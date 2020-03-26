@@ -1,0 +1,5 @@
+readnef
+detect_stars
+describe
+match
+
