@@ -55,6 +55,7 @@ for name in names:
 for name, filename in images:
 	if name0 not in shifts[name]:
 		continue
+	print(name)
 	image = np.load(filename)
 	t = shifts[name][name0]
 	shifted = shift_image(image, t)
