@@ -15,7 +15,7 @@ shape = None
 for name, filename in imgs:
 	print(name)
 	image = np.load(filename)
-	print(image.shape)
+#	print(image.shape)
 	if shape is None:
 		shape = image.shape
 	images[name] = image
