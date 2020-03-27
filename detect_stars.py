@@ -61,7 +61,7 @@ def detect(image):
 		numPixels = cv2.countNonZero(labelMask)
 		# if the number of pixels in the component is sufficiently
 		# large, then add it to our mask of "large blobs"
-		if numPixels > 7:
+		if numPixels > 7 and numPixels < 50:
 			mask = cv2.add(mask, labelMask)
 
 	cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,

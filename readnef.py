@@ -12,7 +12,7 @@ def readnef(filename):
 	image = rawpy.imread(fname).raw_image_visible
 
 	shape = image.shape
-	cshape = (int(shape[0]/2), int(shape[1]/2), 3)
+	cshape = (int(shape[0]/2), int(shape[1]/2), 4)
 
 	post = np.zeros(cshape)
 
@@ -21,6 +21,7 @@ def readnef(filename):
 			post[y][x][0] = image[y*2 + 1][x*2]
 			post[y][x][1] = image[y*2][x*2+1]
 			post[y][x][2] = image[y*2+1][x*2+1] + image[y*2][x*2]
+			post[y][x][3] = 1
 	return post
 
 

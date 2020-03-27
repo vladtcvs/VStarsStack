@@ -8,6 +8,8 @@ mul = 2
 
 img = np.load(sys.argv[1])
 
+img = img[:,:,0:3]
+
 img = np.clip(img, 0, 1e6)
 img = np.power(img, 0.5)
 

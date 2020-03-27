@@ -7,6 +7,9 @@ import common
 import multiprocessing as mp
 ncpu = mp.cpu_count()
 
+thr_num = 0.4
+thr_val = 6
+
 def difference(val1, val2):
 	dist1 = abs(val1[0] - val2[0])**2
 	size1 = abs(val1[1] - val2[1])**2
@@ -49,7 +52,7 @@ def build_match(image1, image2, name2):
 		mins = None
 		for j in range(len(main2)):
 			star2 = main2[j]
-			m, s = match(star1, star2, 0.4, 10)
+			m, s = match(star1, star2, thr_num, thr_val)
 			if m == False:
 				continue
 			if mins is None or s < mins:
@@ -59,32 +62,40 @@ def build_match(image1, image2, name2):
 	image1["main"] = main1
 	return image1
 
-def matchStars(image, starsfiles):
+
+def matchStars(image, starsfiles, lock):
 	name = image[0]
 	filename = image[1]
 	print(name)
+	lock.acquire()
 	with open(filename) as f:
 		stars = json.load(f)
+	lock.release()
 	for name0, _ in starsfiles:
 		print("Base: ", name0)
 		starsfn0 = os.path.join(starsdir, name0 + ".json")
+		lock.acquire()
 		with open(starsfn0) as f:
 			stars0 = json.load(f)
+		lock.release()
 		stars = build_match(stars, stars0, name0)
 
+	lock.acquire()
 	with open(filename, "w") as f:
 		json.dump(stars, f, indent=4)
+	lock.release()
 
 
 if __name__ == "__main__":
 	starsdir = sys.argv[1]
 
-
+	filelock = mp.Manager().Lock()
+	
 	shots = {}
 
 	starsfiles = common.listfiles(starsdir, ".json")
 
 	pool = mp.Pool(ncpu)
-	pool.starmap(matchStars, [(image, starsfiles) for image in starsfiles])
+	pool.starmap(matchStars, [(image, starsfiles, filelock) for image in starsfiles])
 	pool.close()
 
