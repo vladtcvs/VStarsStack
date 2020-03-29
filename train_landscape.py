@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import skimage.transform
 from skimage.color import rgb2gray
 import tensorflow as tf
+import cv2
 from tensorflow.keras.layers import *
 
 import random
@@ -16,7 +17,15 @@ from skimage import data, img_as_float
 from skimage import exposure
 
 size=28
-epochs = 32
+epochs = 16
+
+def load_image(filename):
+	image = imageio.imread(filename)
+	image = rgb2gray(image)
+	image = cv2.GaussianBlur(image, (3, 3), 0)
+	image /= np.amax(image)
+	image = exposure.equalize_hist(image)
+	return image
 
 def load_data(data_directory):
 	skys = common.listfiles(data_directory + "/sky", ".png")
@@ -24,12 +33,10 @@ def load_data(data_directory):
 	sky = []
 	land = []
 	for _, filename in skys:
-		image = imageio.imread(filename) / 255
-		sky.append(image)
+		sky.append(load_image(filename))
 
 	for _, filename in lands:
-		image = imageio.imread(filename) / 255
-		land.append(image)
+		land.append(load_image(filename))
 
 	return sky, land
 
@@ -84,13 +91,9 @@ def display_images(images, labels, sample):
 ROOT_PATH = "landscape_model/"
 train_data_directory = os.path.join(ROOT_PATH, "train")
 test_data_directory = os.path.join(ROOT_PATH, "test")
-#test_data_directory = os.path.join(ROOT_PATH, "train")
 
 train_sky, train_land = load_data(train_data_directory)
-
 train_images = np.array(train_sky + train_land)
-train_images = rgb2gray(train_images)
-train_images = exposure.equalize_hist(train_images)
 
 train_sky_labels = np.zeros(len(train_sky)) + 1
 train_land_labels = np.zeros(len(train_land))
@@ -108,7 +111,7 @@ train_images = np.reshape(train_images, (len(train_images), train_images.shape[1
 loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 model = tf.keras.Sequential([
-		Conv2D(128, (9,9), padding="valid", activation="relu"),
+		Conv2D(64, (7,7), padding="valid", activation="relu"),
 		Flatten(),
 		Dense(2, activation='relu'),
 	])
@@ -120,13 +123,12 @@ model.summary()
 
 test_sky, test_land = load_data(test_data_directory)
 test_images = np.array(test_sky + test_land)
-test_images = rgb2gray(test_images)
-test_images = exposure.equalize_hist(test_images)
-test_images = np.reshape(test_images, (len(test_images), test_images.shape[1], test_images.shape[2], 1))
 
 test_sky_labels = np.zeros(len(test_sky)) + 1
 test_land_labels = np.zeros(len(test_land))
 test_labels = np.append(test_sky_labels, test_land_labels)
+
+test_images = np.reshape(test_images, (len(test_images), test_images.shape[1], test_images.shape[2], 1))
 
 test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
 print("Accuracy: {:.3f}".format(test_acc))
@@ -156,4 +158,6 @@ for i in range(len(test_labels)):
 		fp += 1
 
 print("TP: %i, FP: %i, TN: %i, FN: %i" % (tp, fp, tn, fn))
+
+model.save_weights(ROOT_PATH + "/model.weights")
 
