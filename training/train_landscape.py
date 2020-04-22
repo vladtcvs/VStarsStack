@@ -7,7 +7,9 @@ from skimage.color import rgb2gray
 import tensorflow as tf
 import cv2
 from tensorflow.keras.layers import *
+from tensorflow.keras.models import Model
 
+import json
 import random
 import sys
 
@@ -16,16 +18,8 @@ import common
 from skimage import data, img_as_float
 from skimage import exposure
 
-size=28
-epochs = 16
-
-def load_image(filename):
-	image = imageio.imread(filename)
-	image = rgb2gray(image)
-	image = cv2.GaussianBlur(image, (3, 3), 0)
-	image /= np.amax(image)
-	image = exposure.equalize_hist(image)
-	return image
+size = 28
+epochs = 32
 
 def load_data(data_directory):
 	skys = common.listfiles(data_directory + "/sky", ".png")
@@ -33,10 +27,14 @@ def load_data(data_directory):
 	sky = []
 	land = []
 	for _, filename in skys:
-		sky.append(load_image(filename))
+		image = imageio.imread(filename)
+		image = common.prepare_image_for_model(image)
+		sky.append(image)
 
 	for _, filename in lands:
-		land.append(load_image(filename))
+		image = imageio.imread(filename)
+		image = common.prepare_image_for_model(image)
+		land.append(image)
 
 	return sky, land
 
@@ -108,15 +106,51 @@ train_labels = np.append(train_sky_labels, train_land_labels)
 
 train_images = np.reshape(train_images, (len(train_images), train_images.shape[1], train_images.shape[2], 1))
 
+inputs = Input(shape = (28,28,1))
+
+conv1 = Conv2D(64, (7,7), padding="valid", activation="relu")(inputs)
+pool1 = MaxPool2D(pool_size=(2, 2), padding='valid')(conv1)
+norm1 = BatchNormalization()(pool1)
+
+conv2 = Conv2D(32, (3,3), padding="same", activation="relu")(norm1)
+pool2 = MaxPool2D(pool_size=(2, 2), padding='same')(conv2)
+norm2 = BatchNormalization()(pool2)
+
+conv3 = Conv2D(16, (3,3), padding="same", activation="relu")(norm2)
+pool3 = MaxPool2D(pool_size=(2, 2), padding='same')(conv3)
+norm3 = BatchNormalization()(pool3)
+
+flat = Flatten()(norm3)
+dense1 = Dense(16, activation="relu")(flat)
+dense2 = Dense(2, activation="relu")(dense1)
+
+predictions = Dense(2, activation='softmax')(dense2)
+
+
+#model = tf.keras.Sequential([
+#		Conv2D(64, (7,7), padding="valid", activation="relu"),
+#		MaxPool2D(pool_size=(2, 2), padding='valid'),
+#		BatchNormalization(),
+
+#		Conv2D(32, (3,3), padding="valid", activation="relu"),
+#		MaxPool2D(pool_size=(2, 2), padding='valid'),
+#		BatchNormalization(),
+
+#		Conv2D(16, (3,3), padding="valid", activation="relu"),
+#		MaxPool2D(pool_size=(2, 2), padding='valid'),
+#		BatchNormalization(),
+
+#		Flatten(),
+#		Dense(16, activation='relu'),
+#		Dense(2, activation='relu'),
+#	])
+
+model = Model(inputs=inputs, outputs=predictions)
+
 loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-
-model = tf.keras.Sequential([
-		Conv2D(64, (7,7), padding="valid", activation="relu"),
-		Flatten(),
-		Dense(2, activation='relu'),
-	])
-
 model.compile(optimizer='adam', loss=loss, metrics=['accuracy'])
+
+
 model.fit(train_images, train_labels, epochs=epochs)
 
 model.summary()
@@ -159,5 +193,7 @@ for i in range(len(test_labels)):
 
 print("TP: %i, FP: %i, TN: %i, FN: %i" % (tp, fp, tn, fn))
 
-model.save_weights(ROOT_PATH + "/model.weights")
+with open(ROOT_PATH + "/model.json", "w") as f:
+	f.write(probability_model.to_json())
+probability_model.save_weights(ROOT_PATH + "/model.weights")
 

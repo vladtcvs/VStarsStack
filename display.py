@@ -11,8 +11,8 @@ print(img.shape)
 img = img[:,:,0:3]
 
 #img = img - np.average(img)
-img = np.clip(img, 0, 1e6)
-img = np.power(img, 0.5)
+#img = np.clip(img, 0, 1e6)
+#img = np.power(img, 0.5)
 
 amax = np.amax(img)
 if len(img.shape) == 2:

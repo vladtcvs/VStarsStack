@@ -41,16 +41,22 @@ name0 = None
 mind2 = None
 maxc = None
 for name in names:
-	d2 = 0
-	if maxc is not None and len(shifts[name]) < maxc:
+	c = len(shifts[name])
+	print(name, c)
+	if maxc is not None and c < maxc:
 		continue
-	maxc = len(shifts[name])
+	if maxc is None or c > maxc:
+		maxc = c
+		mind2 = None
+	d2 = 0
 	for name2 in shifts[name]:
 		shift = shifts[name][name2]
 		d2 += shift.dx**2 + shift.dy**2
 	if mind2 is None or d2 < mind2:
 		mind2 = d2
 		name0 = name
+
+print("Select:", name0, maxc)
 
 for name, filename in images:
 	if name0 not in shifts[name]:

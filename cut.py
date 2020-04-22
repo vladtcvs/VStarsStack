@@ -8,6 +8,6 @@ y1 = int(sys.argv[3])
 x2 = int(sys.argv[4])
 y2 = int(sys.argv[5])
 
-image[y1:y2, x1:x2] = np.array([0, 0, 0, 0])
+image[y1:y2, x1:x2] = 0
 np.save(sys.argv[6], image)
 

@@ -57,6 +57,9 @@ x1 = int(w/2-w/10)
 x2 = int(w/2+w/10)
 y1 = int(h/2-h/10)
 y2 = int(h/2+h/10)
+
+print("Remove circlular gradient")
+
 center = image[y1:y2, x1:x2]
 centeravg = np.mean(np.mean(center,axis=0), axis=0)
 
@@ -86,6 +89,8 @@ for y in range(h):
 
 image = image - sky
 
+print("Remove vertical gradient")
+
 x1 = 0
 y1 = 0
 x2 = int(w/5)
@@ -108,6 +113,33 @@ for y in range(h):
 		sky[y][x] = c
 
 image = image - sky
+
+print("Remove horizontal gradient")
+
+x1 = 0
+y1 = 0
+x2 = int(w/5)
+y2 = int(h/5)
+lt = image[y1:y2, x1:x2]
+ltavg = np.mean(np.mean(lt, axis=0), axis=0)
+
+x1 = w-int(w/5)
+y1 = 0
+x2 = w
+y2 = int(h/5)
+rt = image[y1:y2, x1:x2]
+rtavg = np.mean(np.mean(rt, axis=0), axis=0)
+
+sky = np.zeros(shape)
+for y in range(h):
+	for x in range(w):
+		f = x / w
+		c = ltavg*(1-f) + rtavg*f
+		sky[y][x] = c
+
+image = image - sky
+
+print("Remove sky residuals")
 
 mask = detect(image)
 sky = np.array(image)

@@ -5,8 +5,11 @@ dir=$1
 echo "Readnef"
 #python3 readnef.py "$dir/original" "$dir/npy"
 
+echo "Remove landscape"
+#python3 remove_landscape.py "$dir/npy" "$dir/npysky"
+
 echo "Detect stars"
-python3 detect_stars.py "$dir/npy" "$dir/stars"
+python3 detect_stars.py "$dir/npysky" "$dir/stars"
 
 echo "Build descriptors"
 python3 describe.py "$dir/stars" "$dir/desc"
@@ -24,7 +27,7 @@ echo "Calculate shifts between images"
 python3 calculate_shift.py "$dir/clusters.json" "$dir/shifts.json"
 
 echo "Make shifts"
-python3 shift.py "$dir/npy" "$dir/shifts.json" "$dir/shifted"
+python3 shift.py "$dir/npysky" "$dir/shifts.json" "$dir/shifted"
 
 echo "Merge images"
 python3 merge.py "$dir/shifted/" "$dir/summary.npy"
