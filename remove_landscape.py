@@ -37,6 +37,13 @@ for name, filename in files:
 	h = image.shape[0]
 	w = image.shape[1]
 
+	if image.shape[2] == 3:
+		cimage = np.zeros((h, w, 4))
+		cimage[:,:,0:3] = image
+		cimage[:,:,3] = 1
+	else:
+		cimage = image
+
 	wc = int((w / size + 2) / 2)
 	hc = int((h / size + 2) / 2)
 
@@ -69,12 +76,12 @@ for name, filename in files:
 			posx = x * size
 
 			if lts[y][x] == 0 and hasnbr(y, x, lts):
-				image[posy:posy+size, posx:posx+size] = 0
+				cimage[posy:posy+size, posx:posx+size] = 0
 			if rts[y][x] == 0 and hasnbr(y, x, rts):
-				image[posy:posy+size, w-posx-size:w-posx] = 0
+				cimage[posy:posy+size, w-posx-size:w-posx] = 0
 			if lbs[y][x] == 0 and hasnbr(y, x, lbs):
-				image[h-posy-size:h-posy, posx:posx+size] = 0
+				cimage[h-posy-size:h-posy, posx:posx+size] = 0
 			if rbs[y][x] == 0 and hasnbr(y, x, rbs):
-				image[h-posy-size:h-posy, w-posx-size:w-posx] = 0
-	np.save(os.path.join(sys.argv[2], name + ".npy"), image)
+				cimage[h-posy-size:h-posy, w-posx-size:w-posx] = 0
+	np.save(os.path.join(sys.argv[2], name + ".npy"), cimage)
 

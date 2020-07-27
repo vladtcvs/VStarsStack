@@ -146,7 +146,7 @@ sky = np.array(image)
 for y in range(image.shape[0]):
 	for x in range(image.shape[1]):
 		if mask[y][x] == 1:
-			sky[y][x] = np.array([0, 0, 0])
+			sky[y][x] = 0
 
 sky = cv2.GaussianBlur(sky, (2*int(h/30)+1, 2*int(w/30)+1), 0)
 image = image - sky

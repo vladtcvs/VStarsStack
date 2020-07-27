@@ -5,15 +5,26 @@ import numpy as np
 
 class Movement(object):
 
-	def apply(self, y, x):
-		nx = x * math.cos(self.a) - y * math.sin(self.a) + self.dx
-		ny = y * math.cos(self.a) + x * math.sin(self.a) + self.dy
-		return ny, nx
+	def apply(self, positions):
+		npositions = []
+		for y, x in positions:
+			nx = x * math.cos(self.a) - y * math.sin(self.a) + self.dx
+			ny = y * math.cos(self.a) + x * math.sin(self.a) + self.dy		
+			npositions.append((ny, nx))
 
-	def reverse(self, y, x):
-		nx = (x-self.dx) * math.cos(self.a) + (y-self.dy) * math.sin(self.a)
-		ny = (y-self.dy) * math.cos(self.a) - (x-self.dx) * math.sin(self.a)
-		return ny, nx
+		return npositions
+
+	def reverse(self, positions):
+		npositions = []
+		for y, x in positions:
+			nx = (x-self.dx) * math.cos(self.a) + (y-self.dy) * math.sin(self.a)
+			ny = (y-self.dy) * math.cos(self.a) - (x-self.dx) * math.sin(self.a)
+			npositions.append((ny, nx))
+
+		return npositions
+
+	def magnitude(self):
+		return self.dx**2 + self.dy**2 + self.a**2
 
 	# move pi1, pi2 to p1, p2
 	def __init__(self, angle, dy, dx):
@@ -30,7 +41,7 @@ class Movement(object):
 		return Movement(s["angle"]*math.pi/180, s["dy"], s["dx"])
 
 	@staticmethod
-	def build(pi1, pi2, p1, p2, debug=False):
+	def build(pi1, pi2, p1, p2, cd, debug=False):
 		diy, dix = common.norm((pi2[0] - pi1[0], pi2[1] - pi1[1]))
 		dy, dx = common.norm((p2[0] - p1[0], p2[1] - p1[1]))
 
@@ -50,7 +61,7 @@ class Movement(object):
 		dx = 0
 		dy = 0
 		t = Movement(a, dy, dx)
-		ty, tx = t.apply(pi1[0], pi1[1])
+		ty, tx = t.apply([(pi1[0], pi1[1])])[0]
 		dy = p1[0] - ty
 		dx = p1[1] - tx
 		return Movement(a, dy, dx)
@@ -71,5 +82,5 @@ class Movement(object):
 		dangle = np.std(angles)
 		ddy = np.std(dys)
 		ddx = np.std(dxs)
-		return t, (dangle, ddy, ddx)
+		return t
 
