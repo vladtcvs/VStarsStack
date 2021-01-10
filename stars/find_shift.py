@@ -8,7 +8,7 @@ import numpy as np
 import common
 import matplotlib.pyplot as plt
 
-percent = 100
+percent = 60
 
 if cfg.use_sphere:
 	from movement_sphere import Movement
@@ -72,7 +72,13 @@ def run(argv):
 				movements[name1][name2] = t.serialize()
 			else:
 				movements[name1][name2] = None
-
+	data = {
+		"movements" : movements
+	}
+	if cfg.use_sphere:
+		data["shift_type"] = "sphere"
+	else:
+		data["shift_type"] = "flat"
 	with open(argv[1], "w") as f:
-		json.dump(movements, f, indent=4)
+		json.dump(data, f, indent=4)
 

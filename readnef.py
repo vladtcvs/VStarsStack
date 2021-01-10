@@ -108,7 +108,7 @@ def run(argv):
 	for name, fname in files:
 		print(name)
 		post = readnef(fname)
-		np.save(os.path.join(npypath, name + ".npy"), post)
+		np.savez_compressed(os.path.join(npypath, name + ".npz"), post)
 
 if __name__ == "__main__":
 	run(sys.argv[1:])

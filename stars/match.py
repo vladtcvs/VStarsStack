@@ -125,23 +125,22 @@ def build_match(image1, image2, name2, thr_val, thr_num):
 	image1["main"] = main1
 	return image1
 
-
 def matchStars(image, starsfiles, starsdir, lock):
 	name = image[0]
 	filename = image[1]
-#	print(name)
 	lock.acquire()
 	with open(filename) as f:
 		stars = json.load(f)
 	lock.release()
 	for name0, _ in starsfiles:
+#		print("%s / %s" % (name, name0))
 		if debug:
 			print("\n")
-		print("Images: ", name, "/", name0)
 		starsfn0 = os.path.join(starsdir, name0 + ".json")
 		lock.acquire()
 		with open(starsfn0) as f:
 			stars0 = json.load(f)
+		print("Images: %s / %s" % (name, name0))
 		lock.release()
 		stars = build_match(stars, stars0, name0, thr_val, thr_num)
 
@@ -158,7 +157,8 @@ def run(argv):
 	shots = {}
 
 	starsfiles = common.listfiles(starsdir, ".json")
-
+	total = len(starsfiles)**2
+	print("total = %i" % total)
 	pool = mp.Pool(ncpu)
 	pool.starmap(matchStars, [(image, starsfiles, starsdir, filelock) for image in starsfiles])
 	pool.close()

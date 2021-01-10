@@ -11,12 +11,10 @@ import common
 import shift_image
 import multiprocessing as mp
 
-ncpu = int(mp.cpu_count())
+ncpu = max(int(mp.cpu_count())-1, 1)
 
-if cfg.use_sphere:
-	from movement_sphere import Movement
-else:
-	from movement_flat import Movement
+from movement_sphere import Movement as ms
+from movement_flat import Movement as mf
 
 def make_shift(filename, name, name0, shifts, path):
 	if name not in shifts:
@@ -24,15 +22,23 @@ def make_shift(filename, name, name0, shifts, path):
 	if name0 not in shifts[name]:
 		return
 	print(name)
-	image = np.load(filename)
+	image = np.load(filename)["arr_0"]
 	t = shifts[name][name0]
-	shifted = shift_image.shift_image(image, t)
-	np.save(os.path.join(path, name + ".npy"), shifted)
+	shifted = shift_image.shift_image(image, t, name)
+	np.savez_compressed(os.path.join(path, name + ".npz"), shifted)
 
 def run(argv):
-	images = common.listfiles(argv[0], ".npy")
+	images = common.listfiles(argv[0], ".npz")
 	with open(argv[1]) as f:
-		shiftsf = json.load(f)
+		data = json.load(f)
+	shiftsf = data["movements"]
+	if data["shift_type"] == "flat":
+		Movement = mf
+	elif data["shift_type"] == "sphere":
+		Movement = ms
+	else:
+		raise Exception("Unknown shift type %s!" % data["shift_type"])
+	
 
 	shifts = {}
 	names = []
@@ -71,4 +77,7 @@ def run(argv):
 	pool = mp.Pool(ncpu)
 	pool.starmap(make_shift, [(filename, name, name0, shifts, argv[2]) for name, filename in images])
 	pool.close()
+
+if __name__ == "__main__":
+	run(sys.argv[1:])
 

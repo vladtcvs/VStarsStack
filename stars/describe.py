@@ -6,7 +6,7 @@ import math
 import numpy as np
 import common
 
-num_main = 32
+num_main = 20
 mindist = 0.1
 
 def dirvec(lat, lon):
@@ -50,7 +50,12 @@ def build_description(main):
 				angle2, dir2 = star2star(star, other2)
 				size2 = other2["size"]
 
-				dangle = math.acos(np.sum(dir1 * dir2)) * 180/math.pi
+				cosa = np.sum(dir1 * dir2)
+				if cosa > 1:
+					cosa = 1
+				if cosa < -1:
+					cosa = -1
+				dangle = math.acos(cosa) * 180/math.pi
 				if angle1 < angle2:
 					star["descriptor"].append((id1, angle1, size1, id2, angle2, size2, dangle))
 				else:

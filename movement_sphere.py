@@ -2,6 +2,7 @@ import common
 import math
 import json
 import numpy as np
+import math
 from scipy.spatial.transform import Rotation
 
 import projection
@@ -155,16 +156,19 @@ class Movement(object):
 			aa = t.rot.as_rotvec()
 			axises[i,0:3] = aa
 		#print("axises", axises)
-		rotvec = np.average(axises, axis=0)
-		dists = []
-		if percent < 100:
+		if percent == 100:
+			rotvec = np.average(axises, axis=0)
+		else:
+			rotvec = np.average(axises, axis=0)
+			dists = []
 			for i in range(len(ts)):
 				daxis = axises[i] - rotvec
 				dl = np.sum(daxis*daxis)**0.5
 				dists.append((dl, axises[i]))
-				print(dl)
+#				print(dl)
 			dists.sort(key=lambda item : item[0])
-			dists = dists[:int(percent * len(dists) / 100)]
+			num = max(1, math.ceil(percent * len(dists) / 100))
+			dists = dists[:num]
 			rotvec = np.zeros((3,))
 			for _,axis in dists:
 				rotvec += axis

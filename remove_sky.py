@@ -4,6 +4,7 @@ import numpy as np
 import sys
 import cv2
 
+k = 4
 
 def detect(image):
 	if len(image.shape) == 3:
@@ -49,107 +50,110 @@ def interp(y, x, h, w):
 	return fun(l/L)
 
 
-image = np.load(sys.argv[1])
+image = np.load(sys.argv[1])["arr_0"]
 shape = image.shape
 w = shape[1]
 h = shape[0]
-x1 = int(w/2-w/10)
-x2 = int(w/2+w/10)
-y1 = int(h/2-h/10)
-y2 = int(h/2+h/10)
 
-print("Remove circlular gradient")
+if False:
+	print("Remove circlular gradient")
 
-center = image[y1:y2, x1:x2]
-centeravg = np.mean(np.mean(center,axis=0), axis=0)
+	x1 = int(w/2-w/10)
+	x2 = int(w/2+w/10)
+	y1 = int(h/2-h/10)
+	y2 = int(h/2+h/10)
 
-x2 = int(w/5)
-y2 = int(h/5)
-lt = image[0:y2, 0:x2]
-ltavg = np.mean(np.mean(lt, axis=0), axis=0)
+	center = image[y1:y2, x1:x2]
+	centeravg = np.mean(np.mean(center,axis=0), axis=0)
 
-x1 = int(w-w/5)
-y1 = 0
-x2 = w
-y2 = int(h/5)
-rt = image[y1:y2, x1:x2]
-rtavg = np.mean(np.mean(rt, axis=0), axis=0)
+	x2 = int(w/5)
+	y2 = int(h/5)
+	lt = image[0:y2, 0:x2]
+	ltavg = np.mean(np.mean(lt, axis=0), axis=0)
 
-corneravg = (ltavg + rtavg)/2
+	x1 = int(w-w/5)
+	y1 = 0
+	x2 = w
+	y2 = int(h/5)
+	rt = image[y1:y2, x1:x2]
+	rtavg = np.mean(np.mean(rt, axis=0), axis=0)
 
-print(centeravg, corneravg)
+	corneravg = (ltavg + rtavg)/2
 
-sky = np.zeros(shape)
-for y in range(h):
-	for x in range(w):
-		f = interp(y, x, h, w)
-		c = corneravg*(1-f) + centeravg*f
-		sky[y][x] = c
+	print(centeravg, corneravg)
 
+	sky = np.zeros(shape)
+	for y in range(h):
+		for x in range(w):
+			f = interp(y, x, h, w)
+			c = corneravg*(1-f) + centeravg*f
+			sky[y][x] = c
 
-image = image - sky
+	image = image - sky
 
-print("Remove vertical gradient")
+if False:
+	print("Remove vertical gradient")
 
-x1 = 0
-y1 = 0
-x2 = int(w/5)
-y2 = int(h/5)
-lt = image[0:y2, 0:x2]
-ltavg = np.mean(np.mean(lt, axis=0), axis=0)
+	x1 = 0
+	y1 = 0
+	x2 = int(w/5)
+	y2 = int(h/5)
+	lt = image[0:y2, 0:x2]
+	ltavg = np.mean(np.mean(lt, axis=0), axis=0)
 
-x1 = 0
-y1 = int(h-h/5)
-x2 = int(w/5)
-y2 = h
-lb = image[y1:y2, x1:x2]
-lbavg = np.mean(np.mean(lb, axis=0), axis=0)
+	x1 = 0
+	y1 = int(h-h/5)
+	x2 = int(w/5)
+	y2 = h
+	lb = image[y1:y2, x1:x2]
+	lbavg = np.mean(np.mean(lb, axis=0), axis=0)
 
-sky = np.zeros(shape)
-for y in range(h):
-	for x in range(w):
-		f = y / h
-		c = ltavg*(1-f) + lbavg*f
-		sky[y][x] = c
+	sky = np.zeros(shape)
+	for y in range(h):
+		for x in range(w):
+			f = y / h
+			c = ltavg*(1-f) + lbavg*f
+			sky[y][x] = c
 
-image = image - sky
+	image = image - sky
 
-print("Remove horizontal gradient")
+	print("Remove horizontal gradient")
 
-x1 = 0
-y1 = 0
-x2 = int(w/5)
-y2 = int(h/5)
-lt = image[y1:y2, x1:x2]
-ltavg = np.mean(np.mean(lt, axis=0), axis=0)
+	x1 = 0
+	y1 = 0
+	x2 = int(w/5)
+	y2 = int(h/5)
+	lt = image[y1:y2, x1:x2]
+	ltavg = np.mean(np.mean(lt, axis=0), axis=0)
 
-x1 = w-int(w/5)
-y1 = 0
-x2 = w
-y2 = int(h/5)
-rt = image[y1:y2, x1:x2]
-rtavg = np.mean(np.mean(rt, axis=0), axis=0)
+	x1 = w-int(w/5)
+	y1 = 0
+	x2 = w
+	y2 = int(h/5)
+	rt = image[y1:y2, x1:x2]
+	rtavg = np.mean(np.mean(rt, axis=0), axis=0)
 
-sky = np.zeros(shape)
-for y in range(h):
-	for x in range(w):
-		f = x / w
-		c = ltavg*(1-f) + rtavg*f
-		sky[y][x] = c
+	sky = np.zeros(shape)
+	for y in range(h):
+		for x in range(w):
+			f = x / w
+			c = ltavg*(1-f) + rtavg*f
+			sky[y][x] = c
 
-image = image - sky
+	image = image - sky
 
-print("Remove sky residuals")
+if True:
+	print("Remove sky residuals")
 
-mask = detect(image)
-sky = np.array(image)
-for y in range(image.shape[0]):
-	for x in range(image.shape[1]):
-		if mask[y][x] == 1:
-			sky[y][x] = 0
+	mask = detect(image)
+	sky = np.array(image)
+	for y in range(image.shape[0]):
+		for x in range(image.shape[1]):
+			if mask[y][x] == 1:
+				sky[y][x] = 0
 
-sky = cv2.GaussianBlur(sky, (2*int(h/30)+1, 2*int(w/30)+1), 0)
-image = image - sky
+	sky = cv2.GaussianBlur(sky, (2*int(h/k)+1, 2*int(w/k)+1), 0)
+	image = image - sky
 
-np.save(sys.argv[2], image)
+np.savez_compressed(sys.argv[2], image)
 
