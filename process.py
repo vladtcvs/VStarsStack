@@ -1,5 +1,6 @@
 import planet.planet
 import stars.stars
+import cluster.cluster
 
 import os
 
@@ -18,6 +19,7 @@ def usage():
 	print("\toptical-fix - make optical fixes (devignetting, remove distorsion)")
 	print("\tplanet - commands for processing planet images")
 	print("\tstars - commands for processing stars images")
+	print("\tcluster - command for cluster processing")
 	print("\tshift - move and rotate images to match them")
 	print("\tmerge - merge images")
 	print("\thelp - pring help")
@@ -32,6 +34,8 @@ def run(argv):
 		planet.planet.run(argv[1:])
 	elif cmd == "stars":
 		stars.stars.run(argv[1:])
+	elif cmd == "cluster":
+		cluster.cluster.run(argv[1:])
 	elif cmd == "shift":
 		shift.run(argv[1:])
 	elif cmd == "merge":

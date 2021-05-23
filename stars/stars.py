@@ -3,7 +3,6 @@ import stars.describe
 import stars.match
 import stars.net
 import stars.cluster
-import stars.find_shift
 import stars.lonlat
 import stars.process
 import sys
@@ -22,8 +21,6 @@ def run(argv):
 		stars.net.run(argv[1:])
 	elif cmd == "cluster":
 		stars.cluster.run(argv[1:])
-	elif cmd == "find-shift":
-		stars.find_shift.run(argv[1:])
 	elif cmd == "process":
 		stars.process.run(argv[1:])
 	else:

@@ -5,7 +5,6 @@ import stars.describe
 import stars.match
 import stars.net
 import stars.cluster
-import stars.find_shift
 import stars.lonlat
 import sys
 
@@ -31,8 +30,6 @@ def run(argv):
 	stars.net.run([descdir, net])
 	print("Cluster")
 	stars.cluster.run([net, descdir, clusters])
-	print("Find shift")
-	stars.find_shift.run([clusters, shifts])
 
 if __name__ == "__main__":
 	run(sys.argv[1:])
