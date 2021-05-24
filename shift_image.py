@@ -21,7 +21,13 @@ def shift_image(image, t, name):
 			oy = npositions[x][0]
 			ox = npositions[x][1]
 			_, pixel = common.getpixel(image, oy, ox)
-			shifted[y][x] = pixel
+			shifted[y][x][0] = pixel[0]
+			shifted[y][x][1] = pixel[1]
+			shifted[y][x][2] = pixel[2]
+			if n < 4:
+				shifted[y][x][3] = 1
+			else:
+				shifted[y][x][3] = pixel[3]
 
 	return shifted
 
