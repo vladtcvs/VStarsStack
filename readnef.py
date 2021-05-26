@@ -7,6 +7,7 @@ import numpy as np
 import sys
 
 import common
+import usage
 
 masks = np.array([
 			[
@@ -86,30 +87,26 @@ def readnef(filename):
 #			post[y][x][3] = 1
 #	return post
 
+def process_file(argv):
+	input = argv[0]
+	output = argv[1]
+	post = readnef(input)
+	np.savez_compressed(output, post)
 
-def usage():
-	print("readnef nef_path npy_path")
-
-def run(argv):
-
-	if argv[0] == "help":
-		usage()
-		return
-
-	path = argv[0]
-
-	if len(sys.argv) > 1:
-		npypath = argv[1]
-	else:
-		npypath = path
-
-	files = common.listfiles(path, ".nef")
-
+def process_path(argv):
+	input = argv[0]
+	output = argv[1]
+	files = common.listfiles(input, ".nef")
 	for name, fname in files:
 		print(name)
 		post = readnef(fname)
-		np.savez_compressed(os.path.join(npypath, name + ".npz"), post)
+		np.savez_compressed(os.path.join(output, name + ".npz"), post)
 
-if __name__ == "__main__":
-	run(sys.argv[1:])
+commands = {
+	"file" : (process_file, "read single file", "input.NEF output.npz"),
+	"path" : (process_path, "read all files in path", "input/ output/"),
+}
+
+def run(argv):
+	usage.run(argv, "readnef", commands)
 

@@ -6,26 +6,18 @@ import stars.cluster
 import stars.lonlat
 import stars.process
 import sys
+import usage
+
+commands = {
+	"detect"   : (stars.detect.run, "detect stars"),
+	"lonlat"   : (stars.lonlat.run, "fill longitude and latitude"),
+	"describe" : (stars.describe.run, "find descriptions for each image"),
+	"match"    : (stars.match.run, "match stars between images"),
+	"net"      : (stars.net.run, "build net of matching"),
+	"cluster"  : (stars.cluster.run, "find matching stars clusters between images"),
+	"process"  : (stars.process.run, "run process - all commands above"),
+}
 
 def run(argv):
-	cmd = argv[0]
-	if cmd == "detect":
-		stars.detect.run(argv[1:])
-	elif cmd == "lonlat":
-		stars.lonlat.run(argv[1:])
-	elif cmd == "describe":
-		stars.describe.run(argv[1:])
-	elif cmd == "match":
-		stars.match.run(argv[1:])
-	elif cmd == "net":
-		stars.net.run(argv[1:])
-	elif cmd == "cluster":
-		stars.cluster.run(argv[1:])
-	elif cmd == "process":
-		stars.process.run(argv[1:])
-	else:
-		print("Unknown command", cmd)
-
-if __name__ == "__main__":
-	run(sys.argv[1:])
+	usage.run(argv, "stars", commands)
 

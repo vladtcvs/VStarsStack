@@ -1,26 +1,15 @@
-import optical_fix.vignetting
-import optical_fix.distorsion
+import image_fix.vignetting
+import image_fix.distorsion
+import image_fix.remove_sky
 
-import sys
+import usage
 
-
-def usage():
-	print("Commands: ")
-	print("\tdistorsion - fix distorsion")
-	print("\tvignetting - fix vignetting")
-	print("\thelp - pring help")
+commands = {
+	"distorsion" : (image_fix.distorsion.run, "fix distorsion"),
+	"vignetting" : (image_fix.vignetting.run, "fix vignetting"),
+	"remove-sky" : (image_fix.remove_sky.run, "remove sky"),
+}
 
 def run(argv):
-	cmd = argv[0]
-	if cmd == "distorsion":
-		optical_fix.distorsion.run(argv[1:])
-	elif cmd == "vignetting":
-		optical_fix.vignetting.run(argv[1:])
-	elif cmd == "help":
-		usage()
-	else:
-		print("Unknown command", cmd)
-
-if __name__ == "__main__":
-	run(sys.argv[1:])
+	usage.run(argv, "image-fix", commands)
 
