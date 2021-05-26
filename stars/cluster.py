@@ -3,6 +3,7 @@ import common
 import json
 import sys
 import random
+import usage
 
 def find_cluster(net, name, starid):
 	cluster = [(name, starid)]
@@ -28,8 +29,12 @@ def normalize_cluster(cluster):
 		c[name] = sid
 	return True, c
 
-def run(argv):
-	with open(argv[0]) as f:
+def process(argv):
+	net_f     = argv[0]
+	descs_p   = argv[1]
+	cluster_f = argv[2]
+
+	with open(net_f) as f:
 		rnet = json.load(f)
 
 	net = {}
@@ -44,8 +49,7 @@ def run(argv):
 		for i in net[name]:
 			allstars.append((name, i))
 
-	descdir = argv[1]
-	descfiles = common.listfiles(descdir, ".json")
+	descfiles = common.listfiles(descs_p, ".json")
 	descs = {}
 	for name, filename in descfiles:
 		with open(filename) as f:
@@ -83,9 +87,13 @@ def run(argv):
 		if len(dcluster) >= 2:
 			dclusters.append(dcluster)
 
-	with open(argv[2], "w") as f:
+	with open(cluster_f, "w") as f:
 		json.dump(dclusters, f, indent=4)
 
-if __name__ == "__main__":
-	run(sys.argv[1:])
+commands = {
+	"path" : (process, "build clusters of matching stars", "net.json descs/ cluster.json"),
+}
+
+def run(argv):
+	usage.run(argv, "stars cluster", commands)
 
