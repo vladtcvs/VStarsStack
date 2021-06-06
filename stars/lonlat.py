@@ -3,11 +3,11 @@ import sys
 import json
 
 import cfg
-
+import usage
 import projection
 import common
 
-def run(argv):
+def process(argv):
 	descs = common.listfiles(argv[0], ".json")
 	for name, filename in descs:
 		print(name)
@@ -26,4 +26,10 @@ def run(argv):
 		with open(filename, "w") as f:
 			json.dump(desc, f, indent=4)
 
-				
+commands = {
+	"*" : (process, "fill longitude and latitude for stars", "stars/"),
+}
+
+def run(argv):
+	usage.run(argv, "stars lonlat", commands)
+			

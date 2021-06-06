@@ -6,6 +6,8 @@ import cfg
 import common
 import multiprocessing as mp
 
+import usage
+
 ncpu = max(int(mp.cpu_count())-1, 1)
 #ncpu = 10
 
@@ -149,7 +151,7 @@ def matchStars(image, starsfiles, starsdir, lock):
 		json.dump(stars, f, indent=4)
 	lock.release()
 
-def run(argv):
+def process(argv):
 	starsdir = argv[0]
 
 	filelock = mp.Manager().Lock()
@@ -163,6 +165,10 @@ def run(argv):
 	pool.starmap(matchStars, [(image, starsfiles, starsdir, filelock) for image in starsfiles])
 	pool.close()
 
-if __name__ == "__main__":
-	run(argv[1:])
+commands = {
+	"*" : (process, "find stars matches", "descs_dir/"),
+}
+
+def run(argv):
+	usage.run(argv, "stars match", commands)
 

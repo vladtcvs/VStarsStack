@@ -1,10 +1,10 @@
 import sys
 import os
 import json
-
+import usage
 import common
 
-def run(argv):
+def process(argv):
 	jsondir = argv[0]
 	out = argv[1]
 
@@ -73,6 +73,10 @@ def run(argv):
 	with open(out, "w") as f:
 		json.dump(net, f, indent=4)
 
-if __name__ == "__main__":
-	run(sys.argv[1:])
+commands = {
+	"*" : (process, "Build stars networks", "descs_dir/ net.json"),
+}
+
+def run(argv):
+	usage.run(argv, "stars net", commands)
 

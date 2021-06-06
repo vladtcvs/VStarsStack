@@ -17,7 +17,7 @@ import skimage.draw as draw
 import skimage.color as color
 import skimage.measure as measure
 
-
+import usage
 import sys
 import json
 import os
@@ -245,7 +245,7 @@ def detect_by_bright_areas_mask(image, debug=False):
 
 detect = detect_by_bright_areas_mask
 
-def run(argv):
+def process(argv):
 	debug = False
 	path = argv[0]
 	if len(argv) > 1:
@@ -284,7 +284,10 @@ def run(argv):
 		with open(jsonpath, "w") as f:
 			json.dump(desc, f, indent=4)
 
+commands = {
+	"*" : (process, "detect stars", "npy/ stars/"),
+}
 
-if __name__ == "__main__":
-	run(argv[1:])
+def run(argv):
+	usage.run(argv, "stars detect", commands)
 

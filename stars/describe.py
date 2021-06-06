@@ -5,6 +5,7 @@ import math
 
 import numpy as np
 import common
+import usage
 
 num_main = 20
 mindist = 0.1
@@ -85,7 +86,7 @@ def build_descriptions(image, num_main):
 	image["main"] = main
 	return image
 
-def run(argv):
+def process(argv):
 	path = argv[0]
 	outpath = argv[1]
 	files = common.listfiles(path, ".json")
@@ -100,7 +101,10 @@ def run(argv):
 		with open(os.path.join(outpath, name + ".json"), "w") as f:
 			json.dump(image, f, indent=4)
 
+commands = {
+	"*" : (process, "build stars descriptions", "stars/ descs/"),
+}
 
-if __name__ == "__main__":
-	run(sys.argv[1:])
+def run(argv):
+	usage.run(argv, "stars describe", commands)
 

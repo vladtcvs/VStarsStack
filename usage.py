@@ -5,7 +5,7 @@ def usage(base, commands, message):
 	if message is not None:
 		print("")
 		print(message)
-		print("")
+	print("")
 	print("Commands:\n")
 	for cmd in commands:
 		if cmd != "*":
@@ -15,11 +15,12 @@ def usage(base, commands, message):
 				print("%s - %s\n\t%s %s %s ...\n" % (cmd, commands[cmd][1], prgname, base, cmd))
 		else:
 			if len(commands[cmd]) >= 3:
-				print("default - %s\n\t%s %s %s %s\n" % (commands[cmd][1], prgname, base, cmd, commands[cmd][2]))
+				print("(default) - %s\n\t%s %s %s\n" % (commands[cmd][1], prgname, base, commands[cmd][2]))
 			else:
-				print("default - %s\n\t%s %s %s ...\n" % (commands[cmd][1], prgname, base, cmd))
+				print("(default) - %s\n\t%s %s ...\n" % (commands[cmd][1], prgname, base))
 
-	print("help - print usage\n")
+	print("help - print usage")
+	print("\t%s %s [help]\n" % (prgname, base))
 
 def run(argv, base, commands, message=None):
 	if len(argv) == 0 or argv[0] == "help":
