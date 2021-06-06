@@ -4,6 +4,7 @@ import json
 import math
 import os
 import numpy as np
+import usage
 
 import common
 import matplotlib.pyplot as plt

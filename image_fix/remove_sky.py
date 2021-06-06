@@ -11,6 +11,8 @@ import multiprocessing as mp
 ncpu = 11
 k = 4
 
+sky_blur = 351
+
 def detect(image):
 	if len(image.shape) == 3:
 		gray = np.sum(image, axis=2)
@@ -54,47 +56,56 @@ def interp(y, x, h, w):
 	l = (x**2+y**2)**0.5
 	return fun(l/L)
 
-def remove_sky(name, infname, outfname):
+def skymodel_gauss(image, stars_mask):
+	shape = image.shape
+	sky = np.zeros(shape)
+	idx  = (stars_mask==0)
+	nidx = (stars_mask!=0)
+	sky[idx]  = image[idx]
+	average   = np.mean(sky, axis=(0,1))
+	sky[nidx] = average
+	sky = cv2.GaussianBlur(sky, (sky_blur, sky_blur), 0)
+	return sky
+
+
+def remove_sky(name, infname, outfname, method):
 	print(name)
 	image = np.load(infname)["arr_0"]
 	shape = image.shape
-	sky = np.zeros(shape)
 
-	w = shape[1]
-	h = shape[0]
 	mask = detect(image)
-	idx  = (mask==0)
-	nidx = (mask!=0)
 
-	sky[idx]  = image[idx]
+	if method == "gauss":
+		sky = skymodel_gauss(image, mask)
+	else:
+		sky = skymodel_gauss(image, mask)
 
-	average = np.mean(sky, axis=(0,1))
-	sky[nidx] = average
-	
-	sky = cv2.GaussianBlur(sky, (151, 151), 0)
-	image = image - sky
+	if len(shape) == 3:
+		image[:,:,0:3] = image[:,:,0:3] - sky[:,:,0:3]
 
 	np.savez_compressed(outfname, image)
 
 def process_file(argv):
 	infname = argv[0]
 	outfname = argv[1]
+	method = argv[2]
 	name = os.path.splitext(os.path.basename(infname))[0]
-	remove_sky(name, infname, outfname)
+	remove_sky(name, infname, outfname, method)
 
 def process_dir(argv):
 	inpath = argv[0]
 	outpath = argv[1]
+	method = argv[2]
 	files = common.listfiles(inpath, ".npz")
 	pool = mp.Pool(ncpu)
-	pool.starmap(remove_sky, [(name, fname, os.path.join(outpath, name + ".npz")) for name, fname in files])
+	pool.starmap(remove_sky, [(name, fname, os.path.join(outpath, name + ".npz"), method) for name, fname in files])
 	pool.close()
 
 commands = {
-	"file" : (process_file, "process single file", "input.file output.file"),
-	"path" : (process_dir,  "process all files in dir", "input_path/ output_path/"),
+	"file" : (process_file, "process single file", "input.file output.file <method>"),
+	"path" : (process_dir,  "process all files in dir", "input_path/ output_path/ <method>"),
 }
 
 def run(argv):
-	usage.run(argv, "image-fix remove-sky", commands)
+	usage.run(argv, "image-fix remove-sky", commands, "Methods: gauss")
 

@@ -1,5 +1,6 @@
 import cluster.restore
 import cluster.find_shift
+import usage
 
 def run(argv):
 	cmd = argv[0]

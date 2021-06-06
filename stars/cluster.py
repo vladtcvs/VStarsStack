@@ -91,7 +91,7 @@ def process(argv):
 		json.dump(dclusters, f, indent=4)
 
 commands = {
-	"path" : (process, "build clusters of matching stars", "net.json descs/ cluster.json"),
+	"*" : (process, "build clusters of matching stars", "net.json descs/ cluster.json"),
 }
 
 def run(argv):
