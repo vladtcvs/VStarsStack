@@ -66,7 +66,12 @@ def readnef(filename):
 
 	image = rawpy.imread(filename)
 	rgb = image.postprocess(**options)
-	return rgb
+	shape = rgb.shape
+	shape = (shape[0], shape[1], shape[2]+1)
+	rgba = np.zeros(shape)
+	rgba[:,:,0:3] = rgb
+	rgba[:,:,3] = 1
+	return rgba
 
 #	image = rawpy.imread(filename).raw_image_visible
 #	shape = image.shape
@@ -102,9 +107,15 @@ def process_path(argv):
 		post = readnef(fname)
 		np.savez_compressed(os.path.join(output, name + ".npz"), post)
 
+def process(argv):
+	input = argv[0]
+	if os.path.isdir(input):
+		process_path(argv)
+	else:
+		process_file(argv)
+
 commands = {
-	"file" : (process_file, "read single file", "input.NEF output.npz"),
-	"path" : (process_path, "read all files in path", "input/ output/"),
+	"*" : (process, "read NEF to npz", "(input.NEF output.npz | original/ npy/)"),
 }
 
 def run(argv):
