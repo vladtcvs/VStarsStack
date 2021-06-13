@@ -62,11 +62,13 @@ def find_stars_from_threshold(starsimage, debug=False):
 		if numPixels >= min_star_pixels and numPixels <= max_star_pixels:
 			mask = cv2.add(mask, labelMask)
 
+	mask = mask.copy()
+
 	if debug:
 		plt.imshow(mask, cmap="gray")
 		plt.show()
 
-	cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
+	cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL,
 		cv2.CHAIN_APPROX_SIMPLE)
 	cnts = imutils.grab_contours(cnts)
 	cnts = contours.sort_contours(cnts)[0]
@@ -87,7 +89,7 @@ def find_stars_from_threshold(starsimage, debug=False):
 		plt.show()
 
 	stars.sort(key=lambda s : -s["size"])
-	return stars
+	return stars, mask
 
 
 def detect_by_template(image, debug=False):
@@ -262,7 +264,7 @@ def process(argv):
 
 			if len(image.shape) == 3:
 				image = normalize.normalize(image)
-			stars = detect(image, debug)
+			stars = detect(image, debug)[0]
 			desc = {
 				"stars" : stars,
 				"height" : image.shape[0],
