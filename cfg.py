@@ -16,5 +16,13 @@ with open(os.path.join(cfgdir, config["telescope"])) as f:
 
 camerad    = telescope["camera"]
 distorsion = telescope["distorsion"]
-vignetting = np.load(os.path.join(cfgdir, telescope["vignetting"]))["arr_0"]
 
+if "vignetting" in telescope:
+	vf = os.path.join(cfgdir, telescope["vignetting"])
+else:
+	vf = None
+
+if vf is not None and os.path.exists(vf):
+	vignetting = np.load(vf)["arr_0"]
+else:
+	vignetting = np.zeros((camerad["h"], camerad["w"]))+1
