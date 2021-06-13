@@ -1,31 +1,20 @@
 import math
+import numpy as np
+import os
+import json
 
-use_sphere = True
-camerad = {
-        "H" : 15.4,
-        "W" : 23.1,
-        "F" : 35,
-        "h" : 1542,
-        "w" : 2322
-}
+cfgdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "configs")
 
-stars = {
-	"match" : {
-		"threshold_value" : 2,
-		"threshold_num" : 0.3,
-	},
-}
+with open(os.path.join(cfgdir, "config.json")) as f:
+	config = json.load(f)
 
-def __vignetting(cosa):
-	return (1/(9.0*math.acos(cosa)**2+1)+math.cos(math.acos(cosa)*1.8)**4)/2
+use_sphere = config["use_sphere"]
+stars      = config["stars"]
 
-vignetting = {
-	"function" : __vignetting,
-}
+with open(os.path.join(cfgdir, config["telescope"])) as f:
+	telescope = json.load(f)
 
-distorsion = {
-	"a" : -0.228116,
-	"b" : 0.034905,
-	"c" : 1.012672
-}
+camerad    = telescope["camera"]
+distorsion = telescope["distorsion"]
+vignetting = np.load(os.path.join(cfgdir, telescope["vignetting"]))["arr_0"]
 

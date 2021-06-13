@@ -1,0 +1,11 @@
+{
+	"use_sphere" : true,
+	"stars" : {
+		"match" : {
+			"threshold_value" : 2,
+			"threshold_num" : 0.3
+		}
+	},
+	"telescope" : "nikon_35_1.8.json"
+}
+

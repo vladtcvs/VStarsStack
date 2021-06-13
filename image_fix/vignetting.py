@@ -8,22 +8,16 @@ import numpy as np
 import multiprocessing as mp
 import usage
 
-ncpu = 11
+ncpu = max(1, mp.cpu_count()-1)
 
 def devig(name, fname, out, proj):
 	print(name)
 	img = np.load(fname)["arr_0"].astype(np.uint32)
-	fun = cfg.vignetting["function"]
-	for y in range(img.shape[0]):
-		for x in range(img.shape[1]):
-			lat, lon = proj.project(y, x)
-			cosa = math.cos(lon)*math.cos(lat)
-			v = fun(cosa)
-			img[y][x][0] /= v
-			img[y][x][1] /= v
-			img[y][x][2] /= v
+	nch = img.shape[2]-1
+	vig = cfg.vignetting
+	for i in nch:
+		img[:,:,i] *= vig
 	np.savez_compressed(out, img)
-
 
 def process_file(argv):
 	infname = argv[0]
@@ -41,12 +35,16 @@ def process_dir(argv):
 	pool.starmap(devig, [(name, fname, os.path.join(outpath, name + ".npz"), proj) for name, fname in files])
 	pool.close()
 
+def process(argv):
+	if os.path.isdir(argv[0]):
+		process_dir(argv)
+	else:
+		process_file(argv)
 
 commands = {
-	"file" : (process_file, "process single file", "input.file output.file"),
-	"path" : (process_dir,  "process all files in dir", "input_path/ output_path/"),
+	"*" : (process, "devignetting", "(input.file output.file | input/ output/)"),
 }
 
 def run(argv):
-	usage.run(argv, "process image-fix vignetting", commands)
+	usage.run(argv, "image-fix vignetting", commands)
 
