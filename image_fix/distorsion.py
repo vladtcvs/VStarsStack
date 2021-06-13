@@ -8,12 +8,14 @@ import numpy as np
 import multiprocessing as mp
 import usage
 
-ncpu = 10
+ncpu = max(1, mp.cpu_count()-1)
 
 def fix(img, proj):
 	h = img.shape[0]
 	w = img.shape[1]
-	fixed = np.zeros((h, w, 4))
+	nch = img.shape[2] - 1
+
+	fixed = np.zeros((h, w, nch+1))
 	a = cfg.distorsion["a"]
 	b = cfg.distorsion["b"]
 	c = cfg.distorsion["c"]
@@ -41,15 +43,13 @@ def fix(img, proj):
 				v = v0 * math.cos(angle) + p * math.sin(angle)
 				lat = math.asin(v[2])
 				lon = math.atan2(v[1], v[0])
+
 			fy, fx = proj.reverse(lat, lon)
 			res, pixel = common.getpixel(img, fy, fx)
+			fixed[y][x][0:nch] = pixel[0:nch]
+			if res:
+				fixed[y][x][nch] = 1
 
-			if img.shape[2] == 3:
-				fixed[y][x][0:3] = pixel
-				if res:
-					fixed[y][x][3] = 1
-			else:
-				fixed[y][x] = pixel
 	return fixed
 
 def dedistorsion(name, fname, outfname, proj):
@@ -74,9 +74,14 @@ def process_dir(argv):
 	pool.starmap(dedistorsion, [(name, fname, os.path.join(outpath, name + ".npz"), proj) for name, fname in files])
 	pool.close()
 
+def process(argv):
+	if os.path.isdir(argv[0]):
+		process_dir(argv)
+	else:
+		process_file(argv)
+
 commands = {
-	"file" : (process_file, "process single file", "input.file output.file"),
-	"path" : (process_dir,  "process all files in dir", "input_path/ output_path/"),
+	"*" :  (process, "Remove distrosion", "(input.file output.file | input/ output/)"),
 }
 
 def run(argv):
