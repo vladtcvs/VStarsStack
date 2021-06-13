@@ -2,13 +2,11 @@ import cluster.restore
 import cluster.find_shift
 import usage
 
+commands = {
+	"find-shift" : (cluster.find_shift.run, "Find shifts from cluster file", "cluster.json shifts.json"),
+	"restore"    : (cluster.restore.run, "Restore lon lat in cluster file", "cluster.json [cluster_out.json]"),
+}
+
 def run(argv):
-	cmd = argv[0]
-	if cmd == "help":
-		print("restore - restore lon & lat in cluster description")
-		print("find-shift - build shifts between images")
-	elif cmd == "find-shift":
-		cluster.find_shift.run(argv[1:])
-	elif cmd == "restore":
-		cluster.restore.run(argv[1:])
+	usage.run(argv, "cluster", commands)
 
