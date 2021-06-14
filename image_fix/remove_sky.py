@@ -12,8 +12,8 @@ import stars.detect
 
 ncpu = 11
 k = 4
-
-sky_blur = 351
+build_model = False
+sky_blur = 251
 
 def fun(l):
 	return 2/(l**2+1) - 1
@@ -37,7 +37,7 @@ def skymodel_gauss(image, stars_mask):
 	return sky
 
 
-def remove_sky(name, infname, outfname, method):
+def remove_sky(name, infname, outfname, method, model):
 	print(name)
 	image = np.load(infname)["arr_0"]
 	shape = image.shape
@@ -54,8 +54,10 @@ def remove_sky(name, infname, outfname, method):
 	else:
 		sky = skymodel_gauss(visible, mask)
 
-
-	result = visible - sky
+	if model:
+		result = sky
+	else:
+		result = visible - sky
 
 #	fig = plt.figure()
 
@@ -69,7 +71,7 @@ def remove_sky(name, infname, outfname, method):
 #	plt.imshow(sky  / np.amax(visible))
 
 #	fig.add_subplot(2, 2, 4)
-#	plt.imshow(result  / np.amax(visible))
+#	plt.imshow(np.power(result  / np.amax(result), 1))
 
 #	plt.show()
 
@@ -78,7 +80,7 @@ def remove_sky(name, infname, outfname, method):
 
 	np.savez_compressed(outfname, image)
 
-def process_file(argv):
+def process_file(argv, model=False):
 	infname = argv[0]
 	outfname = argv[1]
 	if len(argv) == 2:
@@ -86,9 +88,9 @@ def process_file(argv):
 	else:
 		method = argv[2]
 	name = os.path.splitext(os.path.basename(infname))[0]
-	remove_sky(name, infname, outfname, method)
+	remove_sky(name, infname, outfname, method, model)
 
-def process_dir(argv):
+def process_dir(argv, model=False):
 	inpath = argv[0]
 	outpath = argv[1]
 	if len(argv) == 2:
@@ -97,7 +99,7 @@ def process_dir(argv):
 		method = argv[2]
 	files = common.listfiles(inpath, ".npz")
 	pool = mp.Pool(ncpu)
-	pool.starmap(remove_sky, [(name, fname, os.path.join(outpath, name + ".npz"), method) for name, fname in files])
+	pool.starmap(remove_sky, [(name, fname, os.path.join(outpath, name + ".npz"), method, model) for name, fname in files])
 	pool.close()
 
 def process(argv):
@@ -106,8 +108,15 @@ def process(argv):
 	else:
 		process_file(argv)
 
+def process_sky(argv):
+	if os.path.isdir(argv[0]):
+		process_dir(argv, True)
+	else:
+		process_file(argv, True)
+
 commands = {
 	"*" : (process, "Remove sky from image", "(input.file output.file | input/ output/) [method]"),
+	"sky" : (process_sky, "Build sky from image", "(input.file output.file | input/ output/) [method]"),
 }
 
 def run(argv):
