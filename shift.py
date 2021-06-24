@@ -22,6 +22,9 @@ def make_shift(filename, name, name0, shifts, path):
 	if name0 not in shifts[name]:
 		return
 	print(name)
+	if not os.path.exists(filename):
+		print("skip")
+		return
 	image = np.load(filename)["arr_0"]
 	t = shifts[name][name0]
 	shifted = shift_image.shift_image(image, t, name)

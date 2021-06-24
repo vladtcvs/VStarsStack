@@ -8,6 +8,7 @@ import os
 import common
 import multiprocessing as mp
 
+import sky_model.isoline_model
 import stars.detect
 
 ncpu = 11
@@ -48,11 +49,16 @@ def remove_sky(name, infname, outfname, method, model):
 
 	visible = image[:,:,0:nch]
 
-	mask = stars.detect.detect(visible)[1]
+	if method not in ["gauss", "isoline"]:
+		method = "gauss"
+
 	if method == "gauss":
+		mask = stars.detect.detect(visible)[1]
 		sky = skymodel_gauss(visible, mask)
+	elif method == "isoline":
+		sky = sky_model.isoline_model.build_sky_model(visible)
 	else:
-		sky = skymodel_gauss(visible, mask)
+		raise Exception("Unknown method", method)
 
 	if model:
 		result = sky
@@ -120,5 +126,5 @@ commands = {
 }
 
 def run(argv):
-	usage.run(argv, "image-fix remove-sky", commands, "Methods: gauss")
+	usage.run(argv, "image-fix remove-sky", commands, "Methods: gauss, isoline")
 

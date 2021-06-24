@@ -52,7 +52,7 @@ if markstars:
 		cv2.circle(img, (round(star["x"]), round(star["y"])), round(star["size"]*5)+1, color, 2)
 
 fig = plt.figure()
-fig.patch.set_facecolor('xkcd:black')
+fig.patch.set_facecolor('#222222')
 
 if len(img.shape) == 2:
 	plt.imshow(img, cmap="gray")
