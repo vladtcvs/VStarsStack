@@ -17,13 +17,11 @@ except:
 if len(img.shape) == 3:
 	img = normalize.normalize(img)
 	img = img[:,:,0:3]
-#img = img[:,:,::-1]
 
-img = np.clip(img, 0, 1e6)
-img = np.power(img, power)
+img = np.clip(img, 0, 1e12)
 
 amax = np.amax(img)
-img = img/amax*65536*mul
+img = img/amax*65535
 img = np.clip(img, 0, 65535).astype('uint16')
 
 imageio.imwrite(sys.argv[2], img)

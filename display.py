@@ -31,10 +31,7 @@ print(img.shape)
 
 if len(img.shape) == 3:
 	img = normalize.normalize(img)
-#	mask = img[:,:,3]
 	img = img[:,:,0:3]
-#	plt.imshow(mask)
-#	plt.show()
 
 #img = img - np.average(img)
 img = np.clip(img, 0, 1e6)
