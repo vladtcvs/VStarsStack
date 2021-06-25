@@ -9,59 +9,26 @@ import sys
 import common
 import usage
 
-masks = np.array([
-			[
-				[
-					[[0, 2], [0, 0]], # red
-					[[1, 0], [0, 1]], # green
-					[[0, 0], [2, 0]], # blue
-				],
-				[
-					[[2, 0], [0, 0]], # red
-					[[0, 1], [1, 0]], # green
-					[[0, 0], [0, 2]], # blue
-				]
-			],
-			[
-				[
-					[[0, 0], [0, 2]], # red
-					[[0, 1], [1, 0]], # green
-					[[2, 0], [0, 0]], # blue
-				],
-				[
-					[[0, 0], [2, 0]], # red
-					[[1, 0], [0, 1]], # green
-					[[0, 2], [0, 0]], # blue
-				]
-			]
-])
+mask = np.array([
+			[[0, 0], [2, 0]], # red
+			[[1, 0], [0, 1]], # green
+			[[0, 2], [0, 0]], # blue
+		])
 
 def getcolor(img, mask):
 	return np.sum(img*mask)
 
-def readnef(filename):
+def readnef_postprocess(filename):
 	options = {
 		"half_size" : True,
-		"four_color_rgb" : False,
 		"use_camera_wb" : False,
-                "use_auto_wb" : False,
-		"user_wb" : (1,1,1,1),
-		"user_flip" : 0,
-		"output_color" : rawpy.ColorSpace.raw,
-		"output_bps" : 16,
-		"user_black" : None,
-		"user_sat" : None,
+		"use_auto_wb" : False,
+		"gamma" : (1,1), 
 		"no_auto_bright" : True,
-		"auto_bright_thr" : 0.0,
-		"adjust_maximum_thr" : 0,
-		"bright" : 100.0,
-		"highlight_mode" : rawpy.HighlightMode.Ignore,
-		"exp_shift" : None,
-		"exp_preserve_highlights" : 0.0,
-		"no_auto_scale" : True,
-		"gamma" : (1, 1),
-		"chromatic_aberration" : None,
-		"bad_pixels_path" : None
+		"output_bps" : 16,
+		"no_auto_bright" : True,
+		"four_color_rgb" : False,
+		"user_wb" : (1,1,1,1),
 	}
 
 	image = rawpy.imread(filename)
@@ -73,24 +40,22 @@ def readnef(filename):
 	rgba[:,:,3] = 1
 	return rgba
 
-#	image = rawpy.imread(filename).raw_image_visible
-#	shape = image.shape
-#	cshape = (shape[0]-1, shape[1]-1, 4)
-#	post = np.zeros(cshape)
+def readnef_manual(filename):
+	image = rawpy.imread(filename).raw_image_visible
+	shape = image.shape
+	cshape = (int(shape[0]/2), int(shape[1]/2), 4)
+	post = np.zeros(cshape)
 
-#	for y in range(cshape[0]):
-#		if y % 10 == 0:
-#			print(y, cshape[0])
-#		sy = y % 2
-#		for x in range(cshape[1]):
-#			sx = x % 2
-#			cut = image[y:y+2, x:x+2]
-#			mask = masks[sy][sx]
-#			post[y][x][0] = getcolor(cut, mask[0])
-#			post[y][x][1] = getcolor(cut, mask[1])
-#			post[y][x][2] = getcolor(cut, mask[2])
-#			post[y][x][3] = 1
-#	return post
+	for y in range(cshape[0]):
+		for x in range(cshape[1]):
+			cut = image[2*y:2*y+2, 2*x:2*x+2]
+			post[y][x][0] = getcolor(cut, mask[0])
+			post[y][x][1] = getcolor(cut, mask[1])
+			post[y][x][2] = getcolor(cut, mask[2])
+			post[y][x][3] = 1
+	return post
+
+readnef = readnef_manual
 
 def process_file(argv):
 	input = argv[0]
