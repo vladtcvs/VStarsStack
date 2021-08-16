@@ -1,5 +1,6 @@
 import os
 import rawpy
+import exifread
 import imageio
 from os import listdir
 from os.path import isfile, join
@@ -41,10 +42,19 @@ def readnef_postprocess(filename):
 	return rgba
 
 def readnef_manual(filename):
-	image = rawpy.imread(filename).raw_image_visible
+	img = rawpy.imread(filename)
+	image = img.raw_image_visible
 	shape = image.shape
 	cshape = (int(shape[0]/2), int(shape[1]/2), 4)
 	post = np.zeros(cshape)
+
+	f = open(filename, 'rb')
+	tags = exifread.process_file(f)
+	f.close()
+
+	shutter = float(tags["EXIF ExposureTime"].values[0])
+	print("shutter = %f" % shutter)
+        
 
 	for y in range(cshape[0]):
 		for x in range(cshape[1]):
@@ -52,7 +62,7 @@ def readnef_manual(filename):
 			post[y][x][0] = getcolor(cut, mask[0])
 			post[y][x][1] = getcolor(cut, mask[1])
 			post[y][x][2] = getcolor(cut, mask[2])
-			post[y][x][3] = 1
+			post[y][x][3] = shutter
 	return post
 
 readnef = readnef_manual
