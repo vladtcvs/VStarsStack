@@ -3,7 +3,8 @@ import numpy as np
 import os
 import json
 
-cfgdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "configs")
+#cfgdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "configs")
+cfgdir = os.path.join(os.getcwd(), "config")
 
 with open(os.path.join(cfgdir, "config.json")) as f:
 	config = json.load(f)
@@ -15,7 +16,11 @@ with open(os.path.join(cfgdir, config["telescope"])) as f:
 	telescope = json.load(f)
 
 camerad    = telescope["camera"]
-distorsion = telescope["distorsion"]
+
+if "distorsion" in telescope:
+	distorsion = telescope["distorsion"]
+else:
+	distorsion = None
 
 if "vignetting" in telescope:
 	vf = os.path.join(cfgdir, telescope["vignetting"])

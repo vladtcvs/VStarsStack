@@ -2,10 +2,10 @@
 	"use_sphere" : true,
 	"stars" : {
 		"match" : {
-			"threshold_value" : 2,
+			"threshold_value" : 0.5,
 			"threshold_num" : 0.3
 		}
 	},
-	"telescope" : "nikon_35_1.8.json"
+	"telescope" : "gso_1000_5.json"
 }
 
