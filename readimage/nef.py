@@ -94,5 +94,5 @@ commands = {
 }
 
 def run(argv):
-	usage.run(argv, "readnef", commands)
+	usage.run(argv, "readimage nef", commands)
 
