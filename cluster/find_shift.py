@@ -11,10 +11,13 @@ import matplotlib.pyplot as plt
 
 percent = 60
 
-if cfg.use_sphere:
-	from movement_sphere import Movement
+if hasattr(cfg, "use_sphere"):
+	if cfg.use_sphere:
+		from movement_sphere import Movement
+	else:
+		from movement_flat import Movement
 else:
-	from movement_flat import Movement
+	pass
 
 def find_shift(pair1, pair2):
 	pi1 = pair1[0]

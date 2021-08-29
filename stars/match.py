@@ -13,9 +13,6 @@ ncpu = max(int(mp.cpu_count())-1, 1)
 
 debug = False
 
-thr_num = cfg.stars["match"]["threshold_num"]
-thr_val = cfg.stars["match"]["threshold_value"]
-
 def ditem_difference(val1, val2):
 	angle1_1 = val1[1]
 	size1_1  = val1[2]
@@ -115,6 +112,9 @@ def best_star_match(star, stars, thr_val, thr_num):
 def build_match(image1, image2, name2, thr_val, thr_num):
 	main1 = image1["main"]
 	main2 = image2["main"]
+	thr_num = cfg.stars["match"]["threshold_num"]
+	thr_val = cfg.stars["match"]["threshold_value"]
+
 	# match stars of main1 to stars of main2
 	for i in range(len(main1)):
 		star = main1[i]
