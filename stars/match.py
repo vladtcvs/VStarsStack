@@ -112,8 +112,6 @@ def best_star_match(star, stars, thr_val, thr_num):
 def build_match(image1, image2, name2, thr_val, thr_num):
 	main1 = image1["main"]
 	main2 = image2["main"]
-	thr_num = cfg.stars["match"]["threshold_num"]
-	thr_val = cfg.stars["match"]["threshold_value"]
 
 	# match stars of main1 to stars of main2
 	for i in range(len(main1)):
@@ -131,6 +129,8 @@ def matchStars(image, starsfiles, starsdir, lock):
 	name = image[0]
 	filename = image[1]
 	lock.acquire()
+	thr_num = cfg.stars["match"]["threshold_num"]
+	thr_val = cfg.stars["match"]["threshold_value"]
 	with open(filename) as f:
 		stars = json.load(f)
 	lock.release()
