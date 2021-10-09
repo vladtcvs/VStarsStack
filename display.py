@@ -23,9 +23,11 @@ markstars = False
 
 if len(sys.argv) > 2:
 	power = float(sys.argv[2])
-#	markstars = True
-#	with open(sys.argv[2]) as f:
-#		stars = json.load(f)
+
+if len(sys.argv) > 3:
+	markstars = True
+	with open(sys.argv[3]) as f:
+		stars = json.load(f)
 
 print(img.shape)
 
@@ -46,7 +48,9 @@ if markstars:
 			color = (1,0,0)
 		else:
 			color = 0
-		cv2.circle(img, (round(star["x"]), round(star["y"])), round(star["size"]*5)+1, color, 2)
+		r = round(star["size"]*5+1)
+		r = round(star["size"])
+		cv2.circle(img, (round(star["x"]), round(star["y"])), r, color, 2)
 
 fig = plt.figure()
 fig.patch.set_facecolor('#222222')
