@@ -35,6 +35,7 @@ def build_description(main):
 
 	for i in range(len(main)):
 		star = main[i]
+		size = star["size"]
 		star["descriptor"] = []
 		other = []
 		for j in range(len(main)):
@@ -58,9 +59,9 @@ def build_description(main):
 					cosa = -1
 				dangle = math.acos(cosa) * 180/math.pi
 				if angle1 < angle2:
-					star["descriptor"].append((id1, angle1, size1, id2, angle2, size2, dangle))
+					star["descriptor"].append((id1, angle1, size1/size, id2, angle2, size2/size, dangle))
 				else:
-					star["descriptor"].append((id2, angle2, size2, id1, angle1, size1, dangle))
+					star["descriptor"].append((id2, angle2, size2/size, id1, angle1, size1/size, dangle))
 	return main
 
 def get_brightest(stars, num, h, w, mindistance):
