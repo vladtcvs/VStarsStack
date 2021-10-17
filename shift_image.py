@@ -20,7 +20,7 @@ def shift_image(image, t, name):
 		for x in xs:
 			oy = npositions[x][0]
 			ox = npositions[x][1]
-			_, pixel = common.getpixel(image, oy, ox)
+			_, pixel = common.getpixel(image, oy, ox, False)
 			shifted[y][x][0] = pixel[0]
 			shifted[y][x][1] = pixel[1]
 			shifted[y][x][2] = pixel[2]

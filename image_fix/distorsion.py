@@ -45,7 +45,7 @@ def fix(img, proj):
 				lon = math.atan2(v[1], v[0])
 
 			fy, fx = proj.reverse(lat, lon)
-			res, pixel = common.getpixel(img, fy, fx)
+			res, pixel = common.getpixel(img, fy, fx, False)
 			fixed[y][x][0:nch] = pixel[0:nch]
 			if res:
 				fixed[y][x][nch] = 1

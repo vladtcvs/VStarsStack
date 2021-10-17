@@ -7,7 +7,8 @@ from skimage import data, img_as_float
 from skimage import exposure
 import numpy as np
 
-def getpixel(img, y, x):
+
+def getpixel_linear(img, y, x):
 	xm = math.floor(x)
 	xmc = 1-(x-xm)
 	xp = math.ceil(x)
@@ -37,8 +38,24 @@ def getpixel(img, y, x):
 	ipp = img[yp][xp]
 
 	return True, imm * ymc*xmc + imp * ymc*xpc + ipm * ypc*xmc + ipp * ypc*xpc
-	
 
+def getpixel_none(img, y, x):
+	x = round(x)
+	y = round(y)
+	
+	if y < 0 or x < 0 or x >= img.shape[1] or y >= img.shape[0]:
+		if len(img.shape) == 2:
+			return False, 0
+		else:
+			return False, np.zeros((img.shape[2],))
+
+	return True, img[y][x]
+
+
+def getpixel(img, y, x, interpolate=True):
+	if interpolate:
+		return getpixel_linear(img, y, x)
+	return getpixel_none(img, y, x)
 
 def listfiles(path, ext):
 	images = []
