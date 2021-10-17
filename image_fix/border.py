@@ -5,7 +5,7 @@ import os
 import multiprocessing as mp
 import common
 
-bw = 50
+bw = 60
 ncpu = max(1, mp.cpu_count()-1)
 
 def diff(name, fname, outname, bw):
@@ -25,18 +25,26 @@ def diff(name, fname, outname, bw):
 def process_file(argv):
 	infile = argv[0]
 	outfile = argv[1]
+	if len(argv) > 2:
+		brd = int(argv[2])
+	else:
+		brd = bw
 
 	name = os.path.splitext(os.path.basename(infile))[0]
 
-	diff(name, infile, outfile, bw)
+	diff(name, infile, outfile, brd)
 
 def process_dir(argv):
 	inpath = argv[0]
 	outpath = argv[1]
+	if len(argv) > 2:
+		brd = int(argv[2])
+	else:
+		brd = bw
 
 	files = common.listfiles(inpath, ".npz")
 	pool = mp.Pool(ncpu)
-	pool.starmap(diff, [(name, fname, os.path.join(outpath, name + ".npz"), bw) for name, fname in files])
+	pool.starmap(diff, [(name, fname, os.path.join(outpath, name + ".npz"), brd) for name, fname in files])
 	pool.close()
 
 def process(argv):
