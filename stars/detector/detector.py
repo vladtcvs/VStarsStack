@@ -123,8 +123,8 @@ def detect_stars(image, debug=False):
 #	circles = cv2.HoughCircles(mask, cv2.HOUGH_GRADIENT, 1.2, minDist=10, minRadius=1, maxRadius=10)
 #	print(circles)
 
-	orig = image[:,:,0:3]**0.4
-	return find_stars(mask, orig, debug)
+#	orig = image[:,:,0:3]**0.4
+	return find_stars(mask)
 
 if __name__ == "__main__":
 	filename = sys.argv[1]
