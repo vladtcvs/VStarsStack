@@ -9,6 +9,7 @@ import sys
 
 import common
 import usage
+import multiprocessing as mp
 
 mask = np.array([
 			[[0, 0], [2, 0]], # red
@@ -67,20 +68,24 @@ def readnef_manual(filename):
 
 readnef = readnef_manual
 
+def work(input, output):
+	print(input)
+	post = readnef(input)
+	np.savez_compressed(output, post)
+
 def process_file(argv):
 	input = argv[0]
 	output = argv[1]
-	post = readnef(input)
-	np.savez_compressed(output, post)
+	work(input, output)
 
 def process_path(argv):
 	input = argv[0]
 	output = argv[1]
 	files = common.listfiles(input, ".nef")
-	for name, fname in files:
-		print(name)
-		post = readnef(fname)
-		np.savez_compressed(os.path.join(output, name + ".npz"), post)
+	ncpu = max(int(mp.cpu_count())-1, 1)
+	pool = mp.Pool(ncpu)
+	pool.starmap(work, [(filename, os.path.join(output, name + ".npz")) for name, filename in files])
+	pool.close()
 
 def process(argv):
 	input = argv[0]
