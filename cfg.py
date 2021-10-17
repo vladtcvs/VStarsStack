@@ -3,6 +3,11 @@ import numpy as np
 import os
 import json
 
+def getval(config, name, default):
+	if name in config:
+		return config[name]
+	return default
+
 #cfgdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "configs")
 cfgdir = os.path.join(os.getcwd(), "config")
 cfgpath = os.path.join(cfgdir, "config.json")
@@ -12,6 +17,9 @@ if os.path.exists(cfgpath):
 		config = json.load(f)
 
 	use_sphere = config["use_sphere"]
+
+	use_angles = getval(config, "use_angles", True)
+
 	stars      = config["stars"]
 
 	with open(os.path.join(cfgdir, config["telescope"])) as f:

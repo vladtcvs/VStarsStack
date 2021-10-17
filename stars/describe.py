@@ -6,6 +6,7 @@ import math
 import numpy as np
 import common
 import usage
+import cfg
 
 num_main = 20
 mindist = 0.1
@@ -31,7 +32,7 @@ def star2star(star1, star2):
 	diff /= np.linalg.norm(diff)
 	return angle, diff
 
-def build_description(main):
+def build_description_angled(main):
 
 	for i in range(len(main)):
 		star = main[i]
@@ -64,6 +65,26 @@ def build_description(main):
 					star["descriptor"].append((id2, angle2, size2/size, id1, angle1, size1/size, dangle))
 	return main
 
+def build_description_distance(main):
+
+	for i in range(len(main)):
+		star = main[i]
+		size = star["size"]
+		star["descriptor"] = []
+		other = []
+		for j in range(len(main)):
+			if i != j:
+				other.append((j, main[j]))
+
+		for j in range(len(other)):
+			id1, other1 = other[j]
+			angle1, dir1 = star2star(star, other1)
+			size1 = other1["size"]
+
+			star["descriptor"].append((id1, angle1, size1/size, id1, angle1, size1/size, 0))
+	return main
+
+
 def get_brightest(stars, num, h, w, mindistance):
 	mindistance = h * mindistance
 	sample = []
@@ -79,9 +100,12 @@ def get_brightest(stars, num, h, w, mindistance):
 	return sample
 	
 
-def build_descriptions(image, num_main):
+def build_descriptions(image, num_main, use_angles):
 	main = get_brightest(image["stars"], num_main, image["height"], image["width"], mindist)
-	main = build_description(main)
+	if use_angles:
+		main = build_description_angled(main)
+	else:
+		main = build_description_distance(main)
 
 	image.pop("stars")
 	image["main"] = main
@@ -96,8 +120,7 @@ def process(argv):
 		print(name)
 		with open(filename) as f:
 			image = json.load(f)
-		
-		image = build_descriptions(image, num_main)
+		image = build_descriptions(image, num_main, cfg.use_angles)
 
 		with open(os.path.join(outpath, name + ".json"), "w") as f:
 			json.dump(image, f, indent=4)
