@@ -1,5 +1,7 @@
 import os
 
+import cfg
+
 import stars.detect
 import stars.describe
 import stars.match
@@ -10,9 +12,9 @@ import sys
 import usage
 
 def process(argv):
-	basedir = argv[0]
-	if len(argv) > 1:
-		first_command = argv[1]
+	basedir = os.getcwd()
+	if len(argv) > 0:
+		first_command = argv[0]
 		if first_command == "detect":
 			level = 0
 		elif first_command == "lonlat":
@@ -28,19 +30,18 @@ def process(argv):
 	else:
 		level = 0
 
-	npydir = os.path.join(basedir, "npy")
+	npydir = os.path.join(basedir, cfg.config["paths"]["npy-fixed"])
 
-	starsdir = os.path.join(basedir, "stars")
+	starsdir = os.path.join(basedir, cfg.config["stars"]["paths"]["stars"])
 	if not os.path.exists(starsdir):
 		os.mkdir(starsdir)
 
-	descdir = os.path.join(basedir, "descs")	
+	descdir = os.path.join(basedir, cfg.config["stars"]["paths"]["descs"])	
 	if not os.path.exists(descdir):
 		os.mkdir(descdir)
 
-	net = os.path.join(basedir, "net.json")
-	clusters = os.path.join(basedir, "clusters.json")
-	shifts = os.path.join(basedir, "shifts.json")
+	net = os.path.join(basedir, cfg.config["stars"]["paths"]["net"])
+	clusters = os.path.join(basedir, cfg.config["cluster"]["path"])
 
 	if level <= 0:
 		print("Detect")
@@ -62,7 +63,7 @@ def process(argv):
 		stars.cluster.run([net, descdir, clusters])
 
 commands = {
-	"*" : (process, "Process stars: detect, lonlat, describe, match, net, cluster", "base_dir/ [first_command]"),
+	"*" : (process, "Process stars: detect, lonlat, describe, match, net, cluster", "[first_command]"),
 }
 
 def run(argv):

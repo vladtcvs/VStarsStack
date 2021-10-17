@@ -21,12 +21,14 @@ commands = {
 	"cluster" : (cluster.cluster.run, "command for cluster processing"),
 	"shift" : (shift.run, "move and rotate images to match them"),
 	"merge" : (merge.run, "merge images", "input_dir/ output.npz"),
-	"configurate" : (configurate.run, "configurate project"),
+	"project" : (configurate.run, "configurate project"),
 }
 
-def run(argv):
-	usage.run(argv, "", commands)
+def run(argv, progname=None):
+	if progname is not None:
+		usage.setprogname(progname)
+	usage.run(argv, "", commands, autohelp=True)
 
 if __name__ == "__main__":
-	run(sys.argv[1:])
+	run(sys.argv[2:], sys.argv[1])
 

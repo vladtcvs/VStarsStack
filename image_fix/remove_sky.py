@@ -9,6 +9,6 @@ commands = {
 }
 
 def run(argv):
-	usage.run(argv, "image-fix remove-sky", commands)
+	usage.run(argv, "image-fix remove-sky", commands, autohelp=True)
 
 

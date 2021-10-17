@@ -7,6 +7,7 @@ from os.path import isfile, join
 import numpy as np
 import sys
 
+import cfg
 import common
 import usage
 import multiprocessing as mp
@@ -88,16 +89,19 @@ def process_path(argv):
 	pool.close()
 
 def process(argv):
-	input = argv[0]
-	if os.path.isdir(input):
-		process_path(argv)
+	if len(argv) > 0:
+		input = argv[0]
+		if os.path.isdir(input):
+			process_path(argv)
+		else:
+			process_file(argv)
 	else:
-		process_file(argv)
+		process_path([cfg.config["paths"]["original"], cfg.config["paths"]["npy-orig"]])
 
 commands = {
-	"*" : (process, "read NEF to npz", "(input.NEF output.npz | original/ npy/)"),
+	"*" : (process, "read NEF to npz", "(input.NEF output.npz | [original/ npy/])"),
 }
 
 def run(argv):
-	usage.run(argv, "readimage nef", commands)
+	usage.run(argv, "readimage nef", commands, autohelp=False)
 

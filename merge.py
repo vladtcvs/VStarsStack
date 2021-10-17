@@ -1,12 +1,17 @@
 import numpy as np
 import sys
 
+import cfg
 import common
 import matplotlib.pyplot as plt
 
 def run(argv):
-	path_images = argv[0]
-	out = argv[1]
+	if len(argv) > 0:
+		path_images = argv[0]
+		out = argv[1]
+	else:
+		path_images = cfg.config["paths"]["shifted"]
+		out = cfg.config["paths"]["output"]
 
 	imgs = common.listfiles(path_images, ".npz")
 

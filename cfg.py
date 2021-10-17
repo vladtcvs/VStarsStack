@@ -8,22 +8,19 @@ def getval(config, name, default):
 		return config[name]
 	return default
 
-#cfgdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "configs")
-cfgdir = os.path.join(os.getcwd(), "config")
-cfgpath = os.path.join(cfgdir, "config.json")
+cfgdir = os.getcwd()
+cfgpath = os.path.join(cfgdir, "project.json")
 
 if os.path.exists(cfgpath):
 	with open(cfgpath) as f:
 		config = json.load(f)
 
-	use_sphere = config["use_sphere"]
-
+	use_sphere = getval(config, "use_sphere", True)
 	use_angles = getval(config, "use_angles", True)
 
 	stars      = config["stars"]
 
-	with open(os.path.join(cfgdir, config["telescope"])) as f:
-		telescope = json.load(f)
+	telescope = config["telescope"]
 
 	camerad    = telescope["camera"]
 

@@ -28,7 +28,14 @@ def find_shift(pair1, pair2):
 	return t
 
 def run(argv):
-	with open(argv[0]) as f:
+	if len(argv) > 0:
+		clusters_fname = argv[0]
+		shifts_fname = argv[1]
+	else:
+		clusters_fname = cfg.config["cluster"]["path"]
+		shifts_fname = cfg.config["paths"]["shifts"]
+
+	with open(clusters_fname) as f:
 		clusters = json.load(f)
 
 	print(clusters)
@@ -84,6 +91,6 @@ def run(argv):
 		data["shift_type"] = "sphere"
 	else:
 		data["shift_type"] = "flat"
-	with open(argv[1], "w") as f:
+	with open(shifts_fname, "w") as f:
 		json.dump(data, f, indent=4)
 

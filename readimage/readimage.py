@@ -8,5 +8,5 @@ commands = {
 }
 
 def run(argv):
-	usage.run(argv, "readimage", commands)
+	usage.run(argv, "readimage", commands, autohelp=True)
 

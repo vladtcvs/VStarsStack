@@ -7,6 +7,7 @@ import numpy as np
 import sys
 
 from PIL import Image
+import cfg
 import common
 import usage
 
@@ -43,16 +44,20 @@ def process_path(argv):
 		np.savez_compressed(os.path.join(output, name + ".npz"), post)
 
 def process(argv):
-	input = argv[0]
-	if os.path.isdir(input):
-		process_path(argv)
+	if len(argv) > 0:
+		input = argv[0]
+		if os.path.isdir(input):
+			process_path(argv)
+		else:
+			process_file(argv)
 	else:
-		process_file(argv)
+		process_path([cfg.config["paths"]["original"], cfg.config["paths"]["npy-orig"]])
+		
 
 commands = {
-	"*" : (process, "read JPEG to npz", "(input.jpg output.npz | original/ npy/)"),
+	"*" : (process, "read JPEG to npz", "(input.jpg output.npz | [original/ npy/])"),
 }
 
 def run(argv):
-	usage.run(argv, "readimage jpeg", commands)
+	usage.run(argv, "readimage jpeg", commands, autohelp=False)
 

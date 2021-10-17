@@ -22,7 +22,8 @@ def devig(name, fname, out):
 	print(name)
 	img = np.load(fname)["arr_0"].astype(np.float64)
 	vig = cfg.vignetting
-	img = mul(img, vig)
+	if vig is not None:
+		img = mul(img, vig)
 	np.savez_compressed(out, img)
 
 def process_file(argv):
@@ -40,15 +41,18 @@ def process_dir(argv):
 	pool.close()
 
 def process(argv):
-	if os.path.isdir(argv[0]):
-		process_dir(argv)
+	if len(argv) > 0:
+		if os.path.isdir(argv[0]):
+			process_dir(argv)
+		else:
+			process_file(argv)
 	else:
-		process_file(argv)
+		process_dir([cfg.config["paths"]["npy-fixed"], cfg.config["paths"]["npy-fixed"]])
 
 commands = {
 	"*" : (process, "devignetting", "(input.file output.file | input/ output/)"),
 }
 
 def run(argv):
-	usage.run(argv, "image-fix vignetting", commands)
+	usage.run(argv, "image-fix vignetting", commands, autohelp=False)
 

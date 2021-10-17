@@ -1,5 +1,9 @@
 prgname = "process.py"
 
+def setprogname(name):
+	global prgname
+	prgname = name
+
 def usage(base, commands, message):
 	print("Usage: %s %s command ..." % (prgname, base))
 	if message is not None:
@@ -22,11 +26,16 @@ def usage(base, commands, message):
 	print("help - print usage")
 	print("\t%s %s [help]\n" % (prgname, base))
 
-def run(argv, base, commands, message=None):
-	if len(argv) == 0 or argv[0] == "help":
+def run(argv, base, commands, message=None, autohelp=False):
+	if autohelp and (len(argv) == 0 or argv[0] == "help"):
 		usage(base, commands, message)
 		return
-	cmd = argv[0]
+
+	if len(argv) > 0:
+		cmd = argv[0]
+	else:
+		cmd = "*"
+
 	if cmd not in commands:
 		cmd = "*"
 		commands[cmd][0](argv)

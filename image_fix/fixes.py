@@ -4,9 +4,25 @@ import image_fix.remove_sky
 import image_fix.difference
 import image_fix.border
 
+import os
+
+import common
+import cfg
+import shutil
 import usage
 
+def copy(argv):
+	orig = cfg.config["paths"]["npy-orig"]
+	fixed = cfg.config["paths"]["npy-fixed"]
+	files = common.listfiles(orig, ".npz")
+	for name, fname in files:
+		print("Copying ", name)
+		fname_out = os.path.join(fixed, name + ".npz")
+		shutil.copyfile(fname, fname_out)
+	
+
 commands = {
+	"copy"       : (copy, "copy images from original to pipeline dir"),
 	"distorsion" : (image_fix.distorsion.run, "fix distorsion"),
 	"vignetting" : (image_fix.vignetting.run, "fix vignetting"),
 	"remove-sky" : (image_fix.remove_sky.run, "remove sky"),
@@ -15,5 +31,5 @@ commands = {
 }
 
 def run(argv):
-	usage.run(argv, "image-fix", commands)
+	usage.run(argv, "image-fix", commands, autohelp=True)
 

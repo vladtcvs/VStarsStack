@@ -5,10 +5,12 @@ import stars.net
 import stars.cluster
 import stars.lonlat
 import stars.process
+import stars.configure
 import sys
 import usage
 
 commands = {
+	"config"   : (stars.configure.run, "configure stars pipeline"),
 	"detect"   : (stars.detect.run, "detect stars"),
 	"lonlat"   : (stars.lonlat.run, "fill longitude and latitude"),
 	"describe" : (stars.describe.run, "find descriptions for each image"),
@@ -19,5 +21,5 @@ commands = {
 }
 
 def run(argv):
-	usage.run(argv, "stars", commands)
+	usage.run(argv, "stars", commands, autohelp=True)
 

@@ -31,8 +31,17 @@ def make_shift(filename, name, name0, shifts, path):
 	np.savez_compressed(os.path.join(path, name + ".npz"), shifted)
 
 def run(argv):
-	images = common.listfiles(argv[0], ".npz")
-	with open(argv[1]) as f:
+	if len(argv) > 0:
+		npy_dir = argv[0]
+		shifts_fname = argv[1]
+		shifted_dir = argv[2]
+	else:
+		npy_dir = cfg.config["paths"]["npy-fixed"]
+		shifts_fname = cfg.config["paths"]["shifts"]
+		shifted_dir = cfg.config["paths"]["shifted"]
+
+	images = common.listfiles(npy_dir, ".npz")
+	with open(shifts_fname) as f:
 		data = json.load(f)
 	shiftsf = data["movements"]
 	if data["shift_type"] == "flat":
@@ -78,7 +87,7 @@ def run(argv):
 	print("Select:", name0, maxc)
 
 	pool = mp.Pool(ncpu)
-	pool.starmap(make_shift, [(filename, name, name0, shifts, argv[2]) for name, filename in images])
+	pool.starmap(make_shift, [(filename, name, name0, shifts, shifted_dir) for name, filename in images])
 	pool.close()
 
 if __name__ == "__main__":

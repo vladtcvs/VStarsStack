@@ -48,13 +48,16 @@ def process_dir(argv):
 	pool.close()
 
 def process(argv):
-	if os.path.isdir(argv[0]):
-		process_dir(argv)
+	if len(argv) > 0:
+		if os.path.isdir(argv[0]):
+			process_dir(argv)
+		else:
+			process_file(argv)
 	else:
-		process_file(argv)
+		process_dir([cfg.config["paths"]["npy-fixed"], cfg.config["paths"]["npy-fixed"]])
 
 commands = {
-	"*" : (process, "remove border", "(input.npz output.npz | input/ output/)"),
+	"*" : (process, "remove border", "(input.npz output.npz | [input/ output/])"),
 }
 
 def run(argv):

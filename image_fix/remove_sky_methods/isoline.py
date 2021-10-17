@@ -8,6 +8,7 @@ import os
 import common
 import multiprocessing as mp
 
+import cfg
 import sky_model.isoline_model
 import stars.detect
 
@@ -109,10 +110,13 @@ def process_dir(argv, model=False):
 	pool.close()
 
 def process(argv):
-	if os.path.isdir(argv[0]):
-		process_dir(argv)
+	if len(argv) > 0:
+		if os.path.isdir(argv[0]):
+			process_dir(argv)
+		else:
+			process_file(argv)
 	else:
-		process_file(argv)
+		process_dir([cfg.config["paths"]["npy-fixed"], cfg.config["paths"]["npy-fixed"]])
 
 def process_sky(argv):
 	if os.path.isdir(argv[0]):
