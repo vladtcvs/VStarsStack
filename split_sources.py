@@ -11,7 +11,7 @@ minsize = nps
 orig=sys.argv[1]
 base=sys.argv[2]
 
-files = common.listfiles(orig, ".nef")
+files = common.listfiles(orig, ".npz")
 
 num = len(files)
 splits = math.ceil(num**(2/3)/2**(1/3))
@@ -31,16 +31,15 @@ if len(block) > 0:
 
 for i in range(len(blocks)):
 	blockdir = os.path.join(base, "block%04i" % i)
-	origdir = os.path.join(blockdir, "orig")
+	npydir = os.path.join(blockdir, "npy")
 	os.mkdir(blockdir)
-	os.mkdir(origdir)
 	os.mkdir(os.path.join(blockdir, "npy"))
 	os.mkdir(os.path.join(blockdir, "stars"))
 	os.mkdir(os.path.join(blockdir, "descs"))
 	os.mkdir(os.path.join(blockdir, "shifted"))
 	for filename in blocks[i]:
 		basename = os.path.basename(filename)
-		os.rename(filename, os.path.join(origdir, basename))
+		os.rename(filename, os.path.join(npydir, basename))
 
 sumdir = os.path.join(base, "sum")
 os.mkdir(sumdir)
