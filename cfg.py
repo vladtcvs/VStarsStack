@@ -18,7 +18,8 @@ if os.path.exists(cfgpath):
 	use_sphere = getval(config, "use_sphere", True)
 	use_angles = getval(config, "use_angles", True)
 
-	stars      = config["stars"]
+	if "stars" in config:
+		stars      = config["stars"]
 
 	telescope = config["telescope"]
 
