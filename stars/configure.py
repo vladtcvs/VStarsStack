@@ -20,7 +20,9 @@ def run(argv):
 		"paths" : {
 			"stars" : "stars",
 			"descs" : "descs",
-		}
+			"net"   : "net.json",
+		},
+		"use_angles" : True,
 	}
 	proj["cluster"] = {
 		"path" : "clusters.json"

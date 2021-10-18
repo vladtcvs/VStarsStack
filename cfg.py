@@ -16,10 +16,10 @@ if os.path.exists(cfgpath):
 		config = json.load(f)
 
 	use_sphere = getval(config, "use_sphere", True)
-	use_angles = getval(config, "use_angles", True)
 
 	if "stars" in config:
 		stars      = config["stars"]
+		use_angles = getval(stars, "use_angles", True)
 
 	telescope = config["telescope"]
 
