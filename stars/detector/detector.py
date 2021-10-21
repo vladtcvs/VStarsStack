@@ -19,6 +19,8 @@ import skimage.draw as draw
 import skimage.color as color
 import skimage.measure as measure
 
+import cfg
+
 def check_round(image, x, y, r):
 	x = int(x+0.5)
 	y = int(y+0.5)
@@ -107,7 +109,7 @@ def detect_stars(image, debug=False):
 	gray = cv2.GaussianBlur(gray, (3, 3), 0)
 
 	blurred = cv2.GaussianBlur(gray, (31, 31), 0)
-	mask = (gray - blurred) > 0.04
+	mask = (gray - blurred) > cfg.config["stars"]["brightness_over_neighbours"]
 
 	border = 30
 	mask[:,0:border] = 0

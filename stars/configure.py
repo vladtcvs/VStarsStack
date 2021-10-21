@@ -23,6 +23,7 @@ def run(argv):
 			"net"   : "net.json",
 		},
 		"use_angles" : True,
+		"brightness_over_neighbours" : 0.04,
 	}
 	proj["cluster"] = {
 		"path" : "clusters.json"
