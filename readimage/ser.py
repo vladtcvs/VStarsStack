@@ -70,7 +70,7 @@ def readser(fname):
 			print("\tprocessing frame %i" % id)
 			frame = np.zeros((height, width), dtype=np.float32)
 			for y in range(height):
-				for x in range(height):
+				for x in range(width):
 					frame[y,x] = serread(f, bpp, le16bit)
 			data = common.data_create(tags, params)
 			common.data_add_channel(data, frame, "raw")
