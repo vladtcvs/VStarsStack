@@ -2,14 +2,18 @@ import numpy as np
 import math
 import common
 
-def shift_image(image, t, name):
+def shift_image(image, t, inmask=None, name=None):
 	shape = image.shape
 	h = shape[0]
 	w = shape[1]
-	n = shape[2]
-	shifted = np.zeros((h, w, 4))
+	
+	shifted = np.zeros(shape)
+	if inmask is None:
+		inmask = np.ones(shape)
+
+	mask = np.zeros(shape)
 	for y in range(h):
-		if y % 200 == 0:
+		if name and y % 200 == 0:
 			print(name, ":", y, "/", h)
 		xs = range(w)
 		ys = []
@@ -20,14 +24,11 @@ def shift_image(image, t, name):
 		for x in xs:
 			oy = npositions[x][0]
 			ox = npositions[x][1]
-			_, pixel = common.getpixel(image, oy, ox, False)
-			shifted[y][x][0] = pixel[0]
-			shifted[y][x][1] = pixel[1]
-			shifted[y][x][2] = pixel[2]
-			if n < 4:
-				shifted[y][x][3] = 1
-			else:
-				shifted[y][x][3] = pixel[3]
+			res, pixel = common.getpixel(image, oy, ox, False)
+			resmask, pixelmask = common.getpixel(image, oy, ox, False)
+			
+			shifted[y][x] = pixel
+			if res and resmask and pixelmask > 1-1e-6:
+				mask[y][x] = 1
 
-	return shifted
-
+	return shifted, mask

@@ -36,7 +36,7 @@ def diff(name, fname, outname, bw_left, bw_top, bw_right, bw_bottom):
 		mask[:, (w-bw_right):w,:] = 0
 
 		common.data_add_channel(img, fixed, channel)
-		common.data_add_channel(img, mask, "mask")
+		common.data_add_channel(img, mask, "mask", encoded=True)
 
 	common.data_store(img, outname)
 

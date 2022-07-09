@@ -25,10 +25,23 @@ def make_shift(filename, name, name0, shifts, path):
 	if not os.path.exists(filename):
 		print("skip")
 		return
-	image = np.load(filename)["arr_0"]
+
 	t = shifts[name][name0]
-	shifted = shift_image.shift_image(image, t, name)
-	np.savez_compressed(os.path.join(path, name + ".npz"), shifted)
+	img = common.data_load(filename)
+
+	if "mask" in img["channels"]:
+		mask = img["channels"]["mask"]
+	else:
+		mask = None
+	for channel in img["meta"]["channels"]:
+		if channel in img["meta"]["encoded_channels"]:
+			continue
+		image = img["channels"][channel]
+		shifted, shmask = shift_image.shift_image(image, t, mask, name)
+		common.data_add_channel(img, shifted, channel)
+		common.data_add_channel(img, shmask, "mask", encoded=True)
+
+	common.data_store(img, os.path.join(path, name + ".zip"))
 
 def run(argv):
 	if len(argv) > 0:
@@ -40,7 +53,7 @@ def run(argv):
 		shifts_fname = cfg.config["paths"]["shifts"]
 		shifted_dir = cfg.config["paths"]["shifted"]
 
-	images = common.listfiles(npy_dir, ".npz")
+	images = common.listfiles(npy_dir, ".zip")
 	with open(shifts_fname) as f:
 		data = json.load(f)
 	shiftsf = data["movements"]

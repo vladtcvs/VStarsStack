@@ -71,7 +71,7 @@ def dedistorsion(name, fname, outfname, proj):
 
 		fixed, mask = fix(image, mask, proj)
 		common.data_add_channel(img, fixed, channel)
-		common.data_add_channel(img, mask, "mask")
+		common.data_add_channel(img, mask, "mask", encoded=True)
 
 	common.data_store(img, outfname)
 
