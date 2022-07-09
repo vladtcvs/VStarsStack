@@ -18,7 +18,7 @@ path=sys.argv[1]
 data = common.data_load(path)
 
 
-if len(sys.argv[2]) > 2 and sys.argv[2] == "RGB":
+if len(sys.argv) > 2 and sys.argv[2] == "RGB":
 	r = data["channels"]["R"]
 	g = data["channels"]["G"]
 	b = data["channels"]["B"]
