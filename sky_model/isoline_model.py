@@ -132,15 +132,10 @@ def approximate_image(image):
 
 def build_sky_model(img):
 	blur = 31
-	nch = img.shape[2]
-	sky = img[:,:,0:nch]
-	sky = cv2.GaussianBlur(sky, (blur, blur), 0)
+	sky = cv2.GaussianBlur(img, (blur, blur), 0)
 
-	for i in range(nch):
-		ch    = sky[:,:,i]
-		val   = np.amax(ch)
-		ch    = ch / val
-		sky[:,:,i] = approximate_image(ch) * val
+	maxval = np.amax(sky)
+	sky    = sky / maxval
+	sky    = approximate_image(img) * maxval
 
 	return sky
-
