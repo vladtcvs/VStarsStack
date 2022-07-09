@@ -99,7 +99,7 @@ def process(argv):
 		process_dir([cfg.config["paths"]["npy-fixed"], cfg.config["paths"]["npy-fixed"]])
 
 commands = {
-	"*" : (process, "remove border", "(input.npz output.npz | [input/ output/])"),
+	"*" : (process, "remove border", "(input.zip output.zip | [input/ output/])"),
 }
 
 def run(argv):

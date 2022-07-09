@@ -6,20 +6,25 @@ import multiprocessing as mp
 
 ncpu = max(1, mp.cpu_count()-1)
 
-def diff(img, back):
-	img = np.load(argv[0])["arr_0"]
-	nch = img.shape[2]-1
-	img[:,:,0:nch] -= back
-	np.savez_compressed(argv[2], img)
+def diff(name, infile, outfile, dark):
+	img = common.data_load(darkpath)
+	for channel in img["meta"]["channels"]:
+		if channel in img["meta"]["encoded_channels"]:
+			continue
+		if channel not in dark["meta"]["channels"]
+			continue
+
+		fixed = img["channels"][channel] - dark["channels"][channel]
+		common.data_add_channel(img, fixed, channel)
+	common.data_store(img, outfile)
 
 def process_file(argv):
 	infile = argv[0]
 	darkpath = argv[1]
 	outfile = argv[2]
 
+	dark = common.data_load(darkpath)
 	name = os.path.splitext(os.path.basename(infile))[0]
-	dark = np.load(darkpath)["arr_0"]
-
 	diff(name, infile, outfile, dark)
 
 def process_dir(argv):
@@ -27,10 +32,11 @@ def process_dir(argv):
 	darkpath = argv[1]
 	outpath = argv[2]
 
-	dark = np.load(darkpath)["arr_0"]
-	files = common.listfiles(inpath, ".npz")
+	dark = common.data_load(darkpath)
+
+	files = common.listfiles(inpath, ".zip")
 	pool = mp.Pool(ncpu)
-	pool.starmap(diff, [(name, fname, os.path.join(outpath, name + ".npz"), dark) for name, fname in files])
+	pool.starmap(diff, [(name, fname, os.path.join(outpath, name + ".zip"), dark) for name, fname in files])
 	pool.close()
 
 def process(argv):
@@ -43,7 +49,7 @@ def process(argv):
 		process_dir([cfg.config["paths"]["npy-fixed"], cfg.config["paths"]["npy-fixed"]])
 
 commands = {
-	"*" : (process, "sub dark frame", "(input.npz dark.npz outpu.npz | [input/ dark.npz output/])"),
+	"*" : (process, "sub dark frame", "(input.zip dark.zip outpu.zip | [input/ dark.zip output/])"),
 }
 
 def run(argv):

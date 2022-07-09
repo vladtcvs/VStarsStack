@@ -14,15 +14,14 @@ import usage
 def copy(argv):
 	orig = cfg.config["paths"]["npy-orig"]
 	fixed = cfg.config["paths"]["npy-fixed"]
-	files = common.listfiles(orig, ".npz")
+	files = common.listfiles(orig, ".zip")
 	for name, fname in files:
 		print("Copying ", name)
-		fname_out = os.path.join(fixed, name + ".npz")
+		fname_out = os.path.join(fixed, name + ".zip")
 		shutil.copyfile(fname, fname_out)
-	
 
 commands = {
-	"copy"       : (copy, "copy images from original to pipeline dir"),
+	"copy"       : (copy, "just copy images from original to pipeline dir"),
 	"distorsion" : (image_fix.distorsion.run, "fix distorsion"),
 	"flatten"    : (image_fix.flatten.run,    "fix vignetting and other similar problems"),
 	"remove-sky" : (image_fix.remove_sky.run, "remove sky"),
