@@ -8,6 +8,7 @@ def indexes(h, w, dy, dx, sy, sx):
 	return range(sy,h+sy,dy), range(sx,w+sx,dx)
 
 def yuv_422_split(frame):
+	frame = frame.astype(np.float32)
 	h = frame.shape[0]
 	w = frame.shape[1]
 	
@@ -51,9 +52,19 @@ def process_file(argv):
 	data = common.data_load(fname)
 
 	Y, Cb, Cr = yuv_422_split(data["channels"]["raw"])
+
+	delta = 128
+	R = Y + 1.403 * (Cr - delta)
+	G = Y - 0.714 * (Cr - delta) - 0.344 * (Cb - delta)
+	B = Y + 1.773 * (Cb - delta)
+
 	common.data_add_channel(data, Y, "Y")
 	common.data_add_channel(data, Cb, "Cb")
 	common.data_add_channel(data, Cr, "Cr")
+
+	common.data_add_channel(data, R, "R")
+	common.data_add_channel(data, G, "G")
+	common.data_add_channel(data, B, "B")
 
 	common.data_store(data, output)
 

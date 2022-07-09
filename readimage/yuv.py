@@ -51,7 +51,6 @@ def readyuv(fname, W, H, format):
 			except:
 				break
 
-	return datas
 	
 def process_file(argv):
 	fname = argv[0]
@@ -64,7 +63,7 @@ def process_file(argv):
 
 	for i, data in readyuv(fname, W, H, fmt):
 		framename = os.path.join(output, "%s_%05i.zip" % (name, i))
-		common.data_store(datas[i], framename)
+		common.data_store(data, framename)
 
 def process_path(argv):
 	input = argv[0]
