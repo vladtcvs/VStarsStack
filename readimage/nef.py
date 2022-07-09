@@ -23,54 +23,38 @@ mask = np.array([
 def getcolor(img, mask):
 	return np.sum(img*mask)
 
-def readnef_postprocess(filename):
-	options = {
-		"half_size" : True,
-		"use_camera_wb" : False,
-		"use_auto_wb" : False,
-		"gamma" : (1,1), 
-		"no_auto_bright" : True,
-		"output_bps" : 16,
-		"no_auto_bright" : True,
-		"four_color_rgb" : False,
-		"user_wb" : (1,1,1,1),
-	}
-
-	image = rawpy.imread(filename)
-	rgb = image.postprocess(**options)
-	shape = rgb.shape
-	shape = (shape[0], shape[1], shape[2]+1)
-	rgba = np.zeros(shape)
-	rgba[:,:,0:3] = rgb
-	rgba[:,:,3] = 1
-	return rgba, None
-
-def readnef_manual(filename):
+def readnef(filename, output):
 	img = rawpy.imread(filename)
 	image = img.raw_image_visible
 	shape = image.shape
-	cshape = (int(shape[0]/2), int(shape[1]/2), 4)
-	post = np.zeros(cshape)
-
+	
 	tags = readimage.tags.read_tags(filename)
-        
+	
+	params = {
+		"originalW" : shape[1],
+		"originalH" : shape[0],
+	}
+
+	exposure = np.ones(shape) * tags["shutter"]*tags["iso"]
+
+	data = common.data_create(tags, params)
+	common.data_add_channel(data, image, "raw")
+	common.data_add_channel(data, exposure, "exposure")
+	common.data_store(data, output)
+
+
+def debayer():
 	for y in range(cshape[0]):
 		for x in range(cshape[1]):
 			cut = image[2*y:2*y+2, 2*x:2*x+2]
 			post[y][x][0] = getcolor(cut, mask[0])
 			post[y][x][1] = getcolor(cut, mask[1])
 			post[y][x][2] = getcolor(cut, mask[2])
-	post[:,:,3] = tags["shutter"]*tags["iso"]
 	return post, tags
-
-readnef = readnef_manual
 
 def work(input, output, metaoutput):
 	print(input)
-	post, meta = readnef(input)
-	np.savez_compressed(output, post)
-	with open(metaoutput, "w") as f:
-		json.dump(meta, f, indent=4, ensure_ascii=False)
+	readnef(input, output)
 
 def process_file(argv):
 	input = argv[0]
