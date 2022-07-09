@@ -1,4 +1,4 @@
-import planet.planet
+import compact_objects.compact_objects
 import stars.stars
 import cluster.cluster
 
@@ -18,7 +18,7 @@ commands = {
 	"readimage" : (readimage.readimage.run, "read source images to npz"),
 	"debayer"   : (debayer.debayer.run, "debayer RAW images"),
 	"image-fix" : (image_fix.fixes.run, "image-fix - make optical fixes (devignetting, remove distorsion) and other image fixes"),
-	"planets" : (planet.planet.run, "commands for processing planet images"),
+	"compact_objects" : (compact_objects.compact_objects.run, "commands for processing images with compact objects (planets, diffractions, etc)"),
 	"stars" : (stars.stars.run, "commands for processing stars images"),
 	"cluster" : (cluster.cluster.run, "command for cluster processing"),
 	"shift" : (shift.run, "move and rotate images to match them"),

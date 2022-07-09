@@ -12,12 +12,15 @@ import os
 import common
 
 def detect(image):
-	if len(image.shape) == 3:
-		gray = np.sum(image, axis=2).astype(np.float)
-	else:
-		gray = image.astype(np.float)
+	sources = []
 
-	print(gray.shape)
+	for channel in image["channels"]:
+		if channel in image["meta"]["encoded_channels"]:
+			continue
+		layer = image["channels"][channel]
+		layer = layer / np.amax(layer)
+		sources.append(layer)
+	gray = sum(sources)
 
 	blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 	mb = np.amax(blurred)
@@ -73,19 +76,21 @@ def run(argv):
 	else:
 		jsonpath = path
 
-	files = common.listfiles(path, ".npz")
+	files = common.listfiles(path, ".zip")
 	for name, filename  in files:
 		print(name)
-		image = np.load(filename)["arr_0"]
 
-		planet = detect(image)
+		image = common.data_load(filename)
+		planet = detect(image, debug=True)[0]		
+
 		if planet is None:
 			print("No planet detected")
 			continue
+
 		desc = {
-			"planet" : planet,
-			"height" : image.shape[0],
-			"width" : image.shape[1],
+				"compact_object"  : planet,
+				"height" : image["meta"]["params"]["originalH"],
+				"width"  : image["meta"]["params"]["originalW"],
 		}
 
 		with open(os.path.join(jsonpath, name + ".json"), "w") as f:
@@ -93,4 +98,3 @@ def run(argv):
 
 if __name__ == "__main__":
 	run(sys.argv[1:])
-

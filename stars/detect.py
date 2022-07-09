@@ -37,31 +37,30 @@ def process(argv):
 			jsonpath = argv[1]
 		else:
 			jsonpath = path
-		files = common.listfiles(path, ".npz")
+		files = common.listfiles(path, ".zip")
 
 		for name, filename  in files:
 			print(name)
 
-			img = common.data_load(filename)
-
+			image = common.data_load(filename)
 			stars = detect(image, debug=False)[0]
 			desc = {
-				"stars" : stars,
-				"height" : image.shape[0],
-				"width" : image.shape[1],
+				"stars"  : stars,
+				"height" : image["meta"]["params"]["originalH"],
+				"width"  : image["meta"]["params"]["originalW"],
 			}
 
 			with open(os.path.join(jsonpath, name + ".json"), "w") as f:
 				json.dump(desc, f, indent=4)
 	else:
 		jsonpath = argv[1]
-		image = np.load(path)["arr_0"]
 
-		stars = detect(image, debug=True)[0]
+		image = common.data_load(path)
+		stars = detect(image, debug=True)[0]		
 		desc = {
-			"stars" : stars,
-			"height" : image.shape[0],
-			"width" : image.shape[1],
+				"stars"  : stars,
+				"height" : image["meta"]["params"]["originalH"],
+				"width"  : image["meta"]["params"]["originalW"],
 		}
 
 		with open(jsonpath, "w") as f:
@@ -73,4 +72,3 @@ commands = {
 
 def run(argv):
 	usage.run(argv, "stars detect", commands)
-

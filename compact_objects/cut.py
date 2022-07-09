@@ -19,7 +19,7 @@ def run(argv):
 		with open(filename) as f:
 			detection = json.load(f)
 		
-		r = int(detection["planet"]["size"]+1)
+		r = int(detection["compact_object"]["size"]+1)
 		rs.append(r)
 
 	r = max(rs)
@@ -28,18 +28,23 @@ def run(argv):
 		print(name)
 		with open(filename) as f:
 			detection = json.load(f)
-		imagename = os.path.join(npypath, name + ".npz")
-		image = np.load(imagename)["arr_0"]
-		
-		x = int(detection["planet"]["x"])
-		y = int(detection["planet"]["y"])
+		imagename = os.path.join(npypath, name + ".zip")
+
+		image = common.data_load(imagename)
+
+		x = int(detection["compact_object"]["x"])
+		y = int(detection["compact_object"]["y"])
 		left  = int(x - r*cutmul)
 		right = int(x + r*cutmul)
 		top   = int(y - r*cutmul)
 		bottom = int(y + r*cutmul)
 
-		image = image[top:bottom, left:right]
+		for channel in image["channels"]:
+			if channel in image["meta"]["encoded_channel"]:
+				continue
+			img = image["channels"][channel]
+			img = img[top:bottom, left:right]
+			common.data_add_channel(image, img, channel)
 		
-		outname = os.path.join(cutpath, name + ".npz")
-		np.savez_compressed(outname, image)
-
+		outname = os.path.join(cutpath, name + ".zip")
+		common.data_store(image, outname)
