@@ -22,9 +22,6 @@ def configurate(argv):
 	# directory for original images in NPZ format
 	dircheck(dir + "/npy-orig")
 
-	# directory for images metainfo
-	dircheck(dir + "/meta")
-
 	# directory for images after pre-processing (remove darks, sky, vignetting, distorsion, etc)
 	dircheck(dir + "/npy")
 
@@ -36,7 +33,6 @@ def configurate(argv):
 		"paths" : {
 			"original"  : "orig",
 			"npy-orig"  : "npy-orig",
-			"meta"      : "meta",
 			"npy-fixed" : "npy",
 			"shifted"   : "shifted",
 			"shifts"    : "shifts.json",
