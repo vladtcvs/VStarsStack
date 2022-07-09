@@ -27,11 +27,11 @@ def readnef(filename, output):
 		"originalH" : shape[0],
 	}
 
-	exposure = np.ones(shape) * tags["shutter"]*tags["iso"]
+	exposure = tags["shutter"]*tags["iso"]
 
 	data = common.data_create(tags, params)
-	common.data_add_channel(data, image, "raw")
-	common.data_add_channel(data, exposure, "exposure")
+	common.data_add_channel(data, image, "raw", encoded=True)
+	common.data_add_parameter(data, exposure, "exposure")
 	common.data_store(data, output)
 
 

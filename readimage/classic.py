@@ -41,7 +41,7 @@ def readjpeg(fname):
 	else:
 		common.data_add_channel(data, rgb, "gray")
 	
-	common.data_add_channel(data, np.ones(shape).astype(np.float32)*e, "exposure")
+	common.data_add_parameter(data, e, "exposure")
 	return data
 
 def process_file(argv):

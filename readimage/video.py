@@ -36,14 +36,13 @@ def read_video(fname):
 			"originalH" : frame.shape[0],
 		}
 
-		exposure = np.ones((frame.shape[0], frame.shape[1]))
 		print("\tprocessing frame %i" % id)
 
 		data = common.data_create(tags, params)
 		common.data_add_channel(data, frame[:,:,0], "R")
 		common.data_add_channel(data, frame[:,:,1], "G")
 		common.data_add_channel(data, frame[:,:,2], "B")
-		common.data_add_channel(data, exposure, "exposure")
+		common.data_add_parameter(data, 1, "exposure")
 		yield id, data
 		id += 1
 	

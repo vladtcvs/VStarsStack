@@ -73,7 +73,8 @@ def readser(fname):
 				for x in range(width):
 					frame[y,x] = serread(f, bpp, le16bit)
 			data = common.data_create(tags, params)
-			common.data_add_channel(data, frame, "raw")
+			common.data_add_channel(data, frame, "raw", encoded=True)
+			common.data_add_parameter(data, 1, "exposure")
 			yield id, data
 
 def process_file(argv):

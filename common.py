@@ -95,16 +95,22 @@ def data_create(tags = {}, params = {}):
 		"channels" : {},
 		"meta" : {
 			"channels" : [],
+			"encoded_channels" : [],
 			"tags" : tags,
 			"params" : params,
 		},
 	}
 	return data
 
-def data_add_channel(data, channel, name):
+def data_add_channel(data, channel, name, encoded=False):
 	data["channels"][name] = channel
 	data["meta"]["channels"].append(name)
+	if encoded:
+		data["meta"]["encoded_channels"].append(name)
 	return data
+
+def data_add_parameter(data, value, name):
+	data["meta"]["params"][name] = value
 
 def data_store(data, output):
 	with zipfile.ZipFile(output, "w") as zf:
@@ -123,5 +129,6 @@ def data_load(input):
 
 		for channel in meta["channels"]:
 			with zf.open(channel+".npy", "r") as f:
-				data_add_channel(data, np.load(f), channel)
+				data_add_channel(data, np.load(f), channel, channel in meta["encoded_channels"])
+
 	return data

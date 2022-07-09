@@ -44,8 +44,8 @@ def readyuv(fname, W, H, format):
 				print("\tprocessing frame %i" % id)
 
 				data = common.data_create(tags, params)
-				common.data_add_channel(data, yuv, "raw")
-				common.data_add_channel(data, exposure, "exposure")
+				common.data_add_channel(data, yuv, "raw", encoded=True)
+				common.data_add_parameter(data, 1, "exposure")
 				yield id, data
 				id += 1
 			except:
