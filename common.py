@@ -59,12 +59,15 @@ def getpixel(img, y, x, interpolate=True):
 		return getpixel_linear(img, y, x)
 	return getpixel_none(img, y, x)
 
-def listfiles(path, ext):
+def listfiles(path, ext=None):
 	images = []
 	for f in os.listdir(path):
 		filename = os.path.abspath(os.path.join(path, f))
-		if not os.path.isfile(filename) or f[-len(ext):].lower() != ext:
+		if not os.path.isfile(filename):
 			continue
+		if (ext is not None) and (f[-len(ext):].lower() != ext):
+			continue
+
 		name = os.path.splitext(f)[0]
 		images.append((name, filename))
 	images.sort(key=lambda item : item[0])
