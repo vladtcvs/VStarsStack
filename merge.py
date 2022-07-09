@@ -13,25 +13,33 @@ def run(argv):
 		path_images = cfg.config["paths"]["shifted"]
 		out = cfg.config["paths"]["output"]
 
-	imgs = common.listfiles(path_images, ".npz")
+	imgs = common.listfiles(path_images, ".zip")
 
 	images = {}
 	shape = None
+	params = None
 
 	for name, filename in imgs:
-		image = np.load(filename)["arr_0"]
-		if shape is None:
-			shape = image.shape
-			print(shape)
-			break
+		img = common.data_load(filename)
 
-	summary = np.zeros(shape)
-	for name, filename in imgs:
-		print(name)
-		image = np.load(filename)["arr_0"]
-		summary = summary + image
+		if params is None:
+			params = img["meta"]["params"]
 
-	np.savez_compressed(out, summary)
+		for channel in img["meta"]["channels"]:
+			if channel in img["meta"]["encoded_channels"]:
+				continue
+			if channel not in images:
+				images[channel] = []
+			images[channel].append(img["channels"][channel])
+
+			if shape is None:
+				shape = img["channels"][channel].shape
+
+	summary = common.data_create({}, params)
+	for channel in images:
+		common.data_add_channel(summary, sum(images["channel"], channel))
+
+	common.data_store(summary, out)
 
 if __name__ == "__main__":
 	run(sys.argv[1:])
