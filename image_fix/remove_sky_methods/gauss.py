@@ -31,27 +31,22 @@ def skymodel_gauss(image, stars_mask):
 
 def remove_sky(name, infname, outfname):
 	print(name)
-	image = np.load(infname)["arr_0"]
-	shape = image.shape
 
-	visible = image
-	nch = shape[2]-1
-	print("Image has %i channels" % nch)
+	img = common.data_load(fname)
+	for channel in img["meta"]["channels"]:
+		if channel in img["meta"]["encoded_channels"]:
+			continue
+		image = img["channels"][channel]
 
-	visible = image[:,:,0:nch]
+		mask = stars.detect.detect(image)[1]
+		sky = skymodel_gauss(image, mask)
 
-	mask = stars.detect.detect(visible)[1]
-	sky = skymodel_gauss(visible, mask)
-
-#	plt.imshow(mask)
-#	plt.show()
-
-	result = visible - sky
-
-	image[:,:,0:nch] = result
-
-	np.savez_compressed(outfname, image)
-
+		result = visible - sky
+		
+		common.data_add_channel(img, result, channel)
+		
+	common.data_store(img, outfname)
+	
 def process_file(argv):
 	infname = argv[0]
 	outfname = argv[1]
@@ -61,9 +56,9 @@ def process_file(argv):
 def process_dir(argv):
 	inpath = argv[0]
 	outpath = argv[1]
-	files = common.listfiles(inpath, ".npz")
+	files = common.listfiles(inpath, ".zip")
 	pool = mp.Pool(ncpu)
-	pool.starmap(remove_sky, [(name, fname, os.path.join(outpath, name + ".npz")) for name, fname in files])
+	pool.starmap(remove_sky, [(name, fname, os.path.join(outpath, name + ".zip")) for name, fname in files])
 	pool.close()
 
 def process(argv):
@@ -81,4 +76,3 @@ commands = {
 
 def run(argv):
 	usage.run(argv, "image-fix remove-sky gauss", commands, "")
-
