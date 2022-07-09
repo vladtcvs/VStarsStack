@@ -2,6 +2,8 @@ import usage
 import os
 import common
 
+import numpy as np
+
 def indexes(h, w, dy, dx, sy, sx):
 	return range(sy,h+sy,dy), range(sx,w+sx,dx)
 
@@ -32,10 +34,15 @@ def yuv_422_split(frame):
 	Cr2y, Cr2x = indexes(h, w, 2,4, 1, 3)
 	Cr2 = frame[:, Cr2x]
 	Cr2 = Cr2[Cr2y,:]
-	
-	
 
-	return Y1, Y2, Cb1, Cb2, Cr1, Cr2
+	Y = np.concatenate((Y1, Y2), axis=1)
+	Cb = np.concatenate((Cb1, Cb2), axis=1)
+	Cr = np.concatenate((Cr1, Cr2), axis=1)
+
+	Cb = np.repeat(Cb, axis=1, repeats=2)
+	Cr = np.repeat(Cr, axis=1, repeats=2)
+
+	return Y, Cb, Cr
 	
 def process_file(argv):
 	fname = argv[0]
@@ -43,13 +50,10 @@ def process_file(argv):
 
 	data = common.data_load(fname)
 
-	Y1,Y2, Cb1,Cb2, Cr1, Cr2 = yuv_422_split(data["channels"]["raw"])
-	common.data_add_channel(data, Y1, "Y1")
-	common.data_add_channel(data, Y2, "Y2")
-	common.data_add_channel(data, Cb1, "Cb1")
-	common.data_add_channel(data, Cb2, "Cb2")
-	common.data_add_channel(data, Cr1, "Cr1")
-	common.data_add_channel(data, Cr2, "Cr2")
+	Y, Cb, Cr = yuv_422_split(data["channels"]["raw"])
+	common.data_add_channel(data, Y, "Y")
+	common.data_add_channel(data, Cb, "Cb")
+	common.data_add_channel(data, Cr, "Cr")
 
 	common.data_store(data, output)
 

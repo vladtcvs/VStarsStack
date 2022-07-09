@@ -31,7 +31,6 @@ def serread4(f):
 	return serread(f, 4, True)
 
 def readser(fname):
-	datas = []
 	with open(fname, "rb") as f:
 		fileid = f.read(14)
 		if fileid != b'LUCAM-RECORDER':
@@ -74,20 +73,17 @@ def readser(fname):
 				for x in range(height):
 					frame[y,x] = serread(f, bpp, le16bit)
 			data = common.data_create(tags, params)
-			common.data_add_channel(data, frame, "gray")
-			datas.append(data)
+			common.data_add_channel(data, frame, "raw")
+			yield id, data
 
-	return datas
-	
 def process_file(argv):
 	fname = argv[0]
 	output = argv[1]
 	name = argv[2]
 
-	datas = readser(fname)
-	for i in range(len(datas)):
-		framename = os.path.join(output, "%s_%05i.zip" % (name, i))
-		common.data_store(datas[i], framename)
+	for id, data in readser(fname):
+		framename = os.path.join(output, "%s_%05i.zip" % (name, id))
+		common.data_store(data, framename)
 
 def process_path(argv):
 	input = argv[0]

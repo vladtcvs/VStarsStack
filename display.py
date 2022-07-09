@@ -17,24 +17,22 @@ path=sys.argv[1]
 
 data = common.data_load(path)
 
-markstars = False
+
 
 if len(sys.argv) > 2:
-	power = float(sys.argv[2])
+	channels = [sys.argv[2]]
+else:
+	channels = data["meta"]["channels"]
 
-if len(sys.argv) > 3:
-	markstars = True
-	with open(sys.argv[3]) as f:
-		stars = json.load(f)
-
-nch = len(data["meta"]["channels"])
+nch = len(channels)
 fig, axs = plt.subplots(1, nch)
 fig.patch.set_facecolor('#222222')
 
-
 id = 0
-for channel in data["meta"]["channels"]:
-	img = np.clip(data["channels"][channel], 0, 1e6)
+for channel in channels:
+	print("Channel = ", channel)
+	img = data["channels"][channel]
+	img = np.clip(img, 0, 1e6)
 	img = np.power(img, power)
 	amax = np.amax(img)
 	img /= amax
