@@ -113,7 +113,7 @@ def data_store(data, output):
 				np.save(f, data["channels"][channel])
 
 def data_load(input):
-	with zipfile.ZipFile(output, "r") as zf:
+	with zipfile.ZipFile(input, "r") as zf:
 		with zf.open("meta.json", "r") as f:
 			meta = json.load(f)
 			data = data_create(meta["tags"], meta["params"])

@@ -54,7 +54,7 @@ def process_path(argv):
 	input = argv[0]
 	output = argv[1]
 
-	files = common.listfiles(input, ".jpg")
+	files = common.listfiles(input, ".jpg") + common.listfiles(input, ".png") + common.listfiles(input, ".tiff")
 	for name, fname in files:
 		print(name)
 		process_file((fname, os.path.join(output, name + '.zip')))
