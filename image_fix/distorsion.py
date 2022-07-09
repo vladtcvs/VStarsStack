@@ -10,15 +10,16 @@ import usage
 
 ncpu = max(1, mp.cpu_count()-1)
 
-def fix(img, proj):
+def fix(img, inmask, proj):
 	if cfg.distorsion is None:
-		return img
+		return img, mask
 
 	h = img.shape[0]
 	w = img.shape[1]
-	nch = img.shape[2] - 1
 
-	fixed = np.zeros((h, w, nch+1))
+	fixed = np.zeros((h, w))
+	mask = np.zeros((h,w))
+
 	a = cfg.distorsion["a"]
 	b = cfg.distorsion["b"]
 	c = cfg.distorsion["c"]
@@ -49,17 +50,30 @@ def fix(img, proj):
 
 			fy, fx = proj.reverse(lat, lon)
 			res, pixel = common.getpixel(img, fy, fx, False)
-			fixed[y][x][0:nch] = pixel[0:nch]
-			if res:
-				fixed[y][x][nch] = 1
+			resmask, pixelmask = common.getpixel(inmask, fy, fx, False)
+			fixed[y][x] = pixel
+			if res and resmask and abs(pixelmask - 1) < 1e-6:
+				mask[y][x] = 1
 
-	return fixed
+	return fixed, mask
 
 def dedistorsion(name, fname, outfname, proj):
 	print(name)
-	img = np.load(fname)["arr_0"]
-	fixed = fix(img, proj)
-	np.savez_compressed(outfname, fixed)
+	img = common.data_load(fname)
+	for channel in img["meta"]["channels"]:
+		if channel in img["meta"]["encoded_channels"]:
+			continue
+		image = img["channels"][channel]
+		if "mask" in img["channels"]:
+			mask = img["channels"]["mask"]
+		else:
+			mask = np.ones(image.shape)
+
+		fixed, mask = fix(image, mask, proj)
+		common.data_add_channel(img, fixed, channel)
+		common.data_add_channel(img, mask, "mask")
+
+	common.data_store(img, outfname)
 
 def process_file(argv):
 	proj = projection.Projection(cfg.camerad["W"], cfg.camerad["H"], cfg.camerad["F"], cfg.camerad["w"], cfg.camerad["h"])
@@ -72,9 +86,9 @@ def process_dir(argv):
 	proj = projection.Projection(cfg.camerad["W"], cfg.camerad["H"], cfg.camerad["F"], cfg.camerad["w"], cfg.camerad["h"])
 	inpath = argv[0]
 	outpath = argv[1]
-	files = common.listfiles(inpath, ".npz")
+	files = common.listfiles(inpath, ".zip")
 	pool = mp.Pool(ncpu)
-	pool.starmap(dedistorsion, [(name, fname, os.path.join(outpath, name + ".npz"), proj) for name, fname in files])
+	pool.starmap(dedistorsion, [(name, fname, os.path.join(outpath, name + ".zip"), proj) for name, fname in files])
 	pool.close()
 
 def process(argv):

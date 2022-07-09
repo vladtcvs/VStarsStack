@@ -10,17 +10,35 @@ ncpu = max(1, mp.cpu_count()-1)
 
 def diff(name, fname, outname, bw_left, bw_top, bw_right, bw_bottom):
 	print(name)
-	img = np.load(fname)["arr_0"]
-	nch = img.shape[2]-1
-	w = img.shape[1]
-	h = img.shape[0]
-	img[0:bw_top,:,:] = 0
-	img[(h-bw_bottom):h,:,:] = 0
 
-	img[:, 0:bw_left,:] = 0
-	img[:, (w-bw_right):w,:] = 0
+	for channel in img["meta"]["channels"]:
+		if channel in img["meta"]["encoded_channels"]:
+			continue
+		image = img["channels"][channel]
+		if "mask" in img["channels"]:
+			mask = img["channels"]["mask"]
+		else:
+			mask = np.ones(image.shape)
+	
+		w = image.shape[1]
+		h = image.shape[0]
 
-	np.savez_compressed(outname, img)
+		img[0:bw_top,:,:] = 0
+		img[(h-bw_bottom):h,:,:] = 0
+
+		img[:, 0:bw_left,:] = 0
+		img[:, (w-bw_right):w,:] = 0
+		
+		mask[0:bw_top,:,:] = 0
+		mask[(h-bw_bottom):h,:,:] = 0
+
+		mask[:, 0:bw_left,:] = 0
+		mask[:, (w-bw_right):w,:] = 0
+
+		common.data_add_channel(img, fixed, channel)
+		common.data_add_channel(img, mask, "mask")
+
+	common.data_store(img, outname)
 
 def process_file(argv):
 	infile = argv[0]
@@ -66,9 +84,9 @@ def process_dir(argv):
 		brd_right = bw
 		brd_bottom = bw
 
-	files = common.listfiles(inpath, ".npz")
+	files = common.listfiles(inpath, ".zip")
 	pool = mp.Pool(ncpu)
-	pool.starmap(diff, [(name, fname, os.path.join(outpath, name + ".npz"), brd_left, brd_top, brd_right, brd_bottom) for name, fname in files])
+	pool.starmap(diff, [(name, fname, os.path.join(outpath, name + ".zip"), brd_left, brd_top, brd_right, brd_bottom) for name, fname in files])
 	pool.close()
 
 def process(argv):

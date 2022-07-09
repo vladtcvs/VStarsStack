@@ -7,25 +7,25 @@ import os
 import numpy as np
 import multiprocessing as mp
 import usage
-import numba
 
 ncpu = max(1, mp.cpu_count()-1)
 
-@numba.njit
-def mul(img, vig):
-	nch = img.shape[2]-1
-	for i in range(nch):
-		img[:,:,i] *= vig
-	return img
-
-def devig(name, fname, out):
+def flatten(name, fname, out):
 	print(name)
-	img = np.load(fname)["arr_0"].astype(np.float64)
-	vig = cfg.vignetting
-	if vig is not None:
-		img = mul(img, vig)
-	np.savez_compressed(out, img)
+	
+	img = common.data_load(fname)
+	for channel in img["meta"]["channels"]:
+		if channel in img["meta"]["encoded_channels"]:
+			continue
+		image = img["channels"][channel]
 
+		if channel in cfg.flat:
+			image = image * cfg.flat[channel]
+
+		common.data_add_channel(img, fixed, channel)
+
+	common.data_store(img, outfname)
+	
 def process_file(argv):
 	infname = argv[0]
 	outfname = argv[1]
@@ -35,9 +35,9 @@ def process_file(argv):
 def process_dir(argv):
 	inpath = argv[0]
 	outpath = argv[1]
-	files = common.listfiles(inpath, ".npz")
+	files = common.listfiles(inpath, ".zip")
 	pool = mp.Pool(ncpu)
-	pool.starmap(devig, [(name, fname, os.path.join(outpath, name + ".npz")) for name, fname in files])
+	pool.starmap(devig, [(name, fname, os.path.join(outpath, name + ".zip")) for name, fname in files])
 	pool.close()
 
 def process(argv):
@@ -50,9 +50,8 @@ def process(argv):
 		process_dir([cfg.config["paths"]["npy-fixed"], cfg.config["paths"]["npy-fixed"]])
 
 commands = {
-	"*" : (process, "devignetting", "(input.file output.file | input/ output/)"),
+	"*" : (process, "flatten", "(input.file output.file | input/ output/)"),
 }
 
 def run(argv):
-	usage.run(argv, "image-fix vignetting", commands, autohelp=False)
-
+	usage.run(argv, "image-fix flatten", commands, autohelp=False)

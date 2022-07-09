@@ -58,9 +58,9 @@ def process_file(argv):
 	G = Y - 0.714 * (Cr - delta) - 0.344 * (Cb - delta)
 	B = Y + 1.773 * (Cb - delta)
 
-	common.data_add_channel(data, Y, "Y")
-	common.data_add_channel(data, Cb, "Cb")
-	common.data_add_channel(data, Cr, "Cr")
+	common.data_add_channel(data, Y, "Y", encoded=True)
+	common.data_add_channel(data, Cb, "Cb", encoded=True)
+	common.data_add_channel(data, Cr, "Cr", encoded=True)
 
 	common.data_add_channel(data, R, "R")
 	common.data_add_channel(data, G, "G")

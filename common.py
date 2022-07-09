@@ -104,8 +104,9 @@ def data_create(tags = {}, params = {}):
 
 def data_add_channel(data, channel, name, encoded=False):
 	data["channels"][name] = channel
-	data["meta"]["channels"].append(name)
-	if encoded:
+	if name not in data["meta"]["channels"]:
+		data["meta"]["channels"].append(name)
+	if encoded and name not in data["meta"]["encoded_channels"]:
 		data["meta"]["encoded_channels"].append(name)
 	return data
 

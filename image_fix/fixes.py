@@ -1,4 +1,4 @@
-import image_fix.vignetting
+import image_fix.flatten
 import image_fix.distorsion
 import image_fix.remove_sky
 import image_fix.difference
@@ -24,7 +24,7 @@ def copy(argv):
 commands = {
 	"copy"       : (copy, "copy images from original to pipeline dir"),
 	"distorsion" : (image_fix.distorsion.run, "fix distorsion"),
-	"vignetting" : (image_fix.vignetting.run, "fix vignetting"),
+	"flatten"    : (image_fix.flatten.run,    "fix vignetting and other similar problems"),
 	"remove-sky" : (image_fix.remove_sky.run, "remove sky"),
 	"difference" : (image_fix.difference.run, "substract dark frame"),
 	"border"     : (image_fix.border.run,     "remove border"),
