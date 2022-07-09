@@ -41,10 +41,9 @@ def process(argv):
 
 		for name, filename  in files:
 			print(name)
-			image = np.load(filename)["arr_0"]
 
-			if len(image.shape) == 3:
-				image = normalize.normalize(image)
+			img = common.data_load(filename)
+
 			stars = detect(image, debug=False)[0]
 			desc = {
 				"stars" : stars,

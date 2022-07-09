@@ -94,16 +94,19 @@ def find_stars(starsimage, original=None, debug=False):
 
 
 def detect_stars(image, debug=False):
-	image = image / np.amax(image)
+	sources = []
 
-	if len(image.shape) == 3:
-		gray = np.sum(image, axis=2).astype(np.float)
-	else:
-		gray = image.astype(np.float)
+	for channel in image["channels"]:
+		if channel in image["meta"]["encoded_channels"]:
+			continue
+		layer = image["channels"][channel]
+		layer = layer / np.amax(layer)
+		sources.append(layer)
 
-	w = image.shape[1]
-	h = image.shape[0]
+	gray = sum(sources)
 
+	w = gray.shape[1]
+	h = gray.shape[0]
 
 	gray = gray / np.amax(gray)
 	gray = cv2.GaussianBlur(gray, (3, 3), 0)
