@@ -7,6 +7,8 @@ from skimage import data, img_as_float
 from skimage import exposure
 import numpy as np
 
+import zipfile
+import json
 
 def getpixel_linear(img, y, x):
 	xm = math.floor(x)
@@ -85,3 +87,38 @@ def prepare_image_for_model(image):
 	image = exposure.equalize_hist(image)
 	return image
 
+def data_create(tags = {}, params = {}):
+	data = {
+		"channels" : {},
+		"meta" : {
+			"channels" : [],
+			"tags" : tags,
+			"params" : params,
+		},
+	}
+	return data
+
+def data_add_channel(data, channel, name):
+	data["channels"][name] = channel
+	data["meta"]["channels"].append(name)
+	return data
+
+def data_store(data, output):
+	with zipfile.ZipFile(output, "w") as zf:
+		with zf.open("meta.json", "w") as f:
+			f.write(bytes(json.dumps(data["meta"], indent=4, ensure_ascii=False), 'utf8'))
+			#json.dump(data["meta"], f, indent=4, ensure_ascii=False)
+		for channel in data["channels"]:
+			with zf.open(channel+".npy", "w") as f:
+				np.save(f, data["channels"][channel])
+
+def data_load(input):
+	with zipfile.ZipFile(output, "r") as zf:
+		with zf.open("meta.json", "r") as f:
+			meta = json.load(f)
+			data = data_create(meta["tags"], meta["params"])
+
+		for channel in meta["channels"]:
+			with zf.open(channel+".npy", "r") as f:
+				data_add_channel(data, np.load(f), channel)
+	return data

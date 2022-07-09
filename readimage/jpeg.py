@@ -22,48 +22,33 @@ def readjpeg(fname):
 	shape = (shape[0], shape[1])
 
 	tags = readimage.tags.read_tags(fname)
+	params = {
+		"originalW" : shape[1],
+		"originalH" : shape[0], 
+	}
 
 	try:
 		e = tags["shutter"]*tags["iso"]
 	except:
 		e = 1
 
+	data = common.data_create(tags, params)
 	if len(rgb.shape) == 3:
-		data = {
-			"channels" : { 
-				"red"   : rgb[:,:,0],
-				"green" : rgb[:,:,1],
-				"blue"  : rgb[:,:,2],
-				"exposure" : np.ones(shape).astype(np.float32)*e
-			},
-			"meta" : {
-				"channels" : ["red", "green", "blue", "exposure"],
-				"tags" : tags,
-			}
-		}
+		common.data_add_channel(data, rgb[:,:,0], "red")
+		common.data_add_channel(data, rgb[:,:,1], "green")
+		common.data_add_channel(data, rgb[:,:,2], "blue")
+		
 	else:
-		data = {
-			"channels" : { 
-				"gray"  : rgb,
-				"exposure" : np.ones(shape).astype(np.float32)*e
-			},
-			"meta" : {
-				"channels" : ["gray", "exposure"],
-				"tags" : tags,
-			}
-		}
+		common.data_add_channel(data, rgb, "gray")
+	
+	common.data_add_channel(data, np.ones(shape).astype(np.float32)*e, "exposure")
 	return data
 
 def process_file(argv):
 	fname = argv[0]
 	output = argv[1]
 	data = readjpeg(fname)
-	with zipfile.ZipFile(output, "w") as zf:
-		with zf.open("meta.json", "w") as f:
-			f.write(bytes(json.dumps(data["meta"], indent=4, ensure_ascii=False), "utf8"))
-		for channel in data["channels"]:
-			with zf.open(channel+".npy", "w") as f:
-				np.save(f, data["channels"][channel])
+	common.data_store(data, output)
 
 def process_path(argv):
 	input = argv[0]
@@ -72,7 +57,7 @@ def process_path(argv):
 	files = common.listfiles(input, ".jpg")
 	for name, fname in files:
 		print(name)
-		process_file((fname, os.path.join(output, name + '.npz')))
+		process_file((fname, os.path.join(output, name + '.zip')))
 
 def process(argv):
 	if len(argv) > 0:
@@ -85,7 +70,7 @@ def process(argv):
 		process_path([cfg.config["paths"]["original"], cfg.config["paths"]["npy-orig"]])
 
 commands = {
-	"*" : (process, "read JPEG to npz", "(input.jpg output.zip | [original/ npy/])"),
+	"*" : (process, "read JPEG to npy", "(input.jpg output.zip | [original/ npy/])"),
 }
 
 def run(argv):
