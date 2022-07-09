@@ -14,14 +14,6 @@ import multiprocessing as mp
 
 import readimage.tags
 
-mask = np.array([
-			[[0, 0], [2, 0]], # red
-			[[1, 0], [0, 1]], # green
-			[[0, 2], [0, 0]], # blue
-		])
-
-def getcolor(img, mask):
-	return np.sum(img*mask)
 
 def readnef(filename, output):
 	img = rawpy.imread(filename)
@@ -43,14 +35,6 @@ def readnef(filename, output):
 	common.data_store(data, output)
 
 
-def debayer():
-	for y in range(cshape[0]):
-		for x in range(cshape[1]):
-			cut = image[2*y:2*y+2, 2*x:2*x+2]
-			post[y][x][0] = getcolor(cut, mask[0])
-			post[y][x][1] = getcolor(cut, mask[1])
-			post[y][x][2] = getcolor(cut, mask[2])
-	return post, tags
 
 def work(input, output, metaoutput):
 	print(input)
