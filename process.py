@@ -9,12 +9,14 @@ import readimage.readimage
 import merge
 import shift
 import configurate
+import debayer.debayer
 
 import sys
 import usage
 
 commands = {
 	"readimage" : (readimage.readimage.run, "read source images to npz"),
+	"debayer"   : (debayer.debayer.run, "debayer RAW images"),
 	"image-fix" : (image_fix.fixes.run, "image-fix - make optical fixes (devignetting, remove distorsion) and other image fixes"),
 	"planets" : (planet.planet.run, "commands for processing planet images"),
 	"stars" : (stars.stars.run, "commands for processing stars images"),

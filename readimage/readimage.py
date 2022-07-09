@@ -5,8 +5,8 @@ import readimage.ser
 
 commands = {
 	"nef"   : (readimage.nef.run, "read Nikon NEF"),
-    "classic"  : (readimage.classic.run, "read usual images (JPG, PNG, TIFF)"),
-	"ser"	: (readimage.ser.run, "read SER images"),
+	"classic"  : (readimage.classic.run, "read usual images (JPG, PNG, TIFF)"),
+	"ser" : (readimage.ser.run, "read SER"),
 }
 
 def run(argv):
