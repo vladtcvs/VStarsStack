@@ -11,7 +11,7 @@ def diff(name, infile, outfile, dark):
 	for channel in img["meta"]["channels"]:
 		if channel in img["meta"]["encoded_channels"]:
 			continue
-		if channel not in dark["meta"]["channels"]
+		if channel not in dark["meta"]["channels"]:
 			continue
 
 		fixed = img["channels"][channel] - dark["channels"][channel]
