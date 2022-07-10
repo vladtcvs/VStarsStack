@@ -134,3 +134,13 @@ def data_load(input):
 				data_add_channel(data, np.load(f), channel, encoded=encoded)
 
 	return data
+
+def data_remove_channel(data, name):
+	if name in data["channels"]:
+		data["channels"].pop(name)
+	
+	if name in data["meta"]["channels"]:
+		data["meta"]["channels"].remove(name)
+	if name in data["meta"]["encoded_channels"]:
+		data["meta"]["encoded_channels"].remove(name)
+	

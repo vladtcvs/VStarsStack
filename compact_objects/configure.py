@@ -11,8 +11,12 @@ def run(argv):
 	with open(projf) as f:
 		proj = json.load(f)
 
-	proj["mode"] = "compact objects"
-	proj["compact objects"] = {
+	proj["mode"] = "compact_objects"
+	proj["compact_objects"] = {
+		"threshold" : 200,
+		"minPixels" : 200,
+		"maxPixels" : 1000,
+		"detect_channels" : ["R", "G", "B"],
 		"paths" : {
 			"descs" : "descs",
 		},

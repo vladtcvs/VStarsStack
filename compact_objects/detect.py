@@ -9,29 +9,23 @@ import sys
 import json
 import os
 
+import cfg
 import common
 import usage
 
-def detect(image):
+def detect(layer, debug=False):
 	sources = []
 
-	for channel in image["channels"]:
-		if channel in image["meta"]["encoded_channels"]:
-			continue
-		layer = image["channels"][channel]
-		layer = layer / np.amax(layer)
-		sources.append(layer)
-	gray = sum(sources)
-
-	blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+	blurred = cv2.GaussianBlur(layer, (5, 5), 0)
 	mb = np.amax(blurred)
 	blurred = blurred / mb * 255
 
-	thr = 30
+	thr = cfg.config["compact_objects"]["threshold"]
 	thresh = cv2.threshold(blurred, thr, 255, cv2.THRESH_BINARY)[1]
 
-#	plt.imshow(thresh, cmap="gray")
-#	plt.show()
+	if debug:
+		plt.imshow(thresh, cmap="gray")
+		plt.show()
 
 	labels = measure.label(thresh, connectivity=2, background=0)
 	mask = np.zeros(thresh.shape, dtype="uint8")
@@ -48,11 +42,13 @@ def detect(image):
 		numPixels = cv2.countNonZero(labelMask)
 		# if the number of pixels in the component is sufficiently
 		# large, then add it to our mask of "large blobs"
-		if numPixels > 20:
+		if numPixels >= cfg.config["compact_objects"]["minPixels"] and numPixels <= cfg.config["compact_objects"]["maxPixels"]:
 			mask = cv2.add(mask, labelMask)
 
 	cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 	cnts = imutils.grab_contours(cnts)
+	if len(cnts) == 0:
+		return None
 	cnts = contours.sort_contours(cnts)[0]
 
 	planetes = []
@@ -72,9 +68,16 @@ def detect(image):
 
 def process_file(filename, descfilename):
 	image = common.data_load(filename)
-	planet = detect(image, debug=True)[0]		
 
-	if planet is None:
+	for channel in cfg.config["compact_objects"]["detect_channels"]:
+		layer = image["channels"][channel]
+		layer = layer / np.amax(layer)
+
+		planet = detect(layer, debug=False)	
+		
+		if planet is not None:
+			break
+	else:
 		print("No planet detected")
 		return
 

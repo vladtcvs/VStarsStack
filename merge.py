@@ -20,6 +20,7 @@ def run(argv):
 	params = None
 
 	for name, filename in imgs:
+		print(name)
 		img = common.data_load(filename)
 
 		if params is None:
@@ -37,10 +38,10 @@ def run(argv):
 
 	summary = common.data_create({}, params)
 	for channel in images:
-		common.data_add_channel(summary, sum(images["channel"], channel))
+		print(channel)
+		common.data_add_channel(summary, sum(images[channel]), channel)
 
 	common.data_store(summary, out)
 
 if __name__ == "__main__":
 	run(sys.argv[1:])
-

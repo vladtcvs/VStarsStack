@@ -62,8 +62,8 @@ def readser(fname):
 			"dateTimeUTC" : datetimeUTC,
 		}
 		params = {
-			"originalW" : width,
-			"originalH" : height,
+			"originalW" : cfg.camerad["w"],
+			"originalH" : cfg.camerad["h"],
 		}
 
 		for id in range(frames):

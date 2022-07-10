@@ -39,11 +39,16 @@ def run(argv):
 		top   = int(y - r*cutmul)
 		bottom = int(y + r*cutmul)
 
-		for channel in image["channels"]:
-			if channel in image["meta"]["encoded_channel"]:
+		for channel in list(image["channels"].keys()):
+			if channel in image["meta"]["encoded_channels"]:
+				common.data_remove_channel(image, channel)
 				continue
 			img = image["channels"][channel]
 			img = img[top:bottom, left:right]
+
+			if img.shape[0] != bottom-top or img.shape[1] != right-left:
+				common.data_remove_channel(image, channel)
+				continue
 			common.data_add_channel(image, img, channel)
 		
 		outname = os.path.join(cutpath, name + ".zip")

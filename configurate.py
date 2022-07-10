@@ -36,7 +36,7 @@ def configurate(argv):
 			"npy-fixed" : "npy",
 			"shifted"   : "shifted",
 			"shifts"    : "shifts.json",
-			"output"    : "sum.npz",
+			"output"    : "sum.zip",
 		}
 	}
 
