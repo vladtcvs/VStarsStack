@@ -45,7 +45,7 @@ id = 0
 for channel in channels:
 	print("Channel = ", channel)
 	img = data["channels"][channel]
-	img = np.clip(img, 0, 1e6)
+	img = np.clip(img, -1e6, 1e6)
 	#img = np.power(img, power)
 	#amax = np.amax(img)
 	#img /= amax

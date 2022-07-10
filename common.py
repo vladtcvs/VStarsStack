@@ -130,6 +130,7 @@ def data_load(input):
 
 		for channel in meta["channels"]:
 			with zf.open(channel+".npy", "r") as f:
-				data_add_channel(data, np.load(f), channel, channel in meta["encoded_channels"])
+				encoded = channel in meta["encoded_channels"]
+				data_add_channel(data, np.load(f), channel, encoded=encoded)
 
 	return data

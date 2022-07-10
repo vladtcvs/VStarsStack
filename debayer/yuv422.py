@@ -1,6 +1,7 @@
 import usage
 import os
 import common
+import cfg
 
 import numpy as np
 
@@ -43,6 +44,9 @@ def yuv_422_split(frame):
 	Cb = np.repeat(Cb, axis=1, repeats=2)
 	Cr = np.repeat(Cr, axis=1, repeats=2)
 
+	Cb = (Cb.astype(np.float32) - 128) / Y
+	Cr = (Cr.astype(np.float32) - 128) / Y
+
 	return Y, Cb, Cr
 	
 def process_file(argv):
@@ -53,14 +57,13 @@ def process_file(argv):
 
 	Y, Cb, Cr = yuv_422_split(data["channels"]["raw"])
 
-	delta = 128
-	R = Y + 1.403 * (Cr - delta)
-	G = Y - 0.714 * (Cr - delta) - 0.344 * (Cb - delta)
-	B = Y + 1.773 * (Cb - delta)
+	R = Y * (1 + 1.403 * Cr)
+	G = Y * (1 - 0.714 * Cr - 0.344 * Cb)
+	B = Y * (1 + 1.773 * Cb)
 
-	common.data_add_channel(data, Y, "Y", encoded=True)
-	common.data_add_channel(data, Cb, "Cb", encoded=True)
-	common.data_add_channel(data, Cr, "Cr", encoded=True)
+	common.data_add_channel(data, Y, "Y")
+	common.data_add_channel(data, Cb, "Cb")
+	common.data_add_channel(data, Cr, "Cr")
 
 	common.data_add_channel(data, R, "R")
 	common.data_add_channel(data, G, "G")
