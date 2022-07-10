@@ -15,7 +15,6 @@ def run(argv):
 	proj["compact objects"] = {
 		"paths" : {
 			"descs" : "descs",
-			"crop"  : "crop",
 		},
 	}
 

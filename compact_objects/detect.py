@@ -10,6 +10,7 @@ import json
 import os
 
 import common
+import usage
 
 def detect(image):
 	sources = []
@@ -69,32 +70,45 @@ def detect(image):
 	return planetes[0]
 
 
-def run(argv):
-	path = argv[0]
-	if len(argv) > 1:
-		jsonpath = argv[1]
-	else:
-		jsonpath = path
+def process_file(filename, descfilename):
+	image = common.data_load(filename)
+	planet = detect(image, debug=True)[0]		
 
-	files = common.listfiles(path, ".zip")
+	if planet is None:
+		print("No planet detected")
+		return
+
+	desc = {
+			"compact_object"  : planet,
+			"height" : image["meta"]["params"]["originalH"],
+			"width"  : image["meta"]["params"]["originalW"],
+	}
+
+	with open(descfilename, "w") as f:
+		json.dump(desc, f, indent=4)
+
+def process_path(npys, descs):
+	files = common.listfiles(npys, ".zip")
 	for name, filename  in files:
 		print(name)
+		out = os.path.join(descs, name + ".json")
+		process_file(filename, out)
 
-		image = common.data_load(filename)
-		planet = detect(image, debug=True)[0]		
+def process(argv):
+	if len(argv) > 0:
+		input = argv[0]
+		output = argv[1]
+		if os.path.isdir(input):
+			process_path(input, output)
+		else:
+			process_file(input, output)
+	else:
+		process_path([cfg.config["paths"]["npy"], cfg.config["compact_objects"]["paths"]["descs"]])
 
-		if planet is None:
-			print("No planet detected")
-			continue
 
-		desc = {
-				"compact_object"  : planet,
-				"height" : image["meta"]["params"]["originalH"],
-				"width"  : image["meta"]["params"]["originalW"],
-		}
+commands = {
+	"*" : (process, "detect compact objects", "npy/ descs/"),
+}
 
-		with open(os.path.join(jsonpath, name + ".json"), "w") as f:
-			json.dump(desc, f, indent=4)
-
-if __name__ == "__main__":
-	run(sys.argv[1:])
+def run(argv):
+	usage.run(argv, "compact_objects detect", commands)

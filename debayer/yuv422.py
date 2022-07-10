@@ -49,10 +49,7 @@ def yuv_422_split(frame):
 
 	return Y, Cb, Cr
 	
-def process_file(argv):
-	fname = argv[0]
-	output = argv[1]
-
+def process_file(fname, output):
 	data = common.data_load(fname)
 
 	Y, Cb, Cr = yuv_422_split(data["channels"]["raw"])
@@ -71,25 +68,22 @@ def process_file(argv):
 
 	common.data_store(data, output)
 
-def process_path(argv):
-	input = argv[0]
-	output = argv[1]
-
+def process_path(input, output):
 	files = common.listfiles(input, ".zip")
 	for name, fname in files:
 		print(name)
-		process_file((fname, os.path.join(output, name + ".zip")))
+		process_file(fname, os.path.join(output, name + ".zip"))
 
 def process(argv):
 	if len(argv) > 0:
 		input = argv[0]
 		output = argv[1]
 		if os.path.isdir(input):
-			process_path((input, output))
+			process_path(input, output)
 		else:
-			process_file((input, output))
+			process_file(input, output)
 	else:
-		process_path([cfg.config["paths"]["npy-orig"], cfg.config["paths"]["npy-fixed"]])
+		process_path(cfg.config["paths"]["npy-orig"], cfg.config["paths"]["npy-fixed"])
 
 commands = {
 	"*" : (process, "Consider RAW as YUV with 422 subsampling", "(npy-input.zip npy-output.zip | [input/ output/])"),

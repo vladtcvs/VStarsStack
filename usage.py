@@ -27,7 +27,7 @@ def usage(base, commands, message):
 	print("\t%s %s [help]\n" % (prgname, base))
 
 def run(argv, base, commands, message=None, autohelp=False):
-	if autohelp and (len(argv) == 0 or argv[0] == "help"):
+	if (autohelp and len(argv) == 0) or (len(argv) > 0 and argv[0] == "help"):
 		usage(base, commands, message)
 		return
 
