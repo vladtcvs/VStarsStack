@@ -10,6 +10,7 @@ import merge
 import shift
 import configurate
 import debayer.debayer
+import planets.planets
 
 import sys
 import usage
@@ -24,6 +25,7 @@ commands = {
 	"shift" : (shift.run, "move and rotate images to match them"),
 	"merge" : (merge.run, "merge images", "input_dir/ output.npz"),
 	"project" : (configurate.run, "configurate project"),
+	"planets" : (planets.planets.run, "commands for processing planets"),
 }
 
 def run(argv, progname=None):
