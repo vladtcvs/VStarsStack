@@ -30,6 +30,7 @@ def configurate(argv):
 
 	config = {
 		"use_sphere" : True,
+		"compress" : True,
 		"paths" : {
 			"original"  : "orig",
 			"npy-orig"  : "npy-orig",

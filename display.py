@@ -10,7 +10,7 @@ import common
 
 power = 1
 
-power = 0.3
+power = 1
 #mul = 2
 
 path=sys.argv[1]
@@ -45,10 +45,11 @@ id = 0
 for channel in channels:
 	print("Channel = ", channel)
 	img = data["channels"][channel]
+	print("Shape = ", img.shape)
 	img = np.clip(img, -1e6, 1e6)
-	#img = np.power(img, power)
-	#amax = np.amax(img)
-	#img /= amax
+	amax = np.amax(img)
+	img /= amax
+	img = np.power(img, power)
 
 	if nch > 1:
 		axs[id].imshow(img, cmap="gray")

@@ -16,6 +16,7 @@ if os.path.exists(cfgpath):
 		config = json.load(f)
 
 	use_sphere = getval(config, "use_sphere", True)
+	compress = getval(config, "compress", True)
 
 	if "stars" in config:
 		stars      = config["stars"]

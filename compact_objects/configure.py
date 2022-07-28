@@ -1,6 +1,10 @@
 import os
 import json
 
+def dircheck(name):
+	if not os.path.isdir(name):
+		os.mkdir(name)
+
 def run(argv):
 	if len(argv) > 0:
 		dir = argv[0]
@@ -17,10 +21,13 @@ def run(argv):
 		"minPixels" : 200,
 		"maxPixels" : 1000,
 		"detect_channels" : ["R", "G", "B"],
+		"cutsize" : 200,
 		"paths" : {
 			"descs" : "descs",
 		},
 	}
+
+	dircheck(dir + '/descs')
 
 	with open(projf, "w") as f:
 		json.dump(proj, f, indent=4, ensure_ascii=False)

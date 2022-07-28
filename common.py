@@ -9,6 +9,7 @@ import numpy as np
 
 import zipfile
 import json
+import cfg
 
 def getpixel_linear(img, y, x):
 	xm = math.floor(x)
@@ -113,8 +114,16 @@ def data_add_channel(data, channel, name, encoded=False):
 def data_add_parameter(data, value, name):
 	data["meta"]["params"][name] = value
 
-def data_store(data, output):
-	with zipfile.ZipFile(output, "w") as zf:
+def data_store(data, output, compress=None):
+	if compress is None:
+		compress = cfg.compress
+
+	if compress:
+		method = zipfile.ZIP_LZMA
+	else:
+		method = zipfile.ZIP_STORED
+
+	with zipfile.ZipFile(output, mode="w", compression=method) as zf:
 		with zf.open("meta.json", "w") as f:
 			f.write(bytes(json.dumps(data["meta"], indent=4, ensure_ascii=False), 'utf8'))
 			#json.dump(data["meta"], f, indent=4, ensure_ascii=False)

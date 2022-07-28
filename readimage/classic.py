@@ -34,12 +34,12 @@ def readjpeg(fname):
 
 	data = common.data_create(tags, params)
 	if len(rgb.shape) == 3:
-		common.data_add_channel(data, rgb[:,:,0], "red")
-		common.data_add_channel(data, rgb[:,:,1], "green")
-		common.data_add_channel(data, rgb[:,:,2], "blue")
+		common.data_add_channel(data, rgb[:,:,0], "R")
+		common.data_add_channel(data, rgb[:,:,1], "G")
+		common.data_add_channel(data, rgb[:,:,2], "B")
 		
 	else:
-		common.data_add_channel(data, rgb, "gray")
+		common.data_add_channel(data, rgb, "Y")
 	
 	common.data_add_parameter(data, e, "exposure")
 	return data

@@ -23,4 +23,3 @@ class Projection(object):
 		x = X / self.k + self.w / 2
 		y = Y / self.k + self.h / 2
 		return y, x
-

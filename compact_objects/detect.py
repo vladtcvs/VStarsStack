@@ -106,7 +106,7 @@ def process(argv):
 		else:
 			process_file(input, output)
 	else:
-		process_path([cfg.config["paths"]["npy"], cfg.config["compact_objects"]["paths"]["descs"]])
+		process_path(cfg.config["paths"]["npy-fixed"], cfg.config["compact_objects"]["paths"]["descs"])
 
 
 commands = {

@@ -41,7 +41,7 @@ def run(argv):
 		print(channel)
 		common.data_add_channel(summary, sum(images[channel]), channel)
 
-	common.data_store(summary, out)
+	common.data_store(summary, out, compress=True)
 
 if __name__ == "__main__":
 	run(sys.argv[1:])
