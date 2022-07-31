@@ -11,6 +11,7 @@ import common
 power = 1
 
 power = 1
+slope = 1
 #mul = 2
 
 path=sys.argv[1]
@@ -49,7 +50,10 @@ for channel in channels:
 	img = np.clip(img, -1e6, 1e6)
 	amax = np.amax(img)
 	img /= amax
-	img = np.power(img, power)
+	img *= slope
+	img = np.clip(img, 0, 1)
+	
+	#img = np.power(img, power)
 
 	if nch > 1:
 		axs[id].imshow(img, cmap="gray")

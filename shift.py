@@ -27,19 +27,21 @@ def make_shift(filename, name, name0, shifts, path):
 		return
 
 	t = shifts[name][name0]
-	img = common.data_load(filename)
+	image = common.data_load(filename)
+	weight = image["meta"]["params"]["weight"]
 
-	if "mask" in img["channels"]:
-		mask = img["channels"]["mask"]
+	if "weight" in img["channels"]:
+		weight_layer = img["channels"]["weight"]
 	else:
-		mask = None
-	for channel in img["meta"]["channels"]:
-		if channel in img["meta"]["encoded_channels"]:
+		weight_layer = None
+
+	for channel in image["meta"]["channels"]:
+		if channel in image["meta"]["encoded_channels"]:
 			continue
-		image = img["channels"][channel]
-		shifted, shmask = shift_image.shift_image(image, t, mask, name)
+		image = image["channels"][channel]
+		shifted, shifted_weight = shift_image.shift_image(image, t, weight_layer, name, weight)
 		common.data_add_channel(img, shifted, channel)
-		common.data_add_channel(img, shmask, "mask", encoded=True)
+		common.data_add_channel(img, shifted_weight, "weight")
 
 	common.data_store(img, os.path.join(path, name + ".zip"))
 

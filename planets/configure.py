@@ -16,6 +16,7 @@ def run(argv):
 		proj = json.load(f)
 
 	proj["planets"] = {
+		"map_resolution" : 360,
 		"paths" : {
 			"cutted" : "cutted",
 			"maps"   : "maps",

@@ -10,15 +10,18 @@ import usage
 
 ncpu = max(1, mp.cpu_count()-1)
 
-def fix(img, inmask, proj):
+def fix(image, image_weight_layer, proj, image_weight=1):
+	if image_weight_layer is None:
+		image_weight_layer = np.ones(shape)*image_weight
+
 	if cfg.distorsion is None:
-		return img, mask
+		return image, image_weight_layer
 
-	h = img.shape[0]
-	w = img.shape[1]
+	h = image.shape[0]
+	w = imege.shape[1]
 
-	fixed = np.zeros((h, w))
-	mask = np.zeros((h,w))
+	fixed  = np.zeros((h, w))
+	fixed_weight = np.zeros((h,w))
 
 	a = cfg.distorsion["a"]
 	b = cfg.distorsion["b"]
@@ -49,29 +52,32 @@ def fix(img, inmask, proj):
 				lon = math.atan2(v[1], v[0])
 
 			fy, fx = proj.reverse(lat, lon)
-			res, pixel = common.getpixel(img, fy, fx, False)
-			resmask, pixelmask = common.getpixel(inmask, fy, fx, False)
-			fixed[y][x] = pixel
-			if res and resmask and abs(pixelmask - 1) < 1e-6:
-				mask[y][x] = 1
 
-	return fixed, mask
+			_, pixel        = common.getpixel(image, fy, fx, False)
+			_, pixel_weight = common.getpixel(image_weight_layer, fy, fx, False)
+			
+			fixed[y][x] = pixel
+			fixed_weight[y][x] = pixel_weight
+
+	return fixed, fixed_weight
 
 def dedistorsion(name, fname, outfname, proj):
 	print(name)
-	img = common.data_load(fname)
-	for channel in img["meta"]["channels"]:
-		if channel in img["meta"]["encoded_channels"]:
+	data = common.data_load(fname)
+	for channel in data["meta"]["channels"]:
+		if channel in data["meta"]["encoded_channels"]:
 			continue
-		image = img["channels"][channel]
-		if "mask" in img["channels"]:
-			mask = img["channels"]["mask"]
-		else:
-			mask = np.ones(image.shape)
+		image = data["channels"][channel]
+		weight = image["meta"]["params"]["weight"]
 
-		fixed, mask = fix(image, mask, proj)
+		if "weight" in data["channels"]:
+			image_weight = data["channels"]["weight"]
+		else:
+			image_weight = None
+
+		fixed, fixed_weight = fix(image, image_weight, proj, weight)
 		common.data_add_channel(img, fixed, channel)
-		common.data_add_channel(img, mask, "mask", encoded=True)
+		common.data_add_channel(img, fixed_weight, "weight")
 
 	common.data_store(img, outfname)
 

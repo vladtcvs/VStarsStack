@@ -18,15 +18,15 @@ class PlanetProjection(object):
     def from_planet_coordinates(self, lon, lat):
         x = self.a/2 * math.sin(lon - self.rot) * math.cos(lat)
         z = -self.b/2 * math.sin(lat)
-        X = x*math.cos(self.angle) - z*math.sin(self.angle) + self.W/2
-        Y = x*math.sin(self.angle) + x*math.cos(self.angle) + self.H/2
+        X = x*math.cos(self.angle) + z*math.sin(self.angle) + self.W/2
+        Y = -x*math.sin(self.angle) + z*math.cos(self.angle) + self.H/2
         return X, Y
     
     def to_planet_coordinates(self, X, Y):
         X = X - self.W/2
         Y = Y - self.H/2
-        x = X*math.cos(self.angle) + Y*math.sin(self.angle)
-        z = -X*math.sin(self.angle) + Y*math.cos(self.angle)
+        x = X*math.cos(self.angle) - Y*math.sin(self.angle)
+        z = X*math.sin(self.angle) + Y*math.cos(self.angle)
         try:
             lat = -math.asin(z/self.b*2)
             lon = math.asin(x/self.a*2/math.cos(lat))+self.rot

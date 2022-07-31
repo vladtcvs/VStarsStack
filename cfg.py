@@ -2,6 +2,7 @@ import math
 import numpy as np
 import os
 import json
+import data
 
 def getval(config, name, default):
 	if name in config:
@@ -31,15 +32,22 @@ if os.path.exists(cfgpath):
 	else:
 		distorsion = None
 
-	if "vignetting" in telescope:
-		vf = os.path.join(cfgdir, telescope["vignetting"])
+else:
+	pass
+
+_flat = None
+def get_flat():
+	if _flat is not None:
+		return _flat
+
+	if "flat" in telescope:
+		vf = os.path.join(cfgdir, telescope["flat"])
 	else:
 		vf = None
 
 	if vf is not None and os.path.exists(vf):
-		vignetting = np.load(vf)["arr_0"]
+		_flat = data.data_load(vf)
 	else:
-		vignetting = np.zeros((camerad["h"], camerad["w"]))+1
-else:
-	pass
+		_flat = data.data_create()
 
+	return _flat

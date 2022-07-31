@@ -10,6 +10,7 @@ import numpy as np
 import zipfile
 import json
 import cfg
+import data
 
 def getpixel_linear(img, y, x):
 	xm = math.floor(x)
@@ -91,65 +92,9 @@ def prepare_image_for_model(image):
 	image = exposure.equalize_hist(image)
 	return image
 
-def data_create(tags = {}, params = {}):
-	data = {
-		"channels" : {},
-		"meta" : {
-			"channels" : [],
-			"encoded_channels" : [],
-			"tags" : tags,
-			"params" : params,
-		},
-	}
-	return data
-
-def data_add_channel(data, channel, name, encoded=False):
-	data["channels"][name] = channel
-	if name not in data["meta"]["channels"]:
-		data["meta"]["channels"].append(name)
-	if encoded and name not in data["meta"]["encoded_channels"]:
-		data["meta"]["encoded_channels"].append(name)
-	return data
-
-def data_add_parameter(data, value, name):
-	data["meta"]["params"][name] = value
-
-def data_store(data, output, compress=None):
-	if compress is None:
-		compress = cfg.compress
-
-	if compress:
-		method = zipfile.ZIP_LZMA
-	else:
-		method = zipfile.ZIP_STORED
-
-	with zipfile.ZipFile(output, mode="w", compression=method) as zf:
-		with zf.open("meta.json", "w") as f:
-			f.write(bytes(json.dumps(data["meta"], indent=4, ensure_ascii=False), 'utf8'))
-			#json.dump(data["meta"], f, indent=4, ensure_ascii=False)
-		for channel in data["channels"]:
-			with zf.open(channel+".npy", "w") as f:
-				np.save(f, data["channels"][channel])
-
-def data_load(input):
-	with zipfile.ZipFile(input, "r") as zf:
-		with zf.open("meta.json", "r") as f:
-			meta = json.load(f)
-			data = data_create(meta["tags"], meta["params"])
-
-		for channel in meta["channels"]:
-			with zf.open(channel+".npy", "r") as f:
-				encoded = channel in meta["encoded_channels"]
-				data_add_channel(data, np.load(f), channel, encoded=encoded)
-
-	return data
-
-def data_remove_channel(data, name):
-	if name in data["channels"]:
-		data["channels"].pop(name)
-	
-	if name in data["meta"]["channels"]:
-		data["meta"]["channels"].remove(name)
-	if name in data["meta"]["encoded_channels"]:
-		data["meta"]["encoded_channels"].remove(name)
-	
+data_create = data.data_create
+data_add_channel = data.data_add_channel
+data_add_parameter = data.data_add_parameter
+data_load = data.data_load
+data_remove_channel = data.data_remove_channel
+data_store = data.data_store

@@ -3,15 +3,59 @@ import cfg
 import usage
 import common
 import os
+import math
+import numpy as np
 
-def process_file(filename, descfilename):
-    pass
+def build_surface_map(image, a, b, angle, rot, maph, exposure):
+	W = image.shape[1]
+	H = image.shape[0]
+	proj = planets.projection.PlanetProjection(W, H, a, b, angle, rot)
+	surface = np.zeros((maph, 2*maph))
+	mask = np.zeros((maph, 2*maph))
+	for y in range(maph):
+		lat = (maph/2 - y) / (maph) * math.pi
+		#print()
+		for x in range(2*maph):
+			lon = x / maph * math.pi
+			if lon > math.pi/2 and lon < 3*math.pi/2:
+				continue
+			X, Y = proj.from_planet_coordinates(lon, lat)
+		#	print(X, Y)
+			res, pix = common.getpixel(image, Y, X)
+			if res:
+				surface[y,x] = pix
+				mask[y,x] = exposure
+	return surface, mask
 
-def process_path(npys, descs):
+def process_file(filename, mapname):
+	image = common.data_load(filename)
+
+	exposure = image["meta"]["params"]["exposure"]
+	a = 63
+	b = 58
+	angle = 0.29736
+	rot = 0
+	maph = cfg.config["planets"]["map_resolution"]
+
+	mapimage = common.data_create(image["meta"]["tags"], image["meta"]["params"])
+
+	for channel in image["meta"]["channels"]:
+		if channel in image["meta"]["encoded_channels"]:
+			continue
+
+		print(channel)
+		layer = image["channels"][channel]
+		sm, mask = build_surface_map(layer, a, b, angle, rot, maph, exposure)
+		common.data_add_channel(mapimage, sm, channel)
+		common.data_add_channel(mapimage, mask, "mask")
+	
+	common.data_store(mapimage, mapname)
+
+def process_path(npys, maps):
 	files = common.listfiles(npys, ".zip")
 	for name, filename  in files:
 		print(name)
-		out = os.path.join(descs, name + ".json")
+		out = os.path.join(maps, name + ".zip")
 		process_file(filename, out)
 
 def process(argv):
@@ -27,7 +71,7 @@ def process(argv):
 
 
 commands = {
-	"*" : (process, "detect compact objects", "cutted/ maps/"),
+	"*" : (process, "build surface map from image", "cutted/ maps/"),
 }
 
 def run(argv):
