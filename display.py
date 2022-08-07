@@ -11,7 +11,7 @@ import common
 power = 1
 
 power = 1
-slope = 1
+slope = 10
 #mul = 2
 
 path=sys.argv[1]

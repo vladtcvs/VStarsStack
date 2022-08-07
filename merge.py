@@ -15,9 +15,10 @@ def run(argv):
 
 	imgs = common.listfiles(path_images, ".zip")
 
-	images = {}
 	shape = None
 	params = None
+
+	summary = {}
 
 	for name, filename in imgs:
 		print(name)
@@ -29,19 +30,24 @@ def run(argv):
 		for channel in img["meta"]["channels"]:
 			if channel in img["meta"]["encoded_channels"]:
 				continue
-			if channel not in images:
-				images[channel] = []
-			images[channel].append(img["channels"][channel])
+			if channel not in summary:
+				summary[channel] = img["channels"][channel]
+			else:
+				summary[channel] += img["channels"][channel]
 
-			if shape is None:
-				shape = img["channels"][channel].shape
+	summary_data = common.data_create({}, params)
+	if "weight" in summary:
+		for channel in summary:
+			if channel == "weight":
+				continue
+			summary[channel] /= summary["weight"]
+		common.data_add_parameter(summary_data, True, "normalized")
 
-	summary = common.data_create({}, params)
-	for channel in images:
+	for channel in summary:
 		print(channel)
-		common.data_add_channel(summary, sum(images[channel]), channel)
+		common.data_add_channel(summary_data, summary[channel], channel)
 
-	common.data_store(summary, out, compress=True)
+	common.data_store(summary_data, out, compress=True)
 
 if __name__ == "__main__":
 	run(sys.argv[1:])
