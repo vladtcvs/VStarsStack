@@ -11,7 +11,10 @@ def dircheck(name):
 
 def configurate(argv):
 	dir = argv[0]
-	name = argv[1]
+	if len(argv) > 1:
+		name = argv[1]
+	else:
+		name = "default"
 
 	# create project directory
 	dircheck(dir)
