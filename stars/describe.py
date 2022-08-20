@@ -8,9 +8,6 @@ import common
 import usage
 import cfg
 
-num_main = 20
-mindist = 0.1
-
 def dirvec(lat, lon):
 	return np.array([math.cos(lon) * math.cos(lat), math.sin(lon) * math.cos(lat), math.sin(lat)])
 
@@ -98,10 +95,9 @@ def get_brightest(stars, num, h, w, mindistance):
 			if len(sample) >= num:
 				break
 	return sample
-	
 
-def build_descriptions(image, num_main, use_angles):
-	main = get_brightest(image["stars"], num_main, image["height"], image["width"], mindist)
+def build_descriptions(image, num_main, mindist, use_angles):
+	main = get_brightest(image["stars"], num_main, image["h"], image["w"], mindist)
 	if use_angles:
 		main = build_description_angled(main)
 	else:
@@ -112,6 +108,9 @@ def build_descriptions(image, num_main, use_angles):
 	return image
 
 def process(argv):
+	num_main = cfg.stars["describe"]["num_main"]
+	mindist = cfg.stars["describe"]["mindist"]
+
 	path = argv[0]
 	outpath = argv[1]
 	files = common.listfiles(path, ".json")
@@ -120,7 +119,7 @@ def process(argv):
 		print(name)
 		with open(filename) as f:
 			image = json.load(f)
-		image = build_descriptions(image, num_main, cfg.use_angles)
+		image = build_descriptions(image, num_main, mindist, cfg.use_angles)
 
 		with open(os.path.join(outpath, name + ".json"), "w") as f:
 			json.dump(image, f, indent=4)

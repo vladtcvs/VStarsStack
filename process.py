@@ -7,7 +7,7 @@ import os
 import image_fix.fixes
 import readimage.readimage
 import merge
-import shift
+import shift.shift
 import configurate
 import debayer.debayer
 import planets.planets
@@ -22,7 +22,7 @@ commands = {
 	"compact_objects" : (compact_objects.compact_objects.run, "commands for processing images with compact objects (planets, diffractions, etc)"),
 	"stars" : (stars.stars.run, "commands for processing stars images"),
 	"cluster" : (cluster.cluster.run, "command for cluster processing"),
-	"shift" : (shift.run, "move and rotate images to match them"),
+	"shift" : (shift.shift.run, "move and rotate images to match them"),
 	"merge" : (merge.run, "merge images", "input_dir/ output.npz"),
 	"project" : (configurate.run, "configurate project"),
 	"planets" : (planets.planets.run, "commands for processing planets"),

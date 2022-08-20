@@ -4,7 +4,7 @@ import json
 
 import cfg
 import usage
-import projection
+import projection.perspective
 import common
 
 def process(argv):
@@ -13,9 +13,17 @@ def process(argv):
 		print(name)
 		with open(filename) as f:
 			desc = json.load(f)
-		h = desc["height"]
-		w = desc["width"]
-		proj = projection.Projection(cfg.camerad["W"], cfg.camerad["H"], cfg.camerad["F"], w, h)
+		h = desc["h"]
+		w = desc["w"]
+		proj = desc["projection"]
+		if proj == "perspective":
+			W = desc["W"]
+			H = desc["H"]
+			F = desc["F"]
+			proj = projection.perspective.PerspectiveProjection(W, H, F, w, h)
+		else:
+			raise Exception("Unknown projection %s" % projection)
+		
 		if "stars" in desc:
 			for star in desc["stars"]:
 				x = star["x"]
@@ -32,4 +40,3 @@ commands = {
 
 def run(argv):
 	usage.run(argv, "stars lonlat", commands)
-			

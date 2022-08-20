@@ -20,7 +20,11 @@ def process_file(argv):
 	name = argv[2]
 
 	print("Opening %s"% fname)
-	images = fits.open(fname)
+	try:
+		images = fits.open(fname)
+	except Exception as e:
+		print("Error reading file: %s" % e)
+		return
 
 	for id in range(1):
 		print(id)
@@ -31,13 +35,17 @@ def process_file(argv):
 			val = str(image.header[key])
 			tags[key] = val
 		data = common.data_create(tags=tags)
-		
-		common.data_add_parameter(data, image.data.shape[0], "originalH")
-		common.data_add_parameter(data, image.data.shape[1], "originalW")
-		common.data_add_parameter(data, image.header["EXPTIME"], "exposure")
-		
+
+		common.data_add_parameter(data, image.data.shape[0], "h")
+		common.data_add_parameter(data, image.data.shape[1], "w")
+		common.data_add_parameter(data, image.header["EXPTIME"], "weight")
+		common.data_add_parameter(data, "perspective", "projection")
+		common.data_add_parameter(data, cfg.camerad["H"] / cfg.camerad["h"], "perspective_kh")
+		common.data_add_parameter(data, cfg.camerad["W"] / cfg.camerad["w"], "perspective_kw")
+		common.data_add_parameter(data, cfg.camerad["F"], "perspective_F")
 
 		common.data_add_channel(data, image.data, "Y")
+		common.data_add_channel(data, np.ones(image.data.shape)*image.header["EXPTIME"], "weight")
 
 		framename = os.path.join(output, "%s.zip" % (name))
 		common.data_store(data, framename)
@@ -64,8 +72,8 @@ def process(argv):
 		process_path([cfg.config["paths"]["original"], cfg.config["paths"]["npy-orig"]])
 
 commands = {
-	"*" : (process, "read SER to npy", "(input.ser output/ | [original/ npy/])"),
+	"*" : (process, "read FITS to npy", "(input.fits output/ | [original/ npy/])"),
 }
 
 def run(argv):
-	usage.run(argv, "readimage ser", commands, autohelp=False)
+	usage.run(argv, "readimage fits", commands, autohelp=False)

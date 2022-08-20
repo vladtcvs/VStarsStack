@@ -31,18 +31,11 @@ def run(argv):
 			if channel in img["meta"]["encoded_channels"]:
 				continue
 			if channel not in summary:
-				summary[channel] = img["channels"][channel]
+				summary[channel] = img["channels"][channel].astype(np.float64)
 			else:
 				summary[channel] += img["channels"][channel]
 
 	summary_data = common.data_create({}, params)
-	if "weight" in summary:
-		for channel in summary:
-			if channel == "weight":
-				continue
-			summary[channel] /= summary["weight"]
-		common.data_add_parameter(summary_data, True, "normalized")
-
 	for channel in summary:
 		print(channel)
 		common.data_add_channel(summary_data, summary[channel], channel)

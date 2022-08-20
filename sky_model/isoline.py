@@ -130,7 +130,7 @@ def approximate_image(image):
 	app = cv2.GaussianBlur(app, (blur, blur), 0)
 	return app
 
-def build_sky_model(img):
+def model(img, mask):
 	blur = 31
 	sky = cv2.GaussianBlur(img, (blur, blur), 0)
 

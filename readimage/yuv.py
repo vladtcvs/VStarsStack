@@ -28,9 +28,14 @@ def readyuv(fname, W, H, format):
 		tags = {
 			"depth" : 8,
 		}
+
 		params = {
-			"originalW" : W,
-			"originalH" : H,
+			"w" : cfg.camerad["w"],
+			"h" : cfg.camerad["h"],
+			"projection" : "perspective",
+			"perspective_kh" : cfg.camerad["H"] / cfg.camerad["h"],
+			"perspective_kw" : cfg.camerad["W"] / cfg.camerad["w"],
+			"perspective_F" : cfg.camerad["F"],
 		}
 
 		id = 0

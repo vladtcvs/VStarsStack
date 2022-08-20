@@ -22,19 +22,20 @@ def readnef(filename, output):
 	
 	tags = readimage.tags.read_tags(filename)
 	
-	params = {
-		"originalW" : shape[1],
-		"originalH" : shape[0],
-	}
+	params = {}
 
 	exposure = tags["shutter"]*tags["iso"]
 
 	data = common.data_create(tags, params)
 	common.data_add_channel(data, image, "raw", encoded=True)
-	common.data_add_parameter(data, exposure, "exposure")
-	common.data_store(data, output)
 
-
+	common.data_add_parameter(data, image.data.shape[0], "h")
+	common.data_add_parameter(data, image.data.shape[1], "w")
+	common.data_add_parameter(data, exposure, "weight")
+	common.data_add_parameter(data, "perspective", "projection")
+	common.data_add_parameter(data, cfg.camerad["H"] / cfg.camerad["h"], "perspective_kh")
+	common.data_add_parameter(data, cfg.camerad["W"] / cfg.camerad["w"], "perspective_kw")
+	common.data_add_parameter(data, cfg.camerad["F"], "perspective_F")
 
 def work(input, output, metaoutput):
 	print(input)

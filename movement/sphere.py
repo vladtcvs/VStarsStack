@@ -1,11 +1,8 @@
-import common
 import math
 import json
 import numpy as np
 import math
 from scipy.spatial.transform import Rotation
-
-import projection
 
 def p2vec(pos):
 	lat = pos[0]
@@ -25,10 +22,10 @@ def vecangle(v1, v2):
 
 class Movement(object):
 
-	def apply(self, positions):
+	def apply(self, positions, proj):
 		ps = []
 		for y, x in positions:
-			lat, lon = self.proj.project(y, x)
+			lat, lon = proj.project(y, x)
 			p = p2vec((lat, lon))
 			ps.append(p)
 		nps = self.rot.apply(ps)
@@ -36,14 +33,14 @@ class Movement(object):
 		for pp in nps:
 			lon = math.atan2(pp[1], pp[0])
 			lat = math.asin(pp[2])
-			ny, nx = self.proj.reverse(lat, lon)
+			ny, nx = proj.reverse(lat, lon)
 			npositions.append((ny, nx))
 		return npositions
 
-	def reverse(self, positions):
+	def reverse(self, positions, proj):
 		ps = []
 		for y, x in positions:
-			lat, lon = self.proj.project(y, x)
+			lat, lon = proj.project(y, x)
 			p = p2vec((lat, lon))
 			ps.append(p)
 		nps = self.rev.apply(ps)
@@ -51,18 +48,11 @@ class Movement(object):
 		for pp in nps:
 			lon = math.atan2(pp[1], pp[0])
 			lat = math.asin(pp[2])
-			ny, nx = self.proj.reverse(lat, lon)
+			ny, nx = proj.reverse(lat, lon)
 			npositions.append((ny, nx))
 		return npositions
 
-	# move pi1, pi2 to p1, p2
-	def __init__(self, rot, H, W, F, h, w):
-		self.proj = projection.Projection(W, H, F, w, h)
-		self.h = h
-		self.w = w
-		self.H = H
-		self.W = W
-		self.F = F
+	def __init__(self, rot):
 		self.rot = rot
 		self.rev = rot.inv()
 
@@ -73,29 +63,31 @@ class Movement(object):
 
 	def serialize(self):
 		q = self.rot.as_quat()
-		return json.dumps({"rot" : list(q), "h" : self.h, "w" : self.w, "H" : self.H, "W" : self.W, "F" : self.F})
+		return json.dumps({"rot" : list(q)})
 
 	@staticmethod
 	def deserialize(ser):
 		s = json.loads(ser)
 		q = s["rot"]
-		h = s["h"]
-		w = s["w"]
-		H = s["H"]
-		W = s["W"]
-		F = s["F"]
 		rot = Rotation.from_quat(np.array(q))
-		return Movement(rot, H, W, F, h, w)
+		return Movement(rot)
 
+
+	# move pi1, pi2 to p1, p2
 	@staticmethod
-	def build(pi1, pi2, p1, p2, cd, debug=False):
-		vi1 = p2vec(pi1)
-		vi2 = p2vec(pi2)
-		v1 = p2vec(p1)
-		v2 = p2vec(p2)
+	def build(point1_from, point2_from, point1_to, point2_to, debug=False):
+		v1_from = p2vec(point1_from)
+		v2_from = p2vec(point2_from)
+		v1_to = p2vec(point1_to)
+		v2_to = p2vec(point2_to)
 
-		axis1 = vecmul(vi1, v1)
-		angle1 = vecangle(vi1, v1)
+		dangle_from = vecangle(v1_from, v2_from)
+		dangle_to = vecangle(v1_to, v2_to)
+		assert abs(dangle_from - dangle_to) < 1*math.pi/180
+
+		# build rotation1, which moves v1_from to v1_to
+		axis1 = vecmul(v1_from, v1_to)
+		angle1 = vecangle(v1_from, v1_to)
 
 		if angle1 == 0:
 			rot1 = Rotation.from_rotvec([0,0,0])
@@ -103,28 +95,31 @@ class Movement(object):
 			axis1 = axis1 / np.linalg.norm(axis1)
 			rot1 = Rotation.from_rotvec(angle1 * axis1)
 
-		vi1_2 = rot1.apply([vi1])[0]
-		vi2_2 = rot1.apply([vi2])[0]
+		# intermidiate position of v1 and v2 vectors
+		# v1_int must be equal to v1_to
+		v1_int = rot1.apply([v1_from])[0]
+		v2_int = rot1.apply([v2_from])[0]
+
+		v1_int = v1_int / np.linalg.norm(v1_int)
+		v2_int = v2_int / np.linalg.norm(v2_int)
+		
 		if debug:
 			print("angle1 = ", angle1)
-		assert(vecangle(vi1_2, v1) < 1*math.pi/180)
+		assert(vecangle(v1_int, v1_to) < 1e-5)
 
-		axis2 = v1
-		axis2 = axis2 / np.linalg.norm(axis2)
+		# build rotation2, which moves v2_int to v2_to
+		axis2 = v1_to
 
-		baxi = scmul(axis2, vi2_2)
-		bax  = scmul(axis2, vi2)
-		if debug:
-			print(baxi, bax)
-		assert(abs(bax - baxi) < 5e-2)
-		ba = axis2 * (bax + baxi) / 2
+		v2proj_int = scmul(axis2, v2_int)
+		v2proj_to = scmul(axis2, v2_to)
 
-		di = vi2_2 - ba
-		d = v2 - ba
-		angle2 = vecangle(di, d)
-		if debug:
-			print("angle2 = ", angle2)
-		if scmul(v1, vecmul(di, d)) < 0:
+		v2ort_int = v2_int - axis2 * v2proj_int
+		v2ort_to = v2_to - axis2 * v2proj_to
+
+		angle2 = vecangle(v2ort_int, v2ort_to)
+		
+		ort = vecmul(v2ort_int, v2ort_to)
+		if scmul(ort, axis2) < 0:
 			angle2 = -angle2
 
 		if angle2 == 0:
@@ -132,21 +127,21 @@ class Movement(object):
 		else:
 			rot2 = Rotation.from_rotvec(angle2 * axis2)
 
-		vi1_3 = rot2.apply([vi1_2])[0]
-		vi2_3 = rot2.apply([vi2_2])[0]
+		v1_res = rot2.apply([v1_int])[0]
+		v2_res = rot2.apply([v2_int])[0]
 		
-		assert(vecangle(vi1_3, v1) < 1*math.pi/180)
-		assert(vecangle(vi2_3, v2) < 1*math.pi/180)
+		assert(vecangle(v1_res, v1_to) < 1*math.pi/180)
+		assert(vecangle(v2_res, v2_to) < 1*math.pi/180)
 
 		rot = rot2 * rot1
 
-		vi1_4 = rot.apply([vi1])[0]
-		vi2_4 = rot.apply([vi2])[0]
+		v1_res = rot.apply([v1_from])[0]
+		v2_res = rot.apply([v2_from])[0]
 		
-		assert(vecangle(vi1_4, v1) < 0.7*math.pi/180)
-		assert(vecangle(vi2_4, v2) < 0.7*math.pi/180)
+		assert(vecangle(v1_res, v1_to) < 0.7*math.pi/180)
+		assert(vecangle(v2_res, v2_to) < 0.7*math.pi/180)
 
-		return Movement(rot, cd["H"], cd["W"], cd["F"], cd["h"], cd["w"])
+		return Movement(rot)
 
 	@staticmethod
 	def average(ts, percent=100):
@@ -174,6 +169,5 @@ class Movement(object):
 				rotvec += axis
 			rotvec /= len(dists)
 		rot = Rotation.from_rotvec(rotvec)
-		t = Movement(rot, ts[0].H, ts[0].W, ts[0].F, ts[0].h, ts[0].w)
+		t = Movement(rot)
 		return t
-

@@ -46,8 +46,12 @@ def process(argv):
 			stars = detect(image, debug=False)[0]
 			desc = {
 				"stars"  : stars,
-				"height" : image["meta"]["params"]["originalH"],
-				"width"  : image["meta"]["params"]["originalW"],
+				"h" : image["meta"]["params"]["h"],
+				"w" : image["meta"]["params"]["w"],
+				"projection" : image["meta"]["params"]["projection"],
+				"H" : image["meta"]["params"]["perspective_kh"] * image["meta"]["params"]["h"],
+				"W" : image["meta"]["params"]["perspective_kw"] * image["meta"]["params"]["w"],
+				"F" : image["meta"]["params"]["perspective_F"],
 			}
 
 			with open(os.path.join(jsonpath, name + ".json"), "w") as f:
@@ -59,8 +63,8 @@ def process(argv):
 		stars = detect(image, debug=True)[0]		
 		desc = {
 				"stars"  : stars,
-				"height" : image["meta"]["params"]["originalH"],
-				"width"  : image["meta"]["params"]["originalW"],
+				"height" : image["meta"]["params"]["h"],
+				"width"  : image["meta"]["params"]["w"],
 		}
 
 		with open(jsonpath, "w") as f:

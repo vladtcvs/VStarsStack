@@ -13,27 +13,28 @@ percent = 60
 
 if hasattr(cfg, "use_sphere"):
 	if cfg.use_sphere:
-		from movement_sphere import Movement
+		from movement.sphere import Movement
 	else:
-		from movement_flat import Movement
+		from movement.flat import Movement
 else:
 	pass
 
-def find_shift(pair1, pair2):
-	pi1 = pair1[0]
-	pi2 = pair2[0]
-	p1 = pair1[1]
-	p2 = pair2[1]
-	t = Movement.build(pi1, pi2, p1, p2, cfg.camerad)
+def find_shift(star1, star2):
+	star1_from = star1[0]
+	star1_to = star1[1]
+	
+	star2_from = star2[0]
+	star2_to = star2[1]
+	t = Movement.build(star1_from, star2_from, star1_to, star2_to)
 	return t
 
 def run(argv):
-	if len(argv) > 0:
+	if len(argv) > 1:
 		clusters_fname = argv[0]
 		shifts_fname = argv[1]
 	else:
 		clusters_fname = cfg.config["cluster"]["path"]
-		shifts_fname = cfg.config["paths"]["shifts"]
+		shifts_fname = cfg.config["paths"]["relative-shifts"]
 
 	with open(clusters_fname) as f:
 		clusters = json.load(f)
@@ -51,29 +52,29 @@ def run(argv):
 		movements[name1] = {}
 		for name2 in names:
 			print("%s / %s" % (name1, name2))
-			pairs = []
+			stars = []
 			for cluster in clusters:
 				if name1 not in cluster:
 					continue
 				if name2 not in cluster:
 					continue
 				if cfg.use_sphere:
-					star1 = (cluster[name1]["lat"], cluster[name1]["lon"])
-					star2 = (cluster[name2]["lat"], cluster[name2]["lon"])
+					star_to = (cluster[name1]["lat"], cluster[name1]["lon"])
+					star_from   = (cluster[name2]["lat"], cluster[name2]["lon"])
 				else:
-					star1 = (cluster[name1]["y"], cluster[name1]["x"])
-					star2 = (cluster[name2]["y"], cluster[name2]["x"])
+					star_to = (cluster[name1]["y"], cluster[name1]["x"])
+					star_from   = (cluster[name2]["y"], cluster[name2]["x"])
 					
-				pairs.append((star1, star2))
+				stars.append((star_from, star_to))
 
 			ts = []
 
-			for i in range(len(pairs)-1):
-				pair1 = pairs[i]
-				for j in range(i+1, len(pairs)):
-					pair2 = pairs[j]
+			for i in range(len(stars)-1):
+				star1_from, star1_to = stars[i]
+				for j in range(i+1, len(stars)):
+					star2_from, star2_to = stars[j]
 					try:
-						t = find_shift(pair1, pair2)
+						t = find_shift((star1_from, star1_to), (star2_from, star2_to))
 						ts.append(t)
 					except:
 						print("Can not find movement")
@@ -91,6 +92,7 @@ def run(argv):
 		data["shift_type"] = "sphere"
 	else:
 		data["shift_type"] = "flat"
+	data["format"] = "relative"
 	with open(shifts_fname, "w") as f:
-		json.dump(data, f, indent=4)
+		json.dump(data, f, indent=4, ensure_ascii=False)
 

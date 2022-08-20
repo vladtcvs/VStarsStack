@@ -13,106 +13,109 @@ ncpu = max(int(mp.cpu_count())-1, 1)
 
 debug = False
 
-def ditem_difference(val1, val2):
-	angle1_1 = val1[1]
-	size1_1  = val1[2]
-	angle2_1 = val1[4]
-	size2_1  = val1[5]
-	dangle_1 = val1[6]
+def items_compare(desc_item1, desc_item2, max_angle_diff, max_dangle_diff, max_size_diff):
+	angle1_1 = desc_item1[1]
+	size1_1  = desc_item1[2]
+	angle2_1 = desc_item1[4]
+	size2_1  = desc_item1[5]
+	dangle_1 = desc_item1[6]
 
-	angle1_2 = val2[1]
-	size1_2  = val2[2]
-	angle2_2 = val2[4]
-	size2_2  = val2[5]
-	dangle_2 = val2[6]
+	angle1_2 = desc_item2[1]
+	size1_2  = desc_item2[2]
+	angle2_2 = desc_item2[4]
+	size2_2  = desc_item2[5]
+	dangle_2 = desc_item2[6]
 
-	da1 = (angle1_1 - angle1_2)**2
-	ds1 = (size1_1 - size1_2)**2
-	da2 = (angle2_1 - angle2_2)**2
-	ds2 = (size2_1 - size2_2)**2
-	dda = (dangle_1 - dangle_2)**2
+	dangle1 = abs(angle1_1 - angle1_2) / max_angle_diff
+	if dangle1 > 1:
+		return False, None
 
-	return da1 + ds1 + da2 + ds2 + dda
+	dangle2 = abs(angle2_1 - angle2_2) / max_angle_diff
+	if dangle2 > 1:
+		return False, None
 
-def best_ditem_match(ditem, descriptor):
+	dsize1 = abs(size1_1 - size1_2) / max_size_diff
+	if dsize1 > 1:
+		return False, None
+	
+	dsize2 = abs(size2_1 - size2_2) / max_size_diff
+	if dsize2 > 1:
+		return False, None
+	
+	ddangle = abs(dangle_1 - dangle_2) / max_dangle_diff
+	if ddangle > 1:
+		return False, None
+	
+	return True, (dangle1 + dangle2 + dsize1 + dsize2 + ddangle)
+
+def best_ditem_match(ditem, descriptor, used, max_angle_diff, max_dangle_diff, max_size_diff):
 	mind = None
 	mini = None
 	for i in range(len(descriptor)):
-		val2 = descriptor[i]
-		d = ditem_difference(ditem, val2)
-		if mind is not None and d > mind:
+		if i in used:
 			continue
-		mind = d
-		mini = i
+		ditem2 = descriptor[i]
+		matched, d = items_compare(ditem, ditem2, max_angle_diff, max_dangle_diff, max_size_diff)
+		if not matched:
+			continue
+		if (mind is None) or (d > mind):
+			mind = d
+			mini = i
+
 	return mini, mind
 
-def star_difference(star1, star2):
-	class FoundMatchException(Exception):
-		pass
+def descriptor_match(desc1,
+					 desc2,
+					 max_angle_diff,
+					 max_dangle_diff,
+					 max_size_diff,
+					 min_matched_ditems):
+	count_matched = 0
+	used = []
+	for ditem in desc1:
+		matched_i, _ = best_ditem_match(ditem, desc2, used, max_angle_diff, max_dangle_diff, max_size_diff)
+		if matched_i is not None:
+			count_matched += 1
+			used.append(matched_i)
 
-	d1 = list(star1["descriptor"])
-	d2 = list(star2["descriptor"])
-	errs = []
-	has_new_match = None
-	while has_new_match != False:
-		has_new_match = False
-		try:
-			for i in range(len(d1)):
-				val1 = d1[i]
-				minj, mind = best_ditem_match(val1, d2)
-				if mind is not None:
-					errs.append(mind)
-					d1.pop(i)
-					d2.pop(minj)
-					raise FoundMatchException()
-		except FoundMatchException:
-			has_new_match = True
-	return errs
+		if count_matched >= min_matched_ditems:
+			return True
 
-def best_star_match(star, stars, thr_val, thr_num):
-	min_i = None
-	min_sum_small_err = None
-	max_len_small_err = None
+	if count_matched >= len(desc1):
+		return True
+	if count_matched >= len(desc2):
+		return True
+	return False
+
+def find_star_match(star,
+					stars,
+					used,
+					max_angle_diff,
+					max_dangle_diff,
+					max_size_diff,
+					min_matched_ditems):
+	desc1 = star["descriptor"]
 	for i in range(len(stars)):
-		#print("Compare to star", i)
+		if i in used:
+			continue
 		star2 = stars[i]
-		errs = star_difference(star, star2)
-#		print(errs)
-		small_errs = []
-		for err in errs:
-			if err < thr_val:
-				small_errs.append(err)
-		sum_small_err = sum(small_errs)
-		len_small_err = len(small_errs)
-#		print(len_small_err, sum_small_err)
-		if len_small_err < thr_num * len(errs):
-			continue
+		desc2 = star2["descriptor"]
+		matched = descriptor_match(desc1, desc2, max_angle_diff, max_dangle_diff, max_size_diff, min_matched_ditems)
+		if matched:
+			return i
+	return None
 
-		if max_len_small_err is not None and len_small_err < max_len_small_err:
-			continue
-
-		if debug:
-			print(len_small_err, sum_small_err)
-
-		if max_len_small_err is None or max_len_small_err < len_small_err:
-			min_sum_small_err = None
-			max_len_small_err = len_small_err
-
-		if min_sum_small_err is None or sum_small_err < min_sum_small_err:
-			min_sum_small_err = sum_small_err
-			min_i = i
-	if debug:
-		if min_i is not None:
-			print("Result: ", min_i, stars[min_i]["y"], stars[min_i]["x"])
-		else:
-			print("Result: None")
-	return min_i
-
-
-def build_match(image1, image2, name2, thr_val, thr_num):
+def build_match(image1,
+				image2,
+				name2,
+				max_angle_diff,
+				max_dangle_diff,
+				max_size_diff,
+				min_matched_ditems):
 	main1 = image1["main"]
 	main2 = image2["main"]
 
+	used = []
 	# match stars of main1 to stars of main2
 	for i in range(len(main1)):
 		star = main1[i]
@@ -120,36 +123,31 @@ def build_match(image1, image2, name2, thr_val, thr_num):
 			print(i, star["y"], star["x"])
 		if "matches" not in star:
 			star["matches"] = {}
-		best = best_star_match(star, main2, thr_val, thr_num)
-		star["matches"][name2] = best
+		matched = find_star_match(star, main2, used, max_angle_diff, max_dangle_diff, max_size_diff, min_matched_ditems)
+		star["matches"][name2] = matched
+		if matched is not None:
+			used.append(matched)
 	image1["main"] = main1
 	return image1
 
-def matchStars(image, starsfiles, starsdir, lock):
-	name = image[0]
-	filename = image[1]
-	lock.acquire()
-	thr_num = cfg.stars["match"]["threshold_num"]
-	thr_val = cfg.stars["match"]["threshold_value"]
-	with open(filename) as f:
-		stars = json.load(f)
-	lock.release()
-	for name0, _ in starsfiles:
-#		print("%s / %s" % (name, name0))
-		if debug:
-			print("\n")
-		starsfn0 = os.path.join(starsdir, name0 + ".json")
-		lock.acquire()
-		with open(starsfn0) as f:
-			stars0 = json.load(f)
-		print("Images: %s / %s" % (name, name0))
-		lock.release()
-		stars = build_match(stars, stars0, name0, thr_val, thr_num)
+def matchStars(description, descriptions):
+	name = description[0]
+	desc = dict(description[1])
+	print(name)
+	if desc["projection"] == "perspective":
+		fov = 2*math.atan((desc["H"]**2 + desc["W"]**2)**0.5/2 / desc["F"])
 
-	lock.acquire()
-	with open(filename, "w") as f:
-		json.dump(stars, f, indent=4)
-	lock.release()
+	max_angle_diff = cfg.stars["match"]["max_angle_diff"] * fov
+	max_dangle_diff = cfg.stars["match"]["max_dangle_diff"] * math.pi/180
+	max_size_diff = cfg.stars["match"]["max_size_diff"]
+	min_matched_ditems = cfg.stars["match"]["min_matched_ditems"]
+	
+	for name_i, desc_i in descriptions:
+		if debug:
+			print("%s / %s" % (name, name_i))
+			print("\n")
+		desc = build_match(desc, desc_i, name_i, max_angle_diff, max_dangle_diff, max_size_diff, min_matched_ditems)
+	return name, desc
 
 def process(argv):
 	starsdir = argv[0]
@@ -159,10 +157,21 @@ def process(argv):
 	shots = {}
 
 	starsfiles = common.listfiles(starsdir, ".json")
+	descs = []
+	name_fname = {}
+	for name, fname in starsfiles:
+		with open(fname) as f:
+			desc = json.load(f)
+		descs.append((name, desc))
+		name_fname[name] = fname
+
 	total = len(starsfiles)**2
 	print("total = %i" % total)
 	pool = mp.Pool(ncpu)
-	pool.starmap(matchStars, [(image, starsfiles, starsdir, filelock) for image in starsfiles])
+	results = pool.starmap(matchStars, [(desc, descs) for desc in descs])
+	for name, desc in results:
+		with open(name_fname[name], "w") as f:
+			json.dump(desc, f, indent=4, ensure_ascii=False)
 	pool.close()
 
 commands = {

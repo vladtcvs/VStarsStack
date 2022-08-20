@@ -62,8 +62,12 @@ def readser(fname):
 			"dateTimeUTC" : datetimeUTC,
 		}
 		params = {
-			"originalW" : cfg.camerad["w"],
-			"originalH" : cfg.camerad["h"],
+			"w" : cfg.camerad["w"],
+			"h" : cfg.camerad["h"],
+			"projection" : "perspective",
+			"perspective_kh" : cfg.camerad["H"] / cfg.camerad["h"],
+			"perspective_kw" : cfg.camerad["W"] / cfg.camerad["w"],
+			"perspective_F" : cfg.camerad["F"],
 		}
 
 		for id in range(frames):
@@ -74,7 +78,7 @@ def readser(fname):
 					frame[y,x] = serread(f, bpp, le16bit)
 			data = common.data_create(tags, params)
 			common.data_add_channel(data, frame, "raw", encoded=True)
-			common.data_add_parameter(data, 1, "exposure")
+			common.data_add_parameter(data, 1, "weight")
 			yield id, data
 
 def process_file(argv):

@@ -13,9 +13,15 @@ def run(argv):
 
 	proj["mode"] = "stars"
 	proj["stars"] = {
+		"describe": {
+			"num_main" : 20,
+			"mindist" : 0.1,
+		},
 		"match" : {
-			"threshold_value": 0.5,
-			"threshold_num": 0.3,
+			"max_angle_diff" : 0.01,
+            "max_size_diff" : 0.1,
+            "max_dangle_diff" : 4,
+            "min_matched_ditems" : 15,
 		},
 		"paths" : {
 			"stars" : "stars",

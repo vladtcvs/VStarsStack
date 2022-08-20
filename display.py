@@ -8,11 +8,8 @@ import matplotlib.pyplot as plt
 
 import common
 
-power = 1
-
-power = 1
-slope = 10
-#mul = 2
+power = 0.5
+slope = 1
 
 path=sys.argv[1]
 
@@ -48,12 +45,16 @@ for channel in channels:
 	img = data["channels"][channel]
 	print("Shape = ", img.shape)
 	img = np.clip(img, -1e6, 1e6)
+
+	amin = np.amin(img)
 	amax = np.amax(img)
-	img /= amax
-	img *= slope
-	img = np.clip(img, 0, 1)
+	print(amax, amin)
+	img = (img - amin)/(amax-amin)
 	
-	#img = np.power(img, power)
+	img = img * slope
+	img = np.clip(img, 0, 1)
+
+	img = np.power(img, power)
 
 	if nch > 1:
 		axs[id].imshow(img, cmap="gray")

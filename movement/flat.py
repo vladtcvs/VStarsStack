@@ -5,7 +5,7 @@ import numpy as np
 
 class Movement(object):
 
-	def apply(self, positions):
+	def apply(self, positions, proj):
 		npositions = []
 		for y, x in positions:
 			nx = x * math.cos(self.a) - y * math.sin(self.a) + self.dx
@@ -14,7 +14,7 @@ class Movement(object):
 
 		return npositions
 
-	def reverse(self, positions):
+	def reverse(self, positions, proj):
 		npositions = []
 		for y, x in positions:
 			nx = (x-self.dx) * math.cos(self.a) + (y-self.dy) * math.sin(self.a)

@@ -3,6 +3,7 @@ import image_fix.distorsion
 import image_fix.remove_sky
 import image_fix.difference
 import image_fix.border
+import image_fix.normalize
 
 import os
 
@@ -27,6 +28,7 @@ commands = {
 	"remove-sky" : (image_fix.remove_sky.run, "remove sky"),
 	"difference" : (image_fix.difference.run, "substract dark frame"),
 	"border"     : (image_fix.border.run,     "remove border"),
+	"normalize"     : (image_fix.normalize.run,     "normalize to weight"),
 }
 
 def run(argv):

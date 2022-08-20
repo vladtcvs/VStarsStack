@@ -37,9 +37,24 @@ def check_round(image, x, y, r):
 #	plt.show()
 	return True
 
+def calc_brightness(image, x, y, r):
+	x = int(x+0.5)
+	y = int(y+0.5)
+	r = int(r+0.5)
+	block = image[y-r:y+r+1, x-r:x+r+1]
+	pos_mask = np.zeros(block.shape)
+	cv2.circle(pos_mask, (r, r), r, 1, -1)
+	
+	masked = block * pos_mask
+	brightness = np.sum(masked) / np.sum(pos_mask)
+	return brightness
+
 def find_stars(starsimage, original=None, debug=False):
 	
+	starsimage = starsimage / np.amax(starsimage)
+
 	min_pixels = 3
+	max_pixels = 100
 
 	shape = starsimage.shape
 	labels = measure.label(starsimage, connectivity=2, background=0)
@@ -55,6 +70,9 @@ def find_stars(starsimage, original=None, debug=False):
 
 		# drop too small
 		if numPixels < min_pixels:
+			continue
+		
+		if numPixels > max_pixels:
 			continue
 
 		mask = cv2.add(mask, labelMask)
@@ -81,7 +99,11 @@ def find_stars(starsimage, original=None, debug=False):
 		if not check_round(mask, cX, cY, radius):
 			continue
 
-		stars.append({"x":cX, "y":cY, "size":radius})
+		brightness = calc_brightness(starsimage, cX, cY, radius)
+
+		size = radius * brightness
+
+		stars.append({"x":cX, "y":cY, "size":size})
 		if debug:
 			vr = int(radius+0.5)
 			cv2.circle(image, (int(cX+0.5), int(cY+0.5)), vr, (1, 0, 0), 1)
@@ -98,6 +120,8 @@ def detect_stars(image, debug=False):
 
 	for channel in image["channels"]:
 		if channel in image["meta"]["encoded_channels"]:
+			continue
+		if channel == "weight":
 			continue
 		layer = image["channels"][channel]
 		layer = layer / np.amax(layer)

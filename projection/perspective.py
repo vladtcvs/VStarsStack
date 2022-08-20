@@ -1,6 +1,6 @@
 import math
 
-class Projection(object):
+class PerspectiveProjection(object):
 
 	def __init__(self, W, H, F, w, h):
 		self.H = H
@@ -11,8 +11,8 @@ class Projection(object):
 		self.k = (self.H/self.h + self.W/self.w) / 2
 
 	def project(self, y, x):
-		X = (x - self.w / 2) * self.k
-		Y = (y - self.h / 2) * self.k
+		X = (self.w / 2 - x) * self.k
+		Y = (self.h / 2 - y) * self.k
 		lon = math.atan(X / self.F)
 		lat = math.atan(Y * math.cos(lon) / self.F)
 		return lat, lon
@@ -20,6 +20,6 @@ class Projection(object):
 	def reverse(self, lat, lon):
 		X = self.F * math.tan(lon)
 		Y = self.F * math.tan(lat) / math.cos(lon)
-		x = X / self.k + self.w / 2
-		y = Y / self.k + self.h / 2
+		x = self.w / 2 - X / self.k
+		y = self.h / 2 - Y / self.k
 		return y, x
