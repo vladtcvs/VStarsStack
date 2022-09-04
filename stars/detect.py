@@ -24,54 +24,50 @@ import os
 
 import normalize
 import common
+import cfg
 
 import stars.detector.detector
 
 detect = stars.detector.detector.detect_stars
 
+def process_file(fname, jsonfile):
+	image = common.data_load(fname)
+	stars = detect(image, debug=False)[0]
+	desc = {
+		"stars"  : stars,
+		"h" : image["meta"]["params"]["h"],
+		"w" : image["meta"]["params"]["w"],
+		"projection" : image["meta"]["params"]["projection"],
+		"H" : image["meta"]["params"]["perspective_kh"] * image["meta"]["params"]["h"],
+		"W" : image["meta"]["params"]["perspective_kw"] * image["meta"]["params"]["w"],
+		"F" : image["meta"]["params"]["perspective_F"],
+	}
+
+	with open(jsonfile, "w") as f:
+		json.dump(desc, f, indent=4)
+
+def process_dir(path, jsonpath):
+	files = common.listfiles(path, ".zip")
+
+	for name, filename in files:
+		print(name)
+		process_file(filename, os.path.join(jsonpath, name + ".json"))
+
 def process(argv):
-	path = argv[0]
+	if len(argv) >= 2:
+		path = argv[0]
+		jsonpath = argv[1]
+	else:
+		path = cfg.config["paths"]["npy-fixed"]
+		jsonpath = cfg.config["stars"]["paths"]["stars"]
 
 	if os.path.isdir(path):
-		if len(argv) > 1:
-			jsonpath = argv[1]
-		else:
-			jsonpath = path
-		files = common.listfiles(path, ".zip")
-
-		for name, filename  in files:
-			print(name)
-
-			image = common.data_load(filename)
-			stars = detect(image, debug=False)[0]
-			desc = {
-				"stars"  : stars,
-				"h" : image["meta"]["params"]["h"],
-				"w" : image["meta"]["params"]["w"],
-				"projection" : image["meta"]["params"]["projection"],
-				"H" : image["meta"]["params"]["perspective_kh"] * image["meta"]["params"]["h"],
-				"W" : image["meta"]["params"]["perspective_kw"] * image["meta"]["params"]["w"],
-				"F" : image["meta"]["params"]["perspective_F"],
-			}
-
-			with open(os.path.join(jsonpath, name + ".json"), "w") as f:
-				json.dump(desc, f, indent=4)
+		process_dir(path, jsonpath)		
 	else:
-		jsonpath = argv[1]
-
-		image = common.data_load(path)
-		stars = detect(image, debug=True)[0]		
-		desc = {
-				"stars"  : stars,
-				"height" : image["meta"]["params"]["h"],
-				"width"  : image["meta"]["params"]["w"],
-		}
-
-		with open(jsonpath, "w") as f:
-			json.dump(desc, f, indent=4)
+		process_file(path, jsonpath)
 
 commands = {
-	"*" : (process, "detect stars", "npy/ stars/"),
+	"*" : (process, "detect stars", "[npy/ stars/]"),
 }
 
 def run(argv):

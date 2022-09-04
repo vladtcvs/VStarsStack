@@ -11,7 +11,7 @@ import common
 import shift.shift_image
 import multiprocessing as mp
 
-ncpu = max(int(mp.cpu_count()/2)-1, 1)
+ncpu = max(int(mp.cpu_count())-1, 1)
 
 from movement.sphere import Movement as ms
 from movement.flat import Movement as mf
