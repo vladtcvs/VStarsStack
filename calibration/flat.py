@@ -71,6 +71,8 @@ def prepare_flats(argv):
 		for channel in dark_frame["meta"]["channels"]:
 			if channel in dark_frame["meta"]["encoded_channels"]:
 				continue
+			if channel in ["weight"]:
+				continue
 			image = dark_frame["channels"][channel]
 			if channel not in channels:
 				channels[channel] = []

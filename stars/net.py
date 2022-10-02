@@ -13,9 +13,6 @@ def process(argv):
 		jsondir = cfg.config["stars"]["paths"]["descs"]
 		out = cfg.config["stars"]["paths"]["net"]
 
-	jsondir = argv[0]
-	out = argv[1]
-
 	imagesfiles = common.listfiles(jsondir, ".json")
 
 	names = []
