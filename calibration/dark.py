@@ -77,7 +77,7 @@ def prepare_darks(argv):
 
 	result_image = data.data_create()
 	for channel in channels:
-		avg = np.average(channels[channel])
+		avg = sum(channels[channel]) / len(channels[channel])
 		data.data_add_channel(result_image, avg, channel)
 	data.data_store(result_image, result)
 

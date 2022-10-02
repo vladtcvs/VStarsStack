@@ -78,7 +78,7 @@ def prepare_flats(argv):
 
 	result_image = data.data_create()
 	for channel in channels:
-		s = np.sum(channels[channel])
+		s = sum(channels[channel])
 		s = s / np.amax(s)
 		data.data_add_channel(result_image, s, channel)
 	data.data_store(result_image, result)
