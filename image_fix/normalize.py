@@ -4,6 +4,9 @@ import common
 import data
 import cfg
 
+import multiprocessing as mp
+ncpu = max(int(mp.cpu_count())-1, 1)
+
 def normalize(name, infname, outfname):
     print(name)
     img = common.data_load(infname)

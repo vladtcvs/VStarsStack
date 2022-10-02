@@ -3,8 +3,16 @@ import os
 import json
 import usage
 import common
+import cfg
 
 def process(argv):
+	if len(argv) >= 2:
+		jsondir = argv[0]
+		out = argv[1]
+	else:
+		jsondir = cfg.config["stars"]["paths"]["descs"]
+		out = cfg.config["stars"]["paths"]["net"]
+
 	jsondir = argv[0]
 	out = argv[1]
 

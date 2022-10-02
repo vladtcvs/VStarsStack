@@ -150,7 +150,10 @@ def matchStars(description, descriptions):
 	return name, desc
 
 def process(argv):
-	starsdir = argv[0]
+	if len(argv) >= 1:
+		starsdir = argv[0]
+	else:
+		starsdir = cfg.config["stars"]["paths"]["descs"]
 
 	filelock = mp.Manager().Lock()
 	

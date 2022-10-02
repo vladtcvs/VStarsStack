@@ -108,11 +108,16 @@ def build_descriptions(image, num_main, mindist, use_angles):
 	return image
 
 def process(argv):
+	if len(argv) >= 2:
+		path = argv[0]
+		outpath = argv[1]
+	else:
+		path = cfg.config["stars"]["paths"]["stars"]
+		outpath = cfg.config["stars"]["paths"]["descs"]
+
 	num_main = cfg.stars["describe"]["num_main"]
 	mindist = cfg.stars["describe"]["mindist"]
 
-	path = argv[0]
-	outpath = argv[1]
 	files = common.listfiles(path, ".json")
 
 	for name, filename in files:

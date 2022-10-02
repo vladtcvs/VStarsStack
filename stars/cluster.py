@@ -4,6 +4,7 @@ import json
 import sys
 import random
 import usage
+import cfg
 
 def find_cluster(net, name, starid):
 	cluster = [(name, starid)]
@@ -30,9 +31,14 @@ def normalize_cluster(cluster):
 	return True, c
 
 def process(argv):
-	net_f     = argv[0]
-	descs_p   = argv[1]
-	cluster_f = argv[2]
+	if len(argv) >= 3:
+		net_f = argv[0]
+		descs_p = argv[1]
+		cluster_f = argv[2]
+	else:
+		net_f = cfg.config["stars"]["paths"]["net"]
+		descs_p = cfg.config["stars"]["paths"]["descs"]
+		cluster_f = cfg.config["cluster"]["path"]
 
 	with open(net_f) as f:
 		rnet = json.load(f)
@@ -86,6 +92,8 @@ def process(argv):
 					}
 		if len(dcluster) >= 2:
 			dclusters.append(dcluster)
+
+	dclusters = sorted(dclusters, key=lambda x : len(x), reverse=True)
 
 	with open(cluster_f, "w") as f:
 		json.dump(dclusters, f, indent=4)
