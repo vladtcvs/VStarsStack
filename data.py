@@ -29,7 +29,6 @@ def data_add_channel(data, channel, name, encoded=False):
 def data_add_parameter(data, value, name):
 	data["meta"]["params"][name] = value
 
-
 def data_store(data, output, compress=None):
 	if compress is None:
 		compress = cfg.compress

@@ -7,6 +7,7 @@ import os
 import numpy as np
 import multiprocessing as mp
 import usage
+import cv2
 
 ncpu = max(1, mp.cpu_count()-1)
 
@@ -81,6 +82,7 @@ def prepare_flats(argv):
 	result_image = data.data_create()
 	for channel in channels:
 		s = sum(channels[channel])
+		s = cv2.GaussianBlur(s, (51, 51), 0)
 		s = s / np.amax(s)
 		data.data_add_channel(result_image, s, channel)
 	data.data_store(result_image, result)
