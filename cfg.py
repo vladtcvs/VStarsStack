@@ -34,20 +34,3 @@ if os.path.exists(cfgpath):
 
 else:
 	pass
-
-_flat = None
-def get_flat():
-	if _flat is not None:
-		return _flat
-
-	if "flat" in telescope:
-		vf = os.path.join(cfgdir, telescope["flat"])
-	else:
-		vf = None
-
-	if vf is not None and os.path.exists(vf):
-		_flat = data.data_load(vf)
-	else:
-		_flat = data.data_create()
-
-	return _flat
