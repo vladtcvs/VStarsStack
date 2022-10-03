@@ -36,7 +36,7 @@ def test_no_rotation_forward():
 
     positions = [(h/2, w/2)]
 
-    proj = perspective.PerspectiveProjection(W, H, F, w, h)
+    proj = perspective.Projection(W, H, F, w, h)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.apply(positions, proj)
@@ -65,7 +65,7 @@ def test_no_rotation_reverse():
 
     positions = [(h/2, w/2)]
 
-    proj = perspective.PerspectiveProjection(W, H, F, w, h)
+    proj = perspective.Projection(W, H, F, w, h)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.reverse(positions, proj)
@@ -101,7 +101,7 @@ def test_lon_rotation_forward():
     y_moved_expected = h/2
     positions = [(y, x)]
 
-    proj = perspective.PerspectiveProjection(W, H, F, w, h)
+    proj = perspective.Projection(W, H, F, w, h)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.apply(positions, proj)
@@ -137,7 +137,7 @@ def test_lon_rotation_reverse():
     y_moved_expected = h/2
     positions = [(y, x)]
 
-    proj = perspective.PerspectiveProjection(W, H, F, w, h)
+    proj = perspective.Projection(W, H, F, w, h)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.reverse(positions, proj)
@@ -173,7 +173,7 @@ def test_neglon_rotation_forward():
     y_moved_expected = h/2
     positions = [(y, x)]
 
-    proj = perspective.PerspectiveProjection(W, H, F, w, h)
+    proj = perspective.Projection(W, H, F, w, h)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.apply(positions, proj)

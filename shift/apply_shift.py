@@ -32,7 +32,7 @@ def make_shift(name, infname, image_shift, outfname):
 		W = data["meta"]["params"]["perspective_kw"] * w
 		H = data["meta"]["params"]["perspective_kh"] * h
 		F = data["meta"]["params"]["perspective_F"]
-		proj = projection.perspective.PerspectiveProjection(W, H, F, w, h)
+		proj = projection.perspective.Projection(W, H, F, w, h)
 	else:	
 		raise Exception("Unknown projection %s" % proj)
 	

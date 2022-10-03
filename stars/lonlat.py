@@ -18,9 +18,9 @@ def process_file(jsonfile):
 		W = desc["W"]
 		H = desc["H"]
 		F = desc["F"]
-		proj = projection.perspective.PerspectiveProjection(W, H, F, w, h)
+		proj = projection.perspective.Projection(W, H, F, w, h)
 	else:
-		raise Exception("Unknown projection %s" % projection)
+		raise Exception("Unknown projection %s" % proj)
 		
 	if "stars" in desc:
 		for star in desc["stars"]:
