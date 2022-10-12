@@ -13,6 +13,8 @@ import configurate
 import debayer.debayer
 import planets.planets
 
+import image
+
 import sys
 import usage
 
@@ -28,6 +30,7 @@ commands = {
 	"merge" : (merge.run, "merge images", "input_dir/ output.npz"),
 	"project" : (configurate.run, "configurate project"),
 	"planets" : (planets.planets.run, "commands for processing planets"),
+	"image" : (image.run, "image processing (show, convert, etc)")
 }
 
 def run(argv, progname=None):
