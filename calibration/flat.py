@@ -56,7 +56,6 @@ def process(argv):
 	else:
 		process_file(input, output, flat_file)
 
-
 def prepare_flats(argv):
 	if len(argv) >= 2:
 		npys = argv[0]
@@ -87,8 +86,62 @@ def prepare_flats(argv):
 		data.data_add_channel(result_image, s, channel)
 	data.data_store(result_image, result)
 
+def prepare_sky(argv):
+	out = argv[0]
+	imgs = argv[1]
+	files = common.listfiles(imgs, ".zip")
+	channels = {}
+	for _, fname in files:
+		frame = data.data_load(fname)
+		for channel in frame["meta"]["channels"]:
+			if channel in frame["meta"]["encoded_channels"]:
+				continue
+			if channel in ["weight"]:
+				continue
+			image = frame["channels"][channel]
+			image = cv2.GaussianBlur(image, (5, 5), 0)
+			if channel not in channels:
+				channels[channel] = []
+			channels[channel].append(image / np.amax(image))
+
+	thr = 0.006
+	S = 101
+	S2 = 301
+	kh=1.1
+	kl=0.9
+
+	result_image = data.data_create()
+	for channel in channels:
+		avg = sum(channels[channel]) / len(channels[channel])
+		skyes = []
+		for i in range(len(channels[channel])):
+			img = channels[channel][i]
+			diff = abs(img - avg)
+			mask = diff > thr
+			
+			sky = (1-mask)*img
+			sky = sky / np.amax(sky)
+
+			sky_avg = np.average(sky)
+			sky_h = sky_avg * kh
+			sky_l = sky_avg * kl
+			sky255 = (sky - sky_l) / (sky_h - sky_l)
+			sky255 = np.clip(sky255, 0, 1)
+
+			sky_fixed = cv2.medianBlur((sky255*255).astype('uint8'), S)
+			sky_fixed = sky_fixed.astype('float32')/255 * (sky_h - sky_l) + sky_l
+			sky_fixed = cv2.GaussianBlur(sky_fixed, (S2, S2), 0)
+
+			skyes.append(sky_fixed)
+
+		sky_fixed = sum(skyes) / len(skyes)
+		sky_fixed = sky_fixed / np.amax(sky_fixed)
+		data.data_add_channel(result_image, sky_fixed, channel)
+	data.data_store(result_image, out)
+
 commands = {
 	"prepare" : (prepare_flats, "flat prepare", "prepare flat frames"),
+	"prepare-starsky" : (prepare_sky, "flat prepare-starsky output.zip inputs/", "prepare flat frames from N images with stars"),
 	"*" : (process, "flat", "(input.file output.file | input/ output/) flat.zip"),
 }
 

@@ -31,7 +31,10 @@ def data_add_parameter(data, value, name):
 
 def data_store(data, output, compress=None):
 	if compress is None:
-		compress = cfg.compress
+		try:
+			compress = cfg.compress
+		except:
+			compress = True
 
 	if compress:
 		method = zipfile.ZIP_LZMA

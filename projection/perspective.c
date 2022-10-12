@@ -35,9 +35,9 @@ static int Projection_init(PyObject *_self, PyObject *args, PyObject *kwds)
 static PyObject *Projection_project(PyObject *_self, PyObject *args, PyObject *kwds)
 {
     struct ProjectionObject *self = (struct ProjectionObject *)_self;
-    int x, y;
+    double x, y;
     static char *kwlist[] = {"y", "x", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "ii", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "dd", kwlist,
                                      &y, &x))
         return Py_None;
     double X = (self->w / 2 - x) * self->kx;
@@ -59,9 +59,9 @@ static PyObject *Projection_reverse(PyObject *_self, PyObject *args, PyObject *k
 
     double X = self->F * tan(lon);
     double Y = self->F * tan(lat) / cos(lon);
-    int x = (int)(self->w / 2 - X / self->kx);
-    int y = (int)(self->h / 2 - Y / self->ky);
-    return Py_BuildValue("(ii)", y, x);
+    double x = (self->w / 2 - X / self->kx);
+    double y = (self->h / 2 - Y / self->ky);
+    return Py_BuildValue("(dd)", y, x);
 }
 
 static PyMethodDef Projection_methods[] = {
