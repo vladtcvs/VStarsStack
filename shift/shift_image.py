@@ -2,6 +2,17 @@ import numpy as np
 import math
 import common
 
+def generate_points(h, w, len0):
+	points = []
+	for y in range(h):
+		for x in range(w):
+			points.append((y,x))
+			if len(points) >= len0:
+				yield points
+				points = []
+	if len(points) > 0:
+		yield points
+
 def shift_image(image, t, proj, image_weight_layer=None, image_weight=1):
 	shape = image.shape
 	h = shape[0]
@@ -13,14 +24,11 @@ def shift_image(image, t, proj, image_weight_layer=None, image_weight=1):
 	if image_weight_layer is None:
 		image_weight_layer = np.ones(shape)*image_weight
 
-	for y in range(h):
-		positions = []
-		for x in range(w):
-			positions.append((y,x))
+	for positions in generate_points(h, w, w*4):
 		original_positions = t.reverse(positions, proj)
-		for i in range(len(positions)):
-			y,x = positions[i]
-			orig_y,orig_x   = original_positions[i]
+		for position, original_position in zip(positions, original_positions):
+			y,x = position
+			orig_y,orig_x   = original_position
 			_, pixel        = common.getpixel(image, orig_y, orig_x, False)
 			_, pixel_weight = common.getpixel(image_weight_layer, orig_y, orig_x, False)
 
