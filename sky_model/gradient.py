@@ -9,27 +9,34 @@ import common
 import multiprocessing as mp
 
 import cfg
-import stars.detect
+import sky_model.remove_stars
 
-def model(image, mask):
+def model(image):
 	shape = image.shape
 	w = shape[1]
 	h = shape[0]
 
-	ws = int(w/8)
-	hs = int(h/8)
+	ws = int(w/10)
+	hs = int(h/10)
 
-	left_top    = np.average(image[0:hs, 0:ws])
-	left_bottom = np.average(image[h-1-hs:h-1, 0:ws])
+	image_nostars = sky_model.remove_stars.remove_stars(image)
 
-	right_top    = np.average(image[0:hs, w-1-ws:w-1])
-	right_bottom = np.average(image[h-1-hs:h-1, w-1-ws:w-1])
+	left_top    = np.average(image_nostars[0:hs, 0:ws])
+	left_bottom = np.average(image_nostars[h-1-hs:h-1, 0:ws])
 
-	sky = np.zeros(shape)
-	for y in range(h):
-		ky = y / (h-1)
-		for x in range(w):
-			kx = x / (w-1)
-			pix = (left_top * (1-ky) + left_bottom * ky) * (1-kx) + (right_top * (1-ky) + right_bottom * ky) * kx
-			sky[y,x] = pix
+	right_top    = np.average(image_nostars[0:hs, w-1-ws:w-1])
+	right_bottom = np.average(image_nostars[h-1-hs:h-1, w-1-ws:w-1])
+
+	bottom_k = np.array(range(h))/(h-1)
+	top_k = 1-bottom_k
+
+	right_k = np.array(range(w))/(w-1)
+	left_k = 1-right_k
+	
+	left_top_k = top_k[:, np.newaxis] * left_k
+	right_top_k = top_k[:, np.newaxis] * right_k
+	left_bottom_k = bottom_k[:, np.newaxis] * left_k
+	right_bottom_k = bottom_k[:, np.newaxis] * right_k
+
+	sky = left_top * left_top_k + left_bottom * left_bottom_k + right_top * right_top_k + right_bottom * right_bottom_k
 	return sky

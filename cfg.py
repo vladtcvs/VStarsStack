@@ -3,6 +3,7 @@ import numpy as np
 import os
 import json
 import data
+import multiprocessing as mp
 
 def getval(config, name, default):
 	if name in config:
@@ -11,6 +12,7 @@ def getval(config, name, default):
 
 cfgdir = os.getcwd()
 cfgpath = os.path.join(cfgdir, "project.json")
+nthreads = max(int(mp.cpu_count())-1, 1)
 
 if os.path.exists(cfgpath):
 	with open(cfgpath) as f:

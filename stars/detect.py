@@ -32,7 +32,19 @@ detect = stars.detector.detector.detect_stars
 
 def process_file(fname, jsonfile):
 	image = common.data_load(fname)
-	stars = detect(image, debug=False)[0]
+	
+	sources = []
+	for channel in image["channels"]:
+		if channel in image["meta"]["encoded_channels"]:
+			continue
+		if channel == "weight":
+			continue
+		layer = image["channels"][channel]
+		layer = layer / np.amax(layer)
+		sources.append(layer)
+	gray = sum(sources)
+
+	stars = detect(gray, debug=False)[0]
 	desc = {
 		"stars"  : stars,
 		"h" : image["meta"]["params"]["h"],

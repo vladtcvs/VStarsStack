@@ -115,20 +115,7 @@ def find_stars(starsimage, original=None, debug=False):
 	return stars, mask
 
 
-def detect_stars(image, debug=False):
-	sources = []
-
-	for channel in image["channels"]:
-		if channel in image["meta"]["encoded_channels"]:
-			continue
-		if channel == "weight":
-			continue
-		layer = image["channels"][channel]
-		layer = layer / np.amax(layer)
-		sources.append(layer)
-
-	gray = sum(sources)
-
+def detect_stars(gray, debug=False):
 	w = gray.shape[1]
 	h = gray.shape[0]
 
@@ -144,19 +131,4 @@ def detect_stars(image, debug=False):
 	mask[:,(w-border):w] = 0
 	mask[(h-border):h,:] = 0
 
-#	if debug:
-#		plt.imshow(mask, cmap="gray")
-#		plt.show()
-
-#	mask = mask.astype(np.uint8)
-#	circles = cv2.HoughCircles(mask, cv2.HOUGH_GRADIENT, 1.2, minDist=10, minRadius=1, maxRadius=10)
-#	print(circles)
-
-#	orig = image[:,:,0:3]**0.4
 	return find_stars(mask)
-
-if __name__ == "__main__":
-	filename = sys.argv[1]
-	image = np.load(filename)["arr_0"]
-	detect_stars(image, True)
-
