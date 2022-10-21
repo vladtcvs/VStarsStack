@@ -135,4 +135,4 @@ commands = {
 }
 
 def run(argv):
-	usage.run(argv, "image", commands)
+	usage.run(argv, "image", commands, autohelp=True)
