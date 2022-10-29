@@ -8,27 +8,25 @@ import multiprocessing as mp
 ncpu = max(int(mp.cpu_count())-1, 1)
 
 def normalize(name, infname, outfname):
-    print(name)
-    img = common.data_load(infname)
+	print(name)
+	img = data.DataFrame.load(infname)
 
-    if "weight" not in img["meta"]["channels"]:
-        data.data_store(img, outfname)
-        return
+	for channel in img.get_channels():
+		image,opts = img.get_channel(channel)
+		if "normalized" in opts and opts["normalized"]:
+			continue
+		if opts["weight"]:
+			continue
+		if opts["encoded"]:
+			continue
+		if channel not in img.links["weight"]:
+			continue
+		weight,_ = img.get_channel(img.links["weight"][channel])
+		image = image / weight
+		opts["normalized"] = True
+		img.add_channel(image, channel, **opts)
 
-    weight = img["channels"]["weight"]
-
-    for channel in img["meta"]["channels"]:
-        if channel in img["meta"]["encoded_channels"]:
-            continue
-        if channel == "weight":
-            continue
-        
-        image = img["channels"][channel]
-        image = image / weight
-        img["channels"][channel] = image
-
-    data.data_add_parameter(img, 1, "normalized")
-    data.data_store(img, outfname)
+	img.store(outfname)
 
 def process_file(argv):
 	infname = argv[0]

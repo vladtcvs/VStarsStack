@@ -9,27 +9,26 @@ import usage
 import os
 import common
 import cfg
+import data
 
 def remove_sky(name, infname, outfname, model):
 	print(name)
 
-	img = common.data_load(infname)
+	img = data.DataFrame.load(infname)
 
-	for channel in img["meta"]["channels"]:
-		if channel in img["meta"]["encoded_channels"]:
-			continue
-
-		if channel == "weight":
+	for channel in img.get_channels():
+		
+		image, opts = img.get_channel(channel)
+		if not opts["brightness"]:
 			continue
 
 		print("\t%s" % channel)
-		image = img["channels"][channel]
 		sky = model(image)
 
 		result = image - sky
-		common.data_add_channel(img, result, channel)
+		img.add_channel(result, channel, **opts)
 
-	common.data_store(img, outfname)
+	img.store(outfname)
 
 def process_file(argv, model):
 	infname = argv[0]

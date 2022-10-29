@@ -11,6 +11,7 @@ from PIL import Image
 import cfg
 import common
 import usage
+import data
 
 import math
 import readimage.tags
@@ -48,10 +49,14 @@ def readyuv(fname, W, H, format):
 				yuv = yuv.reshape(shape)
 				print("\tprocessing frame %i" % id)
 
-				data = common.data_create(tags, params)
-				common.data_add_channel(data, yuv, "raw", encoded=True)
-				common.data_add_parameter(data, 1, "exposure")
-				yield id, data
+				dataframe = data.DataFrame(params, tags)
+				exptime = 1
+				weight = np.ones(frame.data.shape)*exptime
+
+				dataframe.add_channel(yuv, "raw", encoded=True)
+				dataframe.add_channel(weight, "weight")
+				dataframe.add_channel_link("raw", "weight", "weight")
+				yield id, dataframe
 				id += 1
 			except:
 				break
@@ -66,9 +71,9 @@ def process_file(argv):
 	H = cfg.camerad["h"]
 	fmt = cfg.camerad["format"]
 
-	for i, data in readyuv(fname, W, H, fmt):
+	for i, dataframe in readyuv(fname, W, H, fmt):
 		framename = os.path.join(output, "%s_%05i.zip" % (name, i))
-		common.data_store(data, framename)
+		dataframe.store(framename)
 
 def process_path(argv):
 	input = argv[0]

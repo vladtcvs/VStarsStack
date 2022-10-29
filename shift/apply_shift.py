@@ -7,6 +7,7 @@ import os
 
 import projection.perspective
 import common
+import data
 
 import shift.shift_image
 import multiprocessing as mp
@@ -22,34 +23,41 @@ def make_shift(name, infname, image_shift, outfname):
 		print("skip")
 		return
 
-	data = common.data_load(infname)
-	weight = data["meta"]["params"]["weight"]
+	dataframe = data.DataFrame.load(infname)
 
-	proj = data["meta"]["params"]["projection"]
+	proj = dataframe.params["projection"]
 	if proj == "perspective":
-		h = data["meta"]["params"]["h"]
-		w = data["meta"]["params"]["w"]
-		W = data["meta"]["params"]["perspective_kw"] * w
-		H = data["meta"]["params"]["perspective_kh"] * h
-		F = data["meta"]["params"]["perspective_F"]
+		h = dataframe.params["h"]
+		w = dataframe.params["w"]
+		W = dataframe.params["perspective_kw"] * w
+		H = dataframe.params["perspective_kh"] * h
+		F = dataframe.params["perspective_F"]
 		proj = projection.perspective.Projection(W, H, F, w, h)
 	else:	
 		raise Exception("Unknown projection %s" % proj)
-	
-	if "weight" in data["channels"]:
-		weight_layer = data["channels"]["weight"]
-	else:
-		weight_layer = None
 
-	for channel in data["meta"]["channels"]:
-		if channel in data["meta"]["encoded_channels"]:
+	for channel in dataframe.get_channels():
+		image, opts = dataframe.get_channel(channel)
+		if opts["weight"]:
 			continue
-		image = data["channels"][channel]
-		shifted, shifted_weight = shift.shift_image.shift_image(image, image_shift, proj, weight_layer, weight)
-		common.data_add_channel(data, shifted, channel)
-		common.data_add_channel(data, shifted_weight, "weight")
+		if opts["encoded"]:
+			continue
 
-	common.data_store(data, outfname)
+		weight_channel = None
+		if channel in dataframe.links["weight"]:
+			weight_channel = dataframe.links["weight"][channel]
+		
+		if weight_channel:
+			weight,_ = dataframe.get_channel(weight_channel)
+		else:
+			weight = np.ones(image.shape)*1
+
+		shifted, shifted_weight = shift.shift_image.shift_image(image, image_shift, proj, weight)
+		dataframe.add_channel(shifted, channel, **opts)
+		dataframe.add_channel(shifted_weight, weight_channel, weight=True)
+		dataframe.add_channel_link(channel, weight_channel, "weight")
+
+	dataframe.store(outfname)
 
 def run(argv):
 	if len(argv) > 0:

@@ -12,13 +12,13 @@ ncpu = max(1, mp.cpu_count()-1)
 
 def fix(image, image_weight_layer, proj, image_weight=1):
 	if image_weight_layer is None:
-		image_weight_layer = np.ones(shape)*image_weight
+		image_weight_layer = np.ones(image.shape)*image_weight
 
 	if cfg.distorsion is None:
 		return image, image_weight_layer
 
 	h = image.shape[0]
-	w = imege.shape[1]
+	w = image.shape[1]
 
 	fixed  = np.zeros((h, w))
 	fixed_weight = np.zeros((h,w))
@@ -76,10 +76,10 @@ def dedistorsion(name, fname, outfname, proj):
 			image_weight = None
 
 		fixed, fixed_weight = fix(image, image_weight, proj, weight)
-		common.data_add_channel(img, fixed, channel)
-		common.data_add_channel(img, fixed_weight, "weight")
+		common.data_add_channel(image, fixed, channel)
+		common.data_add_channel(image, fixed_weight, "weight")
 
-	common.data_store(img, outfname)
+	common.data_store(image, outfname)
 
 def process_file(argv):
 	proj = projection.Projection(cfg.camerad["W"], cfg.camerad["H"], cfg.camerad["F"], cfg.camerad["w"], cfg.camerad["h"])

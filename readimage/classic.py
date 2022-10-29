@@ -11,6 +11,7 @@ from PIL import Image
 import cfg
 import common
 import usage
+import data
 
 import readimage.tags
 
@@ -32,23 +33,31 @@ def readjpeg(fname):
 	except:
 		e = 1
 
-	data = common.data_create(tags, params)
+	weight = np.ones((shape[0], shape[1]))*e
+
+	dataframe = data.DataFrame(None, tags)
+	dataframe.add_channel(weight, "weight", weight=True)
+
 	if len(rgb.shape) == 3:
-		common.data_add_channel(data, rgb[:,:,0], "R")
-		common.data_add_channel(data, rgb[:,:,1], "G")
-		common.data_add_channel(data, rgb[:,:,2], "B")
-		
+		dataframe.add_channel(rgb[:,:,0], "R", brightness=True)
+		dataframe.add_channel(rgb[:,:,1], "G", brightness=True)
+		dataframe.add_channel(rgb[:,:,2], "B", brightness=True)
+		dataframe.add_channel_link("R", "weight", "weight")
+		dataframe.add_channel_link("G", "weight", "weight")
+		dataframe.add_channel_link("B", "weight", "weight")
+	elif len(rgb.shape) == 2:
+		dataframe.add_channel(rgb[:,:], "Y", weight_name="weight", brightness=True)
+		dataframe.add_channel_link("Y", "weight", "weight")
 	else:
-		common.data_add_channel(data, rgb, "Y")
-	
-	common.data_add_parameter(data, e, "exposure")
-	return data
+		# unknown shape!
+		pass
+	return dataframe
 
 def process_file(argv):
 	fname = argv[0]
 	output = argv[1]
-	data = readjpeg(fname)
-	common.data_store(data, output)
+	dataframe = readjpeg(fname)
+	dataframe.store(output)
 
 def process_path(argv):
 	input = argv[0]

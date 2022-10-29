@@ -2,6 +2,7 @@ import image_fix.distorsion
 import image_fix.remove_sky
 import image_fix.border
 import image_fix.normalize
+import image_fix.motion_fix
 
 import os
 
@@ -24,7 +25,8 @@ commands = {
 	"distorsion" : (image_fix.distorsion.run, "fix distorsion"),
 	"remove-sky" : (image_fix.remove_sky.run, "remove sky"),
 	"border"     : (image_fix.border.run,     "remove border"),
-	"normalize"     : (image_fix.normalize.run,     "normalize to weight"),
+	"normalize"  : (image_fix.normalize.run,  "normalize to weight"),
+	"fix-motion" : (image_fix.motion_fix.run, "remove motion of image"),
 }
 
 def run(argv):

@@ -24,6 +24,7 @@ import os
 
 import normalize
 import common
+import data
 import cfg
 
 import stars.detector.detector
@@ -31,15 +32,13 @@ import stars.detector.detector
 detect = stars.detector.detector.detect_stars
 
 def process_file(fname, jsonfile):
-	image = common.data_load(fname)
+	image = data.DataFrame.load(fname)
 	
 	sources = []
-	for channel in image["channels"]:
-		if channel in image["meta"]["encoded_channels"]:
+	for channel in image.get_channels():
+		layer, options = image.get_channel(channel)
+		if not options["brightness"]:
 			continue
-		if channel == "weight":
-			continue
-		layer = image["channels"][channel]
 		layer = layer / np.amax(layer)
 		sources.append(layer)
 	gray = sum(sources)
@@ -47,12 +46,12 @@ def process_file(fname, jsonfile):
 	stars = detect(gray, debug=False)[0]
 	desc = {
 		"stars"  : stars,
-		"h" : image["meta"]["params"]["h"],
-		"w" : image["meta"]["params"]["w"],
-		"projection" : image["meta"]["params"]["projection"],
-		"H" : image["meta"]["params"]["perspective_kh"] * image["meta"]["params"]["h"],
-		"W" : image["meta"]["params"]["perspective_kw"] * image["meta"]["params"]["w"],
-		"F" : image["meta"]["params"]["perspective_F"],
+		"h" : image.params["h"],
+		"w" : image.params["w"],
+		"projection" : image.params["projection"],
+		"H" : image.params["perspective_kh"] * image.params["h"],
+		"W" : image.params["perspective_kw"] * image.params["w"],
+		"F" : image.params["perspective_F"],
 	}
 
 	with open(jsonfile, "w") as f:

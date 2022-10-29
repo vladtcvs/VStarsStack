@@ -13,20 +13,20 @@ ncpu = max(1, mp.cpu_count()-1)
 def remove_dark(name, fname, out, dark_file):
 	print(name)
 
-	img = common.data_load(fname)
-	dark_img = common.data_load(dark_file)
+	img = data.DataFrame.load(fname)
+	dark_img = data.DataFrame.load(dark_file)
 
-	for channel in img["meta"]["channels"]:
-		if channel in img["meta"]["encoded_channels"]:
+	for channel in img.get_channels():
+		image,opts = img.get_channel(channel)
+		if not opts["brightness"]:
 			continue
-		image = img["channels"][channel]
 
-		if channel in dark_img["meta"]["channels"]:
-			image = image - dark_img["channels"][channel]
+		if channel in dark_img.get_channels():
+			image = image - dark_img.get_channel(channel)[0]
 
-		common.data_add_channel(img, image, channel)
+		img.add_channel(image, channel, **opts)
 
-	common.data_store(img, out)
+	img.store(out)
 
 def process_file(input, output, flat_file):
 	name = os.path.splitext(os.path.basename(input))[0]
@@ -65,23 +65,22 @@ def prepare_darks(argv):
 	
 	channels = {}
 	files = common.listfiles(npys, ".zip")
-	for _, fname in files:
-		dark_frame = data.data_load(fname)
-		for channel in dark_frame["meta"]["channels"]:
-			if channel in dark_frame["meta"]["encoded_channels"]:
+	for name, fname in files:
+		print(name)
+		dark_frame = data.DataFrame.load(fname)
+		for channel in dark_frame.get_channels():
+			image, options = dark_frame.get_channel(channel)
+			if not options["brightness"]:
 				continue
-			if channel in ["weight"]:
-				continue
-			image = dark_frame["channels"][channel]
 			if channel not in channels:
 				channels[channel] = []
 			channels[channel].append(image)
 
-	result_image = data.data_create()
+	result_image = data.DataFrame()
 	for channel in channels:
 		avg = sum(channels[channel]) / len(channels[channel])
-		data.data_add_channel(result_image, avg, channel)
-	data.data_store(result_image, result)
+		result_image.add_channel(avg, channel, brightness=True)
+	result_image.store(result)
 
 commands = {
 	"prepare" : (prepare_darks, "dark prepare", "prepare dark frames"),

@@ -9,6 +9,7 @@ import sys
 import json
 import cfg
 import common
+import data
 import usage
 import multiprocessing as mp
 
@@ -18,43 +19,45 @@ import readimage.tags
 def readnef(filename, output):
 	img = rawpy.imread(filename)
 	image = img.raw_image_visible
-	shape = image.shape
 	
 	tags = readimage.tags.read_tags(filename)
 	
 	params = {}
 
-	exposure = tags["shutter"]*tags["iso"]
+	exptime = tags["shutter"]*tags["iso"]
 
-	data = common.data_create(tags, params)
-	common.data_add_channel(data, image, "raw", encoded=True)
+	dataframe = data.DataFrame(params, tags)
 
-	common.data_add_parameter(data, image.data.shape[0], "h")
-	common.data_add_parameter(data, image.data.shape[1], "w")
-	common.data_add_parameter(data, exposure, "weight")
-	common.data_add_parameter(data, "perspective", "projection")
-	common.data_add_parameter(data, cfg.camerad["H"] / cfg.camerad["h"], "perspective_kh")
-	common.data_add_parameter(data, cfg.camerad["W"] / cfg.camerad["w"], "perspective_kw")
-	common.data_add_parameter(data, cfg.camerad["F"], "perspective_F")
+	weight = np.ones(image.data.shape)*exptime
 
-def work(input, output, metaoutput):
+	dataframe.add_channel(image, "raw", encoded=True)
+	dataframe.add_channel(weight, "weight")
+	dataframe.add_channel_link("raw", "weigh", "weight")
+
+	dataframe.add_parameter(image.data.shape[0], "h")
+	dataframe.add_parameter(image.data.shape[1], "w")
+	dataframe.add_parameter("perspective", "projection")
+	dataframe.add_parameter(cfg.camerad["H"] / cfg.camerad["h"], "perspective_kh")
+	dataframe.add_parameter(cfg.camerad["W"] / cfg.camerad["w"], "perspective_kw")
+	dataframe.add_parameter(cfg.camerad["F"], "perspective_F")
+	dataframe.store(output)
+
+def work(input, output):
 	print(input)
 	readnef(input, output)
 
 def process_file(argv):
 	input = argv[0]
 	output = argv[1]
-	meta = argv[2]
-	work(input, output, meta)
+	work(input, output)
 
 def process_path(argv):
 	input = argv[0]
 	output = argv[1]
-	meta = argv[2]
 	files = common.listfiles(input, ".nef")
 	ncpu = max(int(mp.cpu_count())-1, 1)
 	pool = mp.Pool(ncpu)
-	pool.starmap(work, [(filename, os.path.join(output, name + ".npz"), os.path.join(meta, name + ".json")) for name, filename in files])
+	pool.starmap(work, [(filename, os.path.join(output, name + ".npz")) for name, filename in files])
 	pool.close()
 
 def process(argv):
@@ -65,10 +68,10 @@ def process(argv):
 		else:
 			process_file(argv)
 	else:
-		process_path([cfg.config["paths"]["original"], cfg.config["paths"]["npy-orig"], cfg.config["paths"]["meta"]])
+		process_path([cfg.config["paths"]["original"], cfg.config["paths"]["npy-orig"]])
 
 commands = {
-	"*" : (process, "read NEF to npz", "(input.NEF output.npz meta.json | [original/ npy/ meta/])"),
+	"*" : (process, "read NEF to npy", "(input.NEF output.zip| [original/ npy/])"),
 }
 
 def run(argv):

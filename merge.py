@@ -1,8 +1,10 @@
+from calendar import c
 import numpy as np
 import sys
 
 import cfg
 import common
+import data
 import matplotlib.pyplot as plt
 
 def run(argv):
@@ -19,28 +21,41 @@ def run(argv):
 	params = None
 
 	summary = {}
+	summary_weight = {}
+	sum_opts = {}
 
 	for name, filename in imgs:
-		print(name)
-		img = common.data_load(filename)
+		print(name, filename)
+		img = data.DataFrame.load(filename)
 
-		if params is None:
-			params = img["meta"]["params"]
-
-		for channel in img["meta"]["channels"]:
-			if channel in img["meta"]["encoded_channels"]:
+		for channel in img.get_channels():
+			image, opts = img.get_channel(channel)
+			if opts["encoded"]:
 				continue
-			if channel not in summary:
-				summary[channel] = img["channels"][channel].astype(np.float64)
-			else:
-				summary[channel] += img["channels"][channel]
+			if opts["weight"]:
+				continue
 
-	summary_data = common.data_create({}, params)
+			if channel in img.links["weight"]:
+				weight_channel = img.links["weight"][channel]
+				weight,_ = img.get_channel(weight_channel)
+			else:
+				weight = np.ones(image.shape, dtype=np.float64)
+
+			if channel not in summary:
+				summary[channel] = image.astype(np.float64)
+				summary_weight[channel] = weight
+			else:
+				summary[channel] += image
+				summary_weight[channel] += weight
+			sum_opts[channel] = opts
+
+	result = data.DataFrame()
 	for channel in summary:
 		print(channel)
-		common.data_add_channel(summary_data, summary[channel], channel)
-
-	common.data_store(summary_data, out, compress=True)
+		result.add_channel(summary[channel], channel, **(sum_opts[channel]))
+		result.add_channel(summary_weight[channel], "weight-"+channel, weight=True)
+		result.add_channel_link(channel, "weight-"+channel, "weight")
+	result.store(out)
 
 if __name__ == "__main__":
 	run(sys.argv[1:])

@@ -91,10 +91,3 @@ def prepare_image_for_model(image):
 		image /= am
 	image = exposure.equalize_hist(image)
 	return image
-
-data_create = data.data_create
-data_add_channel = data.data_add_channel
-data_add_parameter = data.data_add_parameter
-data_load = data.data_load
-data_remove_channel = data.data_remove_channel
-data_store = data.data_store

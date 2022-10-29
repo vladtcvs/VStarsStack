@@ -11,6 +11,7 @@ from PIL import Image
 import cfg
 import common
 import usage
+import data
 
 import math
 import readimage.tags
@@ -38,12 +39,18 @@ def read_video(fname):
 
 		print("\tprocessing frame %i" % id)
 
-		data = common.data_create(tags, params)
-		common.data_add_channel(data, frame[:,:,0], "R")
-		common.data_add_channel(data, frame[:,:,1], "G")
-		common.data_add_channel(data, frame[:,:,2], "B")
-		common.data_add_parameter(data, 1, "exposure")
-		yield id, data
+		exptime = 1
+		weight = np.ones((frame.shape[0], frame.shape[1]))*exptime
+
+		dataframe = data.DataFrame(params, tags)
+		dataframe.add_channel(frame[:,:,0], "R")
+		dataframe.add_channel(frame[:,:,1], "G")
+		dataframe.add_channel(frame[:,:,2], "B")
+		dataframe.add_channel(weight, "weight")
+		dataframe.add_channel_link("R", "weight", "weight")
+		dataframe.add_channel_link("G", "weight", "weight")
+		dataframe.add_channel_link("B", "weight", "weight")
+		yield id, dataframe
 		id += 1
 	
 def process_file(argv):
@@ -51,9 +58,9 @@ def process_file(argv):
 	output = argv[1]
 	name = argv[2]
 
-	for i, data in read_video(fname):
+	for i, dataframe in read_video(fname):
 		framename = os.path.join(output, "%s_%05i.zip" % (name, i))
-		common.data_store(data, framename)
+		dataframe.store(framename)
 
 def process_path(argv):
 	input = argv[0]

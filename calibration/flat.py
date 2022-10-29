@@ -14,20 +14,19 @@ ncpu = max(1, mp.cpu_count()-1)
 def flatten(name, fname, out, flat_file):
 	print(name)
 
-	img = common.data_load(fname)
-	flat_img = common.data_load(flat_file)
+	img = data.DataFrame.load(fname)
+	flat_img = data.DataFrame.load(flat_file)
 
-	for channel in img["meta"]["channels"]:
-		if channel in img["meta"]["encoded_channels"]:
+	for channel in img.get_channels():
+		image, opts = img.get_channel(channel)
+		if not opts["brightness"]:
 			continue
-		image = img["channels"][channel]
 
-		if channel in flat_img["meta"]["channels"]:
-			image = image / flat_img["channels"][channel]
+		if channel in flat_img.get_channels():
+			image = image / flat_img.get_channel(channel)[0]
 
-		common.data_add_channel(img, image, channel)
-
-	common.data_store(img, out)
+		img.add_channel(image, channel, **opts)
+	img.store(out)
 
 def process_file(input, output, flat_file):
 	name = os.path.splitext(os.path.basename(input))[0]
@@ -67,38 +66,35 @@ def prepare_flats(argv):
 	channels = {}
 	files = common.listfiles(npys, ".zip")
 	for _, fname in files:
-		dark_frame = data.data_load(fname)
-		for channel in dark_frame["meta"]["channels"]:
-			if channel in dark_frame["meta"]["encoded_channels"]:
+		flat_frame = data.DataFrame.load(fname)
+		for channel in flat_frame.get_channels():
+			image, opts = flat_frame.get_channel(channel)
+			if not opts["brightness"]:
 				continue
-			if channel in ["weight"]:
-				continue
-			image = dark_frame["channels"][channel]
 			if channel not in channels:
 				channels[channel] = []
 			channels[channel].append(image)
 
-	result_image = data.data_create()
+	result_image = data.DataFrame()
 	for channel in channels:
 		s = sum(channels[channel])
 		s = cv2.GaussianBlur(s, (51, 51), 0)
 		s = s / np.amax(s)
-		data.data_add_channel(result_image, s, channel)
-	data.data_store(result_image, result)
+		result_image.add_channel(s, channel, brightness=True)
+	result_image.store(result)
 
 def prepare_sky(argv):
-	out = argv[0]
-	imgs = argv[1]
+	out = argv[1]
+	imgs = argv[0]
 	files = common.listfiles(imgs, ".zip")
 	channels = {}
 	for _, fname in files:
-		frame = data.data_load(fname)
-		for channel in frame["meta"]["channels"]:
-			if channel in frame["meta"]["encoded_channels"]:
+		frame = data.DataFrame.load(fname)
+		for channel in frame.get_channels():
+			image, opts = frame.get_channel(channel)
+			if not opts["brightness"]:
 				continue
-			if channel in ["weight"]:
-				continue
-			image = frame["channels"][channel]
+
 			image = cv2.GaussianBlur(image, (5, 5), 0)
 			if channel not in channels:
 				channels[channel] = []
@@ -110,7 +106,7 @@ def prepare_sky(argv):
 	kh=1.1
 	kl=0.9
 
-	result_image = data.data_create()
+	result_image = data.DataFrame()
 	for channel in channels:
 		avg = sum(channels[channel]) / len(channels[channel])
 		skyes = []
@@ -136,12 +132,12 @@ def prepare_sky(argv):
 
 		sky_fixed = sum(skyes) / len(skyes)
 		sky_fixed = sky_fixed / np.amax(sky_fixed)
-		data.data_add_channel(result_image, sky_fixed, channel)
-	data.data_store(result_image, out)
+		result_image.add_channel(sky_fixed, channel, brightness=True)
+	result_image.store(out)
 
 commands = {
 	"prepare" : (prepare_flats, "flat prepare", "prepare flat frames"),
-	"prepare-starsky" : (prepare_sky, "flat prepare-starsky output.zip inputs/", "prepare flat frames from N images with stars"),
+	"prepare-starsky" : (prepare_sky, "flat prepare-starsky inputs/ output.zip", "prepare flat frames from N images with stars"),
 	"*" : (process, "flat", "(input.file output.file | input/ output/) flat.zip"),
 }
 

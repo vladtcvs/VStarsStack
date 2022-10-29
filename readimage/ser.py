@@ -11,6 +11,7 @@ from PIL import Image
 import cfg
 import common
 import usage
+import data
 
 import math
 import readimage.tags
@@ -76,19 +77,23 @@ def readser(fname):
 			for y in range(height):
 				for x in range(width):
 					frame[y,x] = serread(f, bpp, le16bit)
-			data = common.data_create(tags, params)
-			common.data_add_channel(data, frame, "raw", encoded=True)
-			common.data_add_parameter(data, 1, "weight")
-			yield id, data
+
+			dataframe = data.DataFrame(params, tags)
+			exptime = 1
+			weight = np.ones(frame.data.shape)*exptime
+			dataframe.add_channel(frame, "raw", encoded=True)
+			dataframe.add_channel(weight, "weight")
+			dataframe.add_channel_link("raw", "weight", "weight")
+			yield id, dataframe
 
 def process_file(argv):
 	fname = argv[0]
 	output = argv[1]
 	name = argv[2]
 
-	for id, data in readser(fname):
+	for id, dataframe in readser(fname):
 		framename = os.path.join(output, "%s_%05i.zip" % (name, id))
-		common.data_store(data, framename)
+		dataframe.store(framename)
 
 def process_path(argv):
 	input = argv[0]

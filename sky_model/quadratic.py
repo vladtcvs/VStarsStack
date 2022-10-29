@@ -16,7 +16,7 @@ def model(image):
 	w = shape[1]
 	h = shape[0]
 
-	sz = 0.05
+	sz = 0.01
 
 	ws = int(w*sz+0.5)
 	hs = int(h*sz+0.5)

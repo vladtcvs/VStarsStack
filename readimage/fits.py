@@ -8,6 +8,7 @@ import json
 import cfg
 import common
 import usage
+import data
 
 import math
 
@@ -34,21 +35,32 @@ def process_file(argv):
 		for key in image.header:
 			val = str(image.header[key])
 			tags[key] = val
-		data = common.data_create(tags=tags)
 
-		common.data_add_parameter(data, image.data.shape[0], "h")
-		common.data_add_parameter(data, image.data.shape[1], "w")
-		common.data_add_parameter(data, image.header["EXPTIME"], "weight")
-		common.data_add_parameter(data, "perspective", "projection")
-		common.data_add_parameter(data, cfg.camerad["H"] / cfg.camerad["h"], "perspective_kh")
-		common.data_add_parameter(data, cfg.camerad["W"] / cfg.camerad["w"], "perspective_kw")
-		common.data_add_parameter(data, cfg.camerad["F"], "perspective_F")
+		dataframe = data.DataFrame(tags=tags)
 
-		common.data_add_channel(data, image.data, "Y")
-		common.data_add_channel(data, np.ones(image.data.shape)*image.header["EXPTIME"], "weight")
+		exptime = image.header["EXPTIME"]
+
+		dataframe.add_parameter(image.data.shape[0], "h")
+		dataframe.add_parameter(image.data.shape[1], "w")
+		dataframe.add_parameter("perspective", "projection")
+		dataframe.add_parameter(cfg.camerad["H"] / cfg.camerad["h"], "perspective_kh")
+		dataframe.add_parameter(cfg.camerad["W"] / cfg.camerad["w"], "perspective_kw")
+		dataframe.add_parameter(cfg.camerad["F"], "perspective_F")
+
+		if "FILTER" in image.header:
+			channel_name = image.header["FILTER"]
+		else:
+			channel_name = "Y"
+
+		weight_channel_name = "weight-%s" % channel_name
+		weight = np.ones(image.data.shape)*exptime
+
+		dataframe.add_channel(weight, weight_channel_name, weight=True)
+		dataframe.add_channel(image.data, channel_name, brightness=True)
+		dataframe.add_channel_link(channel_name, weight_channel_name, "weight")
 
 		framename = os.path.join(output, "%s.zip" % (name))
-		common.data_store(data, framename)
+		dataframe.store(framename)
 
 def process_path(argv):
 	input = argv[0]
