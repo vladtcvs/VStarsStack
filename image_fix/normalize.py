@@ -3,6 +3,7 @@ import os
 import common
 import data
 import cfg
+import numpy as np
 
 import multiprocessing as mp
 ncpu = max(int(mp.cpu_count())-1, 1)
@@ -23,6 +24,7 @@ def normalize(name, infname, outfname):
 			continue
 		weight,_ = img.get_channel(img.links["weight"][channel])
 		image = image / weight
+		image[np.where(weight == 0)] = 0
 		opts["normalized"] = True
 		img.add_channel(image, channel, **opts)
 

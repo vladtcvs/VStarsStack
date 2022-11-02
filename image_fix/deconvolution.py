@@ -2,12 +2,15 @@
 import matplotlib.pyplot as plt
 
 from scipy.signal import convolve2d as conv2
+import scipy
 
 from skimage import color, restoration
 
 from PIL import Image
 import numpy as np
 import sys
+
+import data
 
 def gaussuian_filter(kernel_size, sigma=1, muu=0):
  
@@ -23,39 +26,42 @@ def gaussuian_filter(kernel_size, sigma=1, muu=0):
     norm = np.sum(gauss)
     gauss /= norm
 
+#    plt.imshow(gauss)
+#    plt.show()
+
     return gauss
 
+def make_deconvolution(image, psf):
+    #image = scipy.ndimage.median_filter(image, size=7)
+    #return image
+    maxv = np.amax(image)
+    minv = np.amin(image)
+    image = (image - minv) / (maxv-minv)
+    # Restore Image using Richardson-Lucy algorithm
+    #result = restoration.richardson_lucy(image, psf, num_iter=130)
+    result = restoration.wiener(image, psf, 0.01)
 
-rng = np.random.default_rng()
+    result = result * (maxv - minv) + minv
+    return result
 
+def process(fname, psf_name, outfname):
+    dataframe = data.DataFrame.load(fname)
+    #psf = np.asarray(Image.open(psf_name)).astype(np.float64)[:,:,0]
+    #psf = psf / np.sum(psf)
+    #print(psf.shape)
+    psf = gaussuian_filter(13, 0.25, 0)
+    for channel in dataframe.get_channels():
+        image,opts = dataframe.get_channel(channel)
+        if opts["weight"]:
+            continue
+        if opts["encoded"]:
+            continue
+        image = make_deconvolution(image, psf)
+        dataframe.add_channel(image, channel, **opts)
+    dataframe.store(outfname)
 
-im = Image.open('saturn.png')
-orig = np.array(im)
-orig = orig[:,:,0]
-orig = orig / np.amax(orig)
-
-#psf = np.ones((5, 5)) / 25
-# Add Noise to Image
-psf = gaussuian_filter(10, sigma=0.3)
-print(psf.shape)
-
-# Restore Image using Richardson-Lucy algorithm
-deconvolved_RL = restoration.richardson_lucy(orig, psf)
-
-fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(8, 5))
-plt.gray()
-
-for a in (ax[0], ax[1]):
-       a.axis('off')
-
-ax[0].imshow(orig, cmap="gray")
-ax[0].set_title('Original Data')
-
-ax[1].imshow(deconvolved_RL, cmap="gray")
-ax[1].set_title('Restoration using\nRichardson-Lucy')
-
-
-fig.subplots_adjust(wspace=0.02, hspace=0.2,
-                    top=0.9, bottom=0.05, left=0, right=1)
-plt.show()
-
+def run(argv):
+    infname = argv[0]
+    psfname = argv[1]
+    outfname = argv[2]
+    process(infname, psfname, outfname)

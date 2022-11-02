@@ -48,7 +48,7 @@ def process_file(argv):
 		dataframe.add_parameter(cfg.camerad["F"], "perspective_F")
 
 		if "FILTER" in image.header:
-			channel_name = image.header["FILTER"]
+			channel_name = image.header["FILTER"].strip()
 		else:
 			channel_name = "Y"
 

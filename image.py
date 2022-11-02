@@ -8,7 +8,10 @@ import data
 import common
 import usage
 
-def make_frames(data, channel):
+slope = 80
+power = 1
+
+def make_frames(data, channel, *, slope=1, power=1):
 	if channel == "RGB":
 		r,_ = data.get_channel("R")
 		g,_ = data.get_channel("G")
@@ -35,19 +38,18 @@ def make_frames(data, channel):
 			print("Shape = ", img.shape)
 
 			if options["brightness"]:
-				amin = np.amin(img)
+				img = img.astype(np.float64)
+				amin = max(np.amin(img), 0)
 				amax = np.amax(img)
 				print("%s: %f - %f" % (channel, amin, amax))
 				if amax - amin > 0:
 					img = (img - amin)/(amax-amin)
-	
+				img = np.clip(img*slope, 0, 1)**power
+
 			frames[channel] = img
 	return frames
 
 def show(argv):
-	power = 1
-	slope = 1
-
 	path = argv[0]
 	if len(argv) > 1:
 		channel = argv[1]
@@ -55,7 +57,7 @@ def show(argv):
 		channel = None
 
 	dataframe = data.DataFrame.load(path)
-	frames = make_frames(dataframe, channel)
+	frames = make_frames(dataframe, channel, slope=slope, power=power)
 
 	nch = len(frames)		
 	fig, axs = plt.subplots(1, nch)
@@ -67,11 +69,7 @@ def show(argv):
 			sp = axs[id]
 		else:
 			sp = axs
-		img = frames[channel]
-		img = img / np.amax(img)
-		img = img * slope
-		img = np.clip(img, 0, 1)
-		img = np.power(img, power)
+		img = frames[channel].astype(np.float64)
 		sp.imshow(img, cmap="gray")
 		sp.set_title(channel)
 		id += 1
@@ -89,7 +87,7 @@ def convert(argv):
 	out = argv[2]
 
 	dataframe = data.DataFrame.load(path)
-	frames = make_frames(dataframe, channel)
+	frames = make_frames(dataframe, channel, slope=slope, power=power)
 
 	nch = len(frames)
 
@@ -102,8 +100,9 @@ def convert(argv):
 		else:
 			fname = out
 		img = frames[channel]
+
 		img = img*65535
-		img = np.clip(img, 0, 65535).astype('uint16')
+		img = img.astype('uint16')
 		imageio.imwrite(fname, img)
 
 def cut(argv):

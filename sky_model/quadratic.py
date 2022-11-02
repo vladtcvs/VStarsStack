@@ -16,7 +16,7 @@ def model(image):
 	w = shape[1]
 	h = shape[0]
 
-	sz = 0.01
+	sz = 0.05
 
 	ws = int(w*sz+0.5)
 	hs = int(h*sz+0.5)
@@ -28,14 +28,14 @@ def model(image):
 
 	image_nostars = sky_model.remove_stars.remove_stars(image)
 
-	left_top      = np.average(image_nostars[0:hs, 0:ws])
-	left_center   = np.average(image_nostars[center_h-hs_half:center_h+hs_half+1, 0:ws])
-	left_bottom   = np.average(image_nostars[h-1-hs:h-1, 0:ws])
-	center_top    = np.average(image_nostars[0:hs, center_w-ws_half:center_w+ws_half+1])
-	right_top     = np.average(image_nostars[0:hs, w-1-ws:w-1])
-	right_center  = np.average(image_nostars[center_h-hs_half:center_h+hs_half+1, w-1-ws:w-1])
-	right_bottom  = np.average(image_nostars[h-1-hs:h-1, w-1-ws:w-1])
-	center_bottom = np.average(image_nostars[h-1-hs:h-1, center_w-ws_half:center_w+ws_half+1])
+	left_top      = np.median(image_nostars[0:hs, 0:ws])
+	left_center   = np.median(image_nostars[center_h-hs_half:center_h+hs_half+1, 0:ws])
+	left_bottom   = np.median(image_nostars[h-1-hs:h-1, 0:ws])
+	center_top    = np.median(image_nostars[0:hs, center_w-ws_half:center_w+ws_half+1])
+	right_top     = np.median(image_nostars[0:hs, w-1-ws:w-1])
+	right_center  = np.median(image_nostars[center_h-hs_half:center_h+hs_half+1, w-1-ws:w-1])
+	right_bottom  = np.median(image_nostars[h-1-hs:h-1, w-1-ws:w-1])
+	center_bottom = np.median(image_nostars[h-1-hs:h-1, center_w-ws_half:center_w+ws_half+1])
 
 	center_center = (left_center + center_top + right_center + center_bottom) / 4
 

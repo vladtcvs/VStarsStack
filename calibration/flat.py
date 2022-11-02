@@ -8,6 +8,7 @@ import numpy as np
 import multiprocessing as mp
 import usage
 import cv2
+import scipy.signal
 
 ncpu = max(1, mp.cpu_count()-1)
 
@@ -101,31 +102,24 @@ def prepare_sky(argv):
 			channels[channel].append(image / np.amax(image))
 
 	thr = 0.006
-	S = 101
+	S = 31
 	S2 = 301
-	kh=1.1
-	kl=0.9
 
 	result_image = data.DataFrame()
 	for channel in channels:
+		print(channel)
 		avg = sum(channels[channel]) / len(channels[channel])
 		skyes = []
 		for i in range(len(channels[channel])):
 			img = channels[channel][i]
 			diff = abs(img - avg)
-			mask = diff > thr
-			
-			sky = (1-mask)*img
-			sky = sky / np.amax(sky)
+			mask_idx = np.where(diff > thr)
 
-			sky_avg = np.average(sky)
-			sky_h = sky_avg * kh
-			sky_l = sky_avg * kl
-			sky255 = (sky - sky_l) / (sky_h - sky_l)
-			sky255 = np.clip(sky255, 0, 1)
-
-			sky_fixed = cv2.medianBlur((sky255*255).astype('uint8'), S)
-			sky_fixed = sky_fixed.astype('float32')/255 * (sky_h - sky_l) + sky_l
+			sky = img
+			sky[mask_idx] = np.average(sky)
+			print("Apply median filter")
+			sky_fixed = scipy.signal.medfilt2d(sky, S)
+			print("\tDone")
 			sky_fixed = cv2.GaussianBlur(sky_fixed, (S2, S2), 0)
 
 			skyes.append(sky_fixed)

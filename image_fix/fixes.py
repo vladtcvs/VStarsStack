@@ -3,6 +3,8 @@ import image_fix.remove_sky
 import image_fix.border
 import image_fix.normalize
 import image_fix.motion_fix
+import image_fix.deconvolution
+import image_fix.useL
 
 import os
 
@@ -27,8 +29,9 @@ commands = {
 	"border"     : (image_fix.border.run,     "remove border"),
 	"normalize"  : (image_fix.normalize.run,  "normalize to weight"),
 	"fix-motion" : (image_fix.motion_fix.run, "remove motion of image"),
+	"deconvolution" : (image_fix.deconvolution.run, "deconvolution of image"),
+	"useL"       : (image_fix.useL.run, "use L channel for brightness"),
 }
 
 def run(argv):
 	usage.run(argv, "image-fix", commands, autohelp=True)
-

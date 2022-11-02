@@ -4,7 +4,7 @@ import json
 
 import cfg
 
-import projection
+import projection.perspective
 import common
 
 def run(argv):
@@ -14,7 +14,7 @@ def run(argv):
 	else:
 		outfilename = argv[1]
 
-	proj = projection.Projection(cfg.camerad["W"], cfg.camerad["H"], cfg.camerad["F"], cfg.camerad["w"], cfg.camerad["h"])
+	proj = projection.perspective.Projection(cfg.camerad["W"], cfg.camerad["H"], cfg.camerad["F"], cfg.camerad["w"], cfg.camerad["h"])
 	with open(infilename) as f:
 		clusters = json.load(f)
 	for cluster in clusters:
