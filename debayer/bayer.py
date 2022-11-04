@@ -1,50 +1,72 @@
 import usage
 import os
 import common
-
+import data
 import numpy as np
+import cfg
 
 mask = np.array([
-			[[0, 0], [2, 0]], # red
+			[[0, 0], [1, 0]], # red
 			[[1, 0], [0, 1]], # green
-			[[0, 2], [0, 0]], # blue
+			[[0, 1], [0, 0]], # blue
 		])
 
 def getcolor(img, mask):
 	return np.sum(img*mask)
 
-def debayer_process(frame):
-	h = frame.shape[0]
-	w = frame.shape[1]
+def debayer_process(image, weight):
+	h = image.shape[0]
+	w = image.shape[1]
 	
-	chape = (int(h/2), int(w/2))
+	cshape = (int(h/2), int(w/2))
 	R = np.zeros(cshape)
 	G = np.zeros(cshape)
 	B = np.zeros(cshape)
 
+	wR = np.zeros(cshape)
+	wG = np.zeros(cshape)
+	wB = np.zeros(cshape)
+
 	for y in range(int(h/2)):
 		for x in range(int(w/2)):
 			cut = image[2*y:2*y+2, 2*x:2*x+2]
+			wcut = weight[2*y:2*y+2, 2*x:2*x+2]
 			R[y][x] = getcolor(cut, mask[0])
 			G[y][x] = getcolor(cut, mask[1])
 			B[y][x] = getcolor(cut, mask[2])
 
-	return R, G, B
+			wR[y][x] = getcolor(wcut, mask[0])
+			wG[y][x] = getcolor(wcut, mask[1])
+			wB[y][x] = getcolor(wcut, mask[2])
+
+	return R, G, B, wR, wG, wB
 	
 def process_file(argv):
 	fname = argv[0]
 	output = argv[1]
 
-	data = common.data_load(fname)
+	dataframe = data.DataFrame.load(fname)
 
-	R, G, B = debayer_process(data["channels"]["raw"])
-	common.data_add_channel(data, R, "R")
-	common.data_add_channel(data, G, "G")
-	common.data_add_channel(data, B, "B")
+	raw,_ = dataframe.get_channel("raw")
+	weight,_ = dataframe.get_channel(dataframe.links["weight"]["raw"])
 
-	common.data_store(data, output)
+	R, G, B, wR, wG, wB = debayer_process(raw, weight)
+	dataframe.add_channel(R, "R", brightness=True)
+	dataframe.add_channel(G, "G", brightness=True)
+	dataframe.add_channel(B, "B", brightness=True)
+
+	dataframe.add_channel(wR, "weight-R", weight=True)
+	dataframe.add_channel(wG, "weight-G", weight=True)
+	dataframe.add_channel(wB, "weight-B", weight=True)
+
+	dataframe.add_channel_link("R", "weight-R", "weight")
+	dataframe.add_channel_link("G", "weight-G", "weight")
+	dataframe.add_channel_link("B", "weight-B", "weight")
+
+	dataframe.store(output)
 
 def process_path(argv):
+	print(argv)
 	input = argv[0]
 	output = argv[1]
 

@@ -32,7 +32,7 @@ def readnef(filename, output):
 
 	dataframe.add_channel(image, "raw", encoded=True)
 	dataframe.add_channel(weight, "weight")
-	dataframe.add_channel_link("raw", "weigh", "weight")
+	dataframe.add_channel_link("raw", "weight", "weight")
 
 	dataframe.add_parameter(image.data.shape[0], "h")
 	dataframe.add_parameter(image.data.shape[1], "w")
@@ -57,7 +57,7 @@ def process_path(argv):
 	files = common.listfiles(input, ".nef")
 	ncpu = max(int(mp.cpu_count())-1, 1)
 	pool = mp.Pool(ncpu)
-	pool.starmap(work, [(filename, os.path.join(output, name + ".npz")) for name, filename in files])
+	pool.starmap(work, [(filename, os.path.join(output, name + ".zip")) for name, filename in files])
 	pool.close()
 
 def process(argv):

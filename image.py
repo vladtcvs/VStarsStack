@@ -8,7 +8,7 @@ import data
 import common
 import usage
 
-slope = 80
+slope = 1
 power = 1
 
 def make_frames(data, channel, *, slope=1, power=1):
