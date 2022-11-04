@@ -1,7 +1,15 @@
+from calendar import c
 import data
 import numpy as np
 
 import matplotlib.pyplot as plt
+
+def has_flag(opts, name):
+    if name not in opts:
+        return False
+    if not opts[name]:
+        return False
+    return True
 
 def process(infname, outfname, colors, L):
     dataframe = data.DataFrame.load(infname)
@@ -9,20 +17,32 @@ def process(infname, outfname, colors, L):
     print("Colors: %s" % (" ".join(colors)))
     images = {}
     opts = {}
+    L_image_synth = None
+
     for channel in colors:
-        images[channel],opts[channel] = dataframe.get_channel(channel)
-        images[channel] = np.clip(images[channel], 0, 1e9)
+        image,opts[channel] = dataframe.get_channel(channel)
+        image = np.clip(image, 0, 1e12)
+        images[channel] = image
+
+        if not has_flag(opts[channel], "normalized"):
+            weight,_ = dataframe.get_channel(dataframe.links["weight"][channel])
+            image /= weight
+            image[np.where(weight == 0)] = 0
+
+        if L_image_synth is None:
+            L_image_synth = image
+        else:
+            L_image_synth += image
+
+    L_image_synth /= np.amax(L_image_synth)
+    
     L_image_real,_ = dataframe.get_channel(L)
     L_image_real /= np.amax(L_image_real)
-
-    L_image_synth = sum([images[channel] for channel in images])
-    L_image_synth /= np.amax(L_image_synth)
 
     k = L_image_real / L_image_synth
     k[np.where(L_image_synth == 0)] = 0
     for channel in images:
-        images[channel] *= k
-        dataframe.add_channel(images[channel], channel, **opts[channel])
+        dataframe.add_channel(images[channel]*k, channel, **opts[channel])
     dataframe.store(outfname)
 
 def process_file(argv):
