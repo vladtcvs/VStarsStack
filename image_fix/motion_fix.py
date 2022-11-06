@@ -1,7 +1,6 @@
 import common
 import data
 
-import stars
 import skimage.restoration
 import sys
 

@@ -1,10 +1,10 @@
-import stars
+import targets.stars.detect
 import scipy.signal
 import numpy as np
 
 def remove_stars(image):
     size = 31
-    _,mask = stars.detect.detect(image)
+    _,mask = targets.stars.detect.detect(image)
     idx = (mask == 0)
     sidx = (mask != 0)
     nimg = np.zeros(image.shape)

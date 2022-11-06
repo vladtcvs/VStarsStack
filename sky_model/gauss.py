@@ -7,11 +7,11 @@ import usage
 import os
 import common
 import multiprocessing as mp
-import stars
+import targets.stars.detect
 import cfg
 
 def model(image):
-	_,mask = stars.detect.detect(image)
+	_,mask = targets.stars.detect.detect(image)
 	shape = image.shape
 	sky_blur = int(shape[1]/4)*2+1
 

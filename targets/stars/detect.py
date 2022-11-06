@@ -27,9 +27,9 @@ import common
 import data
 import cfg
 
-import stars.detector.detector
+import targets.stars.detector.detector
 
-detect = stars.detector.detector.detect_stars
+detect = targets.stars.detector.detector.detect_stars
 
 def process_file(fname, jsonfile):
 	image = data.DataFrame.load(fname)

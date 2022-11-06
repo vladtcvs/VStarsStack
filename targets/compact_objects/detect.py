@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import cv2
 import imutils
 
+import data
 import sys
 import json
 import os
@@ -67,7 +68,7 @@ def detect(layer, debug=False):
 
 
 def process_file(filename, descfilename):
-	image = common.data_load(filename)
+	image = data_load(filename)
 
 	for channel in cfg.config["compact_objects"]["detect_channels"]:
 		layer = image["channels"][channel]

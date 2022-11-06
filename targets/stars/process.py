@@ -2,12 +2,12 @@ import os
 
 import cfg
 
-import stars.detect
-import stars.describe
-import stars.match
-import stars.net
-import stars.cluster
-import stars.lonlat
+import targets.stars.detect
+import targets.stars.describe
+import targets.stars.match
+import targets.stars.net
+import targets.stars.cluster
+import targets.stars.lonlat
 import sys
 import usage
 
@@ -45,22 +45,22 @@ def process(argv):
 
 	if level <= 0:
 		print("Detect")
-		stars.detect.run([npydir, starsdir])
+		targets.stars.detect.run([npydir, starsdir])
 	if level <= 1:
 		print("Lonlat")
-		stars.lonlat.run([starsdir])
+		targets.stars.lonlat.run([starsdir])
 	if level <= 2:
 		print("Describe")
-		stars.describe.run([starsdir, descdir])
+		targets.stars.describe.run([starsdir, descdir])
 	if level <= 3:
 		print("Match")
-		stars.match.run([descdir])
+		targets.stars.match.run([descdir])
 	if level <= 4:
 		print("Net")
-		stars.net.run([descdir, net])
+		targets.stars.net.run([descdir, net])
 	if level <= 5:
 		print("Cluster")
-		stars.cluster.run([net, descdir, clusters])
+		targets.stars.cluster.run([net, descdir, clusters])
 
 commands = {
 	"*" : (process, "Process stars: detect, lonlat, describe, match, net, cluster", "[first_command]"),
@@ -68,4 +68,3 @@ commands = {
 
 def run(argv):
 	usage.run(argv, "stars process", commands)
-
