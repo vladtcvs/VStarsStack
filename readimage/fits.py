@@ -40,12 +40,30 @@ def process_file(argv):
 
 		exptime = image.header["EXPTIME"]
 
+		pixh = 1
+		if "YPIXSZ" in image.header:
+			pixh = image.header["YPIXSZ"] * 0.001
+		if "h" in cfg.camerad and "H" in cfg.camerad:
+			pixh = cfg.camerad["H"] / cfg.camerad["h"]
+
+		pixw = 1
+		if "XPIXSZ" in image.header:
+			pixw = image.header["XPIXSZ"] * 0.001
+		if "w" in cfg.camerad and "W" in cfg.camerad:
+			pixw = cfg.camerad["W"] / cfg.camerad["w"]
+
+		F = 1000
+		if "FOCALLEN" in image.header:
+			F = image.header["FOCALLEN"]
+		if "F" in cfg.camerad:
+			F = cfg.camerad["F"]
+
 		dataframe.add_parameter(image.data.shape[0], "h")
 		dataframe.add_parameter(image.data.shape[1], "w")
 		dataframe.add_parameter("perspective", "projection")
-		dataframe.add_parameter(cfg.camerad["H"] / cfg.camerad["h"], "perspective_kh")
-		dataframe.add_parameter(cfg.camerad["W"] / cfg.camerad["w"], "perspective_kw")
-		dataframe.add_parameter(cfg.camerad["F"], "perspective_F")
+		dataframe.add_parameter(pixh, "perspective_kh")
+		dataframe.add_parameter(pixw, "perspective_kw")
+		dataframe.add_parameter(F, "perspective_F")
 
 		if "FILTER" in image.header:
 			channel_name = image.header["FILTER"].strip()

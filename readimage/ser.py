@@ -31,6 +31,30 @@ def serread(f, bs, le):
 def serread4(f):
 	return serread(f, 4, True)
 
+def pixelread(f, bpp, le, colorid):
+	if colorid == 0:
+		return serread(f, bpp, le)
+	elif colorid == 100:
+		return np.array([serread(f, bpp, le), serread(f, bpp, le), serread(f, bpp, le)])
+	elif colorid == 101:
+		return np.array([serread(f, bpp, le), serread(f, bpp, le), serread(f, bpp, le)])
+
+def read_to_npy(f, bpp, le, shape):
+	num = 1
+	for i in range(len(shape)):
+		num *= shape[i]
+	num_b = bpp * num
+	block = np.array(list(f.read(num_b)), dtype=np.uint32)
+	block = block.reshape((num, bpp))
+	for i in range(bpp):
+		if le:
+			block[:,i] *= 2**(8*i)
+		else:
+			block[:,i] *= 2**(8*(bpp-i))
+	block = np.sum(block, axis=1)
+	block = block.reshape(shape)
+	return block
+
 def readser(fname):
 	with open(fname, "rb") as f:
 		fileid = f.read(14)
@@ -39,9 +63,6 @@ def readser(fname):
 			return []
 		luid = serread4(f)
 		colorid = serread4(f)
-		if colorid != 0:
-			print("Unsupported colorid = %i" % colorid)
-			return []
 		le16bit = serread4(f)
 		width = serread4(f)
 		height = serread4(f)
@@ -53,6 +74,19 @@ def readser(fname):
 		telescope = f.read(40).decode('utf8')
 		datetime = serread(f, 8, True)
 		datetimeUTC = serread(f, 8, True)
+
+		if colorid == 0:
+			shape = (height, width, 1)
+			channels = ["Y"]
+		elif colorid == 100:
+			shape = (height, width, 3)
+			channels = ["R", "G", "B"]
+		elif colorid == 101:
+			shape = (height, width, 3)
+			channels = ["B", "G", "R"]
+		else:
+			print("Unsupported colorid = %i" % colorid)
+			return []
 
 		tags = {
 			"depth" : depth,
@@ -73,17 +107,16 @@ def readser(fname):
 
 		for id in range(frames):
 			print("\tprocessing frame %i" % id)
-			frame = np.zeros((height, width), dtype=np.float32)
-			for y in range(height):
-				for x in range(width):
-					frame[y,x] = serread(f, bpp, le16bit)
-
+			frame = read_to_npy(f, bpp, le16bit, shape)
 			dataframe = data.DataFrame(params, tags)
 			exptime = 1
 			weight = np.ones(frame.data.shape)*exptime
-			dataframe.add_channel(frame, "raw", encoded=True)
-			dataframe.add_channel(weight, "weight")
-			dataframe.add_channel_link("raw", "weight", "weight")
+			index = 0
+			for index in range(len(channels)):
+				channel = channels[index]
+				dataframe.add_channel(frame[:,:,index], channel)
+				dataframe.add_channel(weight, "weight-"+channel)
+				dataframe.add_channel_link(channel, "weight-"+channel, "weight")
 			yield id, dataframe
 
 def process_file(argv):
