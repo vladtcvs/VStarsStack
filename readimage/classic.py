@@ -24,8 +24,12 @@ def readjpeg(fname):
 
 	tags = readimage.tags.read_tags(fname)
 	params = {
-		"originalW" : shape[1],
-		"originalH" : shape[0], 
+		"w" : shape[1],
+		"h" : shape[0],
+		"projection" : "perspective",
+		"perspective_kh" : cfg.camerad["H"] / cfg.camerad["h"],
+		"perspective_kw" : cfg.camerad["W"] / cfg.camerad["w"],
+		"perspective_F" : cfg.scope["F"],
 	}
 
 	try:
@@ -35,7 +39,7 @@ def readjpeg(fname):
 
 	weight = np.ones((shape[0], shape[1]))*e
 
-	dataframe = data.DataFrame(None, tags)
+	dataframe = data.DataFrame(params, tags)
 	dataframe.add_channel(weight, "weight", weight=True)
 
 	if len(rgb.shape) == 3:

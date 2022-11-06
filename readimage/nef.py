@@ -39,7 +39,7 @@ def readnef(filename, output):
 	dataframe.add_parameter("perspective", "projection")
 	dataframe.add_parameter(cfg.camerad["H"] / cfg.camerad["h"], "perspective_kh")
 	dataframe.add_parameter(cfg.camerad["W"] / cfg.camerad["w"], "perspective_kw")
-	dataframe.add_parameter(cfg.camerad["F"], "perspective_F")
+	dataframe.add_parameter(cfg.scope["F"], "perspective_F")
 	dataframe.store(output)
 
 def work(input, output):

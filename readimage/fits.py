@@ -40,17 +40,9 @@ def process_file(argv):
 
 		exptime = image.header["EXPTIME"]
 
-		pixh = 1
-		if "h" in cfg.camerad and "H" in cfg.camerad:
-			pixh = cfg.camerad["H"] / cfg.camerad["h"]
-
-		pixw = 1
-		if "w" in cfg.camerad and "W" in cfg.camerad:
-			pixw = cfg.camerad["W"] / cfg.camerad["w"]
-
-		F = 1000
-		if "F" in cfg.config["telescope"]:
-			F = cfg.config["telescope"]["F"]
+		pixh = cfg.camerad["H"] / cfg.camerad["h"]
+		pixw = cfg.camerad["W"] / cfg.camerad["w"]
+		F = cfg.scope["F"]
 
 		dataframe.add_parameter(image.data.shape[0], "h")
 		dataframe.add_parameter(image.data.shape[1], "w")

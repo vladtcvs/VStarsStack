@@ -28,6 +28,7 @@ if os.path.exists(cfgpath):
 	telescope = config["telescope"]
 
 	camerad    = telescope["camera"]
+	scope      = telescope["scope"]
 
 	if "distorsion" in telescope:
 		distorsion = telescope["distorsion"]

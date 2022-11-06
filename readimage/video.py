@@ -33,8 +33,13 @@ def read_video(fname):
 			"depth" : 8,
 		}
 		params = {
-			"originalW" : frame.shape[1],
-			"originalH" : frame.shape[0],
+			"w" : frame.shape[1],
+			"h" : frame.shape[0],
+			"projection" : "perspective",
+			"perspective_kh" : cfg.camerad["H"] / cfg.camerad["h"],
+			"perspective_kw" : cfg.camerad["W"] / cfg.camerad["w"],
+			"perspective_F" : cfg.scope["F"],
+
 		}
 
 		print("\tprocessing frame %i" % id)

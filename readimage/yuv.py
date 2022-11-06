@@ -31,12 +31,12 @@ def readyuv(fname, W, H, format):
 		}
 
 		params = {
-			"w" : cfg.camerad["w"],
-			"h" : cfg.camerad["h"],
+			"w" : W,
+			"h" : H,
 			"projection" : "perspective",
 			"perspective_kh" : cfg.camerad["H"] / cfg.camerad["h"],
 			"perspective_kw" : cfg.camerad["W"] / cfg.camerad["w"],
-			"perspective_F" : cfg.camerad["F"],
+			"perspective_F" : cfg.scope["F"],
 		}
 
 		id = 0
