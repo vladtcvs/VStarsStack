@@ -63,6 +63,16 @@ def process_file(argv):
 	dataframe.add_channel_link("G", "weight-G", "weight")
 	dataframe.add_channel_link("B", "weight-B", "weight")
 
+	dataframe.add_parameter(R.shape[0], "h")
+	dataframe.add_parameter(R.shape[1], "w")
+	if dataframe.params["projection"] == "perspective":
+		pixh = dataframe.params["perspective_kh"]*2
+		pixw = dataframe.params["perspective_kw"]*2
+		dataframe.add_parameter(pixh, "perspective_kh")
+		dataframe.add_parameter(pixw, "perspective_kw")
+	else:
+		print("Unsupported projection: %s" % dataframe.params["projection"])
+
 	dataframe.store(output)
 
 def process_path(argv):

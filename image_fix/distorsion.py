@@ -1,12 +1,13 @@
 import cfg
 import sys
 import common
-import projection
+import projection.perspective
 import math
 import os
 import numpy as np
 import multiprocessing as mp
 import usage
+import data
 
 ncpu = max(1, mp.cpu_count()-1)
 
@@ -63,23 +64,23 @@ def fix(image, image_weight_layer, proj, image_weight=1):
 
 def dedistorsion(name, fname, outfname, proj):
 	print(name)
-	data = common.data_load(fname)
-	for channel in data["meta"]["channels"]:
-		if channel in data["meta"]["encoded_channels"]:
+	dataframe = data.DataFrame.load(fname)
+	for channel in dataframe.get_channels():
+		image, opts = dataframe.get_channel(channel)
+		if opts["encoded"]:
 			continue
-		image = data["channels"][channel]
-		weight = image["meta"]["params"]["weight"]
+		if opts["weight"]:
+			continue
+		weight_channel = dataframe.links["weight"][channel]
+		image_weight,_ = dataframe.get_channel(weight_channel)
+		
 
-		if "weight" in data["channels"]:
-			image_weight = data["channels"]["weight"]
-		else:
-			image_weight = None
+		fixed, fixed_weight = fix(image, image_weight, proj, 1)
+		dataframe.add_channel(fixed, channel, **opts)
+		dataframe.add_channel(fixed_weight, weight_channel, weight=True)
+		dataframe.add_channel_link(channel, weight_channel, "weight")
 
-		fixed, fixed_weight = fix(image, image_weight, proj, weight)
-		common.data_add_channel(image, fixed, channel)
-		common.data_add_channel(image, fixed_weight, "weight")
-
-	common.data_store(image, outfname)
+	dataframe.store(outfname)
 
 def process_file(argv):
 	proj = projection.Projection(cfg.camerad["W"], cfg.camerad["H"], cfg.camerad["F"], cfg.camerad["w"], cfg.camerad["h"])
@@ -89,7 +90,7 @@ def process_file(argv):
 	dedistorsion(name, infname, outfname, proj)
 
 def process_dir(argv):
-	proj = projection.Projection(cfg.camerad["W"], cfg.camerad["H"], cfg.camerad["F"], cfg.camerad["w"], cfg.camerad["h"])
+	proj = projection.perspective.Projection(cfg.camerad["W"], cfg.camerad["H"], cfg.camerad["F"], cfg.camerad["w"], cfg.camerad["h"])
 	inpath = argv[0]
 	outpath = argv[1]
 	files = common.listfiles(inpath, ".zip")

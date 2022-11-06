@@ -2,6 +2,7 @@ import usage
 import os
 import common
 import cfg
+import data
 
 import numpy as np
 
@@ -50,23 +51,27 @@ def yuv_422_split(frame):
 	return Y, Cb, Cr
 	
 def process_file(fname, output):
-	data = common.data_load(fname)
+	dataframe = data.DataFrame.load(fname)
 
-	Y, Cb, Cr = yuv_422_split(data["channels"]["raw"])
+	raw,_ = dataframe.get_channel("raw")
+	Y, Cb, Cr = yuv_422_split(raw)
 
 	R = Y * (1 + 1.403 * Cr)
 	G = Y * (1 - 0.714 * Cr - 0.344 * Cb)
 	B = Y * (1 + 1.773 * Cb)
 
-	common.data_add_channel(data, Y, "Y")
-	common.data_add_channel(data, Cb, "Cb")
-	common.data_add_channel(data, Cr, "Cr")
+	dataframe.add_channel(Y, "Y", brightness=True)
+	dataframe.add_channel(Cb, "Cb")
+	dataframe.add_channel(Cr, "Cr")
 
-	common.data_add_channel(data, R, "R")
-	common.data_add_channel(data, G, "G")
-	common.data_add_channel(data, B, "B")
+	dataframe.add_channel(R, "R", brightness=True)
+	dataframe.add_channel(G, "G", brightness=True)
+	dataframe.add_channel(B, "B", brightness=True)
 
-	common.data_store(data, output)
+	dataframe.add_parameter(Y.shape[0], "h")
+	dataframe.add_parameter(Y.shape[1], "w")
+
+	dataframe.store(output)
 
 def process_path(input, output):
 	files = common.listfiles(input, ".zip")
