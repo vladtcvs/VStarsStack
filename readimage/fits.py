@@ -41,22 +41,16 @@ def process_file(argv):
 		exptime = image.header["EXPTIME"]
 
 		pixh = 1
-		if "YPIXSZ" in image.header:
-			pixh = image.header["YPIXSZ"] * 0.001
 		if "h" in cfg.camerad and "H" in cfg.camerad:
 			pixh = cfg.camerad["H"] / cfg.camerad["h"]
 
 		pixw = 1
-		if "XPIXSZ" in image.header:
-			pixw = image.header["XPIXSZ"] * 0.001
 		if "w" in cfg.camerad and "W" in cfg.camerad:
 			pixw = cfg.camerad["W"] / cfg.camerad["w"]
 
 		F = 1000
-		if "FOCALLEN" in image.header:
-			F = image.header["FOCALLEN"]
-		if "F" in cfg.camerad:
-			F = cfg.camerad["F"]
+		if "F" in cfg.config["telescope"]:
+			F = cfg.config["telescope"]["F"]
 
 		dataframe.add_parameter(image.data.shape[0], "h")
 		dataframe.add_parameter(image.data.shape[1], "w")
