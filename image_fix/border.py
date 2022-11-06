@@ -1,44 +1,64 @@
+#
+# Copyright (c) 2022 Vladislav Tsendrovskii
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+
+import cfg
 import sys
 import numpy as np
 import usage
 import os
 import multiprocessing as mp
 import common
+import data
 
 bw = 60
 ncpu = max(1, mp.cpu_count()-1)
 
-def diff(name, fname, outname, bw_left, bw_top, bw_right, bw_bottom):
+def border(name, fname, outname, bw_left, bw_top, bw_right, bw_bottom):
 	print(name)
 
-	for channel in img["meta"]["channels"]:
-		if channel in img["meta"]["encoded_channels"]:
+	img = data.DataFrame.load(fname)
+
+	for channel in img.get_channels():
+		image,opts = img.get_channel(channel)
+		if opts["encoded"]:
 			continue
-		image = img["channels"][channel]
-		if "mask" in img["channels"]:
-			mask = img["channels"]["mask"]
-		else:
-			mask = np.ones(image.shape)
-	
+		if opts["weight"]:
+			continue
+
+		w_channel = img.links["weight"][channel]
+		weight,_ = img.get_channel(w_channel)
+
 		w = image.shape[1]
 		h = image.shape[0]
 
-		img[0:bw_top,:,:] = 0
-		img[(h-bw_bottom):h,:,:] = 0
+		image[0:bw_top,:,:] = 0
+		image[(h-bw_bottom):h,:,:] = 0
 
-		img[:, 0:bw_left,:] = 0
-		img[:, (w-bw_right):w,:] = 0
-		
-		mask[0:bw_top,:,:] = 0
-		mask[(h-bw_bottom):h,:,:] = 0
+		image[:, 0:bw_left,:] = 0
+		image[:, (w-bw_right):w,:] = 0
 
-		mask[:, 0:bw_left,:] = 0
-		mask[:, (w-bw_right):w,:] = 0
+		weight[0:bw_top,:,:] = 0
+		weight[(h-bw_bottom):h,:,:] = 0
 
-		common.data_add_channel(img, fixed, channel)
-		common.data_add_channel(img, mask, "mask", encoded=True)
+		weight[:, 0:bw_left,:] = 0
+		weight[:, (w-bw_right):w,:] = 0
 
-	common.data_store(img, outname)
+		img.add_channel(image, channel, **opts)
+		img.add_channel(weight, w_channel, weight=True)
+		img.add_channel_link(channel, w_channel, "weight")
+
+	img.store(outname)
 
 def process_file(argv):
 	infile = argv[0]
@@ -62,7 +82,7 @@ def process_file(argv):
 
 	name = os.path.splitext(os.path.basename(infile))[0]
 
-	diff(name, infile, outfile, brd_left, brd_top, brd_right, brd_bottom)
+	border(name, infile, outfile, brd_left, brd_top, brd_right, brd_bottom)
 
 def process_dir(argv):
 	inpath = argv[0]
@@ -86,7 +106,7 @@ def process_dir(argv):
 
 	files = common.listfiles(inpath, ".zip")
 	pool = mp.Pool(ncpu)
-	pool.starmap(diff, [(name, fname, os.path.join(outpath, name + ".zip"), brd_left, brd_top, brd_right, brd_bottom) for name, fname in files])
+	pool.starmap(border, [(name, fname, os.path.join(outpath, name + ".zip"), brd_left, brd_top, brd_right, brd_bottom) for name, fname in files])
 	pool.close()
 
 def process(argv):

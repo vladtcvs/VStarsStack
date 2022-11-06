@@ -1,14 +1,28 @@
+#
+# Copyright (c) 2022 Vladislav Tsendrovskii
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+
 import cfg
 import sys
 import common
-import projection
+import projection.perspective
 import math
 import os
 import numpy as np
 import cv2
 
 def run(argv):
-	proj = projection.Projection(cfg.camerad["W"], cfg.camerad["H"], cfg.camerad["F"], cfg.camerad["w"], cfg.camerad["h"])
+	proj = projection.perspective.Projection(cfg.camerad["W"], cfg.camerad["H"], cfg.camerad["F"], cfg.camerad["w"], cfg.camerad["h"])
 	path = argv[0]
 	outpath = argv[1]
 	img = np.load(path).astype(np.float32)

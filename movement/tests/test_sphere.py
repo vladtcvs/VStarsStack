@@ -1,10 +1,24 @@
+#
+# Copyright (c) 2022 Vladislav Tsendrovskii
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+
 import sys
 import math
 sys.path.append('../')
 sys.path.append('../../projection')
 
 import sphere
-import perspective
+import projection.perspective
 
 thr = 1e-6
 pixthr = 1e-3
@@ -36,7 +50,7 @@ def test_no_rotation_forward():
 
     positions = [(h/2, w/2)]
 
-    proj = perspective.Projection(W, H, F, w, h)
+    proj = projection.perspective.Projection(W, H, F, w, h)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.apply(positions, proj)
@@ -65,7 +79,7 @@ def test_no_rotation_reverse():
 
     positions = [(h/2, w/2)]
 
-    proj = perspective.Projection(W, H, F, w, h)
+    proj = projection.perspective.Projection(W, H, F, w, h)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.reverse(positions, proj)
@@ -101,7 +115,7 @@ def test_lon_rotation_forward():
     y_moved_expected = h/2
     positions = [(y, x)]
 
-    proj = perspective.Projection(W, H, F, w, h)
+    proj = projection.perspective.Projection(W, H, F, w, h)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.apply(positions, proj)
@@ -137,7 +151,7 @@ def test_lon_rotation_reverse():
     y_moved_expected = h/2
     positions = [(y, x)]
 
-    proj = perspective.Projection(W, H, F, w, h)
+    proj = projection.perspective.Projection(W, H, F, w, h)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.reverse(positions, proj)
@@ -173,7 +187,7 @@ def test_neglon_rotation_forward():
     y_moved_expected = h/2
     positions = [(y, x)]
 
-    proj = perspective.Projection(W, H, F, w, h)
+    proj = projection.perspective.Projection(W, H, F, w, h)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.apply(positions, proj)
