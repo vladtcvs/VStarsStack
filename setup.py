@@ -12,12 +12,28 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-from setuptools import setup
+from setuptools import setup, Extension, find_packages
+
+import os
+
+perspective = Extension(name="vstarstack.projection.perspective",
+       sources=["src/vstarstack/projection/perspective.c"])
+
+root = os.path.join(os.path.abspath(os.path.dirname(__file__)), "src")
+result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(root) for f in filenames if os.path.splitext(f)[1] == '.py']
+result = list(set([os.path.dirname(item[len(root)+1:]) for item in result]))
+result = [item.replace("/",".") for item in result if "tests" not in item]
+
+print("Packages: ", result)
+
+packages = result
 
 setup (name = 'vstarstack',
        version = '1.0',
        author='Vladislav Tsendrovskii',
        description = 'Stacking astrophotos',
        scripts = ['bin/vstarstack'],
-       package_dir = {'': 'src'}
+       package_dir = {'': 'src'},
+       packages=packages,
+       ext_modules = [perspective]
        )

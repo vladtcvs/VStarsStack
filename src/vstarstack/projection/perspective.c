@@ -88,7 +88,7 @@ static PyMethodDef Projection_methods[] = {
 
 static PyTypeObject Projection = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "projection.perspective.Projection",
+    .tp_name = "vstarstack.projection.perspective.Projection",
     .tp_doc = PyDoc_STR("Perspective projection object"),
     .tp_basicsize = sizeof(struct ProjectionObject),
     .tp_itemsize = 0,
@@ -100,7 +100,7 @@ static PyTypeObject Projection = {
 
 static PyModuleDef perspectiveModule = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "projection.perspective",
+    .m_name = "vstarstack.projection.perspective",
     .m_doc = "Perspective projection module",
     .m_size = -1,
 };

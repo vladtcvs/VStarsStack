@@ -101,4 +101,4 @@ commands = {
 }
 
 def run(argv):
-	usage.run(argv, "readimage jpeg", commands, autohelp=False)
+	vstarstack.usage.run(argv, "readimage jpeg", commands, autohelp=False)

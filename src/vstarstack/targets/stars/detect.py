@@ -36,7 +36,6 @@ import sys
 import json
 import os
 
-import vstarstack.normalize
 import vstarstack.common
 import vstarstack.data
 import vstarstack.cfg

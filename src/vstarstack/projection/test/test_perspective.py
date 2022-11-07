@@ -15,7 +15,7 @@
 import sys
 import math
 
-import projection.perspective
+import vstarstack.projection.perspective
 
 thr = 1e-6
 
@@ -32,7 +32,7 @@ def test_center_f():
     lon_expected = 0
     lat_expected = 0
 
-    proj = projection.perspective.Projection(W, H, F, w, h)
+    proj = vstarstack.projection.perspective.Projection(W, H, F, w, h)
     lat, lon = proj.project(y, x)
     assert abs(lat - lat_expected) < thr
     assert abs(lon - lon_expected) < thr
@@ -50,7 +50,7 @@ def test_center_r():
     x_expected = 750
     y_expected = 500
 
-    proj = projection.perspective.Projection(W, H, F, w, h)
+    proj = vstarstack.projection.perspective.Projection(W, H, F, w, h)
     y, x = proj.reverse(lat, lon)
     assert abs(y - y_expected) < thr
     assert abs(x - x_expected) < thr
@@ -68,7 +68,7 @@ def test_left_f():
     lon_expected = math.atan(W/2/F)
     lat_expected = 0
 
-    proj = projection.perspective.Projection(W, H, F, w, h)
+    proj = vstarstack.projection.perspective.Projection(W, H, F, w, h)
     lat, lon = proj.project(y, x)
     assert abs(lat - lat_expected) < thr
     assert abs(lon - lon_expected) < thr
@@ -86,7 +86,7 @@ def test_left_r():
     lon = math.atan(W/2/F)
     lat = 0
 
-    proj = projection.perspective.Projection(W, H, F, w, h)
+    proj = vstarstack.projection.perspective.Projection(W, H, F, w, h)
     y, x = proj.reverse(lat, lon)
 
     assert abs(y - y_expected) < thr
@@ -105,7 +105,7 @@ def test_top_f():
     lon_expected = 0
     lat_expected = math.atan(H/2/F)
 
-    proj = projection.perspective.Projection(W, H, F, w, h)
+    proj = vstarstack.projection.perspective.Projection(W, H, F, w, h)
     lat, lon = proj.project(y, x)
     assert abs(lat - lat_expected) < thr
     assert abs(lon - lon_expected) < thr
@@ -123,7 +123,7 @@ def test_top_r():
     lon = 0
     lat = math.atan(H/2/F)
 
-    proj = projection.perspective.Projection(W, H, F, w, h)
+    proj = vstarstack.projection.perspective.Projection(W, H, F, w, h)
     y, x = proj.reverse(lat, lon)
 
     assert abs(y - y_expected) < thr

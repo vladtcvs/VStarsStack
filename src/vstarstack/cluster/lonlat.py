@@ -16,7 +16,7 @@ import json
 
 import vstarstack.cfg
 
-import projection.perspective
+import vstarstack.projection.perspective
 
 def run(argv):
 	infilename = argv[0]
@@ -25,7 +25,7 @@ def run(argv):
 	else:
 		outfilename = argv[1]
 
-	proj = projection.perspective.Projection(vstarstack.cfg.camerad["W"],
+	proj = vstarstack.projection.perspective.Projection(vstarstack.cfg.camerad["W"],
 												vstarstack.cfg.camerad["H"],
 												vstarstack.cfg.camerad["F"],
 												vstarstack.cfg.camerad["w"],

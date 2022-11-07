@@ -19,7 +19,7 @@ import sys
 import numpy as np
 import os
 
-import projection.perspective
+import vstarstack.projection.perspective
 import vstarstack.common
 import vstarstack.data
 
@@ -46,7 +46,7 @@ def make_shift(name, infname, image_shift, outfname):
 		W = dataframe.params["perspective_kw"] * w
 		H = dataframe.params["perspective_kh"] * h
 		F = dataframe.params["perspective_F"]
-		proj = projection.perspective.Projection(W, H, F, w, h)
+		proj = vstarstack.projection.perspective.Projection(W, H, F, w, h)
 	else:	
 		raise Exception("Unknown projection %s" % proj)
 

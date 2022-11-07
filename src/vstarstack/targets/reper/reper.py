@@ -97,7 +97,11 @@ def run(argv):
 	rby = int(argv[3])
 	rbx = int(argv[4])
 	files = vstarstack.common.listfiles(path, ".npy")
-	proj = projection.Projection(vstarstack.cfg.camerad["W"], vstarstack.cfg.camerad["H"], vstarstack.cfg.camerad["F"], vstarstack.cfg.camerad["w"], vstarstack.cfg.camerad["h"])
+	proj = vstarstack.projection.Projection(vstarstack.cfg.camerad["W"],
+												vstarstack.cfg.camerad["H"],
+												vstarstack.cfg.camerad["F"],
+												vstarstack.cfg.camerad["w"],
+												vstarstack.cfg.camerad["h"])
 	cluster = {}
 	for name, fname in files:
 		print(name)

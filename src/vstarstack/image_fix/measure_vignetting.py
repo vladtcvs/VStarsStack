@@ -15,14 +15,14 @@
 import vstarstack.cfg
 import sys
 import vstarstack.common
-import projection.perspective
+import vstarstack.projection.perspective
 import math
 import os
 import numpy as np
 import cv2
 
 def run(argv):
-	proj = projection.perspective.Projection(vstarstack.cfg.camerad["W"],
+	proj = vstarstack.projection.perspective.Projection(vstarstack.cfg.camerad["W"],
 												cfg.camerad["H"],
 												cfg.camerad["F"],
 												cfg.camerad["w"],

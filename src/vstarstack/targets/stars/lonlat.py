@@ -17,7 +17,7 @@ import os
 
 import vstarstack.cfg
 import vstarstack.usage
-import projection.perspective
+import vstarstack.projection.perspective
 import vstarstack.common
 
 def process_file(jsonfile):
@@ -30,7 +30,7 @@ def process_file(jsonfile):
 		W = desc["W"]
 		H = desc["H"]
 		F = desc["F"]
-		proj = projection.perspective.Projection(W, H, F, w, h)
+		proj = vstarstack.projection.perspective.Projection(W, H, F, w, h)
 	else:
 		raise Exception("Unknown projection %s" % proj)
 		

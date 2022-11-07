@@ -15,7 +15,7 @@
 import vstarstack.cfg
 import sys
 import vstarstack.common
-import projection.perspective
+import vstarstack.projection.perspective
 import math
 import os
 import numpy as np
@@ -97,7 +97,7 @@ def dedistorsion(name, fname, outfname, proj):
 	dataframe.store(outfname)
 
 def process_file(argv):
-	proj = projection.Projection(vstarstack.cfg.camerad["W"],
+	proj = vstarstack.projection.Projection(vstarstack.cfg.camerad["W"],
 									vstarstack.cfg.camerad["H"],
 									vstarstack.cfg.camerad["F"],
 									vstarstack.cfg.camerad["w"],
@@ -108,7 +108,7 @@ def process_file(argv):
 	dedistorsion(name, infname, outfname, proj)
 
 def process_dir(argv):
-	proj = projection.perspective.Projection(vstarstack.cfg.camerad["W"],
+	proj = vstarstack.projection.perspective.Projection(vstarstack.cfg.camerad["W"],
 												vstarstack.cfg.camerad["H"],
 												vstarstack.cfg.camerad["F"],
 												vstarstack.cfg.camerad["w"],
