@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+
+import vstarstack.process
+import sys
+
+vstarstack.process.run(sys.argv[1:], 'vstarstack')
