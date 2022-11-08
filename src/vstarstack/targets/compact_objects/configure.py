@@ -31,11 +31,20 @@ def run(argv):
 
 	proj["mode"] = "compact_objects"
 	proj["compact_objects"] = {
-		"threshold" : 200,
-		"minPixels" : 200,
-		"maxPixels" : 1000,
-		"detect_channels" : ["R", "G", "B"],
-		"cutsize" : 200,
+		"detector"  : "brightness",
+		"threshold" : 0.05,
+		"disc" : {
+			"mindelta" : 40,
+			"maxdelta" : 50,
+			"num_bins_curvature" : 50,
+			"num_bins_distance" : 10,
+		},
+		"brightness" : {
+			"minPixels" : 200,
+			"maxPixels" : 1000,
+		},
+		"margin" : 20,
+		"require_size" : True,
 		"paths" : {
 			"descs" : "descs",
 			"cutted" : "cutted",

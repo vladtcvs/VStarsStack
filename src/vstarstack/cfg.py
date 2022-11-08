@@ -23,6 +23,11 @@ def getval(config, name, default):
 		return config[name]
 	return default
 
+debug = False
+if "DEBUG" in os.environ:
+	debug = eval(os.environ["DEBUG"])
+	print("Debug = %s" % debug)
+
 cfgdir = os.getcwd()
 cfgpath = os.path.join(cfgdir, "project.json")
 nthreads = max(int(mp.cpu_count())-1, 1)

@@ -12,12 +12,8 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-from imutils import contours
-from skimage import measure
 import numpy as np
-import matplotlib.pyplot as plt
 import cv2
-import imutils
 
 import vstarstack.data
 import sys
@@ -28,60 +24,18 @@ import vstarstack.cfg
 import vstarstack.common
 import vstarstack.usage
 
-def detect(layer, debug=False):
-	sources = []
-
-	blurred = cv2.GaussianBlur(layer, (5, 5), 0)
-	mb = np.amax(blurred)
-	blurred = blurred / mb * 255
-
-	thr = vstarstack.cfg.config["compact_objects"]["threshold"]
-	thresh = cv2.threshold(blurred, thr, 255, cv2.THRESH_BINARY)[1]
-
-	if debug:
-		plt.imshow(thresh, cmap="gray")
-		plt.show()
-
-	labels = measure.label(thresh, connectivity=2, background=0)
-	mask = np.zeros(thresh.shape, dtype="uint8")
-
-	# loop over the unique components
-	for label in np.unique(labels):
-		# if this is the background label, ignore it
-		if label == 0:
-			continue
-		# otherwise, construct the label mask and count the
-		# number of pixels 
-		labelMask = np.zeros(thresh.shape, dtype="uint8")
-		labelMask[labels == label] = 255
-		numPixels = cv2.countNonZero(labelMask)
-		# if the number of pixels in the component is sufficiently
-		# large, then add it to our mask of "large blobs"
-		if numPixels >= vstarstack.cfg.config["compact_objects"]["minPixels"] and numPixels <= vstarstack.cfg.config["compact_objects"]["maxPixels"]:
-			mask = cv2.add(mask, labelMask)
-
-	cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-	cnts = imutils.grab_contours(cnts)
-	if len(cnts) == 0:
-		return None
-	cnts = contours.sort_contours(cnts)[0]
-
-	planetes = []
-
-	# loop over the contours
-	for (i, c) in enumerate(cnts):
-		# draw the bright spot on the image
-		(x, y, w, h) = cv2.boundingRect(c)
-		((cX, cY), radius) = cv2.minEnclosingCircle(c)
-		planetes.append({"x":cX, "y":cY, "size":radius})
-
-	if len(planetes) != 1:
-		print("Error: len(planetes) = %i" % (len(planetes)))
-		return None
-	return planetes[0]
-
+import vstarstack.targets.compact_objects.detectors.brightness_detector as bd
+import vstarstack.targets.compact_objects.detectors.disc_detector as dd
 
 def process_file(filename, descfilename):
+	detector = vstarstack.cfg.config["compact_objects"]["detector"]
+	if detector == "brightness":
+		detect = bd.detect
+	elif detector == "disc":
+		detect = dd.detect
+	else:
+		raise Exception("Unknown detector: %s" % detector)
+
 	image = vstarstack.data.DataFrame.load(filename)
 
 	for channel in image.get_channels():
@@ -90,8 +44,8 @@ def process_file(filename, descfilename):
 			continue
 		layer = layer / np.amax(layer)
 
-		planet = detect(layer, debug=False)	
-		
+		planet = detect(layer, debug=vstarstack.cfg.debug)
+
 		if planet is not None:
 			break
 	else:
@@ -100,8 +54,6 @@ def process_file(filename, descfilename):
 
 	desc = {
 			"compact_object"  : planet,
-			"height" : image["meta"]["params"]["originalH"],
-			"width"  : image["meta"]["params"]["originalW"],
 	}
 
 	with open(descfilename, "w") as f:
@@ -123,7 +75,8 @@ def process(argv):
 		else:
 			process_file(input, output)
 	else:
-		process_path(vstarstack.cfg.config["paths"]["npy-fixed"], vstarstack.cfg.config["compact_objects"]["paths"]["descs"])
+		process_path(vstarstack.cfg.config["paths"]["npy-fixed"],
+					 vstarstack.cfg.config["compact_objects"]["paths"]["descs"])
 
 
 commands = {

@@ -1,3 +1,9 @@
+# Installation
+
+```
+python3 setup.py install [--user]
+```
+
 # Modes of image presentation
 
 * sphere mode
@@ -26,45 +32,45 @@ should be cutted out and images should be aligned to center object
 
 ## Stars mode
 
-Command for work with stars beginning with `starstack stars`.
+Command for work with stars beginning with `vstarstack stars`.
 
 ### detect
 
-`starstack stars detect` - detect stars on image
+`vstarstack stars detect` - detect stars on image
 
 ### lonlat
 
-`starstack stars lonlat`
+`vstarstack stars lonlat`
 
 If we use `sphere` mode, we transform `(y,x)` coordinates of detected stars into `(lat,lon)` coordinates, with `(0,0)` at center of image.
 
 ### describe
 
-`starstack stars describe`
+`vstarstack stars describe`
 
 We build descriptors for N most brightest stars. Each descriptor is invariant to rotations of image - it contains only information about distances to other stars, their relative brightness and angles between pairs of other stars. So we can use this descriptor for identifying stars.
 
 ### match
 
-`starstack stars match`
+`vstarstack stars match`
 
 We match the same stars on different images using descriptors
 
 ### net
 
-`starstack stars net`
+`vstarstack stars net`
 
 Build `net.json` - file with info about star matching. This is intermidiate format.
 
 ### cluster
 
-`starstack stars cluster`
+`vstarstack stars cluster`
 
 Build `clusters.json` - file with clusters of stars. It contains info about stars coordinates on each frame.
 
 ### process
 
-`starstack stars process` - do all steps above in a single run
+`vstarstack stars process` - do all steps above in a single run
 
 # License
 
