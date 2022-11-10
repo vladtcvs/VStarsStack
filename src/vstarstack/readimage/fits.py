@@ -65,17 +65,37 @@ def process_file(argv):
 		dataframe.add_parameter(pixw, "perspective_kw")
 		dataframe.add_parameter(F, "perspective_F")
 
-		if "FILTER" in image.header:
-			channel_name = image.header["FILTER"].strip()
+		slices = []
+
+		shape = image.data.shape
+		if len(shape) == 2:
+			original = image.data.reshape((1, shape[0], shape[1]))
 		else:
-			channel_name = "Y"
+			original = image.data
 
-		weight_channel_name = "weight-%s" % channel_name
-		weight = np.ones(image.data.shape)*exptime
+		shape = original.shape
 
+		weight_channel_name = "weight"
+		weight = np.ones((shape[1], shape[2]))*exptime
 		dataframe.add_channel(weight, weight_channel_name, weight=True)
-		dataframe.add_channel(image.data, channel_name, brightness=True)
-		dataframe.add_channel_link(channel_name, weight_channel_name, "weight")
+
+		if shape[0]==1:
+			if "FILTER" in image.header:
+				channel_name = image.header["FILTER"].strip()
+			else:
+				channel_name = "Y"
+			slices.append(channel_name)
+		elif shape[0] == 3:
+			slices.append('R')
+			slices.append('G')
+			slices.append('B')
+		else:
+			print("Unknown image format, skip")
+			return
+
+		for i in range(len(slices)):
+			dataframe.add_channel(original[i,:,:], slices[i], brightness=True)
+			dataframe.add_channel_link(slices[i], weight_channel_name, "weight")
 
 		framename = os.path.join(output, "%s.zip" % (name))
 		dataframe.store(framename)
