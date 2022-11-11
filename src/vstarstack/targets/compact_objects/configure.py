@@ -40,8 +40,8 @@ def run(argv):
 			"num_bins_distance" : 10,
 		},
 		"brightness" : {
-			"minPixels" : 200,
-			"maxPixels" : 1000,
+			"min_diameter" : 20,
+			"max_diameter" : 40,
 		},
 		"margin" : 20,
 		"require_size" : True,

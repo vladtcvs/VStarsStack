@@ -22,13 +22,15 @@ import matplotlib.pyplot as plt
 import imutils
 
 def detect(layer, debug=False):
-    min_pixels = vstarstack.cfg.config["compact_objects"]["brightness"]["minPixels"]
-    max_pixels = vstarstack.cfg.config["compact_objects"]["brightness"]["maxPixels"]
+    min_d = vstarstack.cfg.config["compact_objects"]["brightness"]["min_diameter"]
+    max_d = vstarstack.cfg.config["compact_objects"]["brightness"]["max_diameter"]
+    min_pixels = 3.141/4*min_d**2
+    max_pixels = 3.141/4*max_d**2
+
     thr = vstarstack.cfg.config["compact_objects"]["threshold"]
 
     blurred = cv2.GaussianBlur(layer, (5, 5), 0)
-    mb = np.amax(blurred)
-    blurred = blurred / mb * 255
+    blurred = blurred / np.amax(blurred) * 255
 
     thresh = cv2.threshold(blurred, int(thr*255), 255, cv2.THRESH_BINARY)[1]
 

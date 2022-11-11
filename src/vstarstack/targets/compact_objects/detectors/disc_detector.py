@@ -38,9 +38,9 @@ def angle(vec1, vec2):
     return math.acos(s)
 
 def get_point(contour, index):
-    if index < 0:
+    while index < 0:
         index += contour.shape[0]
-    if index >= contour.shape[0]:
+    while index >= contour.shape[0]:
         index -= contour.shape[0]
     return contour[index,0,:]
 

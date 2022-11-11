@@ -71,24 +71,30 @@ def run(argv):
 			print("Can not load ", name)
 			continue
 
+		weight_links = dict(image.links["weight"])
+
 		for channel in image.get_channels():
 			img, opts = image.get_channel(channel)
 			if opts["encoded"]:
 				image.remove_channel(channel)
 				continue
 
-			if opts["weight"]:
-				continue
+			img = img[top:bottom+1, left:right+1]
 
-			weight_channel = image.links["weight"][channel]
-			weight,_ = image.get_channel(weight_channel)
-
-			img = img[top:bottom, left:right]
-			weight = weight[top:bottom, left:right]
+			if require_size:
+				if img.shape[0] != 2*maxr + 1:
+					print("\tSkip %s" % channel)
+					image.remove_channel(channel)
+					continue
+				if img.shape[1] != 2*maxr + 1:
+					print("\tSkip %s" % channel)
+					image.remove_channel(channel)
+					continue
 
 			image.add_channel(img, channel, **opts)
-			image.add_channel(weight, weight_channel, weight=True)
-			image.add_channel_link(channel, weight_channel, "weight")
+
+		for ch in weight_links:
+			image.add_channel_link(ch, weight_links[ch], "weight")
 
 		outname = os.path.join(cutpath, name + ".zip")
 		image.store(outname)
