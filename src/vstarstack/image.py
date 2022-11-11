@@ -15,6 +15,7 @@
 import numpy as np
 import os
 import imageio
+import cv2
 
 import matplotlib.pyplot as plt
 
@@ -150,11 +151,56 @@ def rename_channel(argv):
 	dataframe.rename_channel(channel, target)
 	dataframe.store(name)
 
+def remove_unsharp(argv):
+	npys = argv[0]
+	percent = int(argv[1])
+	outpath = argv[2]
+
+	channel_sharpness = {}
+
+	files = vstarstack.common.listfiles(npys, ".zip")
+	for name, filename  in files:
+		print(name)
+		dataframe = vstarstack.data.DataFrame.load(filename)
+		channels = dataframe.get_channels()
+
+		for channel in channels:
+			image, opts = dataframe.get_channel(channel)
+			if not opts["brightness"]:
+				continue
+			sharpness = cv2.Laplacian(image, cv2.CV_64F).var()
+			if channel not in channel_sharpness:
+				channel_sharpness[channel] = []
+			channel_sharpness[channel].append((name, sharpness))
+	
+	for channel in channel_sharpness:
+		shps = channel_sharpness[channel]
+		shps = sorted(shps, key=lambda item : item[1], reverse=True)
+		num = int(len(shps)*percent/100)
+		shps = shps[:num]
+		channel_sharpness[channel] = [item[0] for item in shps]
+
+	for name, filename  in files:
+		print(name)
+		dataframe = vstarstack.data.DataFrame.load(filename)
+		channels = dataframe.get_channels()
+
+		for channel in channels:
+			image, opts = dataframe.get_channel(channel)
+			if not opts["brightness"]:
+				continue
+
+			if name not in channel_sharpness[channel]:
+				dataframe.remove_channel(channel)
+
+		dataframe.store(os.path.join(outpath, name + ".zip"))
+
 commands = {
 	"show"     : (show, "show image"),
 	"convert"  : (convert, "convert image"),
 	"cut"      : (cut, "cut part of image"),
 	"rename-channel" : (rename_channel, "filename.zip original_name target_name - rename channel"),
+	"remove-unsharp" : (remove_unsharp, "inputs/ percent outputs/"),
 }
 
 def run(argv):
