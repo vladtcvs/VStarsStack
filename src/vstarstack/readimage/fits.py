@@ -58,8 +58,6 @@ def process_file(argv):
 		pixw = vstarstack.cfg.camerad["W"] / vstarstack.cfg.camerad["w"]
 		F = vstarstack.cfg.scope["F"]
 
-		dataframe.add_parameter(image.data.shape[0], "h")
-		dataframe.add_parameter(image.data.shape[1], "w")
 		dataframe.add_parameter("perspective", "projection")
 		dataframe.add_parameter(pixh, "perspective_kh")
 		dataframe.add_parameter(pixw, "perspective_kw")
@@ -74,6 +72,9 @@ def process_file(argv):
 			original = image.data
 
 		shape = original.shape
+
+		dataframe.add_parameter(shape[1], "h")
+		dataframe.add_parameter(shape[2], "w")
 
 		weight_channel_name = "weight"
 		weight = np.ones((shape[1], shape[2]))*exptime
