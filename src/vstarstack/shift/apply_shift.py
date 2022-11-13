@@ -66,7 +66,7 @@ def make_shift(name, infname, image_shift, outfname):
 		else:
 			weight = np.ones(image.shape)*1
 
-		shifted, shifted_weight = shift.shift_image.shift_image(image, image_shift, proj, weight)
+		shifted, shifted_weight = vstarstack.shift.shift_image.shift_image(image, image_shift, proj, weight)
 		dataframe.add_channel(shifted, channel, **opts)
 		dataframe.add_channel(shifted_weight, weight_channel, weight=True)
 		dataframe.add_channel_link(channel, weight_channel, "weight")

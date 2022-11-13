@@ -22,5 +22,4 @@ commands = {
 }
 
 def run(argv):
-	vstarstack.usage.run(argv, "cluster", commands)
-
+	vstarstack.usage.run(argv, "cluster", commands, autohelp=True)

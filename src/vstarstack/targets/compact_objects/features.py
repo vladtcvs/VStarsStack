@@ -46,6 +46,10 @@ def match_images(kps):
             matches = bf.match(des1, des2)
             matches = sorted(matches, key = lambda x:x.distance)
 
+            nm = int(len(matches)/3)
+            matches = matches[:nm]
+            matches = matches[:20]    
+
             for match in matches:
                 ind2 = match.trainIdx
                 ind1 = match.queryIdx
@@ -70,9 +74,10 @@ def match_images(kps):
 
                 img1 = (img1 / np.amax(img1) * 255).astype(np.uint8)
                 img2 = (img2 / np.amax(img2) * 255).astype(np.uint8)
+
                 img3 = cv2.drawMatches(img1,kp1,
                                         img2,kp2,
-                                        matches[:150],
+                                        matches,
                                         None,
                                         flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
                 plt.imshow(img3)
@@ -97,5 +102,10 @@ def run(argv):
     files = [filename for name,filename in files]
     kps = find_kps(files)
     clusters = match_images(kps)
+
+    total_clusters = []
+    for channel in clusters:
+        ch_clusters = clusters[channel]
+        total_clusters += ch_clusters
     with open(clusters_fname, "w") as f:
-        json.dump(clusters, f, indent=4, ensure_ascii=False)
+        json.dump(total_clusters, f, indent=4, ensure_ascii=False)

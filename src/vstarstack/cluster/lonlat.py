@@ -27,7 +27,7 @@ def run(argv):
 
 	proj = vstarstack.projection.perspective.Projection(vstarstack.cfg.camerad["W"],
 												vstarstack.cfg.camerad["H"],
-												vstarstack.cfg.camerad["F"],
+												vstarstack.cfg.scope["F"],
 												vstarstack.cfg.camerad["w"],
 												vstarstack.cfg.camerad["h"])
 	with open(infilename) as f:

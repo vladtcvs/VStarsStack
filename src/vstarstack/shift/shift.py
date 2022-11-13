@@ -22,4 +22,4 @@ commands = {
 }
 
 def run(argv):
-	vstarstack.usage.run(argv, "shift", commands)
+	vstarstack.usage.run(argv, "shift", commands, autohelp=True)
