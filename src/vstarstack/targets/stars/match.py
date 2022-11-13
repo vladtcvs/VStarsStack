@@ -194,5 +194,5 @@ commands = {
 }
 
 def run(argv):
-	usage.run(argv, "stars match", commands)
+	vstarstack.usage.run(argv, "stars match", commands)
 

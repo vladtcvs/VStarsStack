@@ -47,6 +47,7 @@ commands = {
 	"planets" : (vstarstack.targets.planets.planets.run, "commands for processing planets"),
 	"image" : (vstarstack.image.run, "image processing (show, convert, etc)"),
 	"clean" : (vstarstack.clean.run, "remove temporary files"),
+	"fine-shift" : (vstarstack.fine_shift.fine_shift.run, "fine shift images"),
 }
 
 def run(argv, progname=None):
