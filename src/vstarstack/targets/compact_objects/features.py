@@ -7,8 +7,18 @@ import json
 import matplotlib.pyplot as plt
 import os
 
+def detect_points(image, orb):
+    blurred = cv2.GaussianBlur(image, (31, 31), 0)
+    mask = np.where(image <= blurred)
+    image = image - blurred
+    image[mask] = 0
+    #plt.imshow(image, cmap='gray')
+    #plt.show()
+    points = orb.detect(image, mask=None)
+    return points
+
 def select_keypoints(image, orb):
-    image = cv2.GaussianBlur(image, (3, 3), 0)
+    #image = cv2.GaussianBlur(image, (3, 3), 0)
     shape = image.shape
     N = 3
     cpts = []
@@ -20,7 +30,7 @@ def select_keypoints(image, orb):
             x1 = int(shape[1]/N*j)
             x2 = int(shape[1]/N*(j+1))
             subimage = image[y1:y2,x1:x2]
-            points = orb.detect(subimage, mask=None)
+            points = detect_points(subimage, orb)
             for point in points:
                 cpts.append({"x":point.pt[0]+x1, "y":point.pt[1]+y1, "size" : point.size})
     return cpts
