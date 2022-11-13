@@ -7,8 +7,16 @@ import json
 import matplotlib.pyplot as plt
 import os
 
-def find_kps(files):
-    kps = {}
+def select_keypoints(image, orb):
+    image = cv2.GaussianBlur(image, (3, 3), 0)
+    points = orb.detect(image, mask=None)
+    cpts = []
+    for point in points:
+        cpts.append({"x":point.pt[0], "y":point.pt[1], "size" : point.size})
+    return cpts
+
+def find_keypoints(files):
+    points = {}
     orb = cv2.ORB_create()
     for fname in files:
         name = os.path.splitext(os.path.basename(fname))[0]
@@ -22,76 +30,117 @@ def find_kps(files):
                 continue
             if not opts["brightness"]:
                 continue
-            if channel not in kps:
-                kps[channel] = {}
+            if channel not in points:
+                points[channel] = {}
             image = (image / np.amax(image) * 255).astype(np.uint8)
-            kp, descs = orb.detectAndCompute(image, None)
-            kps[channel][name] = (kp, descs, fname)
-    return kps
 
-def match_images(kps):
+            cur_points = select_keypoints(image, orb)
+
+            kps = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in cur_points]
+            _, descs = orb.compute(image, kps)
+            points[channel][name] = {"points":cur_points, "descs":descs, "fname":fname}
+    return points
+
+def match_images(points):
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-    crd_clusters = {}
-    for channel in kps:
+    matches = {}
+    for channel in points:
         print("Channel = %s" % channel)
-        names = sorted(list(kps[channel].keys()))
-        clusters = []
+        names = sorted(list(points[channel].keys()))
+        matches[channel] = {}
         for ind in range(len(names)-1):
             next = ind+1
             name1 = names[ind]
             name2 = names[next]
+
+            matches[channel][name1] = {}
+            matches[channel][name1][name2] = []
+
             print("\t%s <-> %s" % (name1, name2))
-            kp1,des1,fname1 = kps[channel][name1]
-            kp2,des2,fname2 = kps[channel][name2]
-            matches = bf.match(des1, des2)
-            matches = sorted(matches, key = lambda x:x.distance)
 
-            nm = int(len(matches)/3)
-            matches = matches[:nm]
-            matches = matches[:20]    
+            des1 = points[channel][name1]["descs"]
+            des2 = points[channel][name2]["descs"]
 
-            for match in matches:
+            imatches = bf.match(des1, des2)
+            imatches = sorted(imatches, key = lambda x:x.distance)
+
+            nm = int(len(imatches)/3)
+            imatches = imatches[:nm]
+            imatches = imatches[:50]
+
+            for match in imatches:
                 ind2 = match.trainIdx
                 ind1 = match.queryIdx
-                for cluster in clusters:
-                    if name1 in cluster and cluster[name1] == ind1:
-                        cluster[name2] = ind2
-                        break
-                    if name2 in cluster and cluster[name2] == ind2:
-                        cluster[name1] = ind1
-                        break
-                else:
-                    cluster = {}
-                    cluster[name1] = ind1
-                    cluster[name2] = ind2
-                    clusters.append(cluster)
+                matches[channel][name1][name2].append((ind1, ind2, match.distance))
 
             if vstarstack.cfg.debug:
-                d1 = vstarstack.data.DataFrame.load(fname1)
-                img1,_ = d1.get_channel(channel)
-                d2 = vstarstack.data.DataFrame.load(fname2)
-                img2,_ = d2.get_channel(channel)
+                draw_matches(points, matches, channel, name1, name2)
+    return matches
 
-                img1 = (img1 / np.amax(img1) * 255).astype(np.uint8)
-                img2 = (img2 / np.amax(img2) * 255).astype(np.uint8)
+def draw_matches(points, matches, channel, name1, name2):
+    points1 = points[channel][name1]["points"]
+    points2 = points[channel][name2]["points"]
+    fname1 = points[channel][name1]["fname"]
+    fname2 = points[channel][name2]["fname"]
 
-                img3 = cv2.drawMatches(img1,kp1,
-                                        img2,kp2,
-                                        matches,
-                                        None,
-                                        flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-                plt.imshow(img3)
-                plt.show()
+    d1 = vstarstack.data.DataFrame.load(fname1)
+    img1,_ = d1.get_channel(channel)
+    d2 = vstarstack.data.DataFrame.load(fname2)
+    img2,_ = d2.get_channel(channel)
 
+    img1 = (img1 / np.amax(img1) * 255).astype(np.uint8)
+    img2 = (img2 / np.amax(img2) * 255).astype(np.uint8)
+
+
+    ms = matches[channel][name1][name2]
+    matches_fmt = [cv2.DMatch(msitem[0], msitem[1], 0) for msitem in ms]
+
+    kp1 = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in points1]
+    kp2 = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in points2]
+
+    img3 = cv2.drawMatches(img1,kp1, img2,kp2,
+                            matches_fmt, None,
+                            flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    plt.imshow(img3)
+    plt.show()
+
+
+def build_clusters(matches):
+    clusters = {}
+    for channel in matches:
+        clusters[channel] = []
+        channel_matches = matches[channel]
+        for name1 in channel_matches:
+            for name2 in channel_matches[name1]:
+                matches_list = channel_matches[name1][name2]
+                for match in matches_list:
+                    id1 = match[0]
+                    id2 = match[1]
+                    for cluster in clusters[channel]:
+                        if name1 in cluster and cluster[name1] == id1:
+                            cluster[name2] = id2
+                            break
+                        if name2 in cluster and cluster[name2] == id2:
+                            cluster[name1] = id1
+                            break
+                    else:
+                        cluster = {
+                            name1 : id1,
+                            name2 : id2,
+                        }
+                        clusters[channel].append(cluster)
+    return clusters
+
+def build_coordinate_clusters(clusters, points):
+    crd_clusters = {}
+    for channel in clusters:
         crd_clusters[channel] = []
-        for cluster in clusters:
+        for cluster in clusters[channel]:
             crd_cluster = {}
             for name in cluster:
-                kp,_,_ = kps[channel][name]
-                point = kp[cluster[name]]
-                crd_cluster[name] = {"x":point.pt[0], "y":point.pt[1]}
+                id = cluster[name]
+                crd_cluster[name] = points[channel][name]["points"][id]
             crd_clusters[channel].append(crd_cluster)
-
     return crd_clusters
 
 def run(argv):
@@ -100,12 +149,14 @@ def run(argv):
     
     files = vstarstack.common.listfiles(inputs, ".zip")
     files = [filename for name,filename in files]
-    kps = find_kps(files)
-    clusters = match_images(kps)
+    points = find_keypoints(files)
+    matches = match_images(points)
+    clusters = build_clusters(matches)
+    crd_clusters = build_coordinate_clusters(clusters, points)
 
     total_clusters = []
-    for channel in clusters:
-        ch_clusters = clusters[channel]
+    for channel in crd_clusters:
+        ch_clusters = crd_clusters[channel]
         total_clusters += ch_clusters
     with open(clusters_fname, "w") as f:
         json.dump(total_clusters, f, indent=4, ensure_ascii=False)
