@@ -27,6 +27,8 @@ import vstarstack.configurate
 import vstarstack.debayer.debayer
 import vstarstack.targets.planets.planets
 
+import vstarstack.fine_shift.fine_shift
+
 import vstarstack.image
 import vstarstack.clean
 import vstarstack.usage

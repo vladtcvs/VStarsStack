@@ -1,3 +1,17 @@
+#
+# Copyright (c) 2022 Vladislav Tsendrovskii
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+
 import vstarstack.data
 import vstarstack.cfg
 import cv2
@@ -12,8 +26,6 @@ def detect_points(image, orb):
     mask = np.where(image <= blurred)
     image = image - blurred
     image[mask] = 0
-    #plt.imshow(image, cmap='gray')
-    #plt.show()
     points = orb.detect(image, mask=None)
     return points
 

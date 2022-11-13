@@ -18,6 +18,9 @@ import os
 
 perspective = Extension(name="vstarstack.projection.perspective",
        sources=["src/vstarstack/projection/perspective.c"])
+image_wave = Extension(name="vstarstack.fine_shift.image_wave",
+       sources=["src/vstarstack/fine_shift/image_wave.c"])
+
 
 root = os.path.join(os.path.abspath(os.path.dirname(__file__)), "src")
 result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(root) for f in filenames if os.path.splitext(f)[1] == '.py']
@@ -35,5 +38,5 @@ setup (name = 'vstarstack',
        scripts = ['bin/vstarstack'],
        package_dir = {'': 'src'},
        packages=packages,
-       ext_modules = [perspective]
+       ext_modules = [perspective, image_wave]
        )
