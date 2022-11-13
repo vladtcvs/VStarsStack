@@ -9,10 +9,20 @@ import os
 
 def select_keypoints(image, orb):
     image = cv2.GaussianBlur(image, (3, 3), 0)
-    points = orb.detect(image, mask=None)
+    shape = image.shape
+    N = 3
     cpts = []
-    for point in points:
-        cpts.append({"x":point.pt[0], "y":point.pt[1], "size" : point.size})
+
+    for i in range(N):
+        y1 = int(shape[0]/N*i)
+        y2 = int(shape[0]/N*(i+1))
+        for j in range(N):
+            x1 = int(shape[1]/N*j)
+            x2 = int(shape[1]/N*(j+1))
+            subimage = image[y1:y2,x1:x2]
+            points = orb.detect(subimage, mask=None)
+            for point in points:
+                cpts.append({"x":point.pt[0]+x1, "y":point.pt[1]+y1, "size" : point.size})
     return cpts
 
 def find_keypoints(files):
@@ -64,9 +74,9 @@ def match_images(points):
             imatches = bf.match(des1, des2)
             imatches = sorted(imatches, key = lambda x:x.distance)
 
-            nm = int(len(imatches)/3)
+            nm = int(len(imatches)/2)
             imatches = imatches[:nm]
-            imatches = imatches[:50]
+            #imatches = imatches[:150]
 
             for match in imatches:
                 ind2 = match.trainIdx
