@@ -37,6 +37,32 @@ def cluster_average(cluster):
     }
     return pos
 
+def process_alignment(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, good_clusters):
+    print("Processing: %s" % name)
+    wave = vstarstack.fine_shift.image_wave.ImageWave(W, H, gridW, gridH)
+    points = []
+    targets = []
+    for cluster in good_clusters:
+        if name not in cluster["images"]:
+            continue
+
+        # we need reverse transformation
+        x = cluster["average"]["x"]
+        y = cluster["average"]["y"]
+        points.append((x,y))
+        x = cluster["images"][name]["x"]
+        y = cluster["images"][name]["y"]
+        targets.append((x,y))
+
+    print("\tusing %i points" % len(points))
+    if len(points) < plen:
+        print("\tskip - too low points")
+        return
+    wave.approximate(targets, points, Nsteps, dh)
+    data = wave.data()
+    with open(os.path.join(outpath, name+".json"), "w") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+
 def find_alignment(argv):
     clusters = argv[0]
     outpath = argv[1]
@@ -51,11 +77,16 @@ def find_alignment(argv):
     dh = vstarstack.cfg.config["fine_shift"]["dh"]
     gridW = vstarstack.cfg.config["fine_shift"]["gridW"]
     gridH = vstarstack.cfg.config["fine_shift"]["gridH"]
-    
+    cllen = vstarstack.cfg.config["fine_shift"]["cluster_len_k"]
+    plen = vstarstack.cfg.config["fine_shift"]["points_min_len"]
 
+    maxcllen = max([len(cluster) for cluster in clusters])    
     names = []
     good_clusters = []
     for cluster in clusters:
+        if len(cluster.keys()) < maxcllen * cllen:
+            continue
+
         names += list(cluster.keys())
         gcluster = {
             "average" : cluster_average(cluster),
@@ -64,33 +95,15 @@ def find_alignment(argv):
         good_clusters.append(gcluster)
     names = sorted(list(set(names)))
 
-    print("Names: ", names)
-
-    for name in names:
-        print("Processing: %s" % name)
-        wave = vstarstack.fine_shift.image_wave.ImageWave(W, H, gridW, gridH)
-        points = []
-        targets = []
-        for cluster in good_clusters:
-            if name not in cluster["images"]:
-                continue
-
-            # we need reverse transformation
-            x = cluster["average"]["x"]
-            y = cluster["average"]["y"]
-            points.append((x,y))
-            x = cluster["images"][name]["x"]
-            y = cluster["images"][name]["y"]
-            targets.append((x,y))
-
-        print("\tusing %i points" % len(points))
-        wave.approximate(targets, points, Nsteps, dh)
-        data = wave.data()
-        with open(os.path.join(outpath, name+".json"), "w") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
+    pool = mp.Pool(ncpu)
+    args = [(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, good_clusters) for name in names]
+    pool.starmap(process_alignment, args)
+    pool.close()
 
 def apply_alignment_file(name, npy, align_data, output):
     print(name)
+    if not os.path.exists(align_data):
+        return
     with open(align_data) as f:
         align_data = json.load(f)
     wave = vstarstack.fine_shift.image_wave.ImageWave.from_data(align_data)
