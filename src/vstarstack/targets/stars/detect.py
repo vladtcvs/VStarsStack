@@ -83,7 +83,7 @@ def process(argv):
 		jsonpath = argv[1]
 	else:
 		path = vstarstack.cfg.config["paths"]["npy-fixed"]
-		jsonpath = vstarstack.cfg.config["stars"]["paths"]["stars"]
+		jsonpath = vstarstack.cfg.config["paths"]["descs"]
 
 	if os.path.isdir(path):
 		process_dir(path, jsonpath)		

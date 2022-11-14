@@ -21,9 +21,15 @@ import json
 import vstarstack.cfg
 
 def run(argv):
-	npypath = argv[0]
-	jsonpath = argv[1]
-	cutpath = argv[2]
+	if len(argv) >= 3:
+		npypath = vstarstack.cfg.config["paths"]["npy-fixed"]
+		jsonpath = vstarstack.cfg.config["paths"]["descs"]
+		cutpath = vstarstack.cfg.config["paths"]["npy-fixed"]
+	else:
+		npypath = argv[0]
+		jsonpath = argv[1]
+		cutpath = argv[2]
+
 	if len(argv) > 3:
 		margin = int(argv[3])
 	else:

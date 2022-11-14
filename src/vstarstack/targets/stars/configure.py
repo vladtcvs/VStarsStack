@@ -38,8 +38,6 @@ def run(argv):
             "min_matched_ditems" : 15,
 		},
 		"paths" : {
-			"stars" : "stars",
-			"descs" : "descs",
 			"net"   : "net.json",
 		},
 		"use_angles" : True,

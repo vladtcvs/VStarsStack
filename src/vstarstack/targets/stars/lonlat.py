@@ -33,7 +33,7 @@ def process_file(jsonfile):
 		proj = vstarstack.projection.perspective.Projection(W, H, F, w, h)
 	else:
 		raise Exception("Unknown projection %s" % proj)
-		
+
 	if "stars" in desc:
 		for star in desc["stars"]:
 			x = star["x"]
@@ -54,7 +54,7 @@ def process(argv):
 	if len(argv) >= 1:
 		path = argv[0]
 	else:
-		path = vstarstack.cfg.config["stars"]["paths"]["stars"]
+		path = vstarstack.cfg.config["paths"]["descs"]
 
 	if os.path.isdir(path):
 		process_dir(path)		

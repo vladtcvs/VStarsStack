@@ -124,9 +124,15 @@ def apply_alignment_file(name, npy, align_data, output):
     dataframe.store(output)
 
 def apply_alignment(argv):
-    npys = argv[0]
-    aligns = argv[1]
-    outputs = argv[2]
+    if len(argv) >= 3:
+        npys = argv[0]
+        descs = argv[1]
+        outputs = argv[2]
+    else:
+        npys = vstarstack.cfg.config["npy-fixed"]
+        descs = vstarstack.cfg.config["descs"]
+        outputs = vstarstack.cfg.config["aligned"]
+
     if os.path.isdir(npys):
         files = vstarstack.common.listfiles(npys, ".zip")
         pool = mp.Pool(ncpu)

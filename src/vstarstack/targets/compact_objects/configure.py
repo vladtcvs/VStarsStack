@@ -45,10 +45,6 @@ def run(argv):
 		},
 		"margin" : 20,
 		"require_size" : True,
-		"paths" : {
-			"descs" : "descs",
-			"cutted" : "cutted",
-		},
 	}
 
 	dircheck(dir + '/descs')

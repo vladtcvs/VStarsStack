@@ -128,8 +128,8 @@ def process(argv):
 		path = argv[0]
 		outpath = argv[1]
 	else:
-		path = vstarstack.cfg.config["stars"]["paths"]["stars"]
-		outpath = vstarstack.cfg.config["stars"]["paths"]["descs"]
+		path = vstarstack.cfg.config["paths"]["descs"]
+		outpath = vstarstack.cfg.config["paths"]["descs"]
 
 	num_main = vstarstack.cfg.stars["describe"]["num_main"]
 	mindist = vstarstack.cfg.stars["describe"]["mindist"]
@@ -146,7 +146,7 @@ def process(argv):
 			json.dump(image, f, indent=4)
 
 commands = {
-	"*" : (process, "build stars descriptions", "stars/ descs/"),
+	"*" : (process, "build stars descriptions", "descs/ descs/"),
 }
 
 def run(argv):

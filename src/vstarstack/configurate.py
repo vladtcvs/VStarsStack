@@ -39,6 +39,9 @@ def configurate(argv):
 	# directory for images after moving
 	dircheck(dir + "/aligned")
 
+	# directory for image descriptors
+	dircheck(dir + "/descs")
+
 	config = {
 		"use_sphere" : True,
 		"compress" : True,
@@ -46,6 +49,7 @@ def configurate(argv):
 			"original"  : "orig",
 			"npy-orig"  : "npy-orig",
 			"npy-fixed" : "npy",
+			"descs"     : "descs",
 			"aligned"   : "aligned",
 			"output"    : "sum.zip",
 		}
