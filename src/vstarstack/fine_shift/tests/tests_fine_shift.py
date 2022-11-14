@@ -87,3 +87,24 @@ def test_serialize():
     assert data["Nw"] == 3
     assert data["Nh"] == 3
     assert len(data["data"]) == 3*3*2
+
+def test_deserialize():
+    wave = vstarstack.fine_shift.image_wave.ImageWave(10.0, 10.0, 2, 2)
+    targets = [(5.0,5.0)]
+    measured = [(5.2,5.0)]
+    wave.approximate(targets, measured, N, dh)
+    x,y = wave.interpolate(5.2,5.0)
+
+    assert abs(x-5.0) < 5e-3
+    assert abs(y-5.0) < 5e-3
+
+    data = wave.data()
+    wave2 = vstarstack.fine_shift.image_wave.ImageWave.from_data(data)
+
+    assert wave2 is not None
+
+    wave2.approximate(targets, measured, N, dh)
+    x,y = wave2.interpolate(5.2,5.0)
+
+    assert abs(x-5.0) < 5e-3
+    assert abs(y-5.0) < 5e-3
