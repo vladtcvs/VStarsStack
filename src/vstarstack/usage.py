@@ -47,12 +47,11 @@ def run(argv, base, commands, message=None, autohelp=False):
 
 	if len(argv) > 0:
 		cmd = argv[0]
-	else:
-		cmd = "*"
-
-	if cmd not in commands:
-		cmd = "*"
-		commands[cmd][0](argv)
-	else:
+	
+		if cmd not in commands:
+			print("Command %s not found!" % cmd)
+			usage(base, commands, message)
+			return
 		commands[cmd][0](argv[1:])
-
+	else:
+		commands["*"][0](argv)
