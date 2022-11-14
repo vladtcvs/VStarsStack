@@ -246,14 +246,12 @@ void approximate(struct ImageWaveObject *self, double dh, size_t Nsteps,
     }
 }
 
-// arguments: w, h, Nw, Nh
-static int ImageWave_init(PyObject *_self, PyObject *args, PyObject *kwds)
+static int init(struct ImageWaveObject *self, double w, double h, double Nw, double Nh)
 {
-    struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
-    static char *kwlist[] = {"w", "h", "Nw", "Nh", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "ddii", kwlist,
-                                     &self->w, &self->h, &self->Nw, &self->Nh))
-        return -1;
+    self->w = w;
+    self->h = h;
+    self->Nw = Nw;
+    self->Nh = Nh;
 
     if (self->h <= 0 || self->w <= 0 || self->Nw < 2 || self->Nh < 2)
         return -1;
@@ -290,6 +288,20 @@ static int ImageWave_init(PyObject *_self, PyObject *args, PyObject *kwds)
         return -1;
     }
     return 0;
+}
+
+// arguments: w, h, Nw, Nh
+static int ImageWave_init(PyObject *_self, PyObject *args, PyObject *kwds)
+{
+    double w, h;
+    int Nw, Nh;
+    struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
+    static char *kwlist[] = {"w", "h", "Nw", "Nh", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "ddii", kwlist,
+                                     &w, &h, &Nw, &Nh))
+        return -1;
+
+    return init(self, w, h, Nw, Nh);
 }
 
 static void ImageWave_finalize(PyObject *_self)
@@ -414,11 +426,40 @@ static PyObject *ImageWave_approximate(PyObject *_self, PyObject *args, PyObject
     return Py_True;
 }
 
+static PyObject *ImageWave_data(PyObject *_self, PyObject *args, PyObject *kwds)
+{
+    struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
+    int xi, yi;
+    PyObject *data = PyList_New(self->Nw*self->Nh*2);
+    for (yi = 0; yi < self->Nh; yi++)
+        for (xi = 0; xi < self->Nw; xi++)
+        {
+            double vx = get_array(self->array, self->Nw, self->Nh, xi, yi, 0);
+            double vy = get_array(self->array, self->Nw, self->Nh, xi, yi, 1);
+
+            PyList_SetItem(data, yi*self->Nw*2 + xi*2, PyFloat_FromDouble(vx));
+            PyList_SetItem(data, yi*self->Nw*2 + xi*2 + 1, PyFloat_FromDouble(vy));
+        }
+    PyObject *result = Py_BuildValue("{s:i,s:i,s:d,s:d,s:O}",
+                                        "Nw", self->Nw,
+                                        "Nh", self->Nh,
+                                        "w", self->w,
+                                        "h", self->h,
+                                        "data", data);
+    return result;
+}
+
+static PyObject *ImageWave_fromdata(PyObject *_self, PyObject *args, PyObject *kwds);
+
 static PyMethodDef ImageWave_methods[] = {
     {"interpolate", (PyCFunction)ImageWave_interpolate, METH_VARARGS | METH_KEYWORDS,
      "Apply shift grid to coordinates x,y"},
     {"approximate", (PyCFunction)ImageWave_approximate, METH_VARARGS | METH_KEYWORDS,
      "find grid values which gives the best fit for points -> targets"},
+    {"data", (PyCFunction)ImageWave_data, METH_VARARGS | METH_KEYWORDS,
+     "data of ImageWave"},
+    {"from_data", (PyCFunction)ImageWave_fromdata, METH_VARARGS | METH_KEYWORDS | METH_STATIC,
+     "generate ImageWave from data"},
     {NULL} /* Sentinel */
 };
 
@@ -434,6 +475,58 @@ static PyTypeObject ImageWave = {
     .tp_finalize = ImageWave_finalize,
     .tp_methods = ImageWave_methods,
 };
+
+static PyObject *ImageWave_fromdata(PyObject *_self, PyObject *args, PyObject *kwds)
+{
+    int yi, xi;
+    // _self == NULL
+    PyObject *data;
+    static char *kwlist[] = {"data", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &data))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
+        return Py_None;
+    }
+
+    double h = PyFloat_AsDouble(PyDict_GetItemString(data, "h"));
+    double w = PyFloat_AsDouble(PyDict_GetItemString(data, "w"));
+    long Nh  = PyLong_AsLong(PyDict_GetItemString(data, "Nh"));
+    long Nw  = PyLong_AsLong(PyDict_GetItemString(data, "Nw"));
+
+    PyObject *argList = Py_BuildValue("ddii", w, h, Nw, Nh);
+    PyObject *obj = PyObject_CallObject((PyObject *) &ImageWave, argList);
+
+    Py_DECREF(argList);
+
+    if (obj == NULL)
+    {
+        return Py_None;
+    }
+
+    struct ImageWaveObject *object = (struct ImageWaveObject *)obj;
+    PyObject *values = PyDict_GetItemString(data, "data");
+
+    if (PyList_Size(values) != Nw*Nh*2)
+    {
+        Py_DECREF(obj);
+        PyErr_SetString(PyExc_ValueError, "invalid values list len");
+        return Py_None;
+    }
+
+    for (yi = 0; yi < Nh; yi++)
+        for (xi = 0; xi < Nw; xi++)
+        {
+            int ind = (yi*Nw+xi)*2;
+            double vx = PyFloat_AsDouble(PyList_GetItem(values, ind));
+            double vy = PyFloat_AsDouble(PyList_GetItem(values, ind+1));
+
+            set_array(object->array, Nw, Nh, xi, yi, 0, vx);
+            set_array(object->array, Nw, Nh, xi, yi, 1, vy);
+        }
+
+    return obj;
+}
+
 
 static PyModuleDef image_waveModule = {
     PyModuleDef_HEAD_INIT,

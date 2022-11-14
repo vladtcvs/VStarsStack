@@ -75,3 +75,15 @@ def test_approximate_parabola_long():
     assert abs(x-5) < 5e-3
     assert abs(y-5) < 5e-3
 
+def test_serialize():
+    wave = vstarstack.fine_shift.image_wave.ImageWave(10, 10, 3, 3)
+    data = wave.data()
+    assert type(data["w"]) == float
+    assert type(data["h"]) == float
+    assert type(data["Nw"]) == int
+    assert type(data["Nh"]) == int
+    assert data["w"] == 10
+    assert data["h"] == 10
+    assert data["Nw"] == 3
+    assert data["Nh"] == 3
+    assert len(data["data"]) == 3*3*2

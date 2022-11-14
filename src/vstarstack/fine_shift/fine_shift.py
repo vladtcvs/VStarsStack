@@ -16,15 +16,24 @@ import vstarstack.fine_shift.image_wave
 import vstarstack.usage
 import vstarstack.cfg
 
+import os
 import json
 
-Nsteps=10000
-dh = 0.1
+def cluster_average(cluster):
+    xs = []
+    ys = []
+    for name in cluster:
+        xs.append(cluster[name]["x"])
+        ys.append(cluster[name]["y"])
+    pos = {
+        "x" : sum(xs)/len(xs),
+        "y" : sum(ys)/len(ys),
+    }
+    return pos
 
-def align_features(argv):
-    images = argv[0]
-    clusters = argv[1]
-    outpath = argv[2]
+def find_alignment(argv):
+    clusters = argv[0]
+    outpath = argv[1]
 
     with open(clusters) as f:
         clusters = json.load(f)
@@ -32,24 +41,47 @@ def align_features(argv):
     W = vstarstack.cfg.camerad["w"]
     H = vstarstack.cfg.camerad["h"]
 
+    Nsteps = vstarstack.cfg.config["fine_shift"]["Nsteps"]
+    dh = vstarstack.cfg.config["fine_shift"]["dh"]
+    gridW = vstarstack.cfg.config["fine_shift"]["gridW"]
+    gridH = vstarstack.cfg.config["fine_shift"]["gridH"]
+    
+
     names = []
     good_clusters = []
+    for cluster in clusters:
+        names += list(cluster.keys())
+        gcluster = {
+            "average" : cluster_average(cluster),
+            "images" : cluster,
+        }
+        good_clusters.append(gcluster)
+    names = sorted(list(set(names)))
+
+    print("Names: ", names)
 
     for name in names:
-        wave = vstarstack.fine_shift.image_wave.ImageWave(W, H, 20, 20)
+        print("Processing: %s" % name)
+        wave = vstarstack.fine_shift.image_wave.ImageWave(W, H, gridW, gridH)
         points = []
         targets = []
         for cluster in good_clusters:
+            if name not in cluster["images"]:
+                continue
             x = cluster["average"]["x"]
             y = cluster["average"]["y"]
             targets.append((x,y))
             x = cluster["images"][name]["x"]
             y = cluster["images"][name]["y"]
             points.append((x,y))
+        print("\tusing %i points" % len(points))
         wave.approximate(targets, points, Nsteps, dh)
+        data = wave.data()
+        with open(os.path.join(outpath, name+".json"), "w") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
 
 commands = {
-    "align-features" : (align_features, "align features on images", "npy/ clusters.json shifted/"),
+    "align-features" : (find_alignment, "find alignment of images", "clusters.json alignments/"),
 }
 
 def run(argv):

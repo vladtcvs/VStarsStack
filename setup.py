@@ -38,5 +38,16 @@ setup (name = 'vstarstack',
        scripts = ['bin/vstarstack'],
        package_dir = {'': 'src'},
        packages=packages,
-       ext_modules = [perspective, image_wave]
-       )
+       ext_modules = [perspective, image_wave],
+       install_requires = [
+              'numpy',
+              'astropy',
+              'rawpy',
+              'pillow',
+              'imageio',
+              'exifread',
+              'opencv-python',
+              'scikit-image',
+              'scipy',
+       ]
+)
