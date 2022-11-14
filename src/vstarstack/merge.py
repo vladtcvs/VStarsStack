@@ -27,7 +27,7 @@ def simple_add(argv):
 		path_images = argv[0]
 		out = argv[1]
 	else:
-		path_images = vstarstack.cfg.config["paths"]["shifted"]
+		path_images = vstarstack.cfg.config["paths"]["aligned"]
 		out = vstarstack.cfg.config["paths"]["output"]
 
 	imgs = vstarstack.common.listfiles(path_images, ".zip")
@@ -220,7 +220,7 @@ def sigma_clip(argv):
 		out = argv[1]
 		sigma_k = float(argv[2])
 	else:
-		path_images = vstarstack.cfg.config["paths"]["shifted"]
+		path_images = vstarstack.cfg.config["paths"]["aligned"]
 		out = vstarstack.cfg.config["paths"]["output"]
 		sigma_k = vstarstack.cfg.config["sigma_clip_coefficient"]
 

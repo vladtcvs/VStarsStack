@@ -81,7 +81,7 @@ def run(argv):
 	else:
 		npy_dir = vstarstack.cfg.config["paths"]["npy-fixed"]
 		shifts_fname = vstarstack.cfg.config["paths"]["absolute-shifts"]
-		shifted_dir = vstarstack.cfg.config["paths"]["shifted"]
+		shifted_dir = vstarstack.cfg.config["paths"]["aligned"]
 
 	with open(shifts_fname) as f:
 		data = json.load(f)

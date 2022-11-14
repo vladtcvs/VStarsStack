@@ -20,7 +20,7 @@ import os
 def run(argv):
     orig    = vstarstack.cfg.config["paths"]["npy-orig"]
     fixed   = vstarstack.cfg.config["paths"]["npy-fixed"]
-    shifted = vstarstack.cfg.config["paths"]["shifted"]
+    shifted = vstarstack.cfg.config["paths"]["aligned"]
     
     for path in [orig, fixed, shifted]:
         files = vstarstack.common.listfiles(path, ".zip")

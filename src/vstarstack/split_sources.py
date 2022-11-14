@@ -51,7 +51,7 @@ for i in range(len(blocks)):
 	os.mkdir(os.path.join(blockdir, "npy"))
 	os.mkdir(os.path.join(blockdir, "stars"))
 	os.mkdir(os.path.join(blockdir, "descs"))
-	os.mkdir(os.path.join(blockdir, "shifted"))
+	os.mkdir(os.path.join(blockdir, "aligned"))
 	for filename in blocks[i]:
 		basename = os.path.basename(filename)
 		os.rename(filename, os.path.join(npydir, basename))
@@ -62,5 +62,4 @@ os.mkdir(sumdir)
 os.mkdir(os.path.join(sumdir, "npy"))
 os.mkdir(os.path.join(sumdir, "stars"))
 os.mkdir(os.path.join(sumdir, "descs"))
-os.mkdir(os.path.join(sumdir, "shifted"))
-
+os.mkdir(os.path.join(sumdir, "aligned"))
