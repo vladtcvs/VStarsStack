@@ -60,8 +60,12 @@ def simple_add(argv):
 				summary[channel] = image.astype(np.float64)
 				summary_weight[channel] = weight
 			else:
-				summary[channel] += image
-				summary_weight[channel] += weight
+				try:
+					summary[channel] += image
+					summary_weight[channel] += weight
+				except Exception:
+					print("Can not add image %s. Skipping" % name)
+					pass
 			sum_opts[channel] = opts
 
 	result = vstarstack.data.DataFrame()
