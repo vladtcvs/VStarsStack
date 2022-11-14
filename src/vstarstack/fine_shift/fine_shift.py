@@ -15,9 +15,15 @@
 import vstarstack.fine_shift.image_wave
 import vstarstack.usage
 import vstarstack.cfg
+import vstarstack.data
+import vstarstack.common
 
+import multiprocessing as mp
+import numpy as np
 import os
 import json
+
+ncpu = vstarstack.cfg.nthreads
 
 def cluster_average(cluster):
     xs = []
@@ -68,20 +74,59 @@ def find_alignment(argv):
         for cluster in good_clusters:
             if name not in cluster["images"]:
                 continue
+
+            # we need reverse transformation
             x = cluster["average"]["x"]
             y = cluster["average"]["y"]
-            targets.append((x,y))
+            points.append((x,y))
             x = cluster["images"][name]["x"]
             y = cluster["images"][name]["y"]
-            points.append((x,y))
+            targets.append((x,y))
+
         print("\tusing %i points" % len(points))
         wave.approximate(targets, points, Nsteps, dh)
         data = wave.data()
         with open(os.path.join(outpath, name+".json"), "w") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
+def apply_alignment_file(name, npy, align_data, output):
+    print(name)
+    with open(align_data) as f:
+        align_data = json.load(f)
+    wave = vstarstack.fine_shift.image_wave.ImageWave.from_data(align_data)
+    dataframe = vstarstack.data.DataFrame.load(npy)
+    links = dict(dataframe.links)
+    for channel in dataframe.get_channels():
+        image, opts = dataframe.get_channel(channel)
+        if opts["encoded"]:
+            continue
+        fixed = np.zeros(image.shape)
+        for y in range(fixed.shape[0]):
+            for x in range(fixed.shape[1]):
+                ox,oy = wave.interpolate(x,y)
+                fixed[y,x] = vstarstack.common.getpixel(image, oy, ox)[1]
+
+        dataframe.add_channel(fixed, channel, **opts)
+    dataframe.links = links
+    dataframe.store(output)
+
+def apply_alignment(argv):
+    npys = argv[0]
+    aligns = argv[1]
+    outputs = argv[2]
+    if os.path.isdir(npys):
+        files = vstarstack.common.listfiles(npys, ".zip")
+        pool = mp.Pool(ncpu)
+        args = [(name, fname, os.path.join(aligns, name + ".json"), os.path.join(outputs, name + ".zip"))
+                    for name, fname in files]
+        pool.starmap(apply_alignment_file, args)
+        pool.close()
+    else:
+        apply_alignment_file(os.path.basename(npys), npys, aligns, outputs)
+
 commands = {
     "align-features" : (find_alignment, "find alignment of images", "clusters.json alignments/"),
+    "apply-aligns" : (apply_alignment, "apply alignments to images", "npys/ alignments/ output/"),
 }
 
 def run(argv):
