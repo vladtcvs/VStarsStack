@@ -60,8 +60,18 @@ def process_alignment(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, good_
         return
     wave.approximate(targets, points, Nsteps, dh)
     data = wave.data()
+
+    if os.path.isfile(outpath):
+        with open(outpath) as f:
+            descriptor = json.load(f)
+    else:
+        descriptor = {}
+
+    descriptor["fine_shift"] = {}
+    descriptor["fine_shift"]["image_wave"] = data
+    
     with open(os.path.join(outpath, name+".json"), "w") as f:
-        json.dump(data, f, indent=4, ensure_ascii=False)
+        json.dump(descriptor, f, indent=4, ensure_ascii=False)
 
 def find_alignment(argv):
     clusters = argv[0]

@@ -97,7 +97,15 @@ def run(argv):
 					image.remove_channel(channel)
 					continue
 
+			detection["roi"] = {
+				"x1" : left,
+				"y1" : top,
+				"x2" : right,
+				"y2" : bottom
+			}
 			image.add_channel(img, channel, **opts)
+			with open(filename, "w") as f:
+				json.dump(detection, f, indnent=4, ensure_ascii=False)
 
 		for ch in weight_links:
 			image.add_channel_link(ch, weight_links[ch], "weight")

@@ -48,7 +48,6 @@ def run(argv):
 	}
 
 	dircheck(dir + '/descs')
-	dircheck(dir + '/cutted')
 
 	with open(projf, "w") as f:
 		json.dump(proj, f, indent=4, ensure_ascii=False)
