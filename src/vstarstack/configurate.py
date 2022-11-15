@@ -24,6 +24,8 @@ def dircheck(name):
 		os.mkdir(name)
 
 def configurate(argv):
+	dir = argv[0]
+
 	# create project directory
 	dircheck(dir)
 
@@ -52,20 +54,25 @@ def configurate(argv):
 			"descs"     : "descs",
 			"aligned"   : "aligned",
 			"output"    : "sum.zip",
-		}
+		},
+		"camera" : {
+			"W" : 10.0,
+			"H" : 10.0,
+			"w" : 1000,
+			"h" : 1000,
+		},
+		"scope" : {
+			"F" : 1000.0,
+		},
 	}
-
-	with open(os.path.join(cfgdir, telescope_fname)) as f:
-		config["telescope"] = json.load(f)
 
 	with open(dir + "/project.json", "w") as f:
 		json.dump(config, f, indent=4, ensure_ascii=False)
 
 
 commands = {
-    "list" : (list_cfg, "list available telescope names", ""),
-	"*" : (configurate, "create project", "project_dir telescope_name"),
+    "create" : (configurate, "create project", "project_dir"),
 }
 
 def run(argv):
-	usage.run(argv, "project", commands)
+	vstarstack.usage.run(argv, "project", commands)
