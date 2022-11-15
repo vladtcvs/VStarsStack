@@ -55,15 +55,17 @@ def configurate(argv):
 			"aligned"   : "aligned",
 			"output"    : "sum.zip",
 		},
-		"camera" : {
-			"W" : 10.0,
-			"H" : 10.0,
-			"w" : 1000,
-			"h" : 1000,
-		},
-		"scope" : {
-			"F" : 1000.0,
-		},
+		"telescope" : {
+			"camera" : {
+				"W" : 10.0,
+				"H" : 10.0,
+				"w" : 1000,
+				"h" : 1000,
+			},
+			"scope" : {
+				"F" : 1000.0,
+			},
+		}
 	}
 
 	with open(dir + "/project.json", "w") as f:
