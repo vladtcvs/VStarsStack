@@ -39,6 +39,7 @@ def run(argv):
 
 	files = vstarstack.common.listfiles(jsonpath, ".json")
 	for name, filename in files:
+		print("Loading info: %s" % name)
 		with open(filename) as f:
 			detection = json.load(f)
 
@@ -105,7 +106,7 @@ def run(argv):
 			}
 			image.add_channel(img, channel, **opts)
 			with open(filename, "w") as f:
-				json.dump(detection, f, indnent=4, ensure_ascii=False)
+				json.dump(detection, f, indent=4, ensure_ascii=False)
 
 		for ch in weight_links:
 			image.add_channel_link(ch, weight_links[ch], "weight")
