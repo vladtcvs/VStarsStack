@@ -27,15 +27,7 @@ import vstarstack.usage
 import vstarstack.targets.compact_objects.detectors.brightness_detector as bd
 import vstarstack.targets.compact_objects.detectors.disc_detector as dd
 
-def process_file(filename, descfilename):
-	detector = vstarstack.cfg.config["compact_objects"]["detector"]
-	if detector == "brightness":
-		detect = bd.detect
-	elif detector == "disc":
-		detect = dd.detect
-	else:
-		raise Exception("Unknown detector: %s" % detector)
-
+def process_file(filename, descfilename, detector):
 	image = vstarstack.data.DataFrame.load(filename)
 
 	for channel in image.get_channels():
@@ -44,7 +36,7 @@ def process_file(filename, descfilename):
 			continue
 		layer = layer / np.amax(layer)
 
-		planet = detect(layer, debug=vstarstack.cfg.debug)
+		planet = detector(layer, debug=vstarstack.cfg.debug)
 
 		if planet is not None:
 			break
@@ -59,29 +51,35 @@ def process_file(filename, descfilename):
 	with open(descfilename, "w") as f:
 		json.dump(desc, f, indent=4)
 
-def process_path(npys, descs):
+def process_path(npys, descs, detector):
 	files = vstarstack.common.listfiles(npys, ".zip")
 	for name, filename  in files:
 		print(name)
 		out = os.path.join(descs, name + ".json")
-		process_file(filename, out)
+		process_file(filename, out, detector)
 
-def process(argv):
+def process(detector, argv):
 	if len(argv) > 0:
 		input = argv[0]
 		output = argv[1]
 		if os.path.isdir(input):
-			process_path(input, output)
+			process_path(input, output, detector)
 		else:
-			process_file(input, output)
+			process_file(input, output, detector)
 	else:
 		process_path(vstarstack.cfg.config["paths"]["npy-fixed"],
-					 vstarstack.cfg.config["compact_objects"]["paths"]["descs"])
+					 vstarstack.cfg.config["paths"]["descs"], detector)
 
+def process_brightness(argv):
+	process(bd.detect, argv)
+
+def process_disc(argv):
+	process(dd.detect, argv)
 
 commands = {
-	"*" : (process, "detect compact objects", "npy/ descs/"),
+	"brightness" : (process_brightness, "detect compact objects with brightness detector", "npy/ descs/"),
+	"disc"       : (process_disc, "detect compact objects with disc detector", "npy/ descs/"),
 }
 
 def run(argv):
-	vstarstack.usage.run(argv, "compact_objects detect", commands)
+	vstarstack.usage.run(argv, "compact_objects detect", commands, autohelp=True)

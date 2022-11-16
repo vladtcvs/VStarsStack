@@ -31,7 +31,6 @@ def run(argv):
 
 	proj["mode"] = "compact_objects"
 	proj["compact_objects"] = {
-		"detector"  : "brightness",
 		"threshold" : 0.05,
 		"disc" : {
 			"mindelta" : 40,
