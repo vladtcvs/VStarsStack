@@ -21,7 +21,7 @@ import json
 import vstarstack.cfg
 
 def run(argv):
-	if len(argv) >= 3:
+	if len(argv) < 3:
 		npypath = vstarstack.cfg.config["paths"]["npy-fixed"]
 		jsonpath = vstarstack.cfg.config["paths"]["descs"]
 		cutpath = vstarstack.cfg.config["paths"]["npy-fixed"]
