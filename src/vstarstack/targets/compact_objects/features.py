@@ -80,33 +80,39 @@ def match_images(points):
         print("Channel = %s" % channel)
         names = sorted(list(points[channel].keys()))
         matches[channel] = {}
-        for ind in range(len(names)-1):
-            next = ind+1
+        for ind in range(len(names)):
             name1 = names[ind]
-            name2 = names[next]
+            if name1 not in matches[channel]:
+                matches[channel][name1] = {}
 
-            matches[channel][name1] = {}
-            matches[channel][name1][name2] = []
+            for next in range(ind):
+                name2 = names[next]
+                if name2 not in matches[channel]:
+                    matches[channel][name2] = {}
+                
+                matches[channel][name1][name2] = []
+                matches[channel][name2][name1] = []
+                
+                print("\t%s <-> %s" % (name1, name2))
 
-            print("\t%s <-> %s" % (name1, name2))
+                des1 = points[channel][name1]["descs"]
+                des2 = points[channel][name2]["descs"]
 
-            des1 = points[channel][name1]["descs"]
-            des2 = points[channel][name2]["descs"]
+                imatches = bf.match(des1, des2)
+                imatches = sorted(imatches, key = lambda x:x.distance)
 
-            imatches = bf.match(des1, des2)
-            imatches = sorted(imatches, key = lambda x:x.distance)
+                nm = int(len(imatches)/2)
+                imatches = imatches[:nm]
+                #imatches = imatches[:150]
 
-            nm = int(len(imatches)/2)
-            imatches = imatches[:nm]
-            #imatches = imatches[:150]
+                for match in imatches:
+                    ind2 = match.trainIdx
+                    ind1 = match.queryIdx
+                    matches[channel][name1][name2].append((ind1, ind2, match.distance))
+                    matches[channel][name2][name1].append((ind2, ind1, match.distance))
 
-            for match in imatches:
-                ind2 = match.trainIdx
-                ind1 = match.queryIdx
-                matches[channel][name1][name2].append((ind1, ind2, match.distance))
-
-            if vstarstack.cfg.debug:
-                draw_matches(points, matches, channel, name1, name2)
+                if vstarstack.cfg.debug:
+                    draw_matches(points, matches, channel, name1, name2)
     return matches
 
 def draw_matches(points, matches, channel, name1, name2):
