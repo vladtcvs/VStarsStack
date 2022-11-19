@@ -14,9 +14,11 @@
 
 import vstarstack.cluster.lonlat
 import vstarstack.cluster.find_shift
+import vstarstack.cluster.display
 import vstarstack.usage
 
 commands = {
+	"display" : (vstarstack.cluster.display.run, "Display clusters", "cluster.json channel file1.zip file2.zip"),
 	"find-shift" : (vstarstack.cluster.find_shift.run, "Find shifts from cluster file", "cluster.json shifts.json"),
 	"lonlat"    : (vstarstack.cluster.lonlat.run, "Calculate (lat,lon) from (y,x) in cluster file", "cluster.json [cluster_out.json]"),
 }

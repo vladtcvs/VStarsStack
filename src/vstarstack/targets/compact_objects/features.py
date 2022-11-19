@@ -74,19 +74,22 @@ def find_keypoints(files):
     return points
 
 def match_images(points):
+    kdist = 0.2
+    maxd = 80
+
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = {}
     for channel in points:
         print("Channel = %s" % channel)
         names = sorted(list(points[channel].keys()))
         matches[channel] = {}
-        for ind in range(len(names)):
-            name1 = names[ind]
+        for ind1 in range(len(names)):
+            name1 = names[ind1]
             if name1 not in matches[channel]:
                 matches[channel][name1] = {}
 
-            for next in range(ind):
-                name2 = names[next]
+            for ind2 in range(ind1):
+                name2 = names[ind2]
                 if name2 not in matches[channel]:
                     matches[channel][name2] = {}
                 
@@ -101,15 +104,24 @@ def match_images(points):
                 imatches = bf.match(des1, des2)
                 imatches = sorted(imatches, key = lambda x:x.distance)
 
-                nm = int(len(imatches)/2)
+                nm = int(len(imatches) * kdist)
                 imatches = imatches[:nm]
                 #imatches = imatches[:150]
 
                 for match in imatches:
-                    ind2 = match.trainIdx
-                    ind1 = match.queryIdx
-                    matches[channel][name1][name2].append((ind1, ind2, match.distance))
-                    matches[channel][name2][name1].append((ind2, ind1, match.distance))
+                    index2 = match.trainIdx
+                    index1 = match.queryIdx
+
+                    if maxd > 0:
+                        point1 = points[channel][name1]["points"][index1]
+                        point2 = points[channel][name2]["points"][index2]
+                        if abs(point1["x"] - point2["x"]) > maxd:
+                            continue
+                        if abs(point1["y"] - point2["y"]) > maxd:
+                            continue
+
+                    matches[channel][name1][name2].append((index1, index2, match.distance))
+                    matches[channel][name2][name1].append((index2, index1, match.distance))
 
                 if vstarstack.cfg.debug:
                     draw_matches(points, matches, channel, name1, name2)
@@ -133,15 +145,14 @@ def draw_matches(points, matches, channel, name1, name2):
     ms = matches[channel][name1][name2]
     matches_fmt = [cv2.DMatch(msitem[0], msitem[1], 0) for msitem in ms]
 
-    kp1 = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in points1]
-    kp2 = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in points2]
+    kps1 = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in points1]
+    kps2 = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in points2]
 
-    img3 = cv2.drawMatches(img1,kp1, img2,kp2,
+    img3 = cv2.drawMatches(img1, kps1, img2, kps2,
                             matches_fmt, None,
                             flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     plt.imshow(img3)
     plt.show()
-
 
 def build_clusters(matches):
     clusters = {}
@@ -184,7 +195,7 @@ def build_coordinate_clusters(clusters, points):
 def run(argv):
     inputs = argv[0]
     clusters_fname = argv[1]
-    
+
     files = vstarstack.common.listfiles(inputs, ".zip")
     files = [filename for name,filename in files]
     points = find_keypoints(files)
