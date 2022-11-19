@@ -121,7 +121,9 @@ def apply_alignment_file(name, npy, align_data, output):
     if not os.path.exists(align_data):
         return
     with open(align_data) as f:
-        align_data = json.load(f)
+        descriptor = json.load(f)
+        align_data = descriptor["fine_shift"]["image_wave"]
+
     wave = vstarstack.fine_shift.image_wave.ImageWave.from_data(align_data)
     dataframe = vstarstack.data.DataFrame.load(npy)
     links = dict(dataframe.links)
@@ -139,6 +141,9 @@ def apply_alignment_file(name, npy, align_data, output):
     dataframe.links = links
     dataframe.store(output)
 
+def apply_alignment_file_wrapper(arg):
+    apply_alignment_file(*arg)
+
 def apply_alignment(argv):
     if len(argv) >= 3:
         npys = argv[0]
@@ -154,7 +159,8 @@ def apply_alignment(argv):
         pool = mp.Pool(ncpu)
         args = [(name, fname, os.path.join(descs, name + ".json"), os.path.join(outputs, name + ".zip"))
                     for name, fname in files]
-        pool.starmap(apply_alignment_file, args)
+        for _ in pool.imap_unordered(apply_alignment_file_wrapper, args):
+            pass
         pool.close()
     else:
         apply_alignment_file(os.path.basename(npys), npys, descs, outputs)
