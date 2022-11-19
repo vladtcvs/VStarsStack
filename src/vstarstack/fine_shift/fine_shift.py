@@ -22,6 +22,7 @@ import multiprocessing as mp
 import numpy as np
 import os
 import json
+#import tqdm
 
 ncpu = vstarstack.cfg.nthreads
 
@@ -61,17 +62,21 @@ def process_alignment(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, good_
     wave.approximate(targets, points, Nsteps, dh)
     data = wave.data()
 
-    if os.path.isfile(outpath):
-        with open(outpath) as f:
+    out = os.path.join(outpath, name+".json")
+    if os.path.isfile(out):
+        with open(out) as f:
             descriptor = json.load(f)
     else:
         descriptor = {}
 
     descriptor["fine_shift"] = {}
     descriptor["fine_shift"]["image_wave"] = data
-    
-    with open(os.path.join(outpath, name+".json"), "w") as f:
+
+    with open(out, "w") as f:
         json.dump(descriptor, f, indent=4, ensure_ascii=False)
+
+def process_alignment_wrapper(arg):
+    return process_alignment(*arg)
 
 def find_alignment(argv):
     clusters = argv[0]
@@ -107,7 +112,8 @@ def find_alignment(argv):
 
     pool = mp.Pool(ncpu)
     args = [(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, good_clusters) for name in names]
-    pool.starmap(process_alignment, args)
+    for _ in pool.imap_unordered(process_alignment_wrapper, args):
+        pass
     pool.close()
 
 def apply_alignment_file(name, npy, align_data, output):
@@ -146,12 +152,12 @@ def apply_alignment(argv):
     if os.path.isdir(npys):
         files = vstarstack.common.listfiles(npys, ".zip")
         pool = mp.Pool(ncpu)
-        args = [(name, fname, os.path.join(aligns, name + ".json"), os.path.join(outputs, name + ".zip"))
+        args = [(name, fname, os.path.join(descs, name + ".json"), os.path.join(outputs, name + ".zip"))
                     for name, fname in files]
         pool.starmap(apply_alignment_file, args)
         pool.close()
     else:
-        apply_alignment_file(os.path.basename(npys), npys, aligns, outputs)
+        apply_alignment_file(os.path.basename(npys), npys, descs, outputs)
 
 commands = {
     "align-features" : (find_alignment, "find alignment of images", "clusters.json alignments/"),
