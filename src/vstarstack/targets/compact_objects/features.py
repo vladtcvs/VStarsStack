@@ -74,8 +74,8 @@ def find_keypoints(files):
     return points
 
 def match_images(points):
-    kdist = 0.2
-    maxd = 80
+    kdist = float(vstarstack.cfg.config["compact_objects"]["features"]["featuresPercent"])/100
+    maxd = float(vstarstack.cfg.config["compact_objects"]["features"]["maxFeatureDelta"])
 
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = {}
@@ -108,17 +108,38 @@ def match_images(points):
                 imatches = imatches[:nm]
                 #imatches = imatches[:150]
 
+                if len(imatches) == 0:
+                    continue
+
+                deltaxs = []
+                deltays = []
+
                 for match in imatches:
                     index2 = match.trainIdx
                     index1 = match.queryIdx
 
-                    if maxd > 0:
-                        point1 = points[channel][name1]["points"][index1]
-                        point2 = points[channel][name2]["points"][index2]
-                        if abs(point1["x"] - point2["x"]) > maxd:
-                            continue
-                        if abs(point1["y"] - point2["y"]) > maxd:
-                            continue
+                    point1 = points[channel][name1]["points"][index1]
+                    point2 = points[channel][name2]["points"][index2]
+
+                    deltaxs.append(point1["x"] - point2["x"])
+                    deltays.append(point1["y"] - point2["y"])
+
+                meandx = sum(deltaxs) / len(deltaxs)
+                meandy = sum(deltays) / len(deltays)
+
+                for match in imatches:
+                    index2 = match.trainIdx
+                    index1 = match.queryIdx
+
+                    point1 = points[channel][name1]["points"][index1]
+                    point2 = points[channel][name2]["points"][index2]
+
+                    dx = point1["x"] - point2["x"]
+                    dy = point1["y"] - point2["y"]
+                    if abs(dx - meandx) > maxd:
+                        continue
+                    if abs(dy - meandy) > maxd:
+                        continue
 
                     matches[channel][name1][name2].append((index1, index2, match.distance))
                     matches[channel][name2][name1].append((index2, index1, match.distance))
