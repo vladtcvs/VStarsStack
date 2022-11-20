@@ -38,9 +38,9 @@ def cluster_average(cluster):
     }
     return pos
 
-def process_alignment(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, good_clusters):
+def process_alignment(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, spk, good_clusters):
     print("Processing: %s" % name)
-    wave = vstarstack.fine_shift.image_wave.ImageWave(W, H, gridW, gridH)
+    wave = vstarstack.fine_shift.image_wave.ImageWave(W, H, gridW, gridH, spk)
     points = []
     targets = []
     for cluster in good_clusters:
@@ -92,6 +92,7 @@ def find_alignment(argv):
     dh = vstarstack.cfg.config["fine_shift"]["dh"]
     gridW = vstarstack.cfg.config["fine_shift"]["gridW"]
     gridH = vstarstack.cfg.config["fine_shift"]["gridH"]
+    spk = vstarstack.cfg.config["fine_shift"]["stretchPenlatyCoefficient"]
     cllen = vstarstack.cfg.config["fine_shift"]["cluster_len_k"]
     plen = vstarstack.cfg.config["fine_shift"]["points_min_len"]
 
@@ -111,7 +112,7 @@ def find_alignment(argv):
     names = sorted(list(set(names)))
 
     pool = mp.Pool(ncpu)
-    args = [(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, good_clusters) for name in names]
+    args = [(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, spk, good_clusters) for name in names]
     for _ in pool.imap_unordered(process_alignment_wrapper, args):
         pass
     pool.close()

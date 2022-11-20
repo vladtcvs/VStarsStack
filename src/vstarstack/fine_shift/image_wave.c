@@ -31,6 +31,7 @@ struct ImageWaveObject
     double h;       // Grid image height
     double sx;
     double sy;
+    double stretch_penalty_k;
 
     double *array;  // Grid Nh x Nw x 2
     double *array_p;
@@ -156,7 +157,7 @@ static double penalty(struct ImageWaveObject *self, double *array,
             penalty_stretch += SQR(current_y-bottom_y);
         }
     }
-    return penalty_points * 1 + penalty_stretch * 0.01;
+    return penalty_points * 1 + penalty_stretch * self->stretch_penalty_k;
 }
 
 static double partial(struct ImageWaveObject *self,
@@ -246,12 +247,13 @@ void approximate(struct ImageWaveObject *self, double dh, size_t Nsteps,
     }
 }
 
-static int init(struct ImageWaveObject *self, double w, double h, double Nw, double Nh)
+static int init(struct ImageWaveObject *self, double w, double h, double Nw, double Nh, double spk)
 {
     self->w = w;
     self->h = h;
     self->Nw = Nw;
     self->Nh = Nh;
+    self->stretch_penalty_k = spk;
 
     if (self->h <= 0 || self->w <= 0 || self->Nw < 2 || self->Nh < 2)
         return -1;
@@ -294,14 +296,15 @@ static int init(struct ImageWaveObject *self, double w, double h, double Nw, dou
 static int ImageWave_init(PyObject *_self, PyObject *args, PyObject *kwds)
 {
     double w, h;
+    double spk;
     int Nw, Nh;
     struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
-    static char *kwlist[] = {"w", "h", "Nw", "Nh", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "ddii", kwlist,
-                                     &w, &h, &Nw, &Nh))
+    static char *kwlist[] = {"w", "h", "Nw", "Nh", "spk", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "ddiid", kwlist,
+                                     &w, &h, &Nw, &Nh, &spk))
         return -1;
 
-    return init(self, w, h, Nw, Nh);
+    return init(self, w, h, Nw, Nh, spk);
 }
 
 static void ImageWave_finalize(PyObject *_self)

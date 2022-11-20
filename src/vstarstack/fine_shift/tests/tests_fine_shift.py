@@ -18,14 +18,14 @@ N = 2000
 dh = 0.1
 
 def test_identity():
-    wave = vstarstack.fine_shift.image_wave.ImageWave(10, 10, 2, 2)
+    wave = vstarstack.fine_shift.image_wave.ImageWave(10, 10, 2, 2, 0.01)
     x,y = wave.interpolate(0,0)
     assert x==0 and y==0
     x,y = wave.interpolate(10,10)
     assert x==10 and y==10
 
 def test_approximate_identity():
-    wave = vstarstack.fine_shift.image_wave.ImageWave(10, 10, 2, 2)
+    wave = vstarstack.fine_shift.image_wave.ImageWave(10, 10, 2, 2, 0.01)
     targets = [(5,5)]
     measured = [(5,5)]
     wave.approximate(targets, measured, N, dh)
@@ -35,7 +35,7 @@ def test_approximate_identity():
     assert abs(y-5) < 5e-3
 
 def test_approximate_single():
-    wave = vstarstack.fine_shift.image_wave.ImageWave(10.0, 10.0, 2, 2)
+    wave = vstarstack.fine_shift.image_wave.ImageWave(10.0, 10.0, 2, 2, 0.01)
     targets = [(5.0,5.0)]
     measured = [(5.2,5.0)]
     wave.approximate(targets, measured, N, dh)
@@ -45,7 +45,7 @@ def test_approximate_single():
     assert abs(y-5.0) < 5e-3
 
 def test_approximate_parabola():
-    wave = vstarstack.fine_shift.image_wave.ImageWave(10, 10, 3, 3)
+    wave = vstarstack.fine_shift.image_wave.ImageWave(10, 10, 3, 3, 0.01)
     targets = [(5,0),(5,5),(5,10)]
     measured = [(5,0),(5.1,5),(5,10)]
     wave.approximate(targets, measured, N, dh)
@@ -55,7 +55,7 @@ def test_approximate_parabola():
     assert abs(y-5) < 5e-3
 
 def test_approximate_parabola2():
-    wave = vstarstack.fine_shift.image_wave.ImageWave(10, 10, 3, 3)
+    wave = vstarstack.fine_shift.image_wave.ImageWave(10, 10, 3, 3, 0.01)
     targets = [(5,0),(5,5),(5,10)]
     measured = [(5,0),(5.1,5.1),(5,10)]
     wave.approximate(targets, measured, N, dh)
@@ -66,7 +66,7 @@ def test_approximate_parabola2():
 
 
 def test_approximate_parabola_long():
-    wave = vstarstack.fine_shift.image_wave.ImageWave(10.0, 10.0, 30, 30)
+    wave = vstarstack.fine_shift.image_wave.ImageWave(10.0, 10.0, 30, 30, 0.01)
     targets = [(5,0),(5,5),(5,10)]
     measured = [(5,0),(5.1,5.1),(5,10)]
     wave.approximate(targets, measured, N, dh)
@@ -76,7 +76,7 @@ def test_approximate_parabola_long():
     assert abs(y-5) < 5e-3
 
 def test_serialize():
-    wave = vstarstack.fine_shift.image_wave.ImageWave(10, 10, 3, 3)
+    wave = vstarstack.fine_shift.image_wave.ImageWave(10, 10, 3, 3, 0.01)
     data = wave.data()
     assert type(data["w"]) == float
     assert type(data["h"]) == float
@@ -89,7 +89,7 @@ def test_serialize():
     assert len(data["data"]) == 3*3*2
 
 def test_deserialize():
-    wave = vstarstack.fine_shift.image_wave.ImageWave(10.0, 10.0, 2, 2)
+    wave = vstarstack.fine_shift.image_wave.ImageWave(10.0, 10.0, 2, 2, 0.01)
     targets = [(5.0,5.0)]
     measured = [(5.2,5.0)]
     wave.approximate(targets, measured, N, dh)
