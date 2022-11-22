@@ -44,9 +44,107 @@ static void set_array(double *array, int w, int h, int x, int y, int axis, doubl
     array[y*(w*2) + x*2 + axis] = val;
 }
 
-static double get_array(double *array, int w, int h, int x, int y, int axis)
+static double get_array(const double *array, int w, int h, int x, int y, int axis)
 {
+    if (x >= w)
+        x = w-1;
+    if (x < 0)
+        x = 0;
+    if (y >= h)
+        y = h - 1;
+    if (y < 0)
+        y = 0;
     return array[y*(w*2) + x*2 + axis];
+}
+
+static double bli(double left, double right, double x)
+{
+    return left * (1-x) + right * x;
+}
+
+static double bci(double fm1, double f0, double f1, double f2, double x)
+{
+    double a, b, c, d;
+    d = f0;
+    b = (fm1 + f1) / 2 - d;
+    a = (f2 - 2*f1 - 2*b + d) / 6;
+    c = f1 - b - d - a;
+    return a*x*x*x + b*x*x + c*x + d;
+}
+
+static void bilinear_interpolation(struct ImageWaveObject *self, const double *array,
+                                    int xi, int yi, double dx, double dy,
+                                    double *shift_x, double *shift_y)
+{
+    double left_top_x = get_array(array, self->Nw, self->Nh, xi, yi, 0);
+    double right_top_x = get_array(array, self->Nw, self->Nh, xi+1, yi, 0);
+    double left_bottom_x = get_array(array, self->Nw, self->Nh, xi, yi+1, 0);
+    double right_bottom_x = get_array(array, self->Nw, self->Nh, xi+1, yi+1, 0);
+
+    double left_top_y = get_array(array, self->Nw, self->Nh, xi, yi, 1);
+    double right_top_y = get_array(array, self->Nw, self->Nh, xi+1, yi, 1);
+    double left_bottom_y = get_array(array, self->Nw, self->Nh, xi, yi+1, 1);
+    double right_bottom_y = get_array(array, self->Nw, self->Nh, xi+1, yi+1, 1);
+
+    *shift_x = bli(bli(left_top_x, right_top_x, dx), bli(left_bottom_x, right_bottom_x, dx), dy);    
+    *shift_y = bli(bli(left_top_y, right_top_y, dx), bli(left_bottom_y, right_bottom_y, dx), dy);    
+}
+
+static void bicubic_interpolation(struct ImageWaveObject *self, const double *array,
+                                  int xi, int yi, double dx, double dy,
+                                  double *shift_x, double *shift_y)
+{
+    double x_m1m1 = get_array(array, self->Nw, self->Nh, xi-1, yi-1, 0);
+    double x_0m1 = get_array(array, self->Nw, self->Nh, xi, yi-1, 0);
+    double x_1m1 = get_array(array, self->Nw, self->Nh, xi+1, yi-1, 0);
+    double x_2m1 = get_array(array, self->Nw, self->Nh, xi+2, yi-1, 0);
+
+    double x_m10 = get_array(array, self->Nw, self->Nh, xi-1, yi, 0);
+    double x_00 = get_array(array, self->Nw, self->Nh, xi, yi, 0);
+    double x_10 = get_array(array, self->Nw, self->Nh, xi+1, yi, 0);
+    double x_20 = get_array(array, self->Nw, self->Nh, xi+2, yi, 0);
+
+    double x_m11 = get_array(array, self->Nw, self->Nh, xi-1, yi+1, 0);
+    double x_01 = get_array(array, self->Nw, self->Nh, xi, yi+1, 0);
+    double x_11 = get_array(array, self->Nw, self->Nh, xi+1, yi+1, 0);
+    double x_21 = get_array(array, self->Nw, self->Nh, xi+2, yi+1, 0);
+    
+    double x_m12 = get_array(array, self->Nw, self->Nh, xi-1, yi+2, 0);
+    double x_02 = get_array(array, self->Nw, self->Nh, xi, yi+2, 0);
+    double x_12 = get_array(array, self->Nw, self->Nh, xi+1, yi+2, 0);
+    double x_22 = get_array(array, self->Nw, self->Nh, xi+2, yi+2, 0);
+
+    *shift_x = bci(bci(x_m1m1, x_0m1, x_1m1, x_2m1, dx),
+                   bci(x_m10, x_00, x_10, x_20, dx),
+                   bci(x_m11, x_01, x_11, x_21, dx),
+                   bci(x_m12, x_02, x_12, x_22, dx),
+                   dy);
+
+    double y_m1m1 = get_array(array, self->Nw, self->Nh, xi-1, yi-1, 1);
+    double y_0m1 = get_array(array, self->Nw, self->Nh, xi, yi-1, 1);
+    double y_1m1 = get_array(array, self->Nw, self->Nh, xi+1, yi-1, 1);
+    double y_2m1 = get_array(array, self->Nw, self->Nh, xi+2, yi-1, 1);
+
+    double y_m10 = get_array(array, self->Nw, self->Nh, xi-1, yi, 1);
+    double y_00 = get_array(array, self->Nw, self->Nh, xi, yi, 1);
+    double y_10 = get_array(array, self->Nw, self->Nh, xi+1, yi, 1);
+    double y_20 = get_array(array, self->Nw, self->Nh, xi+2, yi, 1);
+
+    double y_m11 = get_array(array, self->Nw, self->Nh, xi-1, yi+1, 1);
+    double y_01 = get_array(array, self->Nw, self->Nh, xi, yi+1, 1);
+    double y_11 = get_array(array, self->Nw, self->Nh, xi+1, yi+1, 1);
+    double y_21 = get_array(array, self->Nw, self->Nh, xi+2, yi+1, 1);
+    
+    double y_m12 = get_array(array, self->Nw, self->Nh, xi-1, yi+2, 1);
+    double y_02 = get_array(array, self->Nw, self->Nh, xi, yi+2, 1);
+    double y_12 = get_array(array, self->Nw, self->Nh, xi+1, yi+2, 1);
+    double y_22 = get_array(array, self->Nw, self->Nh, xi+2, yi+2, 1);
+
+    *shift_y = bci(bci(y_m1m1, y_0m1, y_1m1, y_2m1, dx),
+                   bci(y_m10, y_00, y_10, y_20, dx),
+                   bci(y_m11, y_01, y_11, y_21, dx),
+                   bci(y_m12, y_02, y_12, y_22, dx),
+                   dy);
 }
 
 static void interpolate(struct ImageWaveObject *self, double *array,
@@ -55,67 +153,16 @@ static void interpolate(struct ImageWaveObject *self, double *array,
     double sx = self->sx;
     double sy = self->sy;
 
-    int xi = (int)(x/sx);
-    int yi = (int)(y/sy);
+    int xi = floor(x/sx);
+    int yi = floor(y/sy);
 
-    double dx, dy;
+    double dx = x/sx - xi;
+    double dy = y/sy - yi;
 
-    if (xi < 0 || xi > self->Nw-2)
-    {
-        //printf("sx = %lf, XI = %i, NW = %i\n", sx, xi, self->Nw);
-        if (xi < 0)
-        {
-            xi = 0;
-            dx = 0;
-        }
-        if (xi > self->Nw-2)
-        {
-            xi = self->Nw - 2;
-            dx = 1;
-        }
-    }
-    else
-    {
-        dx = x/sx - xi;
-    }
+    double shift_x, shift_y;
 
-    //printf("x = %lf, xi = %i, dx = %lf\n", x, xi, dx);
+    bicubic_interpolation(self, array, xi, yi, dx, dy, &shift_x, &shift_y);
 
-    if (yi < 0 || yi > self->Nh-2)
-    {
-        if (yi < 0)
-        {
-            yi = 0;
-            dy = 0;
-        }
-        if (yi > self->Nh-2)
-        {
-            yi = self->Nh - 2;
-            dy = 1;
-        }
-    }
-    else
-    {
-        dy = y/sy - yi;
-    }
-
-    double left_top_x = get_array(array, self->Nw, self->Nh, xi, yi, 0);
-    double left_top_y = get_array(array, self->Nw, self->Nh, xi, yi, 1);
-
-    double left_bottom_x = get_array(array, self->Nw, self->Nh, xi, yi+1, 0);
-    double left_bottom_y = get_array(array, self->Nw, self->Nh, xi, yi+1, 1);
-
-    double right_top_x = get_array(array, self->Nw, self->Nh, xi+1, yi, 0);
-    double right_top_y = get_array(array, self->Nw, self->Nh, xi+1, yi, 1);
-
-    double right_bottom_x = get_array(array, self->Nw, self->Nh, xi+1, yi+1, 0);
-    double right_bottom_y = get_array(array, self->Nw, self->Nh, xi+1, yi+1, 1);
-
-    double shift_x = left_top_x*(1-dx)*(1-dy) + right_top_x*dx*(1-dy) + 
-                     left_bottom_x*(1-dx)*dy + right_bottom_x*dx*dy;
-    double shift_y = left_top_y*(1-dx)*(1-dy) + right_top_y*dx*(1-dy) + 
-                     left_bottom_y*(1-dx)*dy + right_bottom_y*dx*dy;
-    
     *rx = x + shift_x;
     *ry = y + shift_y;
 }
