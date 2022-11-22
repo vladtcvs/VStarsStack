@@ -443,11 +443,12 @@ static PyObject *ImageWave_data(PyObject *_self, PyObject *args, PyObject *kwds)
             PyList_SetItem(data, yi*self->Nw*2 + xi*2, PyFloat_FromDouble(vx));
             PyList_SetItem(data, yi*self->Nw*2 + xi*2 + 1, PyFloat_FromDouble(vy));
         }
-    PyObject *result = Py_BuildValue("{s:i,s:i,s:d,s:d,s:O}",
+    PyObject *result = Py_BuildValue("{s:i,s:i,s:d,s:d,s:d,s:O}",
                                         "Nw", self->Nw,
                                         "Nh", self->Nh,
                                         "w", self->w,
                                         "h", self->h,
+                                        "spk", self->stretch_penalty_k,
                                         "data", data);
     return result;
 }
@@ -495,8 +496,10 @@ static PyObject *ImageWave_fromdata(PyObject *_self, PyObject *args, PyObject *k
     double w = PyFloat_AsDouble(PyDict_GetItemString(data, "w"));
     long Nh  = PyLong_AsLong(PyDict_GetItemString(data, "Nh"));
     long Nw  = PyLong_AsLong(PyDict_GetItemString(data, "Nw"));
+    double spk  = PyFloat_AsDouble(PyDict_GetItemString(data, "spk"));
+    
 
-    PyObject *argList = Py_BuildValue("ddii", w, h, Nw, Nh);
+    PyObject *argList = Py_BuildValue("ddiid", w, h, Nw, Nh, spk);
     PyObject *obj = PyObject_CallObject((PyObject *) &ImageWave, argList);
 
     Py_DECREF(argList);

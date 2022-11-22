@@ -59,10 +59,12 @@ def make_deconvolution(image, psf):
 
 def process(fname, psf_name, outfname):
     dataframe = vstarstack.data.DataFrame.load(fname)
-    #psf = np.asarray(Image.open(psf_name)).astype(np.float64)[:,:,0]
-    #psf = psf / np.sum(psf)
-    #print(psf.shape)
-    psf = gaussuian_filter(13, 0.25, 0)
+    psf = np.asarray(Image.open(psf_name)).astype(np.float64)
+    if len(psf.shape) == 3:
+        psf = psf[:,:,0]
+    psf = psf / np.sum(psf)
+    print(psf.shape)
+    #psf = gaussuian_filter(13, 0.25, 0)
     for channel in dataframe.get_channels():
         image,opts = dataframe.get_channel(channel)
         if opts["weight"]:
