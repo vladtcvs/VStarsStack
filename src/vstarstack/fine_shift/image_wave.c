@@ -57,6 +57,19 @@ static double get_array(const double *array, int w, int h, int x, int y, int axi
     return array[y*(w*2) + x*2 + axis];
 }
 
+static void init_array(double *array, int w, int h, double dx, double dy)
+{
+    int xi, yi;
+    for (yi = 0; yi < h; yi++)
+    {
+        for (xi = 0; xi < w; xi++)
+        {
+            set_array(array, w, h, xi, yi, 0, dx);
+            set_array(array, w, h, xi, yi, 1, dy);
+        }
+    }
+}
+
 static double bli(double left, double right, double x)
 {
     return left * (1-x) + right * x;
@@ -178,7 +191,7 @@ static double penalty(struct ImageWaveObject *self, double *array,
         double y = points[i*2+1];
         double tx = targets[i*2];
         double ty = targets[i*2+1];
-        
+
         double sx, sy;
         interpolate(self, array, x, y, &sx, &sy);
         penalty_points += SQR(tx-sx) + SQR(ty-sy);
@@ -288,6 +301,20 @@ void approximate(struct ImageWaveObject *self, double dh, size_t Nsteps,
                         double *targets, double *points, size_t N)
 {
     size_t i;
+    if (N == 0 || Nsteps == 0)
+        return;
+
+    double dx = 0, dy = 0;
+    for (i = 0; i < N; i++)
+    {
+        dx += targets[2*N] - points[2*N];
+        dy += targets[2*N+1] - points[2*N+1];
+    }
+    dx /= N;
+    dy /= N;
+
+    init_array(self->array, self->Nw, self->Nh, dx, dy);
+
     for (i = 0; i < Nsteps; i++)
     {
         approximate_step(self, dh, targets, points, N);
