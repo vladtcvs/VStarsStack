@@ -90,10 +90,6 @@ def process(argv):
 	with open(out, "w") as f:
 		json.dump(net, f, indent=4)
 
-commands = {
-	"*" : (process, "Build stars networks", "descs_dir/ net.json"),
-}
-
 def run(argv):
-	usage.run(argv, "stars net", commands)
+	process(argv)
 

@@ -189,10 +189,6 @@ def process(argv):
 			json.dump(desc, f, indent=4, ensure_ascii=False)
 	pool.close()
 
-commands = {
-	"*" : (process, "find stars matches", "descs_dir/"),
-}
-
 def run(argv):
-	vstarstack.usage.run(argv, "stars match", commands)
+	process(argv)
 

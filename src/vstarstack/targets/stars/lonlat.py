@@ -61,9 +61,5 @@ def process(argv):
 	else:
 		process_file(path)
 
-commands = {
-	"*" : (process, "fill longitude and latitude for stars", "stars/"),
-}
-
 def run(argv):
-	usage.run(argv, "stars lonlat", commands)
+	process(argv)

@@ -68,9 +68,5 @@ def process(argv):
 		process_dir([vstarstack.cfg.config["paths"]["npy-fixed"],
 						vstarstack.cfg.config["paths"]["npy-fixed"]])
 
-commands = {
-	"*" : (process, "normalize to weight"),
-}
-
 def run(argv):
-	vstarstack.usage.run(argv, "image-fix normalize", commands, autohelp=True)
+	process(argv)

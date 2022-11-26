@@ -145,10 +145,5 @@ def process(argv):
 		with open(os.path.join(outpath, name + ".json"), "w") as f:
 			json.dump(image, f, indent=4)
 
-commands = {
-	"*" : (process, "build stars descriptions", "descs/ descs/"),
-}
-
 def run(argv):
-	usage.run(argv, "stars describe", commands)
-
+	process(argv)

@@ -45,11 +45,7 @@ def process(argv):
 
 	npydir = os.path.join(basedir, vstarstack.cfg.config["paths"]["npy-fixed"])
 
-	starsdir = os.path.join(basedir, vstarstack.cfg.config["stars"]["paths"]["stars"])
-	if not os.path.exists(starsdir):
-		os.mkdir(starsdir)
-
-	descdir = os.path.join(basedir, vstarstack.cfg.config["stars"]["paths"]["descs"])	
+	descdir = os.path.join(basedir, vstarstack.cfg.config["paths"]["descs"])	
 	if not os.path.exists(descdir):
 		os.mkdir(descdir)
 
@@ -58,26 +54,22 @@ def process(argv):
 
 	if level <= 0:
 		print("Detect")
-		targets.stars.detect.run([npydir, starsdir])
+		vstarstack.targets.stars.detect.run([npydir, descdir])
 	if level <= 1:
 		print("Lonlat")
-		targets.stars.lonlat.run([starsdir])
+		vstarstack.targets.stars.lonlat.run([descdir])
 	if level <= 2:
 		print("Describe")
-		targets.stars.describe.run([starsdir, descdir])
+		vstarstack.targets.stars.describe.run([descdir, descdir])
 	if level <= 3:
 		print("Match")
-		targets.stars.match.run([descdir])
+		vstarstack.targets.stars.match.run([descdir])
 	if level <= 4:
 		print("Net")
-		targets.stars.net.run([descdir, net])
+		vstarstack.targets.stars.net.run([descdir, net])
 	if level <= 5:
 		print("Cluster")
-		targets.stars.cluster.run([net, descdir, clusters])
-
-commands = {
-	"*" : (process, "Process stars: detect, lonlat, describe, match, net, cluster", "[first_command]"),
-}
+		vstarstack.targets.stars.cluster.run([net, descdir, clusters])
 
 def run(argv):
-	usage.run(argv, "stars process", commands)
+	process(argv)

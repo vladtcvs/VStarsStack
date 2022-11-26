@@ -33,7 +33,7 @@ def simple_add(argv):
 	imgs = vstarstack.common.listfiles(path_images, ".zip")
 
 	shape = None
-	params = None
+	params = {}
 
 	summary = {}
 	summary_weight = {}
@@ -42,6 +42,8 @@ def simple_add(argv):
 	for name, filename in imgs:
 		print(name, filename)
 		img = vstarstack.data.DataFrame.load(filename)
+
+		params = img.params
 
 		for channel in img.get_channels():
 			image, opts = img.get_channel(channel)
@@ -74,6 +76,10 @@ def simple_add(argv):
 		result.add_channel(summary[channel], channel, **(sum_opts[channel]))
 		result.add_channel(summary_weight[channel], "weight-"+channel, weight=True)
 		result.add_channel_link(channel, "weight-"+channel, "weight")
+
+	for param in params:
+		result.add_parameter(params[param], param)
+
 	result.store(out)
 
 def read_and_prepare(img, channel, lows, highs):
@@ -134,11 +140,13 @@ def calculate_sum(imgs, lows, highs):
 	summary = {}
 	summary_weight = {}
 	summary_opts = {}
+	params = {}
 
 	print("Calculate mean value where value between low and high")
 	for name, filename in imgs:
 		print(name, filename)
 		img = vstarstack.data.DataFrame.load(filename)
+		params = img.params
 		for channel in img.get_channels():
 			image, opts = img.get_channel(channel)
 			if opts["encoded"]:
@@ -171,7 +179,7 @@ def calculate_sum(imgs, lows, highs):
 				summary[channel] += image
 				summary_weight[channel] += weight
 
-	return summary, summary_weight, summary_opts
+	return summary, summary_weight, summary_opts, params
 
 def calculate_sigma(imgs, summary, summary_weight, lows, highs):
 	print("Calculate sigma")
@@ -230,13 +238,16 @@ def sigma_clip(argv):
 	highs = {}
 	_, _, lows, highs, _ = sigma_clip_step(imgs, lows, highs, sigma_k)
 	_, _, lows, highs, _ = sigma_clip_step(imgs, lows, highs, sigma_k)
-	summary, weight, opts = calculate_sum(imgs, lows, highs)
+	summary, weight, opts, params = calculate_sum(imgs, lows, highs)
 
 	result = vstarstack.data.DataFrame()
 	for channel in summary:
 		result.add_channel(summary[channel], channel, **(opts[channel]))
 		result.add_channel(weight[channel],  "weight-"+channel, weight=True)
 		result.add_channel_link(channel, "weight-"+channel, "weight")
+
+	for param in params:
+		result.add_parameter(params[param], param)
 
 	result.store(out)
 

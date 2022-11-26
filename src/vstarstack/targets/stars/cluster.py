@@ -112,10 +112,6 @@ def process(argv):
 	with open(cluster_f, "w") as f:
 		json.dump(dclusters, f, indent=4)
 
-commands = {
-	"*" : (process, "build clusters of matching stars", "net.json descs/ cluster.json"),
-}
-
 def run(argv):
-	usage.run(argv, "stars cluster", commands)
+	process(argv)
 

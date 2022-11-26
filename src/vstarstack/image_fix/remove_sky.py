@@ -76,4 +76,4 @@ commands = {
 }
 
 def run(argv):
-	usage.run(argv, "image-fix remove-sky", commands, autohelp=True)
+	vstarstack.usage.run(argv, "image-fix remove-sky", commands, autohelp=True)

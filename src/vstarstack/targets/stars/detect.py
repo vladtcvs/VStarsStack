@@ -90,9 +90,6 @@ def process(argv):
 	else:
 		process_file(path, jsonpath)
 
-commands = {
-	"*" : (process, "detect stars", "[npy/ stars/]"),
-}
 
 def run(argv):
-	vstarstack.usage.run(argv, "stars detect", commands)
+	process(argv)

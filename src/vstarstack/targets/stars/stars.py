@@ -36,4 +36,3 @@ commands = {
 
 def run(argv):
 	vstarstack.usage.run(argv, "stars", commands, autohelp=True)
-
