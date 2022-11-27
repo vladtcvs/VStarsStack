@@ -22,9 +22,10 @@ import matplotlib.pyplot as plt
 import vstarstack.data
 import vstarstack.common
 import vstarstack.usage
+import vstarstack.cfg
 
-slope = 1
 power = 1
+slope = vstarstack.cfg.get_param("multiply", float, 1)
 
 def make_frames(dataframe, channel, *, slope=1, power=1):
 	if channel == "RGB":
@@ -195,12 +196,27 @@ def remove_unsharp(argv):
 
 		dataframe.store(os.path.join(outpath, name + ".zip"))
 
+def exposures(argv):
+	fname = argv[0]
+	dataframe = vstarstack.data.DataFrame.load(fname)
+	channels = dataframe.get_channels()
+
+	for channel in channels:
+		_, opts = dataframe.get_channel(channel)
+		if not opts["brightness"]:
+			continue
+
+		weight_channel = dataframe.links["weight"][channel]
+		w, _ = dataframe.get_channel(weight_channel)
+		print("%s : %f" % (channel, np.amax(w)))
+
 commands = {
 	"show"     : (show, "show image"),
 	"convert"  : (convert, "convert image"),
 	"cut"      : (cut, "cut part of image"),
 	"rename-channel" : (rename_channel, "filename.zip original_name target_name - rename channel"),
 	"remove-unsharp" : (remove_unsharp, "inputs/ percent outputs/"),
+	"exposure" : (exposures, "display image exposures per channel", "file.zip"),
 }
 
 def run(argv):

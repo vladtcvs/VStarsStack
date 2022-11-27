@@ -12,6 +12,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import sys
 import math
 import numpy as np
 import os
@@ -23,10 +24,25 @@ def getval(config, name, default):
 		return config[name]
 	return default
 
+def get_param(name, type, default):
+	for arg in sys.argv[2:]:
+		if arg[:2] != "--":
+			continue
+		arg = arg[2:]
+		items = arg.split("=")
+		if len(items) != 2:
+			continue
+		if items[0] != name:
+			continue
+		return type(items[1])
+	return default
+
 debug = False
 if "DEBUG" in os.environ:
 	debug = eval(os.environ["DEBUG"])
 	print("Debug = %s" % debug)
+
+
 
 cfgdir = os.getcwd()
 cfgpath = os.path.join(cfgdir, "project.json")

@@ -56,4 +56,5 @@ def run(argv, progname=None):
 	vstarstack.usage.run(argv, "", commands, autohelp=True)
 
 if __name__ == "__main__":
-	run(sys.argv[2:], sys.argv[1])
+	argv = [item for item in sys.argv[2:] if item[:2] != "--"]
+	run(argv, sys.argv[1])
