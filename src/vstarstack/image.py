@@ -39,6 +39,8 @@ def make_frames(dataframe, channel, *, slope=1, power=1):
 		rgb[:,:,2] = b
 		amax = np.amax(rgb)
 		rgb = rgb / amax
+		rgb = np.clip(rgb*slope, 0, 1)**power
+
 		frames = {"RGB" : rgb}
 
 	else:

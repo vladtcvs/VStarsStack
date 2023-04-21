@@ -91,5 +91,4 @@ commands = {
 }
 
 def run(argv):
-	usage.run(argv, "readimage nef", commands, autohelp=False)
-
+	vstarstack.usage.run(argv, "readimage nef", commands, autohelp=False)
