@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2023 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +18,9 @@ import numpy as np
 import os
 import json
 import multiprocessing as mp
+
+import vstarstack.tools.camera
+import vstarstack.tools.lens
 
 def getval(config, name, default):
 	if name in config:
@@ -61,13 +64,8 @@ if os.path.exists(cfgpath):
 
 	telescope = config["telescope"]
 
-	camerad    = telescope["camera"]
-	scope      = telescope["scope"]
-
-	if "distorsion" in telescope:
-		distorsion = telescope["distorsion"]
-	else:
-		distorsion = None
+	camera    = vstarstack.tools.camera.Camera(telescope["camera"])
+	scope      = vstarstack.tools.lens.Lens(telescope["scope"])
 
 else:
 	pass

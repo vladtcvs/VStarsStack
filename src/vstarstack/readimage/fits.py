@@ -50,31 +50,28 @@ def process_file(argv):
 			val = str(image.header[key])
 			tags[key] = val
 
-		dataframe = vstarstack.data.DataFrame(tags=tags)
-
-		exptime = image.header["EXPTIME"]
-
-		pixh = vstarstack.cfg.camerad["H"] / vstarstack.cfg.camerad["h"]
-		pixw = vstarstack.cfg.camerad["W"] / vstarstack.cfg.camerad["w"]
-		F = vstarstack.cfg.scope["F"]
-
-		dataframe.add_parameter("perspective", "projection")
-		dataframe.add_parameter(pixh, "perspective_kh")
-		dataframe.add_parameter(pixw, "perspective_kw")
-		dataframe.add_parameter(F, "perspective_F")
-
-		slices = []
-
 		shape = image.data.shape
 		if len(shape) == 2:
 			original = image.data.reshape((1, shape[0], shape[1]))
 		else:
 			original = image.data
-
 		shape = original.shape
 
-		dataframe.add_parameter(shape[1], "h")
-		dataframe.add_parameter(shape[2], "w")
+		params = {
+			"w" : shape[2],
+			"h" : shape[1],
+			"projection" : "perspective",
+			"perspective_F" : vstarstack.cfg.scope.F,
+			"perspective_kh" : vstarstack.cfg.camera.kh,
+			"perspective_kw" : vstarstack.cfg.camera.kw,
+			"format" : vstarstack.cfg.camera.format,
+		}
+
+		dataframe = vstarstack.data.DataFrame(params, tags)
+
+		exptime = image.header["EXPTIME"]
+
+		slices = []
 
 		weight_channel_name = "weight"
 		weight = np.ones((shape[1], shape[2]))*exptime

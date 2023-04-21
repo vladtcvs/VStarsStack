@@ -33,7 +33,7 @@ import vstarstack.readimage.tags
 import zipfile
 
 
-def readyuv(fname, W, H, format):
+def readyuv(fname, W, H):
 	frame_len = int(W*H*2)
 	shape = (int(H*2), W)
 
@@ -48,9 +48,10 @@ def readyuv(fname, W, H, format):
 			"w" : W,
 			"h" : H,
 			"projection" : "perspective",
-			"perspective_kh" : vstarstack.cfg.camerad["H"] / vstarstack.cfg.camerad["h"],
-			"perspective_kw" : vstarstack.cfg.camerad["W"] / vstarstack.cfg.camerad["w"],
-			"perspective_F" : vstarstack.cfg.scope["F"],
+			"perspective_F" : vstarstack.cfg.scope.F,
+			"perspective_kh" : vstarstack.cfg.camera.kh,
+			"perspective_kw" : vstarstack.cfg.camera.kw,
+			"format" : vstarstack.cfg.camera.format,
 		}
 
 		id = 0
@@ -81,11 +82,10 @@ def process_file(argv):
 	output = argv[1]
 	name = argv[2]
 
-	W = vstarstack.cfg.camerad["w"]
-	H = vstarstack.cfg.camerad["h"]
-	fmt = vstarstack.cfg.camerad["format"]
+	W = vstarstack.cfg.camera.w
+	H = vstarstack.cfg.camera.h
 
-	for i, dataframe in readyuv(fname, W, H, fmt):
+	for i, dataframe in readyuv(fname, W, H):
 		framename = os.path.join(output, "%s_%05i.zip" % (name, i))
 		dataframe.store(framename)
 

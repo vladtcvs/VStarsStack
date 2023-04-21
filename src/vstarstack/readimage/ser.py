@@ -110,13 +110,15 @@ def readser(fname):
 			"dateTime" : datetime,
 			"dateTimeUTC" : datetimeUTC,
 		}
+
 		params = {
 			"w" : width,
 			"h" : height,
 			"projection" : "perspective",
-			"perspective_kh" : vstarstack.cfg.camerad["H"] / vstarstack.cfg.camerad["h"],
-			"perspective_kw" : vstarstack.cfg.camerad["W"] / vstarstack.cfg.camerad["w"],
-			"perspective_F" : vstarstack.cfg.scope["F"],
+			"perspective_F" : vstarstack.cfg.scope.F,
+			"perspective_kh" : vstarstack.cfg.camera.kh,
+			"perspective_kw" : vstarstack.cfg.camera.kw,
+			"format" : vstarstack.cfg.camera.format,
 		}
 
 		for id in range(frames):

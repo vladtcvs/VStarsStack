@@ -46,14 +46,15 @@ def read_video(fname):
 		tags = {
 			"depth" : 8,
 		}
+
 		params = {
 			"w" : frame.shape[1],
 			"h" : frame.shape[0],
 			"projection" : "perspective",
-			"perspective_kh" : vstarstack.cfg.camerad["H"] / vstarstack.cfg.camerad["h"],
-			"perspective_kw" : vstarstack.cfg.camerad["W"] / vstarstack.cfg.camerad["w"],
-			"perspective_F" : vstarstack.cfg.scope["F"],
-
+			"perspective_F" : vstarstack.cfg.scope.F,
+			"perspective_kh" : vstarstack.cfg.camera.kh,
+			"perspective_kw" : vstarstack.cfg.camera.kw,
+			"format" : vstarstack.cfg.camera.format,
 		}
 
 		print("\tprocessing frame %i" % id)

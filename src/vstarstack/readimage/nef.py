@@ -36,7 +36,15 @@ def readnef(filename, output):
 	
 	tags = vstarstack.readimage.tags.read_tags(filename)
 	
-	params = {}
+	params = {
+		"w" : image.data.shape[1],
+		"h" : image.data.shape[0],
+		"projection" : "perspective",
+		"perspective_F" : vstarstack.cfg.scope.F,
+		"perspective_kh" : vstarstack.cfg.camera.kh,
+		"perspective_kw" : vstarstack.cfg.camera.kw,
+		"format" : vstarstack.cfg.camera.format,
+	}
 
 	exptime = tags["shutter"]*tags["iso"]
 
@@ -48,12 +56,6 @@ def readnef(filename, output):
 	dataframe.add_channel(weight, "weight")
 	dataframe.add_channel_link("raw", "weight", "weight")
 
-	dataframe.add_parameter(image.data.shape[0], "h")
-	dataframe.add_parameter(image.data.shape[1], "w")
-	dataframe.add_parameter("perspective", "projection")
-	dataframe.add_parameter(vstarstack.cfg.camerad["H"] / vstarstack.cfg.camerad["h"], "perspective_kh")
-	dataframe.add_parameter(vstarstack.cfg.camerad["W"] / vstarstack.cfg.camerad["w"], "perspective_kw")
-	dataframe.add_parameter(vstarstack.cfg.scope["F"], "perspective_F")
 	dataframe.store(output)
 
 def work(input, output):
