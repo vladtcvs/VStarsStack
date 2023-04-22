@@ -69,7 +69,7 @@ def make_frames(dataframe, channel, *, slope=1, power=1):
     return frames
 
 
-def show(argv):
+def show(project, argv):
     path = argv[0]
     if len(argv) > 1:
         channel = argv[1]
@@ -97,7 +97,7 @@ def show(argv):
     plt.show()
 
 
-def convert(argv):
+def convert(project, argv):
     path = argv[0]
     if len(argv) > 1:
         channel = argv[1]
@@ -126,7 +126,7 @@ def convert(argv):
         imageio.imwrite(fname, img)
 
 
-def cut(argv):
+def cut(project, argv):
     path = argv[0]
     left = int(argv[1])
     top = int(argv[2])
@@ -150,7 +150,7 @@ def cut(argv):
     outdata.store(out)
 
 
-def rename_channel(argv):
+def rename_channel(project, argv):
     name = argv[0]
     channel = argv[1]
     target = argv[2]
@@ -160,7 +160,7 @@ def rename_channel(argv):
     dataframe.store(name)
 
 
-def remove_unsharp(argv):
+def remove_unsharp(project, argv):
     npys = argv[0]
     percent = int(argv[1])
     outpath = argv[2]
@@ -205,7 +205,7 @@ def remove_unsharp(argv):
         dataframe.store(os.path.join(outpath, name + ".zip"))
 
 
-def exposures(argv):
+def exposures(project, argv):
     fname = argv[0]
     dataframe = vstarstack.data.DataFrame.load(fname)
     channels = dataframe.get_channels()

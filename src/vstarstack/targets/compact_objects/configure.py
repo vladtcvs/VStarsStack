@@ -15,13 +15,14 @@
 import os
 import json
 
+import vstarstack.cfg
 
 def dircheck(name):
     if not os.path.isdir(name):
         os.mkdir(name)
 
 
-def run(project: vstarstack.cfg.Project, argv: list):
+def run(_project: vstarstack.cfg.Project, argv: list):
     if len(argv) > 0:
         dir = argv[0]
     else:

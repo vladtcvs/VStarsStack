@@ -15,6 +15,7 @@
 import os
 import json
 
+import vstarstack.cfg
 
 def dircheck(name):
     if not os.path.isdir(name):
