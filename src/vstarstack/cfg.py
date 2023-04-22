@@ -13,59 +13,71 @@
 #
 
 import sys
-import math
-import numpy as np
-import os
 import json
+import os
 import multiprocessing as mp
 
 import vstarstack.tools.camera
 import vstarstack.tools.lens
 
+
 def getval(config, name, default):
-	if name in config:
-		return config[name]
-	return default
+    if name in config:
+        return config[name]
+    return default
+
 
 def get_param(name, type, default):
-	for arg in sys.argv[2:]:
-		if arg[:2] != "--":
-			continue
-		arg = arg[2:]
-		items = arg.split("=")
-		if len(items) != 2:
-			continue
-		if items[0] != name:
-			continue
-		return type(items[1])
-	return default
+    for arg in sys.argv[2:]:
+        if arg[:2] != "--":
+            continue
+        arg = arg[2:]
+        items = arg.split("=")
+        if len(items) != 2:
+            continue
+        if items[0] != name:
+            continue
+        return type(items[1])
+    return default
+
 
 debug = False
 if "DEBUG" in os.environ:
-	debug = eval(os.environ["DEBUG"])
-	print("Debug = %s" % debug)
+    debug = eval(os.environ["DEBUG"])
+    print("Debug = %s" % debug)
 
-
-
-cfgdir = os.getcwd()
-cfgpath = os.path.join(cfgdir, "project.json")
 nthreads = max(int(mp.cpu_count())-1, 1)
 
-if os.path.exists(cfgpath):
-	with open(cfgpath) as f:
-		config = json.load(f)
 
-	use_sphere = getval(config, "use_sphere", True)
-	compress = getval(config, "compress", True)
+class Project(object):
+    def __init__(self, config):
+        self.config = config
+        self.use_sphere = getval(config, "use_sphere", True)
+        self.compress = getval(config, "compress", True)
 
-	if "stars" in config:
-		stars      = config["stars"]
-		use_angles = getval(stars, "use_angles", True)
+        if "stars" in config:
+            self.stars = config["stars"]
+        else:
+            self.stars = {}
 
-	telescope = config["telescope"]
+        telescope = config["telescope"]
+        self.camera = vstarstack.tools.camera.Camera(telescope["camera"])
+        self.scope = vstarstack.tools.lens.Lens(telescope["scope"])
 
-	camera    = vstarstack.tools.camera.Camera(telescope["camera"])
-	scope      = vstarstack.tools.lens.Lens(telescope["scope"])
 
-else:
-	pass
+_PROJECT = None
+
+
+def get_project(filename=None):
+    """Load project file"""
+    global _PROJECT
+
+    if filename is None:
+        cfgdir = os.getcwd()
+        filename = os.path.join(cfgdir, "project.json")
+
+    if _PROJECT is None and os.path.exists(filename):
+        with open(filename, encoding='utf8') as f:
+            config = json.load(f)
+        _PROJECT = Project(config)
+    return _PROJECT

@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "ndarraytypes.h": "c"
+    },
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "python.formatting.autopep8Args": [
+        "--indent-size=4"
+    ],
+    "python.linting.pylintArgs": [
+        "--indent-string='    '",
+        "--rcfile=pylint.rc"
+    ]   
+}

@@ -20,96 +20,97 @@ import os
 import json
 import vstarstack.cfg
 
-def run(argv):
-	if len(argv) < 3:
-		npypath = vstarstack.cfg.config["paths"]["npy-fixed"]
-		jsonpath = vstarstack.cfg.config["paths"]["descs"]
-		cutpath = vstarstack.cfg.config["paths"]["npy-fixed"]
-	else:
-		npypath = argv[0]
-		jsonpath = argv[1]
-		cutpath = argv[2]
 
-	if len(argv) > 3:
-		margin = int(argv[3])
-	else:
-		margin = vstarstack.cfg.config["compact_objects"]["margin"]
+def run(project: vstarstack.cfg.Project, argv: list):
+    if len(argv) < 3:
+        npypath = project.config["paths"]["npy-fixed"]
+        jsonpath = project.config["paths"]["descs"]
+        cutpath = project.config["paths"]["npy-fixed"]
+    else:
+        npypath = argv[0]
+        jsonpath = argv[1]
+        cutpath = argv[2]
 
-	require_size = vstarstack.cfg.config["compact_objects"]["require_size"]
+    if len(argv) > 3:
+        margin = int(argv[3])
+    else:
+        margin = project.config["compact_objects"]["margin"]
 
-	files = vstarstack.common.listfiles(jsonpath, ".json")
-	for name, filename in files:
-		print("Loading info: %s" % name)
-		with open(filename) as f:
-			detection = json.load(f)
+    require_size = project.config["compact_objects"]["require_size"]
 
-	maxr = 0
-	for name, filename in files:
-		with open(filename) as f:
-			detection = json.load(f)
+    files = vstarstack.common.listfiles(jsonpath, ".json")
+    for name, filename in files:
+        print("Loading info: %s" % name)
+        with open(filename) as f:
+            detection = json.load(f)
 
-		r = int(detection["compact_object"]["r"])
-		if r > maxr:
-			maxr = r
-	maxr = int(maxr+0.5)+margin
+    maxr = 0
+    for name, filename in files:
+        with open(filename) as f:
+            detection = json.load(f)
 
-	for name, filename in files:
-		print(name)
-		with open(filename) as f:
-			detection = json.load(f)
+        r = int(detection["compact_object"]["r"])
+        if r > maxr:
+            maxr = r
+    maxr = int(maxr+0.5)+margin
 
-		x = int(detection["compact_object"]["x"])
-		y = int(detection["compact_object"]["y"])
-		r = int(detection["compact_object"]["r"])
-		left   = int(x - maxr)
-		right  = int(x + maxr)
-		top    = int(y - maxr)
-		bottom = int(y + maxr)
+    for name, filename in files:
+        print(name)
+        with open(filename) as f:
+            detection = json.load(f)
 
-		if left < 0:
-			left = 0
-		if top < 0:
-			top = 0
+        x = int(detection["compact_object"]["x"])
+        y = int(detection["compact_object"]["y"])
+        r = int(detection["compact_object"]["r"])
+        left = int(x - maxr)
+        right = int(x + maxr)
+        top = int(y - maxr)
+        bottom = int(y + maxr)
 
-		imagename = os.path.join(npypath, name + ".zip")
-		try:
-			image = vstarstack.data.DataFrame.load(imagename)
-		except:
-			print("Can not load ", name)
-			continue
+        if left < 0:
+            left = 0
+        if top < 0:
+            top = 0
 
-		weight_links = dict(image.links["weight"])
+        imagename = os.path.join(npypath, name + ".zip")
+        try:
+            image = vstarstack.data.DataFrame.load(imagename)
+        except:
+            print("Can not load ", name)
+            continue
 
-		for channel in image.get_channels():
-			img, opts = image.get_channel(channel)
-			if opts["encoded"]:
-				image.remove_channel(channel)
-				continue
+        weight_links = dict(image.links["weight"])
 
-			img = img[top:bottom+1, left:right+1]
+        for channel in image.get_channels():
+            img, opts = image.get_channel(channel)
+            if opts["encoded"]:
+                image.remove_channel(channel)
+                continue
 
-			if require_size:
-				if img.shape[0] != 2*maxr + 1:
-					print("\tSkip %s" % channel)
-					image.remove_channel(channel)
-					continue
-				if img.shape[1] != 2*maxr + 1:
-					print("\tSkip %s" % channel)
-					image.remove_channel(channel)
-					continue
+            img = img[top:bottom+1, left:right+1]
 
-			detection["roi"] = {
-				"x1" : left,
-				"y1" : top,
-				"x2" : right,
-				"y2" : bottom
-			}
-			image.add_channel(img, channel, **opts)
-			with open(filename, "w") as f:
-				json.dump(detection, f, indent=4, ensure_ascii=False)
+            if require_size:
+                if img.shape[0] != 2*maxr + 1:
+                    print("\tSkip %s" % channel)
+                    image.remove_channel(channel)
+                    continue
+                if img.shape[1] != 2*maxr + 1:
+                    print("\tSkip %s" % channel)
+                    image.remove_channel(channel)
+                    continue
 
-		for ch in weight_links:
-			image.add_channel_link(ch, weight_links[ch], "weight")
+            detection["roi"] = {
+                "x1": left,
+                "y1": top,
+                "x2": right,
+                "y2": bottom
+            }
+            image.add_channel(img, channel, **opts)
+            with open(filename, "w") as f:
+                json.dump(detection, f, indent=4, ensure_ascii=False)
 
-		outname = os.path.join(cutpath, name + ".zip")
-		image.store(outname)
+        for ch in weight_links:
+            image.add_channel_link(ch, weight_links[ch], "weight")
+
+        outname = os.path.join(cutpath, name + ".zip")
+        image.store(outname)

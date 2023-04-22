@@ -17,9 +17,10 @@ import vstarstack.targets.planets.configure
 import vstarstack.usage
 
 commands = {
-	"configure" : (vstarstack.targets.planets.configure.run, "configure planets in project"),
-	"buildmap" : (vstarstack.targets.planets.buildmap.run, "build planet surface map"),
+    "configure": (vstarstack.targets.planets.configure.run, "configure planets in project"),
+    "buildmap": (vstarstack.targets.planets.buildmap.run, "build planet surface map"),
 }
 
-def run(argv):
-	usage.run(argv, "planets", commands, autohelp=True)
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    usage.run(argv, "planets", commands, autohelp=True)

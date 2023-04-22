@@ -12,16 +12,17 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import os
+
 import vstarstack.common
 import vstarstack.cfg
 
-import os
 
-def run(argv):
-    orig    = vstarstack.cfg.config["paths"]["npy-orig"]
-    fixed   = vstarstack.cfg.config["paths"]["npy-fixed"]
-    shifted = vstarstack.cfg.config["paths"]["aligned"]
-    
+def run(project: vstarstack.cfg.Project, _argv: list):
+    orig = project.config["paths"]["npy-orig"]
+    fixed = project.config["paths"]["npy-fixed"]
+    shifted = project.config["paths"]["aligned"]
+
     for path in [orig, fixed, shifted]:
         files = vstarstack.common.listfiles(path, ".zip")
         for _, filename in files:

@@ -1,3 +1,4 @@
+"""Read video source file"""
 #
 # Copyright (c) 2022 Vladislav Tsendrovskii
 #
@@ -13,99 +14,102 @@
 #
 
 import os
-import exifread
-import imageio
-from os import listdir
-from os.path import isfile, join
 import numpy as np
-import sys
+import cv2
 
-import json
-from PIL import Image
 import vstarstack.cfg
 import vstarstack.common
 import vstarstack.usage
 import vstarstack.data
 
-import math
 import vstarstack.readimage.tags
 
-import cv2
-import zipfile
 
-def read_video(fname):
-	vidcap = cv2.VideoCapture(fname)
-	id = 0
+def read_video(project: vstarstack.cfg.Project, fname: str):
+    """Read frames from video file"""
+    vidcap = cv2.VideoCapture(fname)
+    frame_id = 0
 
-	#vidcap.set(cv2.CAP_PROP_FORMAT, -1)
-	while True:
-		success, frame = vidcap.read()
-		if not success:
-			break	
+    # vidcap.set(cv2.CAP_PROP_FORMAT, -1)
+    while True:
+        success, frame = vidcap.read()
+        if not success:
+            break
 
-		tags = {
-			"depth" : 8,
-		}
+        tags = {
+            "depth": 8,
+        }
 
-		params = {
-			"w" : frame.shape[1],
-			"h" : frame.shape[0],
-			"projection" : "perspective",
-			"perspective_F" : vstarstack.cfg.scope.F,
-			"perspective_kh" : vstarstack.cfg.camera.kh,
-			"perspective_kw" : vstarstack.cfg.camera.kw,
-			"format" : vstarstack.cfg.camera.format,
-		}
+        params = {
+            "w": frame.shape[1],
+            "h": frame.shape[0],
+            "projection": "perspective",
+            "perspective_F": project.scope.F,
+            "perspective_kh": project.camera.kh,
+            "perspective_kw": project.camera.kw,
+            "format": project.camera.format,
+        }
 
-		print("\tprocessing frame %i" % id)
+        print(f"\tprocessing frame {frame_id}")
 
-		exptime = 1
-		weight = np.ones((frame.shape[0], frame.shape[1]))*exptime
+        exptime = 1
+        weight = np.ones((frame.shape[0], frame.shape[1]))*exptime
 
-		dataframe = vstarstack.data.DataFrame(params, tags)
-		dataframe.add_channel(frame[:,:,0], "R")
-		dataframe.add_channel(frame[:,:,1], "G")
-		dataframe.add_channel(frame[:,:,2], "B")
-		dataframe.add_channel(weight, "weight")
-		dataframe.add_channel_link("R", "weight", "weight")
-		dataframe.add_channel_link("G", "weight", "weight")
-		dataframe.add_channel_link("B", "weight", "weight")
-		yield id, dataframe
-		id += 1
-	
-def process_file(argv):
-	fname = argv[0]
-	output = argv[1]
-	name = argv[2]
+        dataframe = vstarstack.data.DataFrame(params, tags)
+        dataframe.add_channel(frame[:, :, 0], "R")
+        dataframe.add_channel(frame[:, :, 1], "G")
+        dataframe.add_channel(frame[:, :, 2], "B")
+        dataframe.add_channel(weight, "weight")
+        dataframe.add_channel_link("R", "weight", "weight")
+        dataframe.add_channel_link("G", "weight", "weight")
+        dataframe.add_channel_link("B", "weight", "weight")
+        yield frame_id, dataframe
+        frame_id += 1
 
-	for i, dataframe in read_video(fname):
-		framename = os.path.join(output, "%s_%05i.zip" % (name, i))
-		dataframe.store(framename)
 
-def process_path(argv):
-	input = argv[0]
-	output = argv[1]
+def process_file(project: vstarstack.cfg.Project, argv: list):
+    """Process single file"""
+    fname = argv[0]
+    output = argv[1]
+    name = argv[2]
 
-	files = vstarstack.common.listfiles(input)
-	for name, fname in files:
-		print(name)
-		process_file((fname, output, name))
+    for frame_id, dataframe in read_video(project, fname):
+        framename = os.path.join(output, f"{name}_{frame_id:05}")
+        dataframe.store(framename)
 
-def process(argv):
-	if len(argv) > 0:
-		input = argv[0]
-		output = argv[1]
-		if os.path.isdir(input):
-			process_path((input, output))
-		else:
-			name = os.path.splitext(os.path.basename(input))[0]
-			process_file((input, output, name))
-	else:
-		process_path([vstarstack.cfg.config["paths"]["original"], vstarstack.cfg.config["paths"]["npy-orig"]])
+
+def process_path(project: vstarstack.cfg.Project, argv: list):
+    """Process all videeo files in directory"""
+    input_dir = argv[0]
+    output_dir = argv[1]
+
+    files = vstarstack.common.listfiles(input_dir)
+    for name, fname in files:
+        print(name)
+        process_file(project, (fname, output_dir, name))
+
+
+def process(project: vstarstack.cfg.Project, argv: list):
+    """Process video file(s) in path"""
+    if len(argv) > 0:
+        input_path = argv[0]
+        output_path = argv[1]
+        if os.path.isdir(input_path):
+            process_path(project, (input_path, output_path))
+        else:
+            name = os.path.splitext(os.path.basename(input_path))[0]
+            process_file(project, (input_path, output_path, name))
+    else:
+        process_path(project, [project.config["paths"]
+                     ["original"], project.config["paths"]["npy-orig"]])
+
 
 commands = {
-	"*" : (process, "read Video to npy", "(input.video output/ | [original/ npy/])"),
+    "*": (process, "read Video to npy", "(input.video output/ | [original/ npy/])"),
 }
 
-def run(argv):
-	vstarstack.usage.run(argv, "readimage video", commands, autohelp=False)
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    """Read video file to npy"""
+    vstarstack.usage.run(project, argv, "readimage video",
+                         commands, autohelp=False)

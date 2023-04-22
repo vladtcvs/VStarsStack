@@ -12,13 +12,13 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import vstarstack.projection.perspective
+import sphere
 import sys
 import math
 sys.path.append('../')
 sys.path.append('../../projection')
 
-import sphere
-import vstarstack.projection.perspective
 
 thr = 1e-6
 pixthr = 1e-3
@@ -28,6 +28,7 @@ H = 10
 F = 1000
 w = 1500
 h = 1000
+
 
 def test_no_rotation_forward():
     s1lat1 = 0
@@ -58,6 +59,7 @@ def test_no_rotation_forward():
     assert abs(shifted[0][0] - h/2) < pixthr
     assert abs(shifted[0][1] - w/2) < pixthr
 
+
 def test_no_rotation_reverse():
     s1lat1 = 0
     s1lon1 = 0
@@ -87,6 +89,7 @@ def test_no_rotation_reverse():
     assert abs(shifted[0][0] - h/2) < pixthr
     assert abs(shifted[0][1] - w/2) < pixthr
 
+
 def test_lon_rotation_forward():
     dlon = 0.1
 
@@ -110,7 +113,7 @@ def test_lon_rotation_forward():
 
     x = w/2
     y = h/2
-    
+
     x_moved_expected = x - w * F/W*math.tan(dlon)
     y_moved_expected = h/2
     positions = [(y, x)]
@@ -122,6 +125,7 @@ def test_lon_rotation_forward():
     assert len(shifted) == 1
     assert abs(shifted[0][0] - y_moved_expected) < pixthr
     assert abs(shifted[0][1] - x_moved_expected) < pixthr
+
 
 def test_lon_rotation_reverse():
     dlon = 0.1
@@ -146,7 +150,7 @@ def test_lon_rotation_reverse():
 
     x = w/2
     y = h/2
-    
+
     x_moved_expected = x + w * F/W*math.tan(dlon)
     y_moved_expected = h/2
     positions = [(y, x)]
@@ -158,6 +162,7 @@ def test_lon_rotation_reverse():
     assert len(shifted) == 1
     assert abs(shifted[0][0] - y_moved_expected) < pixthr
     assert abs(shifted[0][1] - x_moved_expected) < pixthr
+
 
 def test_neglon_rotation_forward():
     dlon = -0.1
@@ -182,7 +187,7 @@ def test_neglon_rotation_forward():
 
     x = w/2
     y = h/2
-    
+
     x_moved_expected = x - w * F/W*math.tan(dlon)
     y_moved_expected = h/2
     positions = [(y, x)]

@@ -20,11 +20,12 @@ import vstarstack.targets.compact_objects.features
 import vstarstack.usage
 
 commands = {
-	"config"   : (vstarstack.targets.compact_objects.configure.run, "configure compact_objects pipeline"),
-	"detect" : (vstarstack.targets.compact_objects.detect.run, "detect compact objects"),
-	"cut"    : (vstarstack.targets.compact_objects.cut.run, "cut compact objects"),
-	"features" : (vstarstack.targets.compact_objects.features.run, "detect and match features on images")
+    "config": (vstarstack.targets.compact_objects.configure.run, "configure compact_objects pipeline"),
+    "detect": (vstarstack.targets.compact_objects.detect.run, "detect compact objects"),
+    "cut": (vstarstack.targets.compact_objects.cut.run, "cut compact objects"),
+    "features": (vstarstack.targets.compact_objects.features.run, "detect and match features on images")
 }
 
-def run(argv):
-	vstarstack.usage.run(argv, "compact_objects", commands, autohelp=True)
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    vstarstack.usage.run(argv, "compact_objects", commands, autohelp=True)

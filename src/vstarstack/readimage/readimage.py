@@ -1,3 +1,4 @@
+"""Read source image files to internal format"""
 #
 # Copyright (c) 2022 Vladislav Tsendrovskii
 #
@@ -12,6 +13,8 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import vstarstack.cfg
+
 import vstarstack.usage
 import vstarstack.readimage.nef
 import vstarstack.readimage.classic
@@ -21,13 +24,15 @@ import vstarstack.readimage.video
 import vstarstack.readimage.fits
 
 commands = {
-	"nef"   : (vstarstack.readimage.nef.run, "read Nikon NEF"),
-	"classic"  : (vstarstack.readimage.classic.run, "read usual images (JPG, PNG, TIFF)"),
-	"ser" : (vstarstack.readimage.ser.run, "read SER"),
-	"yuv" : (vstarstack.readimage.yuv.run, "read YUV images"),
-	"fits" : (vstarstack.readimage.fits.run, "read FITS images"),
-	"video" : (vstarstack.readimage.video.run, "read VIDEO images"),
+    "nef": (vstarstack.readimage.nef.run, "read Nikon NEF"),
+    "classic": (vstarstack.readimage.classic.run, "read usual images (JPG, PNG, TIFF)"),
+    "ser": (vstarstack.readimage.ser.run, "read SER"),
+    "yuv": (vstarstack.readimage.yuv.run, "read YUV images"),
+    "fits": (vstarstack.readimage.fits.run, "read FITS images"),
+    "video": (vstarstack.readimage.video.run, "read VIDEO images"),
 }
 
-def run(argv):
-	vstarstack.usage.run(argv, "readimage", commands, autohelp=True)
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    """Run reading image files"""
+    vstarstack.usage.run(project, argv, "readimage", commands, autohelp=True)

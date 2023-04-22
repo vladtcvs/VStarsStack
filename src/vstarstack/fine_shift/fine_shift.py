@@ -22,9 +22,10 @@ import multiprocessing as mp
 import numpy as np
 import os
 import json
-#import tqdm
+# import tqdm
 
 ncpu = vstarstack.cfg.nthreads
+
 
 def cluster_average(cluster):
     xs = []
@@ -33,10 +34,11 @@ def cluster_average(cluster):
         xs.append(cluster[name]["x"])
         ys.append(cluster[name]["y"])
     pos = {
-        "x" : sum(xs)/len(xs),
-        "y" : sum(ys)/len(ys),
+        "x": sum(xs)/len(xs),
+        "y": sum(ys)/len(ys),
     }
     return pos
+
 
 def process_alignment(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, spk, good_clusters):
     print("Processing: %s" % name)
@@ -50,10 +52,10 @@ def process_alignment(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, spk, 
         # we need reverse transformation
         x = cluster["average"]["x"]
         y = cluster["average"]["y"]
-        points.append((x,y))
+        points.append((x, y))
         x = cluster["images"][name]["x"]
         y = cluster["images"][name]["y"]
-        targets.append((x,y))
+        targets.append((x, y))
 
     print("\tusing %i points" % len(points))
     if len(points) < plen:
@@ -75,28 +77,30 @@ def process_alignment(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, spk, 
     with open(out, "w") as f:
         json.dump(descriptor, f, indent=4, ensure_ascii=False)
 
+
 def process_alignment_wrapper(arg):
     return process_alignment(*arg)
 
-def find_alignment(argv):
+
+def find_alignment(project: vstarstack.cfg.Project, argv: list):
     clusters = argv[0]
     outpath = argv[1]
 
     with open(clusters) as f:
         clusters = json.load(f)
 
-    W = vstarstack.cfg.camerad["w"]
-    H = vstarstack.cfg.camerad["h"]
+    W = project.camera.w
+    H = project.camera.h
 
-    Nsteps = vstarstack.cfg.config["fine_shift"]["Nsteps"]
-    dh = vstarstack.cfg.config["fine_shift"]["dh"]
-    gridW = vstarstack.cfg.config["fine_shift"]["gridW"]
-    gridH = vstarstack.cfg.config["fine_shift"]["gridH"]
-    spk = vstarstack.cfg.config["fine_shift"]["stretchPenlatyCoefficient"]
-    cllen = vstarstack.cfg.config["fine_shift"]["cluster_len_k"]
-    plen = vstarstack.cfg.config["fine_shift"]["points_min_len"]
+    Nsteps = project.config["fine_shift"]["Nsteps"]
+    dh = project.config["fine_shift"]["dh"]
+    gridW = project.config["fine_shift"]["gridW"]
+    gridH = project.config["fine_shift"]["gridH"]
+    spk = project.config["fine_shift"]["stretchPenlatyCoefficient"]
+    cllen = project.config["fine_shift"]["cluster_len_k"]
+    plen = project.config["fine_shift"]["points_min_len"]
 
-    maxcllen = max([len(cluster) for cluster in clusters])    
+    maxcllen = max([len(cluster) for cluster in clusters])
     names = []
     good_clusters = []
     for cluster in clusters:
@@ -105,17 +109,19 @@ def find_alignment(argv):
 
         names += list(cluster.keys())
         gcluster = {
-            "average" : cluster_average(cluster),
-            "images" : cluster,
+            "average": cluster_average(cluster),
+            "images": cluster,
         }
         good_clusters.append(gcluster)
     names = sorted(list(set(names)))
 
     pool = mp.Pool(ncpu)
-    args = [(name, outpath, Nsteps, plen, dh, W, H, gridW, gridH, spk, good_clusters) for name in names]
+    args = [(name, outpath, Nsteps, plen, dh, W, H, gridW,
+             gridH, spk, good_clusters) for name in names]
     for _ in pool.imap_unordered(process_alignment_wrapper, args):
         pass
     pool.close()
+
 
 def apply_alignment_file(name, npy, align_data, output):
     print(name)
@@ -135,41 +141,45 @@ def apply_alignment_file(name, npy, align_data, output):
         fixed = np.zeros(image.shape)
         for y in range(fixed.shape[0]):
             for x in range(fixed.shape[1]):
-                ox,oy = wave.interpolate(x,y)
-                fixed[y,x] = vstarstack.common.getpixel(image, oy, ox)[1]
+                ox, oy = wave.interpolate(x, y)
+                fixed[y, x] = vstarstack.common.getpixel(image, oy, ox)[1]
 
         dataframe.add_channel(fixed, channel, **opts)
     dataframe.links = links
     dataframe.store(output)
 
+
 def apply_alignment_file_wrapper(arg):
     apply_alignment_file(*arg)
 
-def apply_alignment(argv):
+
+def apply_alignment(project: vstarstack.cfg.Project, argv: list):
     if len(argv) >= 3:
         npys = argv[0]
         descs = argv[1]
         outputs = argv[2]
     else:
-        npys = vstarstack.cfg.config["npy-fixed"]
-        descs = vstarstack.cfg.config["descs"]
-        outputs = vstarstack.cfg.config["aligned"]
+        npys = project.config["npy-fixed"]
+        descs = project.config["descs"]
+        outputs = project.config["aligned"]
 
     if os.path.isdir(npys):
         files = vstarstack.common.listfiles(npys, ".zip")
         pool = mp.Pool(ncpu)
         args = [(name, fname, os.path.join(descs, name + ".json"), os.path.join(outputs, name + ".zip"))
-                    for name, fname in files]
+                for name, fname in files]
         for _ in pool.imap_unordered(apply_alignment_file_wrapper, args):
             pass
         pool.close()
     else:
         apply_alignment_file(os.path.basename(npys), npys, descs, outputs)
 
+
 commands = {
-    "align-features" : (find_alignment, "find alignment of images", "clusters.json alignments/"),
-    "apply-aligns" : (apply_alignment, "apply alignments to images", "npys/ alignments/ output/"),
+    "align-features": (find_alignment, "find alignment of images", "clusters.json alignments/"),
+    "apply-aligns": (apply_alignment, "apply alignments to images", "npys/ alignments/ output/"),
 }
 
-def run(argv):
-    vstarstack.usage.run(argv, "fine-shift", commands, autohelp=True)
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    vstarstack.usage.run(project, argv, "fine-shift", commands, autohelp=True)

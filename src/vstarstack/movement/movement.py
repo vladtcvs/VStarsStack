@@ -1,5 +1,6 @@
+"""Common movement definitions"""
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2023 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,16 +13,10 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import vstarstack.usage
-import vstarstack.debayer.yuv422
-import vstarstack.debayer.bayer
-import vstarstack.cfg
 
-commands = {
-    "yuv422": (vstarstack.debayer.yuv422.run, "Consider RAW as YUV with 422 subsampling"),
-    "bayer": (vstarstack.debayer.bayer.run, "Consider RAW as Bayer masked image")
-}
+class MovementException(Exception):
+    """Movement exception"""
 
-
-def run(project: vstarstack.cfg.Project, argv: list):
-    vstarstack.usage.run(project, argv, "debayer", commands, autohelp=True)
+    def __init__(self, movement_type, reason):
+        Exception.__init__(
+            self, f"Movement (type={movement_type}) exception: {reason}")

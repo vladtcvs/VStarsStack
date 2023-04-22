@@ -18,26 +18,27 @@ import vstarstack.cfg
 
 import vstarstack.projection.perspective
 
-def run(argv):
-	infilename = argv[0]
-	if len(argv) == 1:
-		outfilename = infilename
-	else:
-		outfilename = argv[1]
 
-	proj = vstarstack.projection.perspective.Projection(vstarstack.cfg.camerad["W"],
-												vstarstack.cfg.camerad["H"],
-												vstarstack.cfg.scope["F"],
-												vstarstack.cfg.camerad["w"],
-												vstarstack.cfg.camerad["h"])
-	with open(infilename) as f:
-		clusters = json.load(f)
-	for cluster in clusters:
-		for name in cluster:
-			x = cluster[name]["x"]
-			y = cluster[name]["y"]
-			lat, lon = proj.project(y, x)
-			cluster[name]["lon"] = lon
-			cluster[name]["lat"] = lat
-	with open(outfilename, "w") as f:
-		json.dump(clusters, f, indent=4)
+def run(project: vstarstack.cfg.Project, argv: list):
+    infilename = argv[0]
+    if len(argv) == 1:
+        outfilename = infilename
+    else:
+        outfilename = argv[1]
+
+    proj = vstarstack.projection.perspective.Projection(project.camera.W,
+                                                        project.camera.H,
+                                                        project.scope.F,
+                                                        project.camera.w,
+                                                        project.camera.h)
+    with open(infilename) as f:
+        clusters = json.load(f)
+    for cluster in clusters:
+        for name in cluster:
+            x = cluster[name]["x"]
+            y = cluster[name]["y"]
+            lat, lon = proj.project(y, x)
+            cluster[name]["lon"] = lon
+            cluster[name]["lat"] = lat
+    with open(outfilename, "w") as f:
+        json.dump(clusters, f, indent=4)

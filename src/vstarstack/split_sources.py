@@ -23,8 +23,8 @@ nps = max(int(mp.cpu_count())-1, 1)
 
 minsize = nps
 
-orig=sys.argv[1]
-base=sys.argv[2]
+orig = sys.argv[1]
+base = sys.argv[2]
 
 files = vstarstack.common.listfiles(orig, ".npz")
 
@@ -32,29 +32,29 @@ num = len(files)
 splits = math.ceil(num**(2/3)/2**(1/3))
 inblock = max(math.ceil(num / splits), minsize)
 
-blocks=[]
-block=[]
+blocks = []
+block = []
 
 for name, filename in files:
-	block.append(filename)
-	if len(block) >= inblock:
-		blocks.append(block)
-		block=[]
+    block.append(filename)
+    if len(block) >= inblock:
+        blocks.append(block)
+        block = []
 
 if len(block) > 0:
-	blocks.append(block)
+    blocks.append(block)
 
 for i in range(len(blocks)):
-	blockdir = os.path.join(base, "block%04i" % i)
-	npydir = os.path.join(blockdir, "npy")
-	os.mkdir(blockdir)
-	os.mkdir(os.path.join(blockdir, "npy"))
-	os.mkdir(os.path.join(blockdir, "stars"))
-	os.mkdir(os.path.join(blockdir, "descs"))
-	os.mkdir(os.path.join(blockdir, "aligned"))
-	for filename in blocks[i]:
-		basename = os.path.basename(filename)
-		os.rename(filename, os.path.join(npydir, basename))
+    blockdir = os.path.join(base, "block%04i" % i)
+    npydir = os.path.join(blockdir, "npy")
+    os.mkdir(blockdir)
+    os.mkdir(os.path.join(blockdir, "npy"))
+    os.mkdir(os.path.join(blockdir, "stars"))
+    os.mkdir(os.path.join(blockdir, "descs"))
+    os.mkdir(os.path.join(blockdir, "aligned"))
+    for filename in blocks[i]:
+        basename = os.path.basename(filename)
+        os.rename(filename, os.path.join(npydir, basename))
 
 sumdir = os.path.join(base, "sum")
 os.mkdir(sumdir)

@@ -17,79 +17,79 @@ import vstarstack.usage
 import vstarstack.common
 import vstarstack.cfg
 
-def process(argv):
-	if len(argv) >= 2:
-		jsondir = argv[0]
-		out = argv[1]
-	else:
-		jsondir = vstarstack.cfg.config["stars"]["paths"]["descs"]
-		out = vstarstack.cfg.config["stars"]["paths"]["net"]
 
-	imagesfiles = vstarstack.common.listfiles(jsondir, ".json")
+def process(project: vstarstack.cfg.Project, argv: list):
+    if len(argv) >= 2:
+        jsondir = argv[0]
+        out = argv[1]
+    else:
+        jsondir = project.config["stars"]["paths"]["descs"]
+        out = project.config["stars"]["paths"]["net"]
 
-	names = []
+    imagesfiles = vstarstack.common.listfiles(jsondir, ".json")
 
-	images = {}
-	for name,filename in imagesfiles:
-		names.append(name)
-		with open(filename) as f:
-			images[name] = json.load(f)
+    names = []
 
-	net = {}
-	for name in names:
-		net[name] = {}
-		image = images[name]
-		stars = image["main"]
-		for i in range(len(stars)):
-			net[name][i] = {}
-			for name2 in names:
-				m = stars[i]["matches"][name2]
-				if m is not None:
-					net[name][i][name2] = m
+    images = {}
+    for name, filename in imagesfiles:
+        names.append(name)
+        with open(filename) as f:
+            images[name] = json.load(f)
 
-	# find invalid matches
-	errors = []
-	for name1 in net:
-		for i in net[name1]:
-			for name2 in net[name1][i]:
-				j = net[name1][i][name2]
-				if name2 in net and j in net[name2] and name1 in net[name2][j]:
-					if net[name2][j][name1] != i:
-						errors.append((name1, i, name2, j))
-	# remove invalid matches
-	for name1, i, name2, j in errors:
-		if name2 in net[name1][i]:
-			net[name1][i].pop(name2)
-		if name1 in net[name2][j]:
-			net[name2][j].pop(name1)
+    net = {}
+    for name in names:
+        net[name] = {}
+        image = images[name]
+        stars = image["main"]
+        for i in range(len(stars)):
+            net[name][i] = {}
+            for name2 in names:
+                m = stars[i]["matches"][name2]
+                if m is not None:
+                    net[name][i][name2] = m
 
-	# symmetrise net
-	ns = []
-	for name1 in net:
-		for i in net[name1]:
-			for name2 in net[name1][i]:
-				j = net[name1][i][name2]
-				if name2 not in net or j not in net[name2] or name1 not in net[name2][j]:
-					ns.append((name1, i, name2, j))
-	for name1, i, name2, j in ns:
-		if name1 not in net:
-			net[name1] = {}
-		if i not in net[name1]:
-			net[name1][i] = {}
-		if name2 not in net[name1][i]:
-			net[name1][i][name2] = j
-		
-		if name2 not in net:
-			net[name2] = {}
-		if j not in net[name2]:
-			net[name2][j] = {}
-		if name1 not in net[name2][j]:
-			net[name2][j][name1] = i
-		
+    # find invalid matches
+    errors = []
+    for name1 in net:
+        for i in net[name1]:
+            for name2 in net[name1][i]:
+                j = net[name1][i][name2]
+                if name2 in net and j in net[name2] and name1 in net[name2][j]:
+                    if net[name2][j][name1] != i:
+                        errors.append((name1, i, name2, j))
+    # remove invalid matches
+    for name1, i, name2, j in errors:
+        if name2 in net[name1][i]:
+            net[name1][i].pop(name2)
+        if name1 in net[name2][j]:
+            net[name2][j].pop(name1)
 
-	with open(out, "w") as f:
-		json.dump(net, f, indent=4)
+    # symmetrise net
+    ns = []
+    for name1 in net:
+        for i in net[name1]:
+            for name2 in net[name1][i]:
+                j = net[name1][i][name2]
+                if name2 not in net or j not in net[name2] or name1 not in net[name2][j]:
+                    ns.append((name1, i, name2, j))
+    for name1, i, name2, j in ns:
+        if name1 not in net:
+            net[name1] = {}
+        if i not in net[name1]:
+            net[name1][i] = {}
+        if name2 not in net[name1][i]:
+            net[name1][i][name2] = j
 
-def run(argv):
-	process(argv)
+        if name2 not in net:
+            net[name2] = {}
+        if j not in net[name2]:
+            net[name2][j] = {}
+        if name1 not in net[name2][j]:
+            net[name2][j][name1] = i
 
+    with open(out, "w") as f:
+        json.dump(net, f, indent=4)
+
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    process(project, argv)

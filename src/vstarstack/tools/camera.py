@@ -1,3 +1,4 @@
+"""Camera description"""
 #
 # Copyright (c) 2023 Vladislav Tsendrovskii
 #
@@ -12,7 +13,9 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-class Camera(object):
+class Camera:
+    """Camera description"""
+
     def __init__(self, config):
         self.w = config["w"]
         self.h = config["h"]

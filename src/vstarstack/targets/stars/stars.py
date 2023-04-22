@@ -24,15 +24,16 @@ import sys
 import vstarstack.usage
 
 commands = {
-	"config"   : (vstarstack.targets.stars.configure.run, "configure stars pipeline"),
-	"detect"   : (vstarstack.targets.stars.detect.run, "detect stars"),
-	"lonlat"   : (vstarstack.targets.stars.lonlat.run, "fill longitude and latitude"),
-	"describe" : (vstarstack.targets.stars.describe.run, "find descriptions for each image"),
-	"match"    : (vstarstack.targets.stars.match.run, "match stars between images"),
-	"net"      : (vstarstack.targets.stars.net.run, "build net of matching"),
-	"cluster"  : (vstarstack.targets.stars.cluster.run, "find matching stars clusters between images"),
-	"process"  : (vstarstack.targets.stars.process.run, "run process - all commands above"),
+    "config": (vstarstack.targets.stars.configure.run, "configure stars pipeline"),
+    "detect": (vstarstack.targets.stars.detect.run, "detect stars"),
+    "lonlat": (vstarstack.targets.stars.lonlat.run, "fill longitude and latitude"),
+    "describe": (vstarstack.targets.stars.describe.run, "find descriptions for each image"),
+    "match": (vstarstack.targets.stars.match.run, "match stars between images"),
+    "net": (vstarstack.targets.stars.net.run, "build net of matching"),
+    "cluster": (vstarstack.targets.stars.cluster.run, "find matching stars clusters between images"),
+    "process": (vstarstack.targets.stars.process.run, "run process - all commands above"),
 }
 
-def run(argv):
-	vstarstack.usage.run(argv, "stars", commands, autohelp=True)
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    vstarstack.usage.run(argv, "stars", commands, autohelp=True)

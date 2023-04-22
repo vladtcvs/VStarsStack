@@ -13,10 +13,11 @@
 #
 
 from calendar import c
-import vstarstack.data
 import numpy as np
 
-import matplotlib.pyplot as plt
+import vstarstack.data
+import vstarstack.cfg
+
 
 def has_flag(opts, name):
     if name not in opts:
@@ -24,6 +25,7 @@ def has_flag(opts, name):
     if not opts[name]:
         return False
     return True
+
 
 def process(infname, outfname, colors, L):
     dataframe = vstarstack.data.DataFrame.load(infname)
@@ -34,12 +36,13 @@ def process(infname, outfname, colors, L):
     L_image_synth = None
 
     for channel in colors:
-        image,opts[channel] = dataframe.get_channel(channel)
+        image, opts[channel] = dataframe.get_channel(channel)
         image = np.clip(image, 0, 1e12)
         images[channel] = image
 
         if not has_flag(opts[channel], "normalized"):
-            weight,_ = dataframe.get_channel(dataframe.links["weight"][channel])
+            weight, _ = dataframe.get_channel(
+                dataframe.links["weight"][channel])
             image /= weight
             image[np.where(weight == 0)] = 0
 
@@ -49,8 +52,8 @@ def process(infname, outfname, colors, L):
             L_image_synth += image
 
     L_image_synth /= np.amax(L_image_synth)
-    
-    L_image_real,_ = dataframe.get_channel(L)
+
+    L_image_real, _ = dataframe.get_channel(L)
     L_image_real /= np.amax(L_image_real)
 
     k = L_image_real / L_image_synth
@@ -59,6 +62,7 @@ def process(infname, outfname, colors, L):
         dataframe.add_channel(images[channel]*k, channel, **opts[channel])
     dataframe.store(outfname)
 
+
 def process_file(argv):
     infname = argv[0]
     outfname = argv[1]
@@ -66,5 +70,6 @@ def process_file(argv):
     colors = argv[3:]
     process(infname, outfname, colors, L)
 
-def run(argv):
+
+def run(_project: vstarstack.cfg.Project, argv: list):
     process_file(argv)

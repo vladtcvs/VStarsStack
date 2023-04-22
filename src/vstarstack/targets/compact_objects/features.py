@@ -23,12 +23,15 @@ import json
 import matplotlib.pyplot as plt
 import os
 
+
 def find_keypoints_orb(image, x1, y1, detector):
     cpts = []
     points = detector.detect(image, mask=None)
     for point in points:
-        cpts.append({"x":point.pt[0]+x1, "y":point.pt[1]+y1, "size" : point.size})
+        cpts.append(
+            {"x": point.pt[0]+x1, "y": point.pt[1]+y1, "size": point.size})
     return cpts
+
 
 def find_keypoints_brightness(image, x1, y1, detector):
     blurSize = int(detector["blurSize"])
@@ -41,47 +44,48 @@ def find_keypoints_brightness(image, x1, y1, detector):
         blurSize += 1
 
     image = image / np.amax(image)
-    blurred = cv2.GaussianBlur(image, (3,3), 0)
-    avg = cv2.GaussianBlur(blurred, (blurSize,blurSize), 0)
+    blurred = cv2.GaussianBlur(image, (3, 3), 0)
+    avg = cv2.GaussianBlur(blurred, (blurSize, blurSize), 0)
     thresh = (blurred > avg * k_thr) * (blurred > minv)
     labels = measure.label(thresh, background=0, connectivity=2)
     mask = np.zeros(thresh.shape, dtype="uint8")
 
     for label in np.unique(labels):
-	    # if this is the background label, ignore it
+        # if this is the background label, ignore it
         if label == 0:
             continue
         # otherwise, construct the label mask and count the
-        # number of pixels 
+        # number of pixels
         labelMask = np.zeros(thresh.shape, dtype="uint8")
         labelMask[labels == label] = 255
         numPixels = cv2.countNonZero(labelMask)
-	    # if the number of pixels in the component is sufficiently
+        # if the number of pixels in the component is sufficiently
         # large, then add it to our mask of "large blobs"
         if numPixels >= minPixel and numPixels < maxPixel:
             mask = cv2.add(mask, labelMask)
-    
+
     cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-    cv2.CHAIN_APPROX_SIMPLE)
+                            cv2.CHAIN_APPROX_SIMPLE)
     cnts = imutils.grab_contours(cnts)
 
     cpts = []
-    
+
     if len(cnts) > 0:
         cnts = imutils.contours.sort_contours(cnts)[0]
         # loop over the contours
-    
+
         for _, c in enumerate(cnts):
             ((cX, cY), radius) = cv2.minEnclosingCircle(c)
             cv2.circle(image, (int(cX), int(cY)), int(radius)+5, 1, 2)
-            cpts.append({"x":cX+x1, "y":cY+y1, "size" : radius+10})
+            cpts.append({"x": cX+x1, "y": cY+y1, "size": radius+10})
 
 #    plt.imshow(image)
 #    plt.show()
     return cpts
 
+
 def select_keypoints(image, fun, detector):
-    #image = cv2.GaussianBlur(image, (3, 3), 0)
+    # image = cv2.GaussianBlur(image, (3, 3), 0)
     shape = image.shape
     N = 1
     cpts = []
@@ -92,16 +96,17 @@ def select_keypoints(image, fun, detector):
         for j in range(N):
             x1 = int(shape[1]/N*j)
             x2 = int(shape[1]/N*(j+1))
-            subimage = image[y1:y2,x1:x2]
+            subimage = image[y1:y2, x1:x2]
             cpts += fun(subimage, x1, y1, detector)
 
     return cpts
 
-def find_keypoints(files):
+
+def find_keypoints(project, files):
     points = {}
     orb = cv2.ORB_create()
 
-    definition = vstarstack.cfg.config["compact_objects"]["features"]["detector"]
+    definition = project.config["compact_objects"]["features"]["detector"]
     if definition["type"] == "orb":
         detector = orb
         fun = find_keypoints_orb
@@ -114,7 +119,7 @@ def find_keypoints(files):
         print(name)
         dataframe = vstarstack.data.DataFrame.load(fname)
         for channel in dataframe.get_channels():
-            image,opts = dataframe.get_channel(channel)
+            image, opts = dataframe.get_channel(channel)
             if opts["weight"]:
                 continue
             if opts["encoded"]:
@@ -127,14 +132,19 @@ def find_keypoints(files):
 
             keypoints = select_keypoints(image, fun, detector)
 
-            kps = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in keypoints]
+            kps = [cv2.KeyPoint(point["x"], point["y"], point["size"])
+                   for point in keypoints]
             _, descs = orb.compute(image, kps)
-            points[channel][name] = {"points":keypoints, "descs":descs, "fname":fname}
+            points[channel][name] = {
+                "points": keypoints, "descs": descs, "fname": fname}
     return points
 
+
 def match_images(points):
-    kdist = float(vstarstack.cfg.config["compact_objects"]["features"]["featuresPercent"])/100
-    maxd = float(vstarstack.cfg.config["compact_objects"]["features"]["maxFeatureDelta"])
+    kdist = float(project.config["compact_objects"]
+                  ["features"]["featuresPercent"])/100
+    maxd = float(project.config["compact_objects"]
+                 ["features"]["maxFeatureDelta"])
 
     bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = {}
@@ -151,21 +161,21 @@ def match_images(points):
                 name2 = names[ind2]
                 if name2 not in matches[channel]:
                     matches[channel][name2] = {}
-                
+
                 matches[channel][name1][name2] = []
                 matches[channel][name2][name1] = []
-                
+
                 print("\t%s <-> %s" % (name1, name2))
 
                 des1 = points[channel][name1]["descs"]
                 des2 = points[channel][name2]["descs"]
 
                 imatches = bf.match(des1, des2)
-                imatches = sorted(imatches, key = lambda x:x.distance)
+                imatches = sorted(imatches, key=lambda x: x.distance)
 
                 nm = int(len(imatches) * kdist)
                 imatches = imatches[:nm]
-                #imatches = imatches[:150]
+                # imatches = imatches[:150]
 
                 if len(imatches) == 0:
                     continue
@@ -200,12 +210,15 @@ def match_images(points):
                     if abs(dy - meandy) > maxd:
                         continue
 
-                    matches[channel][name1][name2].append((index1, index2, match.distance))
-                    matches[channel][name2][name1].append((index2, index1, match.distance))
+                    matches[channel][name1][name2].append(
+                        (index1, index2, match.distance))
+                    matches[channel][name2][name1].append(
+                        (index2, index1, match.distance))
 
                 if vstarstack.cfg.debug:
                     draw_matches(points, matches, channel, name1, name2)
     return matches
+
 
 def draw_matches(points, matches, channel, name1, name2):
     points1 = points[channel][name1]["points"]
@@ -214,25 +227,27 @@ def draw_matches(points, matches, channel, name1, name2):
     fname2 = points[channel][name2]["fname"]
 
     d1 = vstarstack.data.DataFrame.load(fname1)
-    img1,_ = d1.get_channel(channel)
+    img1, _ = d1.get_channel(channel)
     d2 = vstarstack.data.DataFrame.load(fname2)
-    img2,_ = d2.get_channel(channel)
+    img2, _ = d2.get_channel(channel)
 
     img1 = (img1 / np.amax(img1) * 255).astype(np.uint8)
     img2 = (img2 / np.amax(img2) * 255).astype(np.uint8)
 
-
     ms = matches[channel][name1][name2]
     matches_fmt = [cv2.DMatch(msitem[0], msitem[1], 0) for msitem in ms]
 
-    kps1 = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in points1]
-    kps2 = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in points2]
+    kps1 = [cv2.KeyPoint(point["x"], point["y"], point["size"])
+            for point in points1]
+    kps2 = [cv2.KeyPoint(point["x"], point["y"], point["size"])
+            for point in points2]
 
     img3 = cv2.drawMatches(img1, kps1, img2, kps2,
-                            matches_fmt, None,
-                            flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+                           matches_fmt, None,
+                           flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     plt.imshow(img3)
     plt.show()
+
 
 def build_clusters(matches):
     clusters = {}
@@ -254,11 +269,12 @@ def build_clusters(matches):
                             break
                     else:
                         cluster = {
-                            name1 : id1,
-                            name2 : id2,
+                            name1: id1,
+                            name2: id2,
                         }
                         clusters[channel].append(cluster)
     return clusters
+
 
 def build_coordinate_clusters(clusters, points):
     crd_clusters = {}
@@ -272,12 +288,13 @@ def build_coordinate_clusters(clusters, points):
             crd_clusters[channel].append(crd_cluster)
     return crd_clusters
 
-def run(argv):
+
+def run(project: vstarstack.cfg.Project, argv: list):
     inputs = argv[0]
     clusters_fname = argv[1]
 
     files = vstarstack.common.listfiles(inputs, ".zip")
-    files = [filename for name,filename in files]
+    files = [filename for name, filename in files]
     points = find_keypoints(files)
     matches = match_images(points)
     clusters = build_clusters(matches)

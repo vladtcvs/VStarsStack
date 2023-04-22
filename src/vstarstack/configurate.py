@@ -16,65 +16,69 @@ import vstarstack.usage
 import os
 import json
 
+
 def list_cfg(argv):
-	pass
+    pass
+
 
 def dircheck(name):
-	if not os.path.isdir(name):
-		os.mkdir(name)
+    if not os.path.isdir(name):
+        os.mkdir(name)
+
 
 def configurate(argv):
-	dir = argv[0]
+    directory = argv[0]
 
-	# create project directory
-	dircheck(dir)
+    # create project directory
+    dircheck(directory)
 
-	# directory for original images (NEF, png, jpg, etc)
-	dircheck(dir + "/orig")
+    # directory for original images (NEF, png, jpg, etc)
+    dircheck(directory + "/orig")
 
-	# directory for original images in NPZ format
-	dircheck(dir + "/npy-orig")
+    # directory for original images in NPZ format
+    dircheck(directory + "/npy-orig")
 
-	# directory for images after pre-processing (remove darks, sky, vignetting, distorsion, etc)
-	dircheck(dir + "/npy")
+    # directory for images after pre-processing (remove darks, sky, vignetting, distorsion, etc)
+    dircheck(directory + "/npy")
 
-	# directory for images after moving
-	dircheck(dir + "/aligned")
+    # directory for images after moving
+    dircheck(directory + "/aligned")
 
-	# directory for image descriptors
-	dircheck(dir + "/descs")
+    # directory for image descriptors
+    dircheck(directory + "/descs")
 
-	config = {
-		"use_sphere" : True,
-		"compress" : True,
-		"paths" : {
-			"original"  : "orig",
-			"npy-orig"  : "npy-orig",
-			"npy-fixed" : "npy",
-			"descs"     : "descs",
-			"aligned"   : "aligned",
-			"output"    : "sum.zip",
-		},
-		"telescope" : {
-			"camera" : {
-				"W" : 10.0,
-				"H" : 10.0,
-				"w" : 1000,
-				"h" : 1000,
-			},
-			"scope" : {
-				"F" : 1000.0,
-			},
-		}
-	}
+    config = {
+        "use_sphere": True,
+        "compress": True,
+        "paths": {
+            "original": "orig",
+            "npy-orig": "npy-orig",
+            "npy-fixed": "npy",
+            "descs": "descs",
+            "aligned": "aligned",
+            "output": "sum.zip",
+        },
+        "telescope": {
+            "camera": {
+                "W": 10.0,
+                "H": 10.0,
+                "w": 1000,
+                "h": 1000,
+            },
+            "scope": {
+                "F": 1000.0,
+            },
+        }
+    }
 
-	with open(dir + "/project.json", "w") as f:
-		json.dump(config, f, indent=4, ensure_ascii=False)
+    with open(directory + "/project.json", "w") as f:
+        json.dump(config, f, indent=4, ensure_ascii=False)
 
 
 commands = {
-    "create" : (configurate, "create project", "project_dir"),
+    "create": (configurate, "create project", "project_dir"),
 }
 
-def run(argv):
-	vstarstack.usage.run(argv, "project", commands)
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    vstarstack.usage.run(project, argv, "project", commands)

@@ -1,3 +1,4 @@
+"""Read tags from EXIF"""
 #
 # Copyright (c) 2022 Vladislav Tsendrovskii
 #
@@ -12,29 +13,25 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import os.path
 import exifread
 
 tags_names = {
-	"shutter" : [("EXIF ExposureTime", 0)],
-	"iso" : [("EXIF ISOSpeedRatings", 0), ("MakerNote ISOSetting", 1)],
+    "shutter": [("EXIF ExposureTime", 0)],
+    "iso": [("EXIF ISOSpeedRatings", 0), ("MakerNote ISOSetting", 1)],
 }
 
+
 def read_tags(filename):
-	f = open(filename, 'rb')
-	tags = exifread.process_file(f)
-	f.close()
+    """Read EXIF tags from file"""
+    with open(filename, 'rb') as file:
+        tags = exifread.process_file(file)
 
-#	for key in tags:
-#		print(key, tags[key])
+    res = {}
+    for tag_name, tag in tags_names.items():
+        for name, variant_id in tags_names[tag_name]:
+            if name in tags:
+                res[tag_name] = float(tag.values[variant_id])
+                break
 
-	res = {}
-	for tn in tags_names:
-		for name, id in tags_names[tn]:
-			if name in tags:
-				res[tn] = float(tags[name].values[id])
-				break
-
-	print(res)
-	return res
-
+    print(res)
+    return res

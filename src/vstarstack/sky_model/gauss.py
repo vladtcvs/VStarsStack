@@ -1,3 +1,4 @@
+"""Gauss sky model"""
 #
 # Copyright (c) 2022 Vladislav Tsendrovskii
 #
@@ -12,28 +13,27 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import matplotlib.pyplot as plt
-from skimage import measure
+
 import numpy as np
-import sys
 import cv2
+
 import vstarstack.usage
-import os
 import vstarstack.common
-import multiprocessing as mp
 import vstarstack.targets.stars.detect
 import vstarstack.cfg
 
-def model(image):
-	_,mask = vstarstack.targets.stars.detect.detect(image)
-	shape = image.shape
-	sky_blur = int(shape[1]/4)*2+1
 
-	sky = np.zeros(shape)
-	idx  = (mask==0)
-	nidx = (mask!=0)
-	sky[idx]  = image[idx]
-	average   = np.mean(sky, axis=(0,1))
-	sky[nidx] = average
-	sky = cv2.GaussianBlur(sky, (sky_blur, sky_blur), 0)
-	return sky
+def model(project, image):
+    """Build Gaussian sky model"""
+    _, mask = vstarstack.targets.stars.detect.detect(project, image)
+    shape = image.shape
+    sky_blur = int(shape[1]/4)*2+1
+
+    sky = np.zeros(shape)
+    idx = (mask == 0)
+    nidx = (mask != 0)
+    sky[idx] = image[idx]
+    average = np.mean(sky, axis=(0, 1))
+    sky[nidx] = average
+    sky = cv2.GaussianBlur(sky, (sky_blur, sky_blur), 0)
+    return sky

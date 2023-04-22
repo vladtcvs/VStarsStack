@@ -19,10 +19,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import vstarstack.data
+import vstarstack.cfg
 
-def run(argv):
-    with open(argv[0]) as f:
-        clusters = json.load(f)
+
+def run(_project: vstarstack.cfg.Project, argv: list):
+    with open(argv[0], encoding='utf8') as file:
+        clusters = json.load(file)
 
     fname1 = argv[2]
     fname2 = argv[3]
@@ -30,9 +32,9 @@ def run(argv):
 
     df1 = vstarstack.data.DataFrame.load(fname1)
     df2 = vstarstack.data.DataFrame.load(fname2)
-    
-    img1,_ = df1.get_channel(channel)
-    img2,_ = df2.get_channel(channel)
+
+    img1, _ = df1.get_channel(channel)
+    img2, _ = df2.get_channel(channel)
 
     img1 = (img1 / np.amax(img1) * 255).astype(np.uint8)
     img2 = (img2 / np.amax(img2) * 255).astype(np.uint8)
@@ -44,8 +46,8 @@ def run(argv):
         if name1 not in cluster or name2 not in cluster:
             continue
         used_cluster = {
-            name1 : cluster[name1],
-            name2 : cluster[name2],
+            name1: cluster[name1],
+            name2: cluster[name2],
         }
         used_clusters.append(used_cluster)
 
@@ -63,7 +65,7 @@ def run(argv):
         index += 1
 
     img3 = cv2.drawMatches(img1, kps1, img2, kps2,
-                            matches, None,
-                            flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+                           matches, None,
+                           flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     plt.imshow(img3)
     plt.show()

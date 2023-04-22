@@ -14,6 +14,7 @@
 
 import math
 
+
 class PlanetProjection(object):
     # @param W image width
     # @param H image height
@@ -28,14 +29,14 @@ class PlanetProjection(object):
         self.b = b
         self.angle = angle
         self.rot = rot
-    
+
     def from_planet_coordinates(self, lon, lat):
         x = self.a/2 * math.sin(lon - self.rot) * math.cos(lat)
         z = -self.b/2 * math.sin(lat)
         X = x*math.cos(self.angle) + z*math.sin(self.angle) + self.W/2
         Y = -x*math.sin(self.angle) + z*math.cos(self.angle) + self.H/2
         return X, Y
-    
+
     def to_planet_coordinates(self, X, Y):
         X = X - self.W/2
         Y = Y - self.H/2
@@ -48,12 +49,14 @@ class PlanetProjection(object):
         except:
             return None, None
 
+
 def equal(val, expected):
     return abs(val - expected) < 1e-6
 
+
 if __name__ == "__main__":
     # perform testing
-    
+
     # sphere
     proj = PlanetProjection(100, 100, 50, 50, 0, 0)
     lon, lat = proj.to_planet_coordinates(50, 50)

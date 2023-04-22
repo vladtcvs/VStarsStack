@@ -27,199 +27,208 @@ import vstarstack.cfg
 power = 1
 slope = vstarstack.cfg.get_param("multiply", float, 1)
 
+
 def make_frames(dataframe, channel, *, slope=1, power=1):
-	if channel == "RGB":
-		r,_ = dataframe.get_channel("R")
-		g,_ = dataframe.get_channel("G")
-		b,_ = dataframe.get_channel("B")
-		
-		rgb = np.zeros((r.shape[0], r.shape[1], 3))
-		rgb[:,:,0] = r
-		rgb[:,:,1] = g
-		rgb[:,:,2] = b
-		amax = np.amax(rgb)
-		rgb = rgb / amax
-		rgb = np.clip(rgb*slope, 0, 1)**power
+    if channel == "RGB":
+        r, _ = dataframe.get_channel("R")
+        g, _ = dataframe.get_channel("G")
+        b, _ = dataframe.get_channel("B")
 
-		frames = {"RGB" : rgb}
+        rgb = np.zeros((r.shape[0], r.shape[1], 3))
+        rgb[:, :, 0] = r
+        rgb[:, :, 1] = g
+        rgb[:, :, 2] = b
+        amax = np.amax(rgb)
+        rgb = rgb / amax
+        rgb = np.clip(rgb*slope, 0, 1)**power
 
-	else:
-		frames = {}
-		if channel is None:
-			channels = dataframe.get_channels()
-		else:
-			channels = [channel]
+        frames = {"RGB": rgb}
 
-		for channel in channels:
-			print("Channel = ", channel)
-			img,options = dataframe.get_channel(channel)
-			print("Shape = ", img.shape)
+    else:
+        frames = {}
+        if channel is None:
+            channels = dataframe.get_channels()
+        else:
+            channels = [channel]
 
-			if options["brightness"]:
-				img = img.astype(np.float64)
-				amin = max(np.amin(img), 0)
-				amax = np.amax(img)
-				print("%s: %f - %f" % (channel, amin, amax))
-				if amax - amin > 0:
-					img = (img - amin)/(amax-amin)
-				img = np.clip(img*slope, 0, 1)**power
+        for channel in channels:
+            print("Channel = ", channel)
+            img, options = dataframe.get_channel(channel)
+            print("Shape = ", img.shape)
 
-			frames[channel] = img
-	return frames
+            if options["brightness"]:
+                img = img.astype(np.float64)
+                amin = max(np.amin(img), 0)
+                amax = np.amax(img)
+                print("%s: %f - %f" % (channel, amin, amax))
+                if amax - amin > 0:
+                    img = (img - amin)/(amax-amin)
+                img = np.clip(img*slope, 0, 1)**power
+
+            frames[channel] = img
+    return frames
+
 
 def show(argv):
-	path = argv[0]
-	if len(argv) > 1:
-		channel = argv[1]
-	else:
-		channel = None
+    path = argv[0]
+    if len(argv) > 1:
+        channel = argv[1]
+    else:
+        channel = None
 
-	dataframe = vstarstack.data.DataFrame.load(path)
-	frames = make_frames(dataframe, channel, slope=slope, power=power)
+    dataframe = vstarstack.data.DataFrame.load(path)
+    frames = make_frames(dataframe, channel, slope=slope, power=power)
 
-	nch = len(frames)		
-	fig, axs = plt.subplots(1, nch)
-	fig.patch.set_facecolor('#222222')
+    nch = len(frames)
+    fig, axs = plt.subplots(1, nch)
+    fig.patch.set_facecolor('#222222')
 
-	id = 0
-	for channel in frames:
-		if nch > 1:
-			sp = axs[id]
-		else:
-			sp = axs
-		img = frames[channel].astype(np.float64)
-		sp.imshow(img, cmap="gray")
-		sp.set_title(channel)
-		id += 1
+    id = 0
+    for channel in frames:
+        if nch > 1:
+            sp = axs[id]
+        else:
+            sp = axs
+        img = frames[channel].astype(np.float64)
+        sp.imshow(img, cmap="gray")
+        sp.set_title(channel)
+        id += 1
 
-	plt.show()
+    plt.show()
 
 
 def convert(argv):
-	path = argv[0]
-	if len(argv) > 1:
-		channel = argv[1]
-	else:
-		channel = None
+    path = argv[0]
+    if len(argv) > 1:
+        channel = argv[1]
+    else:
+        channel = None
 
-	out = argv[2]
+    out = argv[2]
 
-	dataframe = vstarstack.data.DataFrame.load(path)
-	frames = make_frames(dataframe, channel, slope=slope, power=power)
+    dataframe = vstarstack.data.DataFrame.load(path)
+    frames = make_frames(dataframe, channel, slope=slope, power=power)
 
-	nch = len(frames)
+    nch = len(frames)
 
-	out = os.path.abspath(out)
-	dir = os.path.dirname(out)
-	name, ext = os.path.splitext(os.path.basename(out))
-	for channel in frames:
-		if nch > 1:
-			fname = os.path.join(dir, "%s_%s.%s" % (name, channel, ext))
-		else:
-			fname = out
-		img = frames[channel]
+    out = os.path.abspath(out)
+    dir = os.path.dirname(out)
+    name, ext = os.path.splitext(os.path.basename(out))
+    for channel in frames:
+        if nch > 1:
+            fname = os.path.join(dir, "%s_%s.%s" % (name, channel, ext))
+        else:
+            fname = out
+        img = frames[channel]
 
-		img = img*65535
-		img = img.astype('uint16')
-		imageio.imwrite(fname, img)
+        img = img*65535
+        img = img.astype('uint16')
+        imageio.imwrite(fname, img)
+
 
 def cut(argv):
-	path = argv[0]
-	left = int(argv[1])
-	top = int(argv[2])
-	right = int(argv[3])
-	bottom = int(argv[4])
-	out = argv[5]
+    path = argv[0]
+    left = int(argv[1])
+    top = int(argv[2])
+    right = int(argv[3])
+    bottom = int(argv[4])
+    out = argv[5]
 
-	dataframe = vstarstack.data.DataFrame.load(path)
-	channels = dataframe.get_channels()
+    dataframe = vstarstack.data.DataFrame.load(path)
+    channels = dataframe.get_channels()
 
-	outdata = vstarstack.data.DataFrame(params=dataframe.params)
-	for channel in channels:
-		print("Channel = ", channel)
-		img,options = dataframe.get_channel(channel)
-		sub = img[top:bottom+1, left:right+1]
-		outdata.add_channel(sub, channel, **options)
-	for link_type in dataframe.links:
-		for name in dataframe.links[link_type]:
-			outdata.add_channel_link(name, dataframe.links[link_type][name], link_type)
-	outdata.store(out)
+    outdata = vstarstack.data.DataFrame(params=dataframe.params)
+    for channel in channels:
+        print("Channel = ", channel)
+        img, options = dataframe.get_channel(channel)
+        sub = img[top:bottom+1, left:right+1]
+        outdata.add_channel(sub, channel, **options)
+    for link_type in dataframe.links:
+        for name in dataframe.links[link_type]:
+            outdata.add_channel_link(
+                name, dataframe.links[link_type][name], link_type)
+    outdata.store(out)
+
 
 def rename_channel(argv):
-	name = argv[0]
-	channel = argv[1]
-	target = argv[2]
-	print(name)
-	dataframe = vstarstack.data.DataFrame.load(name)
-	dataframe.rename_channel(channel, target)
-	dataframe.store(name)
+    name = argv[0]
+    channel = argv[1]
+    target = argv[2]
+    print(name)
+    dataframe = vstarstack.data.DataFrame.load(name)
+    dataframe.rename_channel(channel, target)
+    dataframe.store(name)
+
 
 def remove_unsharp(argv):
-	npys = argv[0]
-	percent = int(argv[1])
-	outpath = argv[2]
+    npys = argv[0]
+    percent = int(argv[1])
+    outpath = argv[2]
 
-	channel_sharpness = {}
+    channel_sharpness = {}
 
-	files = vstarstack.common.listfiles(npys, ".zip")
-	for name, filename  in files:
-		print(name)
-		dataframe = vstarstack.data.DataFrame.load(filename)
-		channels = dataframe.get_channels()
+    files = vstarstack.common.listfiles(npys, ".zip")
+    for name, filename in files:
+        print(name)
+        dataframe = vstarstack.data.DataFrame.load(filename)
+        channels = dataframe.get_channels()
 
-		for channel in channels:
-			image, opts = dataframe.get_channel(channel)
-			if not opts["brightness"]:
-				continue
-			sharpness = cv2.Laplacian(image, cv2.CV_64F).var()
-			if channel not in channel_sharpness:
-				channel_sharpness[channel] = []
-			channel_sharpness[channel].append((name, sharpness))
-	
-	for channel in channel_sharpness:
-		shps = channel_sharpness[channel]
-		shps = sorted(shps, key=lambda item : item[1], reverse=True)
-		num = int(len(shps)*percent/100)
-		shps = shps[:num]
-		channel_sharpness[channel] = [item[0] for item in shps]
+        for channel in channels:
+            image, opts = dataframe.get_channel(channel)
+            if not opts["brightness"]:
+                continue
+            sharpness = cv2.Laplacian(image, cv2.CV_64F).var()
+            if channel not in channel_sharpness:
+                channel_sharpness[channel] = []
+            channel_sharpness[channel].append((name, sharpness))
 
-	for name, filename  in files:
-		print(name)
-		dataframe = vstarstack.data.DataFrame.load(filename)
-		channels = dataframe.get_channels()
+    for channel in channel_sharpness:
+        shps = channel_sharpness[channel]
+        shps = sorted(shps, key=lambda item: item[1], reverse=True)
+        num = int(len(shps)*percent/100)
+        shps = shps[:num]
+        channel_sharpness[channel] = [item[0] for item in shps]
 
-		for channel in channels:
-			image, opts = dataframe.get_channel(channel)
-			if not opts["brightness"]:
-				continue
+    for name, filename in files:
+        print(name)
+        dataframe = vstarstack.data.DataFrame.load(filename)
+        channels = dataframe.get_channels()
 
-			if name not in channel_sharpness[channel]:
-				dataframe.remove_channel(channel)
+        for channel in channels:
+            image, opts = dataframe.get_channel(channel)
+            if not opts["brightness"]:
+                continue
 
-		dataframe.store(os.path.join(outpath, name + ".zip"))
+            if name not in channel_sharpness[channel]:
+                dataframe.remove_channel(channel)
+
+        dataframe.store(os.path.join(outpath, name + ".zip"))
+
 
 def exposures(argv):
-	fname = argv[0]
-	dataframe = vstarstack.data.DataFrame.load(fname)
-	channels = dataframe.get_channels()
+    fname = argv[0]
+    dataframe = vstarstack.data.DataFrame.load(fname)
+    channels = dataframe.get_channels()
 
-	for channel in channels:
-		_, opts = dataframe.get_channel(channel)
-		if not opts["brightness"]:
-			continue
+    for channel in channels:
+        _, opts = dataframe.get_channel(channel)
+        if not opts["brightness"]:
+            continue
 
-		weight_channel = dataframe.links["weight"][channel]
-		w, _ = dataframe.get_channel(weight_channel)
-		print("%s : %f" % (channel, np.amax(w)))
+        weight_channel = dataframe.links["weight"][channel]
+        w, _ = dataframe.get_channel(weight_channel)
+        print("%s : %f" % (channel, np.amax(w)))
+
 
 commands = {
-	"show"     : (show, "show image"),
-	"convert"  : (convert, "convert image"),
-	"cut"      : (cut, "cut part of image"),
-	"rename-channel" : (rename_channel, "filename.zip original_name target_name - rename channel"),
-	"remove-unsharp" : (remove_unsharp, "inputs/ percent outputs/"),
-	"exposure" : (exposures, "display image exposures per channel", "file.zip"),
+    "show": (show, "show image"),
+    "convert": (convert, "convert image"),
+    "cut": (cut, "cut part of image"),
+    "rename-channel": (rename_channel, "filename.zip original_name target_name - rename channel"),
+    "remove-unsharp": (remove_unsharp, "inputs/ percent outputs/"),
+    "exposure": (exposures, "display image exposures per channel", "file.zip"),
 }
 
-def run(argv):
-	vstarstack.usage.run(argv, "image", commands, autohelp=True)
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    vstarstack.usage.run(project, argv, "image", commands, autohelp=True)

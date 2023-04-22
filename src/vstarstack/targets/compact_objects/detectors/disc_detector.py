@@ -22,35 +22,41 @@ from skimage import measure
 import matplotlib.pyplot as plt
 import imutils
 
+
 def len_of_vec(vec):
     len = (vec[0]**2+vec[1]**2)**0.5
     return len
 
+
 def dir_of_vec(vec):
     return vec / len_of_vec(vec)
+
 
 def angle(vec1, vec2):
     vec1 = dir_of_vec(vec1)
     vec2 = dir_of_vec(vec2)
-    
+
     s = vec1[0]*vec2[0] + vec1[1]*vec2[1]
-    s = np.clip(s,0,1)
+    s = np.clip(s, 0, 1)
     return math.acos(s)
+
 
 def get_point(contour, index):
     while index < 0:
         index += contour.shape[0]
     while index >= contour.shape[0]:
         index -= contour.shape[0]
-    return contour[index,0,:]
+    return contour[index, 0, :]
+
 
 def left(vec):
     return np.array([-vec[1], vec[0]])
 
+
 def contour_curvature_d(contour, delta):
-    centers = np.zeros((contour.shape[0],2))
+    centers = np.zeros((contour.shape[0], 2))
     ks = np.zeros((contour.shape[0]))
-    for i in range(0,contour.shape[0]):
+    for i in range(0, contour.shape[0]):
         prev = i - delta
         next = i + delta
         p_prev = get_point(contour, prev)
@@ -69,22 +75,23 @@ def contour_curvature_d(contour, delta):
             continue
 
         t = (ny*(ny-py))/D+(nx*(nx-px))/D
-        #s = -((ny-py)*py)/D-((nx-px)*px)/D
+        # s = -((ny-py)*py)/D-((nx-px)*px)/D
         center = p_cur + p/2 + left(p)*t
-        centers[i,:] = center
+        centers[i, :] = center
         r = ((center[0]-p_cur[0])**2 + (center[1]-p_cur[1])**2)**0.5
         k = 1/r
         ks[i] = k
     return centers, ks
 
+
 def contour_curvature(contour, mindelta, maxdelta):
     nump = maxdelta-mindelta+1
     len = contour.shape[0]
-    cs = np.zeros((nump,len,2))
-    ks = np.zeros((nump,len))
+    cs = np.zeros((nump, len, 2))
+    ks = np.zeros((nump, len))
     id = 0
-    for delta in range(mindelta,maxdelta+1):
-        c,k = contour_curvature_d(contour, delta)
+    for delta in range(mindelta, maxdelta+1):
+        c, k = contour_curvature_d(contour, delta)
         cs[id] = c
         ks[id] = k
         id += 1
@@ -92,13 +99,15 @@ def contour_curvature(contour, mindelta, maxdelta):
     ks = np.median(ks, axis=0)
     return cs, ks
 
+
 def radius_to_contour(contour, center):
     ds = []
     for i in range(len(contour)):
-        p = contour[i,0]
+        p = contour[i, 0]
         d = ((p[0]-center[0])**2 + (p[1]-center[1])**2)**0.5
         ds.append(d)
     return np.median(ds)
+
 
 def sigma_clip(values, k):
     mean = np.mean(values)
@@ -107,9 +116,10 @@ def sigma_clip(values, k):
     values = values[np.where(values <= mean + d)]
     return values
 
+
 def mean_center(centers):
-    centers0 = centers[:,0]
-    centers1 = centers[:,1]
+    centers0 = centers[:, 0]
+    centers1 = centers[:, 1]
 
     centers0 = sigma_clip(centers0, 1)
     centers1 = sigma_clip(centers1, 1)
@@ -119,12 +129,13 @@ def mean_center(centers):
     center = np.array([center0, center1])
     return center
 
-def detect(layer, debug=False):
-    thresh = vstarstack.cfg.config["compact_objects"]["threshold"]
-    mindelta = vstarstack.cfg.config["compact_objects"]["disc"]["mindelta"]
-    maxdelta = vstarstack.cfg.config["compact_objects"]["disc"]["maxdelta"]
-    bins_ks = vstarstack.cfg.config["compact_objects"]["disc"]["num_bins_curvature"]
-    bins_d = vstarstack.cfg.config["compact_objects"]["disc"]["num_bins_distance"]
+
+def detect(project, layer, debug=False):
+    thresh = project.config["compact_objects"]["threshold"]
+    mindelta = project.config["compact_objects"]["disc"]["mindelta"]
+    maxdelta = project.config["compact_objects"]["disc"]["maxdelta"]
+    bins_ks = project.config["compact_objects"]["disc"]["num_bins_curvature"]
+    bins_d = project.config["compact_objects"]["disc"]["num_bins_distance"]
 
     blurred = cv2.GaussianBlur(layer, (5, 5), 0)
     mb = np.amax(blurred)
@@ -133,11 +144,11 @@ def detect(layer, debug=False):
     thresh = int(thresh*255)
 
     ret, thresh_img = cv2.threshold(blurred, thresh, 255, cv2.THRESH_BINARY)
-    
+
     contours, _ = cv2.findContours(
-                            image=thresh_img,
-                            mode=cv2.RETR_TREE,
-                            method=cv2.CHAIN_APPROX_SIMPLE)
+        image=thresh_img,
+        mode=cv2.RETR_TREE,
+        method=cv2.CHAIN_APPROX_SIMPLE)
 
     # contour contains data in (x,y) format
 
@@ -146,7 +157,8 @@ def detect(layer, debug=False):
         return None
     contour = sorted(contours, key=lambda item: len(item), reverse=True)[0]
 
-    centers, ks = contour_curvature(contour, mindelta=mindelta, maxdelta=maxdelta)
+    centers, ks = contour_curvature(
+        contour, mindelta=mindelta, maxdelta=maxdelta)
 
     # select only points of contour, where curvature is near to the most frequet
     values, bins = np.histogram(ks, bins=bins_ks)
@@ -167,7 +179,7 @@ def detect(layer, debug=False):
 
     rs = np.zeros(centers.shape[0])
     for i in range(centers.shape[0]):
-        p = contour[i,0,:]
+        p = contour[i, 0, :]
         r = ((p[0]-center[0])**2 + (p[1]-center[1])**2)**0.5
         rs[i] = r
 
@@ -188,23 +200,22 @@ def detect(layer, debug=False):
     ks = ks[idx]
     rs = rs[idx]
 
-    
     center = mean_center(centers)
     r = radius_to_contour(contour, center)
-    
+
     if debug:
         image_copy = np.zeros((layer.shape[0], layer.shape[1], 3))
-        image_copy[:,:,0] = layer
+        image_copy[:, :, 0] = layer
 
         for i in range(len(centers)):
-            x,y = centers[i].astype(np.int32)
-            cv2.circle(image_copy, (x,y), 2, (0,255,255), -1)
+            x, y = centers[i].astype(np.int32)
+            cv2.circle(image_copy, (x, y), 2, (0, 255, 255), -1)
 
-        x,y = center.astype(np.int32)
-        cv2.circle(image_copy, (x,y), int(r), (0,255,255), 2)
-        cv2.circle(image_copy, (x,y), 4, (255,255,255), 2)
-    
-        cv2.drawContours(image_copy, [contour], 0, (0,255,0), 2)
+        x, y = center.astype(np.int32)
+        cv2.circle(image_copy, (x, y), int(r), (0, 255, 255), 2)
+        cv2.circle(image_copy, (x, y), 4, (255, 255, 255), 2)
+
+        cv2.drawContours(image_copy, [contour], 0, (0, 255, 0), 2)
         plt.imshow(image_copy)
         plt.show()
 

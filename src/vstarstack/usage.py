@@ -12,46 +12,55 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-prgname = "process.py"
+PRGNAME = "process.py"
+
 
 def setprogname(name):
-	global prgname
-	prgname = name
+    """Setup program name"""
+    global PRGNAME
+    PRGNAME = name
+
 
 def usage(base, commands, message):
-	print("Usage: %s %s command ..." % (prgname, base))
-	if message is not None:
-		print("")
-		print(message)
-	print("")
-	print("Commands:\n")
-	for cmd in commands:
-		if cmd != "*":
-			if len(commands[cmd]) >= 3:
-				print("%s - %s\n\t%s %s %s %s\n" % (cmd, commands[cmd][1], prgname, base, cmd, commands[cmd][2]))
-			else:
-				print("%s - %s\n\t%s %s %s ...\n" % (cmd, commands[cmd][1], prgname, base, cmd))
-		else:
-			if len(commands[cmd]) >= 3:
-				print("(default) - %s\n\t%s %s %s\n" % (commands[cmd][1], prgname, base, commands[cmd][2]))
-			else:
-				print("(default) - %s\n\t%s %s ...\n" % (commands[cmd][1], prgname, base))
+    """Display usage"""
+    print(f"Usage: {PRGNAME} {base} command ...")
+    if message is not None:
+        print("")
+        print(message)
+    print("")
+    print("Commands:\n")
+    for cmd in commands:
+        desc = commands[cmd][1]
+        if cmd != "*":
+            if len(commands[cmd]) >= 3:
+                extra = commands[cmd][2]
+                print(f"{cmd} - {desc}\n\t{PRGNAME} {base} {cmd} {extra}\n")
+            else:
+                print(f"{cmd} - {desc}\n\t{PRGNAME} {base} {cmd}...\n")
+        else:
+            if len(commands[cmd]) >= 3:
+                extra = commands[cmd][2]
+                print(f"(default) - {desc}\n\t{PRGNAME} {base} {extra}\n")
+            else:
+                print(f"(default) - {desc}\n\t{PRGNAME} {base}...\n")
 
-	print("help - print usage")
-	print("\t%s %s [help]\n" % (prgname, base))
+    print("help - print usage")
+    print(f"\t{PRGNAME} {base} [help]\n")
 
-def run(argv, base, commands, message=None, autohelp=False):
-	if (autohelp and len(argv) == 0) or (len(argv) > 0 and argv[0] == "help"):
-		usage(base, commands, message)
-		return
 
-	if len(argv) > 0:
-		cmd = argv[0]
-	
-		if cmd not in commands:
-			print("Command %s not found!" % cmd)
-			usage(base, commands, message)
-			return
-		commands[cmd][0](argv[1:])
-	else:
-		commands["*"][0](argv)
+def run(project, argv, base, commands, message=None, autohelp=False):
+    """Run usage"""
+    if (autohelp and len(argv) == 0) or (len(argv) > 0 and argv[0] == "help"):
+        usage(base, commands, message)
+        return
+
+    if len(argv) > 0:
+        cmd = argv[0]
+
+        if cmd not in commands:
+            print(f"Command {cmd} not found!")
+            usage(base, commands, message)
+            return
+        commands[cmd][0](project, argv[1:])
+    else:
+        commands["*"][0](project, argv)

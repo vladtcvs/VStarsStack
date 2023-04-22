@@ -1,3 +1,4 @@
+"""Image fixes"""
 #
 # Copyright (c) 2022 Vladislav Tsendrovskii
 #
@@ -12,6 +13,13 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import os
+import shutil
+
+import vstarstack.common
+import vstarstack.cfg
+import vstarstack.usage
+
 import vstarstack.image_fix.distorsion
 import vstarstack.image_fix.remove_sky
 import vstarstack.image_fix.border
@@ -20,32 +28,29 @@ import vstarstack.image_fix.motion_fix
 import vstarstack.image_fix.deconvolution
 import vstarstack.image_fix.useL
 
-import os
+def copy(project: vstarstack.cfg.Project, _argv: list):
+    """Copy files"""
+    orig = project.config["paths"]["npy-orig"]
+    fixed = project.config["paths"]["npy-fixed"]
+    files = vstarstack.common.listfiles(orig, ".zip")
+    for name, fname in files:
+        print("Copying ", name)
+        fname_out = os.path.join(fixed, name + ".zip")
+        shutil.copyfile(fname, fname_out)
 
-import vstarstack.common
-import vstarstack.cfg
-import shutil
-import vstarstack.usage
-
-def copy(argv):
-	orig = vstarstack.cfg.config["paths"]["npy-orig"]
-	fixed = vstarstack.cfg.config["paths"]["npy-fixed"]
-	files = vstarstack.common.listfiles(orig, ".zip")
-	for name, fname in files:
-		print("Copying ", name)
-		fname_out = os.path.join(fixed, name + ".zip")
-		shutil.copyfile(fname, fname_out)
 
 commands = {
-	"copy"       : (copy, "just copy images from original to pipeline dir"),
-	"distorsion" : (vstarstack.image_fix.distorsion.run, "fix distorsion"),
-	"remove-sky" : (vstarstack.image_fix.remove_sky.run, "remove sky"),
-	"border"     : (vstarstack.image_fix.border.run,     "remove border"),
-	"normalize"  : (vstarstack.image_fix.normalize.run,  "normalize to weight"),
-	"fix-motion" : (vstarstack.image_fix.motion_fix.run, "remove motion of image"),
-	"deconvolution" : (vstarstack.image_fix.deconvolution.run, "deconvolution of image"),
-	"useL"       : (vstarstack.image_fix.useL.run, "use L channel for brightness"),
+    "copy": (copy, "just copy images from original to pipeline dir"),
+    "distorsion": (vstarstack.image_fix.distorsion.run, "fix distorsion"),
+    "remove-sky": (vstarstack.image_fix.remove_sky.run, "remove sky"),
+    "border": (vstarstack.image_fix.border.run,     "remove border"),
+    "normalize": (vstarstack.image_fix.normalize.run,  "normalize to weight"),
+    "fix-motion": (vstarstack.image_fix.motion_fix.run, "remove motion of image"),
+    "deconvolution": (vstarstack.image_fix.deconvolution.run, "deconvolution of image"),
+    "useL": (vstarstack.image_fix.useL.run, "use L channel for brightness"),
 }
 
-def run(argv):
-	vstarstack.usage.run(argv, "image-fix", commands, autohelp=True)
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    """Run image fix methods"""
+    vstarstack.usage.run(project, argv, "image-fix", commands, autohelp=True)

@@ -1,3 +1,4 @@
+"""Remove stars"""
 #
 # Copyright (c) 2022 Vladislav Tsendrovskii
 #
@@ -12,13 +13,16 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import vstarstack.targets.stars.detect
 import scipy.signal
 import numpy as np
 
-def remove_stars(image):
+import vstarstack.targets.stars.detect
+
+
+def remove_stars(project, image):
+    """Remove stars from image"""
     size = 31
-    _,mask = vstarstack.targets.stars.detect.detect(image)
+    _, mask = vstarstack.targets.stars.detect.detect(project, image)
     idx = (mask == 0)
     sidx = (mask != 0)
     nimg = np.zeros(image.shape)

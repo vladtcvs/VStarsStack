@@ -12,12 +12,12 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import sys
 import math
 
 import vstarstack.projection.perspective
 
 thr = 1e-6
+
 
 def test_center_f():
     W = 15
@@ -37,6 +37,7 @@ def test_center_f():
     assert abs(lat - lat_expected) < thr
     assert abs(lon - lon_expected) < thr
 
+
 def test_center_r():
     W = 15
     H = 10
@@ -55,6 +56,7 @@ def test_center_r():
     assert abs(y - y_expected) < thr
     assert abs(x - x_expected) < thr
 
+
 def test_left_f():
     W = 15
     H = 10
@@ -72,6 +74,7 @@ def test_left_f():
     lat, lon = proj.project(y, x)
     assert abs(lat - lat_expected) < thr
     assert abs(lon - lon_expected) < thr
+
 
 def test_left_r():
     W = 15
@@ -92,6 +95,7 @@ def test_left_r():
     assert abs(y - y_expected) < thr
     assert abs(x - x_expected) < thr
 
+
 def test_top_f():
     W = 15
     H = 10
@@ -109,6 +113,7 @@ def test_top_f():
     lat, lon = proj.project(y, x)
     assert abs(lat - lat_expected) < thr
     assert abs(lon - lon_expected) < thr
+
 
 def test_top_r():
     W = 15

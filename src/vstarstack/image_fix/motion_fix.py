@@ -14,12 +14,14 @@
 
 import vstarstack.common
 import vstarstack.data
+import vstarstack.cfg
 
 import skimage.restoration
 import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
+
 
 def build_psf(image, rect):
     image = image[rect[1]:rect[3], rect[0]:rect[2]]
@@ -29,12 +31,14 @@ def build_psf(image, rect):
     image = image / np.sum(image)
     return image
 
+
 def fix(image, star_rect):
     niterations = 20
     psf = build_psf(image, star_rect)
     return skimage.restoration.richardson_lucy(image, psf, niterations)
 
-def process_file(argv):
+
+def process_file(project: vstarstack.cfg.Project, argv: list):
     fname = argv[0]
     outname = argv[1]
     rect = (int(argv[2]), int(argv[3]), int(argv[4]), int(argv[5]))
@@ -51,5 +55,6 @@ def process_file(argv):
         dataframe.add_channel(fixed, channel, **options)
     dataframe.store(outname)
 
-def run(argv):
-    process_file(argv)
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    process_file(project, argv)

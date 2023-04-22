@@ -29,32 +29,51 @@ import vstarstack.targets.planets.planets
 
 import vstarstack.fine_shift.fine_shift
 
+import vstarstack.cfg
 import vstarstack.image
 import vstarstack.clean
 import vstarstack.usage
 
 commands = {
-	"readimage" : (vstarstack.readimage.readimage.run, "read source images to npz"),
-	"debayer"   : (vstarstack.debayer.debayer.run, "debayer RAW images"),
-	"image-fix" : (vstarstack.image_fix.fixes.run, "image-fix - make optical fixes (remove distorsion, coma, etc) and other image fixes"),
-	"calibration" : (vstarstack.calibration.calibration.run, "calibration - flats, darks"),
-	"compact_objects" : (vstarstack.targets.compact_objects.compact_objects.run, "commands for processing images with compact objects (planets, diffractions, etc)"),
-	"stars" : (vstarstack.targets.stars.stars.run, "commands for processing stars images"),
-	"cluster" : (vstarstack.cluster.cluster.run, "command for cluster processing"),
-	"shift" : (vstarstack.shift.shift.run, "move and rotate images to match them"),
-	"merge" : (vstarstack.merge.run, "merge images", "input_dir/ output.npz"),
-	"project" : (vstarstack.configurate.run, "configurate project"),
-	"planets" : (vstarstack.targets.planets.planets.run, "commands for processing planets"),
-	"image" : (vstarstack.image.run, "image processing (show, convert, etc)"),
-	"clean" : (vstarstack.clean.run, "remove temporary files"),
-	"fine-shift" : (vstarstack.fine_shift.fine_shift.run, "fine shift images"),
+    "readimage": (vstarstack.readimage.readimage.run,
+                  "read source images to npz"),
+    "debayer": (vstarstack.debayer.debayer.run,
+                "debayer RAW images"),
+    "image-fix": (vstarstack.image_fix.fixes.run,
+                  "image-fix - make optical fixes and other image fixes"),
+    "calibration": (vstarstack.calibration.calibration.run,
+                    "calibration - flats, darks"),
+    "compact_objects": (vstarstack.targets.compact_objects.compact_objects.run,
+                        "commands for processing images with compact objects (planets, diffractions, etc)"),
+    "stars": (vstarstack.targets.stars.stars.run,
+              "commands for processing stars images"),
+    "cluster": (vstarstack.cluster.cluster.run,
+                "command for cluster processing"),
+    "shift": (vstarstack.shift.shift.run,
+              "move and rotate images to match them"),
+    "merge": (vstarstack.merge.run,
+              "merge images", "input_dir/ output.npz"),
+    "project": (vstarstack.configurate.run,
+                "configurate project"),
+    "planets": (vstarstack.targets.planets.planets.run,
+                "commands for processing planets"),
+    "image": (vstarstack.image.run,
+              "image processing (show, convert, etc)"),
+    "clean": (vstarstack.clean.run,
+              "remove temporary files"),
+    "fine-shift": (vstarstack.fine_shift.fine_shift.run,
+                   "fine shift images"),
 }
 
-def run(argv, progname=None):
-	if progname is not None:
-		vstarstack.usage.setprogname(progname)
-	vstarstack.usage.run(argv, "", commands, autohelp=True)
+
+def run(project: vstarstack.cfg.Project, argv: list, progname=None):
+    """Run program"""
+    if progname is not None:
+        vstarstack.usage.setprogname(progname)
+    vstarstack.usage.run(project, argv, "", commands, autohelp=True)
+
 
 if __name__ == "__main__":
-	argv = [item for item in sys.argv[2:] if item[:2] != "--"]
-	run(argv, sys.argv[1])
+    program_project = vstarstack.cfg.get_project()
+    program_argv = [item for item in sys.argv[2:] if item[:2] != "--"]
+    run(program_project, program_argv, sys.argv[1])

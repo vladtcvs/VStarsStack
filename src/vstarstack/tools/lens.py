@@ -1,3 +1,4 @@
+"""Lens description"""
 #
 # Copyright (c) 2023 Vladislav Tsendrovskii
 #
@@ -13,6 +14,8 @@
 #
 
 class Lens(object):
+    """Lens description"""
+
     def __init__(self, config):
         self.F = config["F"]
         if "distorsion" in config:

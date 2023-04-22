@@ -21,55 +21,57 @@ import vstarstack.targets.stars.match
 import vstarstack.targets.stars.net
 import vstarstack.targets.stars.cluster
 import vstarstack.targets.stars.lonlat
-import sys
+
 import vstarstack.usage
 
-def process(argv):
-	basedir = os.getcwd()
-	if len(argv) > 0:
-		first_command = argv[0]
-		if first_command == "detect":
-			level = 0
-		elif first_command == "lonlat":
-			level = 1
-		elif first_command == "describe":
-			level = 2
-		elif first_command == "match":
-			level = 3
-		elif first_command == "net":
-			level = 4
-		elif first_command == "cluster":
-			level = 5
-	else:
-		level = 0
 
-	npydir = os.path.join(basedir, vstarstack.cfg.config["paths"]["npy-fixed"])
+def process(project: vstarstack.cfg.Project, argv: list):
+    basedir = os.getcwd()
+    if len(argv) > 0:
+        first_command = argv[0]
+        if first_command == "detect":
+            level = 0
+        elif first_command == "lonlat":
+            level = 1
+        elif first_command == "describe":
+            level = 2
+        elif first_command == "match":
+            level = 3
+        elif first_command == "net":
+            level = 4
+        elif first_command == "cluster":
+            level = 5
+    else:
+        level = 0
 
-	descdir = os.path.join(basedir, vstarstack.cfg.config["paths"]["descs"])	
-	if not os.path.exists(descdir):
-		os.mkdir(descdir)
+    npydir = os.path.join(basedir, project.config["paths"]["npy-fixed"])
 
-	net = os.path.join(basedir, vstarstack.cfg.config["stars"]["paths"]["net"])
-	clusters = os.path.join(basedir, vstarstack.cfg.config["cluster"]["path"])
+    descdir = os.path.join(basedir, project.config["paths"]["descs"])
+    if not os.path.exists(descdir):
+        os.mkdir(descdir)
 
-	if level <= 0:
-		print("Detect")
-		vstarstack.targets.stars.detect.run([npydir, descdir])
-	if level <= 1:
-		print("Lonlat")
-		vstarstack.targets.stars.lonlat.run([descdir])
-	if level <= 2:
-		print("Describe")
-		vstarstack.targets.stars.describe.run([descdir, descdir])
-	if level <= 3:
-		print("Match")
-		vstarstack.targets.stars.match.run([descdir])
-	if level <= 4:
-		print("Net")
-		vstarstack.targets.stars.net.run([descdir, net])
-	if level <= 5:
-		print("Cluster")
-		vstarstack.targets.stars.cluster.run([net, descdir, clusters])
+    net = os.path.join(basedir, project.config["stars"]["paths"]["net"])
+    clusters = os.path.join(basedir, project.config["cluster"]["path"])
 
-def run(argv):
-	process(argv)
+    if level <= 0:
+        print("Detect")
+        vstarstack.targets.stars.detect.run(project, [npydir, descdir])
+    if level <= 1:
+        print("Lonlat")
+        vstarstack.targets.stars.lonlat.run(project, [descdir])
+    if level <= 2:
+        print("Describe")
+        vstarstack.targets.stars.describe.run(project, [descdir, descdir])
+    if level <= 3:
+        print("Match")
+        vstarstack.targets.stars.match.run(project, [descdir])
+    if level <= 4:
+        print("Net")
+        vstarstack.targets.stars.net.run(project, [descdir, net])
+    if level <= 5:
+        print("Cluster")
+        vstarstack.targets.stars.cluster.run(project, [net, descdir, clusters])
+
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    process(project, argv)

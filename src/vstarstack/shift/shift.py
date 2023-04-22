@@ -1,3 +1,4 @@
+"""Image shifting"""
 #
 # Copyright (c) 2022 Vladislav Tsendrovskii
 #
@@ -17,9 +18,15 @@ import vstarstack.shift.select_shift
 import vstarstack.shift.apply_shift
 
 commands = {
-	"select-shift" : (vstarstack.shift.select_shift.run, "Select base image and shift", "shifts.json shift.json"),
-	"apply-shift"  : (vstarstack.shift.apply_shift.run, "Apply selected shifts", "shift.json npy/ shifted/"),
+    "select-shift": (vstarstack.shift.select_shift.run,
+                     "Select base image and shift",
+                     "shifts.json shift.json"),
+    "apply-shift": (vstarstack.shift.apply_shift.run,
+                    "Apply selected shifts",
+                    "shift.json npy/ shifted/"),
 }
 
-def run(argv):
-	vstarstack.usage.run(argv, "shift", commands, autohelp=True)
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    """Run image shifting"""
+    vstarstack.usage.run(project, argv, "shift", commands, autohelp=True)

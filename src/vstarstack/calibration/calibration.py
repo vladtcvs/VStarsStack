@@ -16,11 +16,13 @@ import vstarstack.calibration.dark
 import vstarstack.calibration.flat
 
 import vstarstack.usage
+import vstarstack.cfg
 
 commands = {
-	"dark"     : (vstarstack.calibration.dark.run,     "dark frames handling"),
-	"flat"     : (vstarstack.calibration.flat.run,     "flat frames handling"),
+    "dark": (vstarstack.calibration.dark.run,     "dark frames handling"),
+    "flat": (vstarstack.calibration.flat.run,     "flat frames handling"),
 }
 
-def run(argv):
-	vstarstack.usage.run(argv, "calibration", commands, autohelp=True)
+
+def run(project: vstarstack.cfg.Project, argv: list):
+    vstarstack.usage.run(project, argv, "calibration", commands, autohelp=True)

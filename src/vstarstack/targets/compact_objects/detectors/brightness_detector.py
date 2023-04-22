@@ -21,13 +21,14 @@ from skimage import measure
 import matplotlib.pyplot as plt
 import imutils
 
-def detect(layer, debug=False):
-    min_d = vstarstack.cfg.config["compact_objects"]["brightness"]["min_diameter"]
-    max_d = vstarstack.cfg.config["compact_objects"]["brightness"]["max_diameter"]
+
+def detect(project, layer, debug=False):
+    min_d = project.config["compact_objects"]["brightness"]["min_diameter"]
+    max_d = project.config["compact_objects"]["brightness"]["max_diameter"]
     min_pixels = 3.141/4*min_d**2
     max_pixels = 3.141/4*max_d**2
 
-    thr = vstarstack.cfg.config["compact_objects"]["threshold"]
+    thr = project.config["compact_objects"]["threshold"]
 
     blurred = cv2.GaussianBlur(layer, (5, 5), 0)
     blurred = blurred / np.amax(blurred) * 255
@@ -46,18 +47,18 @@ def detect(layer, debug=False):
         # if this is the background label, ignore it
         if label == 0:
             continue
-	    # otherwise, construct the label mask and count the
-	    # number of pixels
+            # otherwise, construct the label mask and count the
+            # number of pixels
         labelMask = np.zeros(thresh.shape, dtype="uint8")
         labelMask[labels == label] = 255
         numPixels = cv2.countNonZero(labelMask)
-		# if the number of pixels in the component is sufficiently
-		# large, then add it to our mask of "large blobs"
+        # if the number of pixels in the component is sufficiently
+        # large, then add it to our mask of "large blobs"
         if numPixels >= min_pixels and numPixels <= max_pixels:
             mask = cv2.add(mask, labelMask)
 
         cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,
-	                        cv2.CHAIN_APPROX_SIMPLE)
+                                cv2.CHAIN_APPROX_SIMPLE)
         cnts = imutils.grab_contours(cnts)
         if len(cnts) == 0:
             return None

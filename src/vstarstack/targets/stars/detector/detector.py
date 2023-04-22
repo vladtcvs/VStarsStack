@@ -35,114 +35,118 @@ import skimage.measure as measure
 
 import vstarstack.cfg
 
+
 def check_round(image, x, y, r):
-	x = int(x+0.5)
-	y = int(y+0.5)
-	r = int(r+0.5)
-	block = image[y-r:y+r+1, x-r:x+r+1]
-	pos_mask = np.zeros(block.shape)
-	cv2.circle(pos_mask, (r, r), r, 1, -1)
-	num_circle = cv2.countNonZero(pos_mask)
-	num_real = cv2.countNonZero(pos_mask*block)
-	if num_real < num_circle*0.55:
-		return False
-#	print(num_real, num_circle)
-#	plt.imshow(block)
-#	plt.show()
-	return True
+    x = int(x+0.5)
+    y = int(y+0.5)
+    r = int(r+0.5)
+    block = image[y-r:y+r+1, x-r:x+r+1]
+    pos_mask = np.zeros(block.shape)
+    cv2.circle(pos_mask, (r, r), r, 1, -1)
+    num_circle = cv2.countNonZero(pos_mask)
+    num_real = cv2.countNonZero(pos_mask*block)
+    if num_real < num_circle*0.55:
+        return False
+# print(num_real, num_circle)
+# plt.imshow(block)
+# plt.show()
+    return True
+
 
 def calc_brightness(image, x, y, r):
-	x = int(x+0.5)
-	y = int(y+0.5)
-	r = int(r+0.5)
-	block = image[y-r:y+r+1, x-r:x+r+1]
-	pos_mask = np.zeros(block.shape)
-	cv2.circle(pos_mask, (r, r), r, 1, -1)
-	
-	masked = block * pos_mask
-	brightness = np.sum(masked) / np.sum(pos_mask)
-	return brightness
+    x = int(x+0.5)
+    y = int(y+0.5)
+    r = int(r+0.5)
+    block = image[y-r:y+r+1, x-r:x+r+1]
+    pos_mask = np.zeros(block.shape)
+    cv2.circle(pos_mask, (r, r), r, 1, -1)
+
+    masked = block * pos_mask
+    brightness = np.sum(masked) / np.sum(pos_mask)
+    return brightness
+
 
 def find_stars(starsimage, original=None, debug=False):
-	
-	starsimage = starsimage / np.amax(starsimage)
 
-	min_pixels = 3
-	max_pixels = 100
+    starsimage = starsimage / np.amax(starsimage)
 
-	shape = starsimage.shape
-	labels = measure.label(starsimage, connectivity=2, background=0)
-	mask = np.zeros(shape, dtype="uint8")
+    min_pixels = 3
+    max_pixels = 100
 
-	for label in np.unique(labels):
-		if label == 0:
-			continue
+    shape = starsimage.shape
+    labels = measure.label(starsimage, connectivity=2, background=0)
+    mask = np.zeros(shape, dtype="uint8")
 
-		labelMask = np.zeros(shape, dtype="uint8")
-		labelMask[labels == label] = 255
-		numPixels = cv2.countNonZero(labelMask)
+    for label in np.unique(labels):
+        if label == 0:
+            continue
 
-		# drop too small
-		if numPixels < min_pixels:
-			continue
-		
-		if numPixels > max_pixels:
-			continue
+        labelMask = np.zeros(shape, dtype="uint8")
+        labelMask[labels == label] = 255
+        numPixels = cv2.countNonZero(labelMask)
 
-		mask = cv2.add(mask, labelMask)
+        # drop too small
+        if numPixels < min_pixels:
+            continue
 
-	mask = mask.copy()
+        if numPixels > max_pixels:
+            continue
 
-#	if debug:
-#		plt.imshow(mask, cmap="gray")
-#		plt.show()
+        mask = cv2.add(mask, labelMask)
 
-	cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL,
-		cv2.CHAIN_APPROX_SIMPLE)
-	cnts = imutils.grab_contours(cnts)
-	cnts = contours.sort_contours(cnts)[0]
+    mask = mask.copy()
 
-	stars = []
+# if debug:
+# plt.imshow(mask, cmap="gray")
+# plt.show()
 
-	if debug:
-		image = original / np.amax(original)
+    cnts = cv2.findContours(mask, cv2.RETR_EXTERNAL,
+                            cv2.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+    cnts = contours.sort_contours(cnts)[0]
 
-	# loop over the contours
-	for (i, c) in enumerate(cnts):
-		((cX, cY), radius) = cv2.minEnclosingCircle(c)
-		if not check_round(mask, cX, cY, radius):
-			continue
+    stars = []
 
-		brightness = calc_brightness(starsimage, cX, cY, radius)
+    if debug:
+        image = original / np.amax(original)
 
-		size = radius * brightness
+    # loop over the contours
+    for (i, c) in enumerate(cnts):
+        ((cX, cY), radius) = cv2.minEnclosingCircle(c)
+        if not check_round(mask, cX, cY, radius):
+            continue
 
-		stars.append({"x":cX, "y":cY, "size":size})
-		if debug:
-			vr = int(radius+0.5)
-			cv2.circle(image, (int(cX+0.5), int(cY+0.5)), vr, (1, 0, 0), 1)
-	if debug:
-		plt.imshow(image/np.amax(image))
-		plt.show()
+        brightness = calc_brightness(starsimage, cX, cY, radius)
 
-	stars.sort(key=lambda s : -s["size"])
-	return stars, mask
+        size = radius * brightness
+
+        stars.append({"x": cX, "y": cY, "size": size})
+        if debug:
+            vr = int(radius+0.5)
+            cv2.circle(image, (int(cX+0.5), int(cY+0.5)), vr, (1, 0, 0), 1)
+    if debug:
+        plt.imshow(image/np.amax(image))
+        plt.show()
+
+    stars.sort(key=lambda s: -s["size"])
+    return stars, mask
 
 
-def detect_stars(gray, debug=False):
-	w = gray.shape[1]
-	h = gray.shape[0]
+def detect_stars(project, gray, debug=False):
+    w = gray.shape[1]
+    h = gray.shape[0]
 
-	gray = gray / np.amax(gray)
-	gray = cv2.GaussianBlur(gray, (3, 3), 0)
+    gray = gray / np.amax(gray)
+    gray = cv2.GaussianBlur(gray, (3, 3), 0)
 
-	blurred = cv2.GaussianBlur(gray, (31, 31), 0)
-	mask = (gray - blurred) > vstarstack.cfg.config["stars"]["brightness_over_neighbours"]
+    blurred = cv2.GaussianBlur(gray, (31, 31), 0)
+    mask = (
+        gray - blurred) > project.config["stars"]["brightness_over_neighbours"]
 
-	border = 30
-	mask[:,0:border] = 0
-	mask[0:border,:] = 0
-	mask[:,(w-border):w] = 0
-	mask[(h-border):h,:] = 0
+    border = 30
+    mask[:, 0:border] = 0
+    mask[0:border, :] = 0
+    mask[:, (w-border):w] = 0
+    mask[(h-border):h, :] = 0
 
-	return find_stars(mask)
+    return find_stars(mask)
