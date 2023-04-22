@@ -15,6 +15,7 @@
 import os
 import json
 
+import vstarstack.cfg
 
 def run(project: vstarstack.cfg.Project, argv: list):
     if len(argv) > 0:

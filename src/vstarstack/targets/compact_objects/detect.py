@@ -37,7 +37,7 @@ def process_file(filename, descfilename, detector):
             continue
         layer = layer / np.amax(layer)
 
-        planet = detector(layer, debug=vstarstack.cfg.debug)
+        planet = detector(layer, debug=vstarstack.cfg.DEBUG)
 
         if planet is not None:
             break

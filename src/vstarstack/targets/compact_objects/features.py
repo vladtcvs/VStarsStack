@@ -215,7 +215,7 @@ def match_images(points):
                     matches[channel][name2][name1].append(
                         (index2, index1, match.distance))
 
-                if vstarstack.cfg.debug:
+                if vstarstack.cfg.DEBUG:
                     draw_matches(points, matches, channel, name1, name2)
     return matches
 

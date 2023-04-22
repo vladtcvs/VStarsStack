@@ -13,7 +13,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-class Lens(object):
+class Lens:
     """Lens description"""
 
     def __init__(self, config):

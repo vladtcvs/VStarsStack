@@ -13,6 +13,8 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import vstarstack.cfg
+
 class Camera:
     """Camera description"""
 
@@ -30,7 +32,7 @@ class Camera:
             self.W = self.w * self.kw
             self.H = self.h * self.kh
         else:
-            raise Exception("Insufficient camera parameters")
+            raise vstarstack.cfg.ConfigException("Insufficient camera parameters")
 
         if "encoding_format" in config:
             self.format = config["encoding_format"]

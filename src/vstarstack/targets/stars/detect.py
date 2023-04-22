@@ -12,29 +12,12 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-from imutils import contours
-from skimage import measure
 import numpy as np
-import matplotlib.pyplot as plt
-import cv2
-import imutils
-import math
-import scipy.ndimage as ndimage
-import scipy.ndimage.filters as filters
 
-from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
-from scipy.ndimage.filters import maximum_filter
-
-import skimage.segmentation as seg
-import skimage.filters as filters
-import skimage.draw as draw
-import skimage.color as color
-import skimage.measure as measure
-
-import vstarstack.usage
-import sys
 import json
 import os
+
+import vstarstack.usage
 
 import vstarstack.common
 import vstarstack.data
@@ -45,7 +28,7 @@ import vstarstack.targets.stars.detector.detector
 detect = vstarstack.targets.stars.detector.detector.detect_stars
 
 
-def process_file(fname, jsonfile):
+def process_file(project, fname, jsonfile):
     image = vstarstack.data.DataFrame.load(fname)
 
     sources = []
@@ -57,7 +40,7 @@ def process_file(fname, jsonfile):
         sources.append(layer)
     gray = sum(sources)
 
-    stars = detect(gray, debug=False)[0]
+    stars = detect(project, gray, debug=False)[0]
     desc = {
         "stars": stars,
         "h": image.params["h"],
@@ -72,12 +55,12 @@ def process_file(fname, jsonfile):
         json.dump(desc, f, indent=4)
 
 
-def process_dir(path, jsonpath):
+def process_dir(project, path, jsonpath):
     files = vstarstack.common.listfiles(path, ".zip")
 
     for name, filename in files:
         print(name)
-        process_file(filename, os.path.join(jsonpath, name + ".json"))
+        process_file(project, filename, os.path.join(jsonpath, name + ".json"))
 
 
 def process(project: vstarstack.cfg.Project, argv: list):
@@ -89,9 +72,9 @@ def process(project: vstarstack.cfg.Project, argv: list):
         jsonpath = project.config["paths"]["descs"]
 
     if os.path.isdir(path):
-        process_dir(path, jsonpath)
+        process_dir(project, path, jsonpath)
     else:
-        process_file(path, jsonpath)
+        process_file(project, path, jsonpath)
 
 
 def run(project: vstarstack.cfg.Project, argv: list):

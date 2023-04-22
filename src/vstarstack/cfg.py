@@ -41,12 +41,19 @@ def get_param(name, type, default):
     return default
 
 
-debug = False
+DEBUG = False
 if "DEBUG" in os.environ:
-    debug = eval(os.environ["DEBUG"])
-    print("Debug = %s" % debug)
+    DEBUG = os.environ["DEBUG"].lower() == "true"
+    print("Debug = {debug}")
 
 nthreads = max(int(mp.cpu_count())-1, 1)
+
+
+class ConfigException(Exception):
+    """Config error exception"""
+
+    def __init__(self, reason):
+        Exception.__init__(self, f"Config error: {reason}")
 
 
 class Project(object):
