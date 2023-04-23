@@ -12,6 +12,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import vstarstack.cfg
 import vstarstack.targets.stars.detect
 import vstarstack.targets.stars.describe
 import vstarstack.targets.stars.match
@@ -20,7 +21,6 @@ import vstarstack.targets.stars.cluster
 import vstarstack.targets.stars.lonlat
 import vstarstack.targets.stars.process
 import vstarstack.targets.stars.configure
-import sys
 import vstarstack.usage
 
 commands = {
@@ -36,4 +36,4 @@ commands = {
 
 
 def run(project: vstarstack.cfg.Project, argv: list):
-    vstarstack.usage.run(argv, "stars", commands, autohelp=True)
+    vstarstack.usage.run(project, argv, "stars", commands, autohelp=True)

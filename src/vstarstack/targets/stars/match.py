@@ -187,19 +187,18 @@ def process(project: vstarstack.cfg.Project, argv: list):
     descs = []
     name_fname = {}
     for name, fname in starsfiles:
-        with open(fname) as f:
-            desc = json.load(f)
+        with open(fname, encoding='utf8') as file:
+            desc = json.load(file)
         descs.append((name, desc))
         name_fname[name] = fname
 
     total = len(starsfiles)**2
-    print("total = %i" % total)
-    pool = mp.Pool(ncpu)
-    results = pool.starmap(matchStars, [(desc, descs) for desc in descs])
-    for name, desc in results:
-        with open(name_fname[name], "w") as f:
-            json.dump(desc, f, indent=4, ensure_ascii=False)
-    pool.close()
+    print(f"total = {total}")
+    with mp.Pool(ncpu) as pool:
+        results = pool.starmap(matchStars, [(project, desc, descs) for desc in descs])
+        for name, desc in results:
+            with open(name_fname[name], "w", encoding='utf8') as file:
+                json.dump(desc, file, indent=4, ensure_ascii=False)
 
 
 def run(project: vstarstack.cfg.Project, argv: list):
