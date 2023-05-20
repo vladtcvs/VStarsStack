@@ -16,11 +16,17 @@ from setuptools import setup, Extension, find_packages
 
 import os
 
-perspective = Extension(name="vstarstack.projection.perspective",
-       sources=["src/vstarstack/projection/perspective.c"])
-image_wave = Extension(name="vstarstack.fine_shift.image_wave",
-       sources=["src/vstarstack/fine_shift/image_wave.c"])
+perspective = Extension(name="vstarstack.library.projection.perspective",
+       sources=["src/vstarstack/library/projection/perspective.c"])
 
+equirectangular = Extension(name="vstarstack.library.projection.equirectangular",
+       sources=["src/vstarstack/library/projection/equirectangular.c"])
+
+orthographic = Extension(name="vstarstack.library.projection.orthographic",
+       sources=["src/vstarstack/library/projection/orthographic.c"])
+
+image_wave = Extension(name="vstarstack.library.fine_shift.image_wave",
+       sources=["src/vstarstack/library/fine_shift/image_wave.c"])
 
 root = os.path.join(os.path.abspath(os.path.dirname(__file__)), "src")
 result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(root) for f in filenames if os.path.splitext(f)[1] == '.py']
@@ -38,7 +44,10 @@ setup (name = 'vstarstack',
        scripts = ['bin/vstarstack'],
        package_dir = {'': 'src'},
        packages=packages,
-       ext_modules = [perspective, image_wave],
+       ext_modules = [perspective,
+                      equirectangular,
+                      orthographic,
+                      image_wave],
        install_requires = [
               'numpy',
               'astropy',

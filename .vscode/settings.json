@@ -1,6 +1,7 @@
 {
     "files.associations": {
-        "ndarraytypes.h": "c"
+        "ndarraytypes.h": "c",
+        "random": "c"
     },
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
@@ -8,7 +9,6 @@
         "--indent-size=4"
     ],
     "python.linting.pylintArgs": [
-        "--indent-string='    '",
-        "--rcfile=pylint.rc"
-    ]   
+        "--indent-string='    '"
+    ]
 }
