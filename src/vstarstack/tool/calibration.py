@@ -39,19 +39,19 @@ def _process_file_remove_dark(input_fname : str,
 def _process_dir_flatten(input_path : str,
                          flat_fname : str,
                          output_path : str):
-    files = vstarstack.library.common.listfiles(input_path, ".npz")
+    files = vstarstack.library.common.listfiles(input_path, ".zip")
     for name, filename in files:
         print(f"Processing {name}")
-        output_fname = os.path.join(output_path, name + ".npz")
+        output_fname = os.path.join(output_path, name + ".zip")
         _process_file_flatten(filename, flat_fname, output_fname)
 
 def _process_dir_remove_dark(input_path : str,
                       dark_fname : str,
                       output_path : str):
-    files = vstarstack.library.common.listfiles(input_path, ".npz")
+    files = vstarstack.library.common.listfiles(input_path, ".zip")
     for name, filename in files:
         print(f"Processing {name}")
-        output_fname = os.path.join(output_path, name + ".npz")
+        output_fname = os.path.join(output_path, name + ".zip")
         _process_file_remove_dark(filename, dark_fname, output_fname)
 
 def _process_flatten(_project : vstarstack.tool.cfg.Project,
@@ -78,7 +78,7 @@ def _process_build_dark(_project : vstarstack.tool.cfg.Project,
                         argv : list[str]):
     input_path = argv[0]
     dark_fname = argv[1]
-    files = vstarstack.library.common.listfiles(input_path, ".npz")
+    files = vstarstack.library.common.listfiles(input_path, ".zip")
     darks = [item[1] for item in files]
     dark = vstarstack.library.calibration.dark.prepare_darks(darks)
     dark.store(dark_fname)
@@ -87,7 +87,7 @@ def _process_build_flat_simple(_project : vstarstack.tool.cfg.Project,
                                argv : list[str]):
     input_path = argv[0]
     flat_fname = argv[1]
-    files = vstarstack.library.common.listfiles(input_path, ".npz")
+    files = vstarstack.library.common.listfiles(input_path, ".zip")
     flats = [item[1] for item in files]
     flat = vstarstack.library.calibration.flat.prepare_flat_simple(flats)
     flat.store(flat_fname)
@@ -96,7 +96,7 @@ def _process_build_flat_sigma(_project : vstarstack.tool.cfg.Project,
                               argv : list[str]):
     input_path = argv[0]
     flat_fname = argv[1]
-    files = vstarstack.library.common.listfiles(input_path, ".npz")
+    files = vstarstack.library.common.listfiles(input_path, ".zip")
     flats = [item[1] for item in files]
     flat = vstarstack.library.calibration.flat.prepare_flat_sky(flats)
     flat.store(flat_fname)
@@ -104,19 +104,19 @@ def _process_build_flat_sigma(_project : vstarstack.tool.cfg.Project,
 commands = {
     "flatten": (_process_flatten,
                 "Flatten image",
-                "inputs/ flat.npz outputs/"),
+                "inputs/ flat.zip outputs/"),
     "remove-dark": (_process_remove_dark,
                    "Substract dark from image",
-                   "inputs/ dark.npz outputs/"),
+                   "inputs/ dark.zip outputs/"),
     "build-dark" : (_process_build_dark,
                     "Create dark image",
-                    "darks/ dark.npz"),
+                    "darks/ dark.zip"),
     "build-flat-simple" : (_process_build_flat_simple,
                            "Create flat image - just sum of flats",
-                           "flats/ flat.npz"),
+                           "flats/ flat.zip"),
     "build-flat-sigma" : (_process_build_flat_sigma,
                            "Create flat image - sigma clipping",
-                           "flats/ flat.npz")
+                           "flats/ flat.zip")
 }
 
 def run(project: vstarstack.tool.cfg.Project, argv: list):
