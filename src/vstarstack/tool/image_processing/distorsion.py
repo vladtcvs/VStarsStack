@@ -68,4 +68,4 @@ commands = {
 }
 
 def run(project: vstarstack.tool.cfg.Project, argv: list):
-    vstarstack.tool.usage.run(project, argv, "image-fix distorsion", commands)
+    vstarstack.tool.usage.run(project, argv, "image-process distorsion", commands)

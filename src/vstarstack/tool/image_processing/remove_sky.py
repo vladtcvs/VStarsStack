@@ -73,4 +73,4 @@ commands = {
 def run(project: vstarstack.tool.cfg.Project, argv: list):
     """Run removing of sky"""
     vstarstack.tool.usage.run(
-        project, argv, "image-fix remove-sky", commands, autohelp=True)
+        project, argv, "image-process remove-sky", commands, autohelp=True)

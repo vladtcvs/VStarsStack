@@ -96,9 +96,13 @@ def _process_build_flat_sigma(_project : vstarstack.tool.cfg.Project,
                               argv : list[str]):
     input_path = argv[0]
     flat_fname = argv[1]
+    sigma_k = vstarstack.tool.cfg.get_param("sigma_k", float, 0.5)
+    smooth = vstarstack.tool.cfg.get_param("smooth", int, 31)
+    if smooth % 2 == 0:
+        smooth += 1
     files = vstarstack.library.common.listfiles(input_path, ".zip")
     flats = [item[1] for item in files]
-    flat = vstarstack.library.calibration.flat.prepare_flat_sky(flats)
+    flat = vstarstack.library.calibration.flat.prepare_flat_sky(flats, sigma_k, smooth)
     flat.store(flat_fname)
 
 commands = {

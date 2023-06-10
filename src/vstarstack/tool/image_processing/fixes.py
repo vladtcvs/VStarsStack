@@ -24,6 +24,7 @@ import vstarstack.tool.image_processing.distorsion
 import vstarstack.tool.image_processing.remove_sky
 import vstarstack.tool.image_processing.border
 import vstarstack.tool.image_processing.normalize
+import vstarstack.tool.image_processing.blur
 
 def copy(project: vstarstack.tool.cfg.Project, argv: list):
     """Copy files"""
@@ -45,8 +46,9 @@ commands = {
     "remove-sky": (vstarstack.tool.image_processing.remove_sky.run, "remove sky"),
     "border": (vstarstack.tool.image_processing.border.run,     "remove border"),
     "normalize": (vstarstack.tool.image_processing.normalize.run,  "normalize to weight"),
+    "blur": (vstarstack.tool.image_processing.blur.run,  "gaussian blur"),
 }
 
 def run(project: vstarstack.tool.cfg.Project, argv: list):
     """Run image fix methods"""
-    vstarstack.tool.usage.run(project, argv, "image-fix", commands, autohelp=True)
+    vstarstack.tool.usage.run(project, argv, "image-process", commands, autohelp=True)

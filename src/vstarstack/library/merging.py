@@ -137,7 +137,7 @@ def _read_and_prepare(dataframe, channel, lows, highs):
     else:
         weight = np.ones(image.shape, dtype=np.float64)
 
-    image /= weight
+    image = image / weight
     image[np.where(weight == 0)] = 0
     if channel in lows:
         too_low_idx = np.where(image < lows[channel])
@@ -171,7 +171,7 @@ def _calculate_mean(input_filenames, lows, highs):
                 mean_weight[channel] += weight
 
     for channel in mean:
-        mean[channel] /= mean_weight[channel]
+        mean[channel] = mean[channel] / mean_weight[channel]
         mean[channel][np.where(mean_weight[channel] == 0)] = 0
     return mean, mean_weight
 
@@ -234,10 +234,10 @@ def _calculate_sigma(input_filenames, summary, summary_weight, lows, highs):
             delta2 = (image - summary[channel])**2
             if channel not in sigma:
                 sigma[channel] = delta2 * (weight != 0)
-                nums[channel] = (weight != 0).astype(np.int)
+                nums[channel] = (weight != 0).astype("int")
             else:
                 sigma[channel] += delta2 * (weight != 0)
-                nums[channel] += (weight != 0).astype(np.int)
+                nums[channel] += (weight != 0).astype("int")
 
     for channel in sigma:
         sigma[channel] = np.sqrt(sigma[channel] / nums[channel])
