@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2023 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,15 +16,14 @@ import numpy as np
 import vstarstack.library.data
 from vstarstack.library.data import DataFrame
 
-def simple_add(input_filenames : list) -> DataFrame:
+def simple_add(images : vstarstack.library.common.IImageSource) -> DataFrame:
     """Just add images"""
 
     summary = {}
     summary_weight = {}
     sum_opts = {}
 
-    for filename in input_filenames:
-        img = DataFrame.load(filename)
+    for img in images.items():
         params = img.params
 
         for channel_name in img.get_channels():
@@ -48,7 +47,7 @@ def simple_add(input_filenames : list) -> DataFrame:
                     summary[channel_name] += channel
                     summary_weight[channel_name] += weight
                 except Exception:
-                    print(f"Can not add image {filename}. Skipping")
+                    print("Can not add image. Skipping")
 
             sum_opts[channel_name] = opts
 
@@ -65,16 +64,15 @@ def simple_add(input_filenames : list) -> DataFrame:
 
     return result
 
-def mean(input_filenames : list) -> DataFrame:
-    """Just add images"""
+def mean(images : vstarstack.library.common.IImageSource) -> DataFrame:
+    """Just mean of images"""
 
     counts = {}
     summary = {}
     summary_weight = {}
     sum_opts = {}
 
-    for filename in input_filenames:
-        img = DataFrame.load(filename)
+    for img in images.items():
         params = img.params
 
         for channel_name in img.get_channels():
@@ -100,7 +98,7 @@ def mean(input_filenames : list) -> DataFrame:
                     summary_weight[channel_name] += weight
                     counts[channel_name] += 1
                 except Exception:
-                    print(f"Can not add image {filename}. Skipping")
+                    print(f"Can not add image. Skipping")
 
             sum_opts[channel_name] = opts
 
@@ -151,39 +149,37 @@ def _read_and_prepare(dataframe, channel, lows, highs):
 
     return image, weight, opts
 
-def _calculate_mean(input_filenames, lows, highs):
+def _calculate_mean(images, lows, highs):
     """Calculate mean value of images, where they are fitted between low and high"""
-    mean = {}
+    mean_image = {}
     mean_weight = {}
 
-    for filename in input_filenames:
-        img = DataFrame.load(filename)
+    for img in images.items():
         for channel in img.get_channels():
             image, weight, _ = _read_and_prepare(img, channel, lows, highs)
             if image is None:
                 continue
 
-            if channel not in mean:
-                mean[channel] = image * weight
+            if channel not in mean_image:
+                mean_image[channel] = image * weight
                 mean_weight[channel] = weight
             else:
-                mean[channel] += image*weight
+                mean_image[channel] += image*weight
                 mean_weight[channel] += weight
 
-    for channel in mean:
-        mean[channel] = mean[channel] / mean_weight[channel]
-        mean[channel][np.where(mean_weight[channel] == 0)] = 0
-    return mean, mean_weight
+    for channel in mean_image:
+        mean_image[channel] = mean_image[channel] / mean_weight[channel]
+        mean_image[channel][np.where(mean_weight[channel] == 0)] = 0
+    return mean_image, mean_weight
 
-def _calculate_sum(input_filenames, lows, highs):
+def _calculate_sum(images, lows, highs):
     """Calculate sum value of images, where they are fitted between low and high"""
     summary = {}
     summary_weight = {}
     summary_opts = {}
     params = {}
 
-    for filename in input_filenames:
-        img = DataFrame.load(filename)
+    for img in images.items():
         params = img.params
         for channel in img.get_channels():
             image, opts = img.get_channel(channel)
@@ -219,13 +215,12 @@ def _calculate_sum(input_filenames, lows, highs):
 
     return summary, summary_weight, summary_opts, params
 
-def _calculate_sigma(input_filenames, summary, summary_weight, lows, highs):
+def _calculate_sigma(images, summary, summary_weight, lows, highs):
     """Calculate sigma in each pixel"""
     sigma = {}
     nums = {}
-    for filename in input_filenames:
-        img = DataFrame.load(filename)
 
+    for img in images.items():
         for channel in img.get_channels():
             image, weight, _ = _read_and_prepare(img, channel, lows, highs)
             if image is None:
@@ -246,20 +241,20 @@ def _calculate_sigma(input_filenames, summary, summary_weight, lows, highs):
 
     return sigma
 
-def _sigma_clip_step(input_filenames, lows, highs, sigma_k):
+def _sigma_clip_step(images, lows, highs, sigma_k):
     """Single step of sigma clipping"""
-    mean, mean_weight = _calculate_mean(input_filenames, lows, highs)
-    sigma = _calculate_sigma(input_filenames, mean, mean_weight, lows, highs)
+    mean_image, mean_weight = _calculate_mean(images, lows, highs)
+    sigma = _calculate_sigma(images, mean_image, mean_weight, lows, highs)
 
     lows = {}
     highs = {}
-    for channel, mean_value in mean.items():
+    for channel, mean_value in mean_image.items():
         lows[channel] = mean_value - sigma[channel] * sigma_k
         highs[channel] = mean_value + sigma[channel] * sigma_k
 
     return lows, highs
 
-def sigma_clip(input_filenames : list,
+def sigma_clip(images : vstarstack.library.common.IImageSource,
                sigma_k : float,
                steps : int) -> DataFrame:
     """Sigma clipped summary of images"""
@@ -267,9 +262,9 @@ def sigma_clip(input_filenames : list,
     highs = {}
 
     for _ in range(steps):
-        lows, highs = _sigma_clip_step(input_filenames, lows, highs, sigma_k)
+        lows, highs = _sigma_clip_step(images, lows, highs, sigma_k)
 
-    summary, weight, opts, params = _calculate_sum(input_filenames, lows, highs)
+    summary, weight, opts, params = _calculate_sum(images, lows, highs)
 
     result = DataFrame()
     for channel_name, channel in summary.items():

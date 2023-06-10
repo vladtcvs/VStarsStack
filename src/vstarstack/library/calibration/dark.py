@@ -12,6 +12,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import vstarstack.library.common
 import vstarstack.library.data
 import vstarstack.library.merging
 
@@ -28,6 +29,7 @@ def remove_dark(dataframe : vstarstack.library.data.DataFrame,
 
         dataframe.replace_channel(image, channel)
 
-def prepare_darks(files : list[str]) -> vstarstack.library.data.DataFrame:
+def prepare_darks(images : vstarstack.library.common.IImageSource
+                  ) -> vstarstack.library.data.DataFrame:
     """Build dark frame"""
-    return vstarstack.library.merging.mean(files)
+    return vstarstack.library.merging.mean(images)

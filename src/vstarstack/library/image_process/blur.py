@@ -14,6 +14,7 @@
 
 import cv2
 import vstarstack.library.data
+import vstarstack.library.common
 
 def blur(dataframe : vstarstack.library.data.DataFrame, size : int):
     """Gaussian blur"""
@@ -35,3 +36,17 @@ def blur(dataframe : vstarstack.library.data.DataFrame, size : int):
         dataframe.replace_channel(weight, w_channel)
 
     return dataframe
+
+class BlurredSource(vstarstack.library.common.IImageSource):
+    """Blurred image source"""
+    def __init__(self, src : vstarstack.library.common.IImageSource, size : int):
+        if size % 2 == 0:
+            size += 1
+        self.size = size
+        self.src = src
+
+    def items(self) -> vstarstack.library.data.DataFrame:
+        """Take next element"""
+        for dataframe in self.src.items():
+            dataframe = blur(dataframe, self.size)
+            yield dataframe

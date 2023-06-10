@@ -26,8 +26,9 @@ import vstarstack.tool.cfg
 
 POWER = 1
 SLOPE = vstarstack.tool.cfg.get_param("multiply", float, 1)
+FLOOR = vstarstack.tool.cfg.get_param("clip_floor", bool, False)
 
-def _make_frames(dataframe, channels, *, slope=1, power=1):
+def _make_frames(dataframe, channels, *, slope=1, power=1, clip_floor=False):
     if channels == "RGB":
         r, _ = dataframe.get_channel("R")
         g, _ = dataframe.get_channel("G")
@@ -58,8 +59,11 @@ def _make_frames(dataframe, channels, *, slope=1, power=1):
                 amin = max(np.amin(img), 0)
                 amax = np.amax(img)
                 print(f"{channel}: {amin} - {amax}")
-                if amax - amin > 0:
-                    img = (img - amin)/(amax-amin)
+                if clip_floor:
+                    if amax - amin > 0:
+                        img = (img - amin)/(amax-amin)
+                else:
+                    img = img / amax
                 img = np.clip(img*slope, 0, 1)**power
 
             frames[channel] = img
@@ -77,7 +81,11 @@ def _show(_project, argv):
         channel = None
 
     dataframe = vstarstack.library.data.DataFrame.load(path)
-    frames = _make_frames(dataframe, channel, slope=SLOPE, power=POWER)
+    frames = _make_frames(dataframe,
+                          channel,
+                          slope=SLOPE,
+                          power=POWER,
+                          clip_floor=FLOOR)
 
     nch = len(frames)
     fig, axs = plt.subplots(1, nch)
@@ -90,7 +98,8 @@ def _show(_project, argv):
         else:
             subplot = axs
         img = frames[channel].astype(np.float64)
-        subplot.imshow(img, cmap="gray")
+        img = img / np.amax(img)
+        subplot.imshow(img, cmap="gray", vmin=0, vmax=1.0)
         subplot.set_title(channel)
         index += 1
 

@@ -16,9 +16,14 @@ import cv2
 import numpy as np
 import skimage.filters
 
+import vstarstack.library.common
 import vstarstack.library.data
 import vstarstack.library.merging
+import vstarstack.library.stars.detect
+import vstarstack.library.stars.cut
+import vstarstack.library.image_process.blur
 
+from vstarstack.library.image_process.blur import BlurredSource
 from vstarstack.library.image_process.normalize import normalize
 from vstarstack.library.image_process.nanmean_filter import nanmean_filter
 
@@ -36,10 +41,16 @@ def flatten(dataframe : vstarstack.library.data.DataFrame,
         dataframe.replace_channel(image, channel)
     return dataframe
 
-def prepare_flat_simple(fnames : list[str]) -> vstarstack.library.data.DataFrame:
+def prepare_flat_simple(images : vstarstack.library.common.IImageSource,
+                        smooth_size : int
+                        ) -> vstarstack.library.data.DataFrame:
     """Prepare flat files for processing"""
-    flat = vstarstack.library.merging.simple_add(fnames)
-    return vstarstack.library.image_process.normalize.normalize(flat)
+    if smooth_size % 2 == 0:
+        smooth_size += 1
+
+    source = BlurredSource(images, smooth_size)
+    dataframe = vstarstack.library.merging.simple_add(source)
+    return dataframe
 
 def calculate_median(image, weight, smooth_size):
     """Apply median filter with mask (weight > 0)"""
@@ -49,15 +60,57 @@ def calculate_median(image, weight, smooth_size):
     image = nanmean_filter(image, radius)
     return image
 
-def prepare_flat_sky(fnames : list[str],
-                     sigma_k : float,
-                     smooth_size : int) -> vstarstack.library.data.DataFrame:
-    """Generate flat image"""
-    flat = vstarstack.library.merging.sigma_clip(fnames, sigma_k, 5)
-    flat = normalize(flat)
+class NoStarSource(vstarstack.library.common.IImageSource):
+    """Images without stars"""
+    def __init__(self,
+                 src : vstarstack.library.common.IImageSource,
+                 stars : list):
+        self.src = src
+        self.stars = stars
 
-    for channel in list(flat.get_channels()):
-        _, opts = flat.get_channel(channel)
-        if not opts["brightness"]:
-            flat.remove_channel(channel)
+    def items(self) -> vstarstack.library.data.DataFrame:
+        """Iterate images"""
+        for index, image in enumerate(self.src.items()):
+            image = vstarstack.library.stars.cut.cut_stars(image, self.stars[index])
+            yield image
+
+def prepare_flat_sky(images : vstarstack.library.common.IImageSource,
+                     smooth_size : int
+                     ) -> vstarstack.library.data.DataFrame:
+    """Generate flat image"""
+    sum_layer = {}
+    sum_weight = {}
+    params = {}
+    for dataframe in images.items():
+        descs = []
+        params = dataframe.params
+        for name in dataframe.get_channels():
+            layer, opts = dataframe.get_channel(name)
+            if not opts["brightness"]:
+                continue
+            channel_descs = vstarstack.library.stars.detect.detect_stars(layer)
+            descs += channel_descs
+        dataframe = vstarstack.library.image_process.blur.blur(dataframe, 5)
+        dataframe = normalize(dataframe)
+        nostars_dataframe = vstarstack.library.stars.cut.cut_stars(dataframe, descs)
+        for name in nostars_dataframe.get_channels():
+            layer, opts = nostars_dataframe.get_channel(name)
+            if not opts["brightness"]:
+                continue
+            weight_name = nostars_dataframe.links["weight"][name]
+            weight, _ = nostars_dataframe.get_channel(weight_name)
+            if name not in sum_layer:
+                sum_layer[name] = layer
+                sum_weight[name] = weight
+            else:
+                sum_layer[name] += layer
+                sum_weight[name] += weight
+
+    flat = vstarstack.library.data.DataFrame(params=params)
+    for name, layer in sum_layer.items():
+        weight = sum_weight[name]
+        layer[np.where(weight == 0)] = 0
+        flat.add_channel(layer, name, brightness=True)
+        flat.add_channel(weight, "weight-"+name, weight=True)
+        flat.add_channel_link(name, "weight-"+name, "weight")
     return flat

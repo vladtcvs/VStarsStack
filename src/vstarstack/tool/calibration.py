@@ -80,29 +80,32 @@ def _process_build_dark(_project : vstarstack.tool.cfg.Project,
     dark_fname = argv[1]
     files = vstarstack.library.common.listfiles(input_path, ".zip")
     darks = [item[1] for item in files]
-    dark = vstarstack.library.calibration.dark.prepare_darks(darks)
+    src = vstarstack.library.common.FilesImageSource(darks)
+    dark = vstarstack.library.calibration.dark.prepare_darks(src)
     dark.store(dark_fname)
 
 def _process_build_flat_simple(_project : vstarstack.tool.cfg.Project,
                                argv : list[str]):
     input_path = argv[0]
     flat_fname = argv[1]
+    smooth = vstarstack.tool.cfg.get_param("smooth", int, 31)
     files = vstarstack.library.common.listfiles(input_path, ".zip")
     flats = [item[1] for item in files]
-    flat = vstarstack.library.calibration.flat.prepare_flat_simple(flats)
+    src = vstarstack.library.common.FilesImageSource(flats)
+    flat = vstarstack.library.calibration.flat.prepare_flat_simple(src, smooth)
     flat.store(flat_fname)
 
-def _process_build_flat_sigma(_project : vstarstack.tool.cfg.Project,
+def _process_build_flat_sky(_project : vstarstack.tool.cfg.Project,
                               argv : list[str]):
     input_path = argv[0]
     flat_fname = argv[1]
-    sigma_k = vstarstack.tool.cfg.get_param("sigma_k", float, 0.5)
     smooth = vstarstack.tool.cfg.get_param("smooth", int, 31)
     if smooth % 2 == 0:
         smooth += 1
     files = vstarstack.library.common.listfiles(input_path, ".zip")
     flats = [item[1] for item in files]
-    flat = vstarstack.library.calibration.flat.prepare_flat_sky(flats, sigma_k, smooth)
+    src = vstarstack.library.common.FilesImageSource(flats)
+    flat = vstarstack.library.calibration.flat.prepare_flat_sky(src, smooth)
     flat.store(flat_fname)
 
 commands = {
@@ -118,8 +121,8 @@ commands = {
     "build-flat-simple" : (_process_build_flat_simple,
                            "Create flat image - just sum of flats",
                            "flats/ flat.zip"),
-    "build-flat-sigma" : (_process_build_flat_sigma,
-                           "Create flat image - sigma clipping",
+    "build-flat-sky" : (_process_build_flat_sky,
+                           "Create flat image - use sky images",
                            "flats/ flat.zip")
 }
 

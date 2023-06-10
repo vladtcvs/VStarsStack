@@ -22,6 +22,9 @@ from skimage import exposure
 import cv2
 import numpy as np
 
+import abc
+
+import vstarstack.library.data
 
 def getpixel_linear(img, y, x):
     xm = math.floor(x)
@@ -107,3 +110,31 @@ def prepare_image_for_model(image):
         image /= am
     image = exposure.equalize_hist(image)
     return image
+
+class IImageSource(abc.ABC):
+    """Abstract image source"""
+
+    @abc.abstractmethod
+    def items(self) -> vstarstack.library.data.DataFrame:
+        """Take elements from source"""
+
+class ListImageSource(IImageSource):
+    """Get images from list"""
+    def __init__(self, images : list[vstarstack.library.data.DataFrame]):
+        self.images = images
+        self.index = 0
+
+    def items(self) -> vstarstack.library.data.DataFrame:
+        """Take next element from source"""
+        for item in self.images:
+            yield item
+
+class FilesImageSource(IImageSource):
+    """Get images from files"""
+    def __init__(self, filenames : list[str]):
+        self.filenames = filenames
+
+    def items(self):
+        """Take next element from source"""
+        for fname in self.filenames:
+            yield vstarstack.library.data.DataFrame.load(fname)
