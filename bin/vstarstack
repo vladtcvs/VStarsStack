@@ -2,10 +2,10 @@
 
 import sys
 
-import vstarstack.process
-import vstarstack.cfg
+import vstarstack.tool.process
+import vstarstack.tool.cfg
 
-program_project = vstarstack.cfg.get_project()
+program_project = vstarstack.tool.cfg.get_project()
 program_argv = [item for item in sys.argv[1:] if item[:2] != "--"]
 
-vstarstack.process.run(program_project, program_argv, 'vstarstack')
+vstarstack.tool.process.run(program_project, program_argv, 'vstarstack')
