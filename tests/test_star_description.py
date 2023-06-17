@@ -18,9 +18,7 @@ import vstarstack.library.stars.describe as describe
 thr = 1e-6
 
 def assert_descriptor(desc : describe.DescriptorItem, expected_desc):
-    eid1, eangle1, ers1, eid2, eangle2, ers2, eangle12 = expected_desc
-    assert desc.id1 == eid1
-    assert desc.id2 == eid2
+    eangle1, ers1, eangle2, ers2, eangle12 = expected_desc
     assert abs(desc.angle1 - eangle1) < thr
     assert abs(desc.angle2 - eangle2) < thr
     assert abs(desc.relative_size1 - ers1) < thr
@@ -63,7 +61,7 @@ def test_descriptor_1():
     star3 = {"id" : 3, "size" : 3, "lon" : 0, "lat" : 1e-3}
     desc = describe.build_descriptor_angled(star1, [star2, star3])
     assert len(desc.items) == 1
-    assert_descriptor(desc.items[0], (2, 1e-3, 2, 3, 1e-3, 3, -math.pi/2))
+    assert_descriptor(desc.items[0], (1e-3, 2, 1e-3, 3, -math.pi/2))
 
 def test_descriptors_1():
     stars = [
@@ -92,12 +90,12 @@ def test_descriptors_1():
 
     assert len(descriptors[0].items) == 1
     assert_descriptor(descriptors[0].items[0],
-                      (2, 1e-3, 2, 3, 2e-3, 3, -math.pi/2))
+                      (1e-3, 2, 2e-3, 3, -math.pi/2))
 
     assert len(descriptors[1].items) == 1
     assert_descriptor(descriptors[1].items[0],
-                      (1, 1e-3, 0.5, 3, (2e-3**2+1e-3**2)**0.5, 1.5, math.atan(2)))
+                      (1e-3, 0.5, (2e-3**2+1e-3**2)**0.5, 1.5, math.atan(2)))
 
     assert len(descriptors[2].items) == 1
     assert_descriptor(descriptors[2].items[0],
-                      (1, 2e-3, 1/3, 2, (2e-3**2+1e-3**2)**0.5, 2/3, -math.atan(1/2)))
+                      (2e-3, 1/3, (2e-3**2+1e-3**2)**0.5, 2/3, -math.atan(1/2)))
