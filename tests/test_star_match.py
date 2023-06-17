@@ -12,10 +12,10 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import math
+
 from vstarstack.library.stars import describe
 from vstarstack.library.stars import match
-from vstarstack.library.stars import cluster
+from vstarstack.library import cluster
 
 thr = 1e-6
 
@@ -245,7 +245,8 @@ def test_match_net_1():
 
     matcher = match.DescriptorMatcher(1, 1e-3, 1e-3, 1e-2)
 
-    match_table = cluster.build_stars_match_table(matcher, lists)
+    match_table = match.build_stars_match_table(matcher, lists)
+
     assert match_table[0][1][0]==0
     assert match_table[0][1][1]==2
     assert match_table[0][1][2]==1
@@ -324,8 +325,8 @@ def test_cluster_1():
     lists = [descriptors_1, descriptors_2]
 
     matcher = match.DescriptorMatcher(1, 1e-3, 1e-3, 1e-2)
-
-    clusters = cluster.build_stars_clusters(matcher, lists)
+    match_table = match.build_stars_match_table(matcher, lists)
+    clusters = cluster.find_clusters_in_match_table(match_table)
     assert len(clusters) == 3
     assert_has_cluster(clusters, {0:0, 1:0})
     assert_has_cluster(clusters, {0:1, 1:2})
