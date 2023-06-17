@@ -39,6 +39,15 @@ pipeline {
             steps {
                 withPythonEnv('python3') {
                     sh 'vstarstack'
+                    sh 'pytest-3 tests/test_equirectangular.py'
+                    sh 'pytest-3 tests/test_perspective.py'
+                    sh 'pytest-3 tests/test_orthographic.py'
+                    sh 'pytest-3 tests/test_sphere.py'
+                    sh 'pytest-3 tests/test_flat.py'
+                    sh 'pytest-3 tests/test_star_detection.py'
+                    sh 'pytest-3 tests/test_star_description.py'
+                    sh 'pytest-3 tests/test_star_match.py'
+                    sh 'pytest-3 tests/test_fine_shift.py'
                 }
             }
         }
