@@ -9,6 +9,6 @@
         "--indent-size=4"
     ],
     "python.linting.pylintArgs": [
-        "--indent-string='    '"
+        "--rcfile=pylint.rc"
     ]
 }
