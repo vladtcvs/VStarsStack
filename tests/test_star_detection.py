@@ -13,8 +13,6 @@
 #
 
 import imageio
-import matplotlib.pyplot as plt
-import cv2
 import numpy as np
 
 import vstarstack.library.stars.detect as detect
@@ -25,13 +23,3 @@ def test_1():
     image = image / np.amax(image)
     gray = image[:,:,0]
     stars = detect.detect_stars(gray)
-    for star in stars:
-        x = star["x"]
-        y = star["y"]
-        r = int(star["radius"]+0.5)
-        cv2.circle(image, (int(x+0.5), int(y+0.5)), r, (1, 0, 0), 1)
-
-    plt.imshow(image)
-    plt.show()
-
-test_1()

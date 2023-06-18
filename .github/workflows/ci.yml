@@ -1,0 +1,40 @@
+name: VStarStack
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pylint
+          python -m pip install numpy
+          python -m pip install opencv-python
+          python -m pip install imutils
+          python -m pip install astropy
+          python -m pip install rawpy
+          python -m pip install scikit-image
+          python -m pip install scipy
+          python -m pip install imutils
+          python -m pip install exifread
+          python -m pip install matplotlib
+          python -m pip install pillow
+          python -m pip install pytest
+      - name: Lint with pylint
+        run: |
+          pylint --rcfile=pylint.rc --fail-under=6 src/
+      - name: Test with pytest
+        run: |
+          cd tests && pytest
