@@ -35,6 +35,13 @@ jobs:
       - name: Lint with pylint
         run: |
           pylint --rcfile=pylint.rc --fail-under=6 src/
+      - name: Build & Install
+        run: |
+          python setup.py build
+          python setup.py install
+      - name: Test that tools launches
+        run: |
+          vstarstack
       - name: Test with pytest
         run: |
           cd tests && pytest
