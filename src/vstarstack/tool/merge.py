@@ -50,7 +50,9 @@ def sigma_clip(project: vstarstack.tool.cfg.Project, argv: list):
 
     imgs = vstarstack.library.common.listfiles(path_images, ".zip")
     filenames = [img[1] for img in imgs]
-    dataframe = vstarstack.library.merging.sigma_clip(FilesImageSource(filenames), sigma_k, sigma_steps)
+    dataframe = vstarstack.library.merging.sigma_clip(FilesImageSource(filenames),
+                                                      sigma_k,
+                                                      sigma_steps)
     dataframe.store(out)
 
 commands = {
