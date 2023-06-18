@@ -19,6 +19,8 @@ import vstarstack.library.merging
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
 
+from vstarstack.library.common import FilesImageSource
+
 def simple_add(project: vstarstack.tool.cfg.Project, argv: list):
     """Calculate simple sum of images"""
     if len(argv) > 0:
@@ -30,7 +32,7 @@ def simple_add(project: vstarstack.tool.cfg.Project, argv: list):
 
     imgs = vstarstack.library.common.listfiles(path_images, ".zip")
     filenames = [img[1] for img in imgs]
-    dataframe = vstarstack.library.merging.simple_add(filenames)
+    dataframe = vstarstack.library.merging.simple_add(FilesImageSource(filenames))
     dataframe.store(out)
 
 def sigma_clip(project: vstarstack.tool.cfg.Project, argv: list):
@@ -48,7 +50,7 @@ def sigma_clip(project: vstarstack.tool.cfg.Project, argv: list):
 
     imgs = vstarstack.library.common.listfiles(path_images, ".zip")
     filenames = [img[1] for img in imgs]
-    dataframe = vstarstack.library.merging.sigma_clip(filenames, sigma_k, sigma_steps)
+    dataframe = vstarstack.library.merging.sigma_clip(FilesImageSource(filenames), sigma_k, sigma_steps)
     dataframe.store(out)
 
 commands = {
