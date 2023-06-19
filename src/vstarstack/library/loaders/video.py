@@ -45,7 +45,7 @@ def read_video(fname: str):
         dataframe.add_channel(frame[:, :, 0], "R", brightness=True)
         dataframe.add_channel(frame[:, :, 1], "G", brightness=True)
         dataframe.add_channel(frame[:, :, 2], "B", brightness=True)
-        dataframe.add_channel(weight, "weight")
+        dataframe.add_channel(weight, "weight", weight=True)
         dataframe.add_channel_link("R", "weight", "weight")
         dataframe.add_channel_link("G", "weight", "weight")
         dataframe.add_channel_link("B", "weight", "weight")
