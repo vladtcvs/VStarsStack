@@ -21,7 +21,7 @@ def generate_mask(name):
         [[0, 0], [0, 0]],  # red
         [[0, 0], [0, 0]],  # green
         [[0, 0], [0, 0]],  # blue
-    ])
+    ], dtype='float')
     if name[0] == "R":
         mask[0][0][0] = 1
     elif name[0] == "G":
@@ -49,6 +49,9 @@ def generate_mask(name):
         mask[1][1][1] = 1
     elif name[3] == "B":
         mask[2][1][1] = 1
+
+    for i in range(mask.shape[0]):
+        mask[i,:,:] = mask[i,:,:] / np.sum(mask[i,:,:])
 
     return mask
 
