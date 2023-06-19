@@ -50,6 +50,9 @@ def generate_mask(name):
     elif name[3] == "B":
         mask[2][1][1] = 1
 
+    for i in range(mask.shape[0]):
+        mask[i,:,:] = mask[i,:,:] / np.sum(mask[i,:,:])
+
     return mask
 
 def _getcolor(img, mask):
