@@ -21,7 +21,7 @@ def generate_mask(name):
         [[0, 0], [0, 0]],  # red
         [[0, 0], [0, 0]],  # green
         [[0, 0], [0, 0]],  # blue
-    ])
+    ], dtype='float')
     if name[0] == "R":
         mask[0][0][0] = 1
     elif name[0] == "G":
