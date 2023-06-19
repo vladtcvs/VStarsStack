@@ -34,34 +34,41 @@ def _process_file(project, filename, descfilename, detector):
         desc = {}
     desc["object"] = {}
 
+    gray = None
+
     for channel in image.get_channels():
         layer, opts = image.get_channel(channel)
         if not opts["brightness"]:
             continue
-        layer = layer / np.amax(layer)
 
-        thresh = project.config["objects"]["threshold"]
-        if detector == "disc":
-            mindelta = project.config["objects"]["disc"]["mindelta"]
-            maxdelta = project.config["objects"]["disc"]["maxdelta"]
-            num_bin_curv = project.config["objects"]["disc"]["num_bins_curvature"]
-            num_bin_dist = project.config["objects"]["disc"]["num_bins_distance"]
-            planets = dd.detect(layer, thresh, mindelta, maxdelta, num_bin_curv, num_bin_dist)
-        elif detector == "brightness":
-            min_size = project.config["objects"]["brightness"]["min_diameter"]
-            max_size = project.config["objects"]["brightness"]["max_diameter"]
-            planets = bd.detect(layer, min_size, max_size, thresh)
+        if gray is None:
+            gray = layer
         else:
-            raise Exception(f"Invalid detector {detector}")
+            gray += layer
 
-        desc[channel] = planets
+    if gray is None:
+        return
 
-    desc = {
-        "object": planets[0],
-    }
+    gray = gray / np.amax(gray)
 
-    with open(descfilename, "w", encoding='utf8') as f:
-        json.dump(desc, f, indent=4)
+    thresh = project.config["objects"]["threshold"]
+    if detector == "disc":
+        mindelta = project.config["objects"]["disc"]["mindelta"]
+        maxdelta = project.config["objects"]["disc"]["maxdelta"]
+        num_bin_curv = project.config["objects"]["disc"]["num_bins_curvature"]
+        num_bin_dist = project.config["objects"]["disc"]["num_bins_distance"]
+        planets = dd.detect(gray, thresh, mindelta, maxdelta, num_bin_curv, num_bin_dist)
+    elif detector == "brightness":
+        min_size = project.config["objects"]["brightness"]["min_diameter"]
+        max_size = project.config["objects"]["brightness"]["max_diameter"]
+        planets = bd.detect(gray, min_size, max_size, thresh)
+    else:
+        raise Exception(f"Invalid detector {detector}")
+
+    if len(planets) > 0:
+        desc["object"] = planets[0]
+        with open(descfilename, "w", encoding='utf8') as f:
+            json.dump(desc, f, indent=4)
 
 def _process_path(project, npys, descs, detector):
     files = vstarstack.library.common.listfiles(npys, ".zip")
