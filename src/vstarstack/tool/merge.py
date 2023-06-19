@@ -33,7 +33,8 @@ def simple_add(project: vstarstack.tool.cfg.Project, argv: list):
     imgs = vstarstack.library.common.listfiles(path_images, ".zip")
     filenames = [img[1] for img in imgs]
     dataframe = vstarstack.library.merging.simple_add(FilesImageSource(filenames))
-    dataframe.store(out)
+    if dataframe is not None:
+        dataframe.store(out)
 
 def sigma_clip(project: vstarstack.tool.cfg.Project, argv: list):
     """Calculate sigma clipped sum of images"""

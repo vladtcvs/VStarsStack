@@ -118,6 +118,10 @@ class IImageSource(abc.ABC):
     def items(self) -> vstarstack.library.data.DataFrame:
         """Take elements from source"""
 
+    @abc.abstractmethod
+    def empty(self) -> bool:
+        """Check if there are elements in source"""
+
 class ListImageSource(IImageSource):
     """Get images from list"""
     def __init__(self, images : list[vstarstack.library.data.DataFrame]):
@@ -129,6 +133,10 @@ class ListImageSource(IImageSource):
         for item in self.images:
             yield item
 
+    def empty(self) -> bool:
+        """Check if there are elements in source"""
+        return len(self.images) == 0
+
 class FilesImageSource(IImageSource):
     """Get images from files"""
     def __init__(self, filenames : list[str]):
@@ -138,3 +146,7 @@ class FilesImageSource(IImageSource):
         """Take next element from source"""
         for fname in self.filenames:
             yield vstarstack.library.data.DataFrame.load(fname)
+
+    def empty(self) -> bool:
+        """Check if there are elements in source"""
+        return len(self.filenames) == 0

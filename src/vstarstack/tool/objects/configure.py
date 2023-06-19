@@ -35,6 +35,8 @@ def run(_project: vstarstack.tool.cfg.Project, argv: list):
     proj["mode"] = "objects"
     proj["objects"] = {
         "threshold": 0.05,
+        "margin" : 30,
+        "require_size" : True,
         "disc": {
             "mindelta": 40,
             "maxdelta": 50,

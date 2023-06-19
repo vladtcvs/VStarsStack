@@ -22,6 +22,10 @@ def simple_add(images : vstarstack.library.common.IImageSource) -> DataFrame:
     summary = {}
     summary_weight = {}
     sum_opts = {}
+    params = None
+
+    if images.empty():
+        return None
 
     for img in images.items():
         params = img.params
