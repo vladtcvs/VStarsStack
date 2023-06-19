@@ -42,9 +42,9 @@ def read_video(fname: str):
         weight = np.ones((frame.shape[0], frame.shape[1]))*exptime
 
         dataframe = vstarstack.library.data.DataFrame(params, tags)
-        dataframe.add_channel(frame[:, :, 0], "R")
-        dataframe.add_channel(frame[:, :, 1], "G")
-        dataframe.add_channel(frame[:, :, 2], "B")
+        dataframe.add_channel(frame[:, :, 0], "R", brightness=True)
+        dataframe.add_channel(frame[:, :, 1], "G", brightness=True)
+        dataframe.add_channel(frame[:, :, 2], "B", brightness=True)
         dataframe.add_channel(weight, "weight")
         dataframe.add_channel_link("R", "weight", "weight")
         dataframe.add_channel_link("G", "weight", "weight")
