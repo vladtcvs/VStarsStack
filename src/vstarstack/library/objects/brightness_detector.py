@@ -49,17 +49,17 @@ def detect(layer : np.ndarray,
         if num_pixels >= min_pixels and num_pixels <= max_pixels:
             mask = cv2.add(mask, label_mask)
 
-    contours = cv2.findContours(mask.copy(),
+    object_contours = cv2.findContours(mask.copy(),
                                 cv2.RETR_EXTERNAL,
                                 cv2.CHAIN_APPROX_SIMPLE)
-    contours = imutils.grab_contours(contours)
-    if len(contours) == 0:
-        return None
-    contours = contours.sort_contours(contours)[0]
+    object_contours = imutils.grab_contours(object_contours)
+    if len(object_contours) == 0:
+        return []
+    object_contours = imutils.contours.sort_contours(object_contours)[0]
 
     planetes = []
     # loop over the contours
-    for contour in contours:
+    for contour in object_contours:
         # draw the bright spot on the image
         (center_x, center_y), radius = cv2.minEnclosingCircle(contour)
         planetes.append({"x": center_x, "y": center_y, "r": radius})

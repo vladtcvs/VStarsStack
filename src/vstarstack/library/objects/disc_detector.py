@@ -143,7 +143,7 @@ def detect(layer : np.ndarray,
 
     # contour contains data in (x,y) format
     if len(contours) == 0:
-        return None
+        return []
 
     # select maximal contour
     contour = sorted(contours, key=lambda item: len(item), reverse=True)[0]
