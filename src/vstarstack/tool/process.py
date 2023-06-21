@@ -17,8 +17,9 @@ import sys
 
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
+import vstarstack.tool.manage_project
 
-import vstarstack.tool.configurate
+import vstarstack.tool.config
 import vstarstack.tool.image
 import vstarstack.tool.clean
 import vstarstack.tool.readimage
@@ -51,7 +52,7 @@ commands = {
               "move and rotate images to match them"),
     "merge": (vstarstack.tool.merge.run,
               "merge images", "input_dir/ output.npz"),
-    "project": (vstarstack.tool.configurate.run,
+    "project": (vstarstack.tool.manage_project.run,
                 "configurate project"),
 #    "planets": (vstarstack.targets.planets.planets.run,
 #                "commands for processing planets"),

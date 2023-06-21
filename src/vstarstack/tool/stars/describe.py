@@ -58,11 +58,11 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
         path = argv[0]
         outpath = argv[1]
     else:
-        path = project.config["paths"]["descs"]
-        outpath = project.config["paths"]["descs"]
+        path = project.config.paths.descs
+        outpath = project.config.paths.descs
 
-    num_main = project.stars["describe"]["num_main"]
-    mindist = project.stars["describe"]["mindist"]
+    num_main = project.config.stars.describe.num_main
+    mindist = project.config.stars.describe.mindist
 
     files = vstarstack.library.common.listfiles(path, ".json")
 
@@ -73,7 +73,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
         description = build_descriptions(description,
                                          num_main,
                                          mindist,
-                                         project.stars["use_angles"])
+                                         project.config.stars.use_angles)
 
         with open(os.path.join(outpath, name + ".json"), "w", encoding='utf8') as f:
             json.dump(description, f, indent=4)

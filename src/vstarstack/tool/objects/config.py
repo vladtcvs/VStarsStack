@@ -12,18 +12,23 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import os
+from vstarstack.tool.configuration import Configuration
 
-import vstarstack.library.common
-import vstarstack.tool.cfg
+_module_configuration = {
+    "threshold": (float, 0.05),
+    "margin": (int, 30),
+    "require_size": (bool, True),
+    "use_modules" : (list, ["disc", "brightness"]),
+    "disc": ("module", {
+        "mindelta": (int, 40),
+        "maxdelta": (int, 50),
+        "num_bins_curvature": (int, 50),
+        "num_bins_distance": (int, 10),
+    }),
+    "brightness": ("module", {
+        "min_diameter": (int, 20),
+        "max_diameter": (int, 40),
+    }),
+}
 
-def run(project: vstarstack.tool.cfg.Project, _argv: list):
-    orig = project.config.paths.npy_orig
-    fixed = project.config.paths.npy_fixed
-    shifted = project.config.paths.aligned
-
-    for path in [orig, fixed, shifted]:
-        files = vstarstack.library.common.listfiles(path, ".zip")
-        for _, filename in files:
-            print(filename)
-            os.remove(filename)
+configuration = Configuration(_module_configuration)

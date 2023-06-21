@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2023 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,18 +12,9 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import os
-
-import vstarstack.library.common
 import vstarstack.tool.cfg
 
-def run(project: vstarstack.tool.cfg.Project, _argv: list):
-    orig = project.config.paths.npy_orig
-    fixed = project.config.paths.npy_fixed
-    shifted = project.config.paths.aligned
-
-    for path in [orig, fixed, shifted]:
-        files = vstarstack.library.common.listfiles(path, ".zip")
-        for _, filename in files:
-            print(filename)
-            os.remove(filename)
+def run(project : vstarstack.tool.cfg.Project, argv : list[str]):
+    if project is None:
+        project = vstarstack.tool.cfg.Project()
+    vstarstack.tool.cfg.store_project(project)

@@ -19,14 +19,12 @@ import multiprocessing as mp
 
 import vstarstack.tool.devices.camera
 import vstarstack.tool.devices.lens
+import vstarstack.tool.config
 
-def getval(config, name, default):
-    if name in config:
-        return config[name]
-    return default
+from vstarstack.tool.configuration import Configuration
 
-
-def get_param(name, type, default):
+def get_param(name, type_of_var, default):
+    """Get cmdline parameter --name=value"""
     for arg in sys.argv[2:]:
         if arg[:2] != "--":
             continue
@@ -36,7 +34,7 @@ def get_param(name, type, default):
             continue
         if items[0] != name:
             continue
-        return type(items[1])
+        return type_of_var(items[1])
     return default
 
 
@@ -47,31 +45,14 @@ if "DEBUG" in os.environ:
 
 nthreads = max(int(mp.cpu_count())-1, 1)
 
-
-class ConfigException(Exception):
-    """Config error exception"""
-
-    def __init__(self, reason):
-        Exception.__init__(self, f"Config error: {reason}")
-
-
 class Project(object):
-    def __init__(self, config):
-        self.config = config
-        self.use_sphere = getval(config, "use_sphere", True)
-        self.compress = getval(config, "compress", True)
-
-        if "stars" in config:
-            self.stars = config["stars"]
-        else:
-            self.stars = {}
-
-        telescope = config["telescope"]
-        self.camera = vstarstack.tool.devices.camera.Camera(telescope["camera"])
-        self.scope = vstarstack.tool.devices.lens.Lens(telescope["scope"])
+    """Holder for configuration"""
+    def __init__(self, config_data : dict = None):
+        self.config = Configuration(vstarstack.tool.config._module_configuration)
+        if config_data is not None:
+            self.config.load_configuration(config_data)
 
 _PROJECT = None
-
 
 def get_project(filename=None):
     """Load project file"""
@@ -86,3 +67,17 @@ def get_project(filename=None):
             config = json.load(f)
         _PROJECT = Project(config)
     return _PROJECT
+
+def store_project(project : Project = None, filename=None):
+    """Store project file"""
+    if project is None:
+        project = _PROJECT
+    data = project.config
+    data = data.write_configuration()
+
+    if filename is None:
+        cfgdir = os.getcwd()
+        filename = os.path.join(cfgdir, "project.json")
+
+    with open(filename, "w", encoding='utf8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)

@@ -45,13 +45,12 @@ def _process(project : vstarstack.tool.cfg.Project,
             _process_file(project, input_path, output_path)
     else:
         _process_path(project,
-                     project.config["planets"]["paths"]["cutted"],
-                     project.config["planets"]["paths"]["maps"])
+                     project.config.paths.aligned,
+                     project.config.planets.paths.maps)
 
 commands = {
-    "*": (_process, "build surface map from image", "cutted/ maps/"),
+    "*": (_process, "build surface map from image", "aligned/ maps/"),
 }
-
 
 def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
     vstarstack.tool.usage.run(project, argv, "planets buildmap", commands)

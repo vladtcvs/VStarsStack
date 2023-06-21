@@ -13,12 +13,16 @@
 #
 
 import vstarstack.tool.planets.buildmap
-import vstarstack.tool.planets.configure
+import vstarstack.tool.planets.config
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 
+def _enable_planets(project : vstarstack.tool.cfg.Project, _argv: list[str]):
+    project.config.enable_module("planets")
+    vstarstack.tool.cfg.store_project()
+
 commands = {
-    "configure": (vstarstack.tool.planets.configure.run, "configure planets in project"),
+    "configure": (_enable_planets, "configure planets in project"),
     "buildmap": (vstarstack.tool.planets.buildmap.run, "build planet surface map"),
 }
 

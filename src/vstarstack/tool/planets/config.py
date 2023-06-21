@@ -12,18 +12,13 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import os
+from vstarstack.tool.configuration import Configuration
 
-import vstarstack.library.common
-import vstarstack.tool.cfg
+_module_configuration = {
+    "map_resolution": (int, 360),
+    "paths": {
+        "maps": (str, "maps", {"directory" : True}),
+    }
+}
 
-def run(project: vstarstack.tool.cfg.Project, _argv: list):
-    orig = project.config.paths.npy_orig
-    fixed = project.config.paths.npy_fixed
-    shifted = project.config.paths.aligned
-
-    for path in [orig, fixed, shifted]:
-        files = vstarstack.library.common.listfiles(path, ".zip")
-        for _, filename in files:
-            print(filename)
-            os.remove(filename)
+configuration = Configuration(_module_configuration)

@@ -36,8 +36,8 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
         starsdir = argv[0]
         matchfile = argv[1]
     else:
-        starsdir = project.config["stars"]["paths"]["descs"]
-        matchfile = project.config["stars"]["paths"]["matchfile"]
+        starsdir = project.config.paths.descs
+        matchfile = project.config.stars.paths.matchfile
 
     starsfiles = vstarstack.library.common.listfiles(starsdir, ".json")
     descs = []
@@ -49,10 +49,10 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
         descs.append((name, desc))
         name_fname[name] = fname
 
-    max_angle_diff = project.stars["match"]["max_angle_diff"] * math.pi/180
-    max_dangle_diff = project.stars["match"]["max_dangle_diff"] * math.pi/180
-    max_size_diff = project.stars["match"]["max_size_diff"]
-    min_matched_ditems = project.stars["match"]["min_matched_ditems"]
+    max_angle_diff = project.config.stars.match.max_angle_diff * math.pi/180
+    max_dangle_diff = project.config.stars.match.max_dangle_diff * math.pi/180
+    max_size_diff = project.config.stars.match.max_size_diff
+    min_matched_ditems = project.config.stars.match.min_matched_ditems
 
     matcher = DescriptorMatcher(min_matched_ditems,
                                 max_angle_diff,

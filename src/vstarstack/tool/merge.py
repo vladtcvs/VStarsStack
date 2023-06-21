@@ -27,8 +27,8 @@ def simple_add(project: vstarstack.tool.cfg.Project, argv: list):
         path_images = argv[0]
         out = argv[1]
     else:
-        path_images = project.config["paths"]["aligned"]
-        out = project.config["paths"]["output"]
+        path_images = project.config.paths.aligned
+        out = project.config.paths.output
 
     imgs = vstarstack.library.common.listfiles(path_images, ".zip")
     filenames = [img[1] for img in imgs]
@@ -44,10 +44,10 @@ def sigma_clip(project: vstarstack.tool.cfg.Project, argv: list):
         sigma_k = float(argv[2])
         sigma_steps = 3
     else:
-        path_images = project.config["paths"]["aligned"]
-        out = project.config["paths"]["output"]
-        sigma_k = project.config["sigma_clip_coefficient"]
-        sigma_steps = project.config["sigma_clip_steps"]
+        path_images = project.config.paths.aligned
+        out = project.config.paths.output
+        sigma_k = project.config.merge.sigma_clip_coefficient
+        sigma_steps = project.config.merge.sigma_clip_steps
 
     imgs = vstarstack.library.common.listfiles(path_images, ".zip")
     filenames = [img[1] for img in imgs]
