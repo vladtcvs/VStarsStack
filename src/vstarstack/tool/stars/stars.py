@@ -15,14 +15,19 @@
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
 
-import vstarstack.tool.stars.configure
+import vstarstack.tool.stars.config
 import vstarstack.tool.stars.detect
 import vstarstack.tool.stars.describe
 import vstarstack.tool.stars.match
 import vstarstack.tool.stars.build_clusters
 
+def _enable_stars(project : vstarstack.tool.cfg.Project, _argv: list[str]):
+    project.config.enable_module("stars")
+    project.config.enable_module("cluster")
+    vstarstack.tool.cfg.store_project()
+
 commands = {
-    "config": (vstarstack.tool.stars.configure.run, "configure stars pipeline"),
+    "config": (_enable_stars, "configure stars pipeline"),
     "detect": (vstarstack.tool.stars.detect.run, "detect stars"),
     "describe": (vstarstack.tool.stars.describe.run, "find descriptions for each image"),
     "match": (vstarstack.tool.stars.match.run, "match stars between images"),

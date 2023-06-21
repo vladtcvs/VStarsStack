@@ -17,15 +17,17 @@ import vstarstack.tool.usage
 
 import vstarstack.tool.objects.detect
 import vstarstack.tool.objects.cut
-import vstarstack.tool.objects.configure
-import vstarstack.tool.objects.clusters
+import vstarstack.tool.objects.config
+
+def _enable_objects(project : vstarstack.tool.cfg.Project, _argv: list[str]):
+    project.config.enable_module("objects")
+    vstarstack.tool.cfg.store_project()
 
 commands = {
-    "config": (vstarstack.tool.objects.configure.run, "configure compact_objects pipeline"),
+    "config": (_enable_objects, "configure compact_objects pipeline"),
     "detect": (vstarstack.tool.objects.detect.run, "detect compact objects"),
     "cut": (vstarstack.tool.objects.cut.run, "cut compact objects"),
-    "clusters": (vstarstack.tool.objects.clusters.run, "detect and match features on images")
 }
 
 def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
-    vstarstack.tool.usage.run(project, argv, "compact_objects", commands, autohelp=True)
+    vstarstack.tool.usage.run(project, argv, "objects", commands, autohelp=True)

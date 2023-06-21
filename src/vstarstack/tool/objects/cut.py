@@ -20,9 +20,9 @@ import vstarstack.library.data
 
 def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
     if len(argv) < 3:
-        npypath = project.config["paths"]["npy-fixed"]
-        jsonpath = project.config["paths"]["descs"]
-        cutpath = project.config["paths"]["npy-fixed"]
+        npypath = project.config.paths.npy_fixed
+        jsonpath = project.config.paths.descs
+        cutpath = project.config.paths.npy_fixed
     else:
         npypath = argv[0]
         jsonpath = argv[1]
@@ -31,9 +31,9 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
     if len(argv) > 3:
         margin = int(argv[3])
     else:
-        margin = project.config["objects"]["margin"]
+        margin = project.config.objects.margin
 
-    require_size = project.config["objects"]["require_size"]
+    require_size = project.config.objects.require_size
 
     files = vstarstack.library.common.listfiles(jsonpath, ".json")
     for name, filename in files:

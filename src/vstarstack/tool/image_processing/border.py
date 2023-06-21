@@ -78,8 +78,8 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
         else:
             process_file(argv)
     else:
-        process_dir([project.config["paths"]["npy-fixed"],
-                     project.config["paths"]["npy-fixed"]])
+        process_dir([project.config.paths.npy_fixed,
+                     project.config.paths.npy_fixed])
 
 
 commands = {

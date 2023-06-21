@@ -27,15 +27,15 @@ ncpu = vstarstack.tool.cfg.nthreads
 
 def create_aligner(project: vstarstack.tool.cfg.Project):
     """Create aligner for the project"""
-    W = project.camera.w
-    H = project.camera.h
+    W = project.config.telescope.camera.w
+    H = project.config.telescope.camera.h
 
-    num_steps = project.config["fine_shift"]["Nsteps"]
-    dh = project.config["fine_shift"]["dh"]
-    gridW = project.config["fine_shift"]["gridW"]
-    gridH = project.config["fine_shift"]["gridH"]
-    spk = project.config["fine_shift"]["stretchPenlatyCoefficient"]
-    min_points = project.config["fine_shift"]["points_min_len"]
+    num_steps = project.config.fine_shift.Nsteps
+    dh = project.config.fine_shift.dh
+    gridW = project.config.fine_shift.gridW
+    gridH = project.config.fine_shift.gridH
+    spk = project.config.fine_shift.stretchPenlatyCoefficient
+    min_points = project.config.fine_shift.points_min_len
 
     aligner = Aligner(W, H, gridW, gridH, spk, num_steps, min_points, dh)
     return aligner
@@ -72,7 +72,7 @@ def find_alignment(project: vstarstack.tool.cfg.Project, argv: list):
         clusters = json.load(f)
 
     aligner = create_aligner(project)
-    cluster_len_k = project.config["fine_shift"]["cluster_len_k"]
+    cluster_len_k = project.config.fine_shift.cluster_len_k
     maxcllen = max([len(cluster) for cluster in clusters])
     names = []
 
@@ -118,9 +118,9 @@ def apply_alignment(project: vstarstack.tool.cfg.Project, argv: list):
         descs = argv[1]
         outputs = argv[2]
     else:
-        npys = project.config["npy-fixed"]
-        descs = project.config["descs"]
-        outputs = project.config["aligned"]
+        npys = project.config.paths.npy_fixed
+        descs = project.config.paths.descs
+        outputs = project.config.paths.aligned
 
     aligner = create_aligner(project)
     if os.path.isdir(npys):

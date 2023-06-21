@@ -32,8 +32,8 @@ def copy(project: vstarstack.tool.cfg.Project, argv: list):
         orig = argv[0]
         fixed = argv[1]
     else:
-        orig = project.config["paths"]["npy-orig"]
-        fixed = project.config["paths"]["npy-fixed"]
+        orig = project.config.paths.npy_orig
+        fixed = project.config.paths.npy_fixed
     files = vstarstack.library.common.listfiles(orig, ".zip")
     for name, fname in files:
         print("Copying ", name)

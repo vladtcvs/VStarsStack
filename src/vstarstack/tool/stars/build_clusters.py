@@ -27,9 +27,9 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
         match_table_f = argv[1]
         cluster_f = argv[2]
     else:
-        descs_path = project.config["stars"]["paths"]["descs"]
-        match_table_f = project.config["stars"]["paths"]["matchfile"]
-        cluster_f = project.config["cluster"]["path"]
+        descs_path = project.config.paths.descs
+        match_table_f = project.config.stars.paths.matchfile
+        cluster_f = project.config.cluster.path
 
     with open(match_table_f, encoding='utf8') as f:
         match_table = json.load(f)

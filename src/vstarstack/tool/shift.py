@@ -33,8 +33,8 @@ def select_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
         all_shifts = argv[0]
         selected_shift = argv[1]
     else:
-        all_shifts = project.config["paths"]["relative-shifts"]
-        selected_shift = project.config["paths"]["absolute-shifts"]
+        all_shifts = project.config.paths.relative_shifts
+        selected_shift = project.config.paths.absolute_shifts
 
     with open(all_shifts, encoding='utf8') as f:
         serialized = json.load(f)
@@ -60,9 +60,9 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
         shifts_fname = argv[1]
         shifted_dir = argv[2]
     else:
-        npy_dir = project.config["paths"]["npy-fixed"]
-        shifts_fname = project.config["paths"]["absolute-shifts"]
-        shifted_dir = project.config["paths"]["aligned"]
+        npy_dir = project.config.paths.npy_fixed
+        shifts_fname = project.config.paths.absolute_shifts
+        shifted_dir = project.config.paths.aligned
 
     with open(shifts_fname, encoding='utf8') as file:
         serialized = json.load(file)

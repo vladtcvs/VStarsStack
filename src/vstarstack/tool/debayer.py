@@ -47,7 +47,7 @@ def _process_path(default_format, input_path, output_path):
         _process_file(default_format, fname, os.path.join(output_path, name + ".zip"))
 
 def _process(project: vstarstack.tool.cfg.Project, argv: list):
-    default_format = project.camera.format
+    default_format = project.config.telescope.camera.format
     if len(argv) > 0:
         input_path = argv[0]
         output_path = argv[1]
@@ -57,8 +57,8 @@ def _process(project: vstarstack.tool.cfg.Project, argv: list):
             _process_file(default_format, input_path, output_path)
     else:
         _process_path(default_format,
-                      project.config["paths"]["npy-orig"],
-                      project.config["paths"]["npy-fixed"])
+                      project.config.paths.npy_orig,
+                      project.config.paths.npy_fixed)
 
 def run(project: vstarstack.tool.cfg.Project, argv: list):
     _process(project, argv)

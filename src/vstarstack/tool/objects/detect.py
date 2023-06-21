@@ -51,16 +51,16 @@ def _process_file(project, filename, descfilename, detector):
 
     gray = gray / np.amax(gray)
 
-    thresh = project.config["objects"]["threshold"]
+    thresh = project.config.objects.threshold
     if detector == "disc":
-        mindelta = project.config["objects"]["disc"]["mindelta"]
-        maxdelta = project.config["objects"]["disc"]["maxdelta"]
-        num_bin_curv = project.config["objects"]["disc"]["num_bins_curvature"]
-        num_bin_dist = project.config["objects"]["disc"]["num_bins_distance"]
+        mindelta = project.config.objects.disc.mindelta
+        maxdelta = project.config.objects.disc.maxdelta
+        num_bin_curv = project.config.objects.disc.num_bins_curvature
+        num_bin_dist = project.config.objects.disc.num_bins_distance
         planets = dd.detect(gray, thresh, mindelta, maxdelta, num_bin_curv, num_bin_dist)
     elif detector == "brightness":
-        min_size = project.config["objects"]["brightness"]["min_diameter"]
-        max_size = project.config["objects"]["brightness"]["max_diameter"]
+        min_size = project.config.objects.brightness.min_diameter
+        max_size = project.config.objects.brightness.max_diameter
         planets = bd.detect(gray, min_size, max_size, thresh)
     else:
         raise Exception(f"Invalid detector {detector}")
@@ -87,8 +87,8 @@ def _process(project, detector, argv):
             _process_file(project, input_path, output_path, detector)
     else:
         _process_path(project,
-                      project.config["paths"]["npy-fixed"],
-                      project.config["paths"]["descs"],
+                      project.config.paths.npy_fixed,
+                      project.config.paths.descs,
                       detector)
 
 def _process_brightness(project, argv):

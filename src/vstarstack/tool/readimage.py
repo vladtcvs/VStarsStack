@@ -27,24 +27,24 @@ import vstarstack.library.loaders.fits
 
 from vstarstack.library.projection.tools import add_description
 
-
 def _work(reader,
           project: vstarstack.tool.cfg.Project,
           input_file: str,
           output_dir: str,
           output_name: str):
     params = {
-        "F": project.scope.F,
-        "kh": project.camera.kh,
-        "kw": project.camera.kw,
+        "F": project.config.telescope.scope.F,
+        "kh": project.config.telescope.camera.H / project.config.telescope.camera.h,
+        "kw": project.config.telescope.camera.W / project.config.telescope.camera.w,
     }
     print(f"File: {input_file}")
     for frame_id, dataframe in enumerate(reader(input_file)):
         outfname = os.path.join(output_dir, f"{output_name}_{frame_id:06}.zip")
         add_description(dataframe, "perspective", **params)
-        if project.camera.format is not None:
-            if project.camera.format != "flat" or "format" not in dataframe.params:
-                dataframe.add_parameter(project.camera.format, "format")
+        img_format = project.config.telescope.camera.format
+        if img_format is not None:
+            if img_format != "flat" or "format" not in dataframe.params:
+                dataframe.add_parameter(img_format, "format")
         dataframe.store(outfname)
 
 def _process_file(reader, project: vstarstack.tool.cfg.Project, argv : list):
@@ -73,8 +73,10 @@ def _process_read(reader, exts, project: vstarstack.tool.cfg.Project, argv : lis
         else:
             _process_file(reader, project, argv)
     else:
-        _process_path(reader, exts, project, [project.config["paths"]
-                      ["original"], project.config["paths"]["npy-orig"]])
+        _process_path(reader, exts, project, [
+                        project.config.paths.original,
+                        project.config.paths.npy_orig,
+                    ])
 
 def _read_nef(project: vstarstack.tool.cfg.Project, argv: list):
     reader = vstarstack.library.loaders.nef.readnef

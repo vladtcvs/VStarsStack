@@ -41,6 +41,8 @@ def _process_file(fname, jsonfile):
             continue
         layer = layer / np.amax(layer)
         sources.append(layer)
+    if len(sources) == 0:
+        return
     gray = sum(sources)
 
     projection = vstarstack.library.projection.tools.get_projection(image)
@@ -67,8 +69,8 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
         path = argv[0]
         jsonpath = argv[1]
     else:
-        path = project.config["paths"]["npy-fixed"]
-        jsonpath = project.config["paths"]["descs"]
+        path = project.config.paths.npy_fixed
+        jsonpath = project.config.paths.descs
 
     if os.path.isdir(path):
         _process_dir(path, jsonpath)

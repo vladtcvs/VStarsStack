@@ -84,8 +84,8 @@ def find_shift(project: vstarstack.tool.cfg.Project, argv: list):
         clusters_f = argv[0]
         shifts_f = argv[1]
     else:
-        clusters_f = project.config["cluster"]["path"]
-        shifts_f = project.config["paths"]["relative-shifts"]
+        clusters_f = project.config.cluster.path
+        shifts_f = project.config.paths.relative_shifts
     with open(clusters_f, encoding='utf8') as f:
         clusters = json.load(f)
     shifts = build_movements(Movement, clusters)
