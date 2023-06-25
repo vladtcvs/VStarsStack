@@ -49,7 +49,11 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
         descs.append((name, desc))
         name_fname[name] = fname
 
-    max_angle_diff = project.config.stars.match.max_angle_diff * math.pi/180
+    fov1 = math.atan(project.config.telescope.camera.W / project.config.telescope.scope.F)
+    fov2 = math.atan(project.config.telescope.camera.H / project.config.telescope.scope.F)
+    fov = min(fov1, fov2)
+
+    max_angle_diff = project.config.stars.match.max_angle_diff_k * fov
     max_dangle_diff = project.config.stars.match.max_dangle_diff * math.pi/180
     max_size_diff = project.config.stars.match.max_size_diff
     min_matched_ditems = project.config.stars.match.min_matched_ditems
