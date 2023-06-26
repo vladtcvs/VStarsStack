@@ -12,14 +12,8 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import sys
-import vstarstack.tool.cfg
+import os
 _PRGNAME = "vstarstack"
-
-def setprogname(name : str):
-    """Setup program name"""
-    global _PRGNAME
-    _PRGNAME = name
 
 def autocompletion(commands : dict, argv : list):
     """Autocompletion"""
@@ -32,7 +26,7 @@ def autocompletion(commands : dict, argv : list):
             submodule = commands[cmd][0]
             if isinstance(submodule, dict):
                 return autocompletion(submodule, argv[1:])
-            return []
+            return os.listdir()
 
     variants = []
     for cmd in commands:
