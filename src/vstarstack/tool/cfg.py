@@ -17,8 +17,6 @@ import json
 import os
 import multiprocessing as mp
 
-import vstarstack.tool.devices.camera
-import vstarstack.tool.devices.lens
 import vstarstack.tool.config
 
 from vstarstack.tool.configuration import Configuration

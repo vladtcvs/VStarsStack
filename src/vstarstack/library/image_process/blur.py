@@ -50,3 +50,7 @@ class BlurredSource(vstarstack.library.common.IImageSource):
         for dataframe in self.src.items():
             dataframe = blur(dataframe, self.size)
             yield dataframe
+
+    def empty(self) -> bool:
+        """Check if there are elements in source"""
+        return self.src.empty()

@@ -28,6 +28,7 @@ def remove_dark(dataframe : vstarstack.library.data.DataFrame,
             image = image - dark.get_channel(channel)[0]
 
         dataframe.replace_channel(image, channel)
+    return dataframe
 
 def prepare_darks(images : vstarstack.library.common.IImageSource
                   ) -> vstarstack.library.data.DataFrame:

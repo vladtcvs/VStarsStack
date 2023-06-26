@@ -177,16 +177,16 @@ def configure_detector(*,
                        inside_coeff = None,
                        outside_coeff = None):
     """Configure detector parameters"""
-    global MIN_R
-    global MAX_R
+    global MIN_STAR_R
+    global MAX_STAR_R
     global BORDER_WIDTH
     global BRIGHTNESS_OVER_AREA
     global INSIDE_COEFF
     global OUTSIDE_COEFF
     if min_r is not None:
-        MIN_R = min_r
+        MIN_STAR_R = min_r
     if max_r is not None:
-        MAX_R = max_r
+        MAX_STAR_R = max_r
     if border is not None:
         BORDER_WIDTH = border
     if brightness_over_area is not None:
