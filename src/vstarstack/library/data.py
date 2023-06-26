@@ -15,6 +15,7 @@
 
 import zipfile
 import json
+from typing import Tuple, List
 import numpy as np
 
 class InvalidParameterException(Exception):
@@ -110,11 +111,11 @@ class DataFrame:
         """Add parameter"""
         self.params[name] = value
 
-    def get_channel(self, channel) -> tuple(dict, np.ndarray):
+    def get_channel(self, channel) -> Tuple[dict, np.ndarray]:
         """Get channel image"""
         return self.channels[channel]["data"], self.channels[channel]["options"]
 
-    def get_channels(self) -> list(str):
+    def get_channels(self) -> List[str]:
         """Get list of channels"""
         return list(self.channels.keys())
 
