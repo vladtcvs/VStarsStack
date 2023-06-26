@@ -12,6 +12,8 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import os
+import tempfile
 import numpy as np
 from vstarstack.library.data import DataFrame
 
@@ -106,3 +108,21 @@ def test_8():
     assert len(dataframe.params) == 1
     assert len(dataframe.get_channels()) == 1
     assert dataframe.params["param"] == 1
+
+
+def test_9():
+    dataframe = DataFrame()
+
+    layer = np.zeros((100,100))
+    dataframe.add_channel(layer, "data", brightness=True)
+    dataframe.add_parameter(1, "param")
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        filename = os.path.join(tmpdirname, "test.zip")
+        dataframe.store(filename)
+        dataframe = DataFrame.load(filename)
+        assert len(dataframe.params) == 1
+        assert len(dataframe.get_channels()) == 1
+        assert "data" in dataframe.get_channels()
+        layer, opts = dataframe.get_channel("data")
+        assert opts["brightness"] is True
