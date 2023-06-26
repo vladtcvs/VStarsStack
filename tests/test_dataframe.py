@@ -97,3 +97,12 @@ def test_7():
     dataframe.rename_channel("weight", "w")
     assert dataframe.links["weight"]["data"] == "w"
 
+def test_8():
+    dataframe = DataFrame()
+
+    layer = np.zeros((100,100))
+    dataframe.add_channel(layer, "data")
+    dataframe.add_parameter(1, "param")
+    assert len(dataframe.params) == 1
+    assert len(dataframe.get_channels()) == 1
+    assert dataframe.params["param"] == 1
