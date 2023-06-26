@@ -26,7 +26,12 @@ def autocompletion(commands : dict, argv : list):
             submodule = commands[cmd][0]
             if isinstance(submodule, dict):
                 return autocompletion(submodule, argv[1:])
-            return os.listdir()
+            files = os.listdir()
+            if len(argv) > 1:
+                last = argv[-1]
+            else:
+                last = ""
+            return [file for file in files if file.startswith(last)]
 
     variants = []
     for cmd in commands:
