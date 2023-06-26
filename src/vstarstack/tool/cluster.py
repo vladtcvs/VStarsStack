@@ -105,6 +105,3 @@ commands = {
                    "Find shifts from cluster file",
                    "cluster.json shifts.json"),
 }
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    vstarstack.tool.usage.run(project, argv, "cluster", commands, autohelp=True)

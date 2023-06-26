@@ -23,7 +23,7 @@ from vstarstack.tool.configuration import Configuration
 
 def get_param(name, type_of_var, default):
     """Get cmdline parameter --name=value"""
-    for arg in sys.argv[2:]:
+    for arg in sys.argv[1:]:
         if arg[:2] != "--":
             continue
         arg = arg[2:]

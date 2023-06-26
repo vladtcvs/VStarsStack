@@ -25,9 +25,6 @@ def _enable_objects(project : vstarstack.tool.cfg.Project, _argv: list[str]):
 
 commands = {
     "config": (_enable_objects, "configure compact_objects pipeline"),
-    "detect": (vstarstack.tool.objects.detect.run, "detect compact objects"),
+    "detect": (vstarstack.tool.objects.detect.commands, "detect compact objects"),
     "cut": (vstarstack.tool.objects.cut.run, "cut compact objects"),
 }
-
-def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
-    vstarstack.tool.usage.run(project, argv, "objects", commands, autohelp=True)

@@ -12,12 +12,33 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import sys
+import vstarstack.tool.cfg
 _PRGNAME = "vstarstack"
 
 def setprogname(name : str):
     """Setup program name"""
     global _PRGNAME
     _PRGNAME = name
+
+def autocompletion(commands : dict, argv : list):
+    """Autocompletion"""
+    if len(argv) == 0:
+        current_input = ""
+    else:
+        current_input = argv[0]
+    for cmd in commands:
+        if cmd == current_input:
+            submodule = commands[cmd][0]
+            if isinstance(submodule, dict):
+                return autocompletion(submodule, argv[1:])
+            return []
+
+    variants = []
+    for cmd in commands:
+        if cmd.startswith(current_input):
+            variants.append(cmd)
+    return variants
 
 def usage(base : str, commands : dict, message : str):
     """Display usage"""
@@ -34,31 +55,36 @@ def usage(base : str, commands : dict, message : str):
                 extra = commands[cmd][2]
                 print(f"{cmd} - {desc}\n\t{_PRGNAME} {base} {cmd} {extra}\n")
             else:
-                print(f"{cmd} - {desc}\n\t{_PRGNAME} {base} {cmd}...\n")
+                print(f"{cmd} - {desc}\n\t{_PRGNAME} {base} {cmd} ...\n")
         else:
             if len(commands[cmd]) >= 3:
                 extra = commands[cmd][2]
                 print(f"(default) - {desc}\n\t{_PRGNAME} {base} {extra}\n")
             else:
-                print(f"(default) - {desc}\n\t{_PRGNAME} {base}...\n")
+                print(f"(default) - {desc}\n\t{_PRGNAME} {base} ...\n")
 
     print("help - print usage")
     print(f"\t{_PRGNAME} {base} [help]\n")
 
 
-def run(project, argv, base, commands, message=None, autohelp=False):
+def run(project, argv, base, commands, message=None):
     """Run usage"""
-    if (autohelp and len(argv) == 0) or (len(argv) > 0 and argv[0] == "help"):
+    if (len(argv) == 0) or (len(argv) > 0 and argv[0] == "help"):
         usage(base, commands, message)
         return
 
-    if len(argv) > 0:
-        cmd = argv[0]
+    cmd = argv[0]
+    if cmd not in commands:
+        print(f"Command {cmd} not found!")
+        usage(base, commands, message)
+        return
 
-        if cmd not in commands:
-            print(f"Command {cmd} not found!")
-            usage(base, commands, message)
-            return
-        commands[cmd][0](project, argv[1:])
+    submodule = commands[cmd][0]
+    if isinstance(submodule, dict):
+        if len(base) > 0:
+            new_base = base + " " + cmd
+        else:
+            new_base = cmd
+        run(project, argv[1:], new_base, submodule, message)
     else:
-        commands["*"][0](project, argv)
+        submodule(project, argv[1:])

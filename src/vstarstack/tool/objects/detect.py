@@ -105,10 +105,3 @@ commands = {
              "detect compact objects with disc detector",
              "npy/ descs/"),
 }
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    vstarstack.tool.usage.run(project,
-                              argv,
-                              "objects detect",
-                              commands,
-                              autohelp=True)

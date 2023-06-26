@@ -71,7 +71,7 @@ def process_dir(argv):
                  brd_left, brd_top, brd_right, brd_bottom) for name, fname in files])
 
 
-def process(project: vstarstack.tool.cfg.Project, argv: list):
+def run(project: vstarstack.tool.cfg.Project, argv: list):
     if len(argv) > 0:
         if os.path.isdir(argv[0]):
             process_dir(argv)
@@ -80,12 +80,3 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
     else:
         process_dir([project.config.paths.npy_fixed,
                      project.config.paths.npy_fixed])
-
-
-commands = {
-    "*": (process, "remove border", "(input.zip output.zip | [input/ output/])"),
-}
-
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    vstarstack.tool.usage.run(project, argv, "image-process border", commands)

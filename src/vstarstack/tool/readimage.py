@@ -110,7 +110,3 @@ commands = {
     "fits": (_read_fits, "read FITS images"),
     "video": (_read_video, "read VIDEO images"),
 }
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    """Run reading image files"""
-    vstarstack.tool.usage.run(project, argv, "readimage", commands, autohelp=True)

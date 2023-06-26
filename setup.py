@@ -12,9 +12,8 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-from setuptools import setup, Extension, find_packages
-
 import os
+from setuptools import setup, Extension
 
 perspective = Extension(name="vstarstack.library.projection.perspective",
        sources=["src/vstarstack/library/projection/perspective.c"])
@@ -29,7 +28,8 @@ image_wave = Extension(name="vstarstack.library.fine_shift.image_wave",
        sources=["src/vstarstack/library/fine_shift/image_wave.c"])
 
 root = os.path.join(os.path.abspath(os.path.dirname(__file__)), "src")
-result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(root) for f in filenames if os.path.splitext(f)[1] == '.py']
+result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(root)
+            for f in filenames if os.path.splitext(f)[1] == '.py']
 result = list(set([os.path.dirname(item[len(root)+1:]) for item in result]))
 result = [item.replace("/",".") for item in result if "tests" not in item]
 

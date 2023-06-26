@@ -182,7 +182,3 @@ commands = {
     "rename-channel": (_rename_channel, "filename.zip original_name target_name - rename channel"),
     "exposure": (_exposures, "display image exposures per channel", "file.zip"),
 }
-
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    vstarstack.tool.usage.run(project, argv, "image", commands, autohelp=True)
