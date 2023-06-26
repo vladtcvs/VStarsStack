@@ -43,12 +43,8 @@ def copy(project: vstarstack.tool.cfg.Project, argv: list):
 commands = {
     "copy": (copy, "just copy images from original to pipeline dir"),
     "distorsion": (vstarstack.tool.image_processing.distorsion.run, "fix distorsion"),
-    "remove-sky": (vstarstack.tool.image_processing.remove_sky.run, "remove sky"),
+    "remove-sky": (vstarstack.tool.image_processing.remove_sky.commands, "remove sky"),
     "border": (vstarstack.tool.image_processing.border.run,     "remove border"),
     "normalize": (vstarstack.tool.image_processing.normalize.run,  "normalize to weight"),
     "blur": (vstarstack.tool.image_processing.blur.run,  "gaussian blur"),
 }
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    """Run image fix methods"""
-    vstarstack.tool.usage.run(project, argv, "image-process", commands, autohelp=True)

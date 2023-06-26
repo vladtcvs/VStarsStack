@@ -125,6 +125,3 @@ commands = {
                            "Create flat image - use sky images",
                            "flats/ flat.zip")
 }
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    vstarstack.tool.usage.run(project, argv, "calibration", commands, autohelp=True)

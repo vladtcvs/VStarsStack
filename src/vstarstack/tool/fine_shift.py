@@ -141,7 +141,3 @@ commands = {
     "align-features": (find_alignment, "find alignment of images", "clusters.json alignments/"),
     "apply-aligns": (apply_alignment, "apply alignments to images", "npys/ alignments/ output/"),
 }
-
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    vstarstack.tool.usage.run(project, argv, "fine-shift", commands, autohelp=True)

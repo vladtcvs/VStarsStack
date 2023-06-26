@@ -1,0 +1,6 @@
+_vstarstack()
+{
+    res=$(vstarstack ${COMP_LINE} --autocomplete=True)
+    COMPREPLY=($res)
+}
+complete -F _vstarstack vstarstack

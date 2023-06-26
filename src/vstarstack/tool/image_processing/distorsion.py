@@ -48,7 +48,7 @@ def _process_dir(distorsion : vstarstack.library.image_process.distorsion.Distor
         pool.starmap(dedistorsion, [(distorsion, name, fname, os.path.join(
             outpath, name + ".zip")) for name, fname in files])
 
-def _process(project: vstarstack.tool.cfg.Project, argv: list):
+def run(project: vstarstack.tool.cfg.Project, argv: list):
     a = project.distorsion["a"]
     b = project.distorsion["b"]
     c = project.distorsion["c"]
@@ -62,10 +62,3 @@ def _process(project: vstarstack.tool.cfg.Project, argv: list):
     else:
         _process_dir(distorsion, [project.config.paths.npy_fixed,
                                   project.config.paths.npy_fixed])
-
-commands = {
-    "*":  (_process, "Remove distrosion", "(input.file output.file | [input/ output/])"),
-}
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    vstarstack.tool.usage.run(project, argv, "image-process distorsion", commands)

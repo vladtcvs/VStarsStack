@@ -34,8 +34,8 @@ def _process_path(project : vstarstack.tool.cfg.Project,
         out = os.path.join(maps_path, name + ".zip")
         _process_file(project, filename, out)
 
-def _process(project : vstarstack.tool.cfg.Project,
-            argv : list[str]):
+def run(project : vstarstack.tool.cfg.Project,
+        argv : list[str]):
     if len(argv) > 0:
         input_path = argv[0]
         output_path = argv[1]
@@ -47,10 +47,3 @@ def _process(project : vstarstack.tool.cfg.Project,
         _process_path(project,
                      project.config.paths.aligned,
                      project.config.planets.paths.maps)
-
-commands = {
-    "*": (_process, "build surface map from image", "aligned/ maps/"),
-}
-
-def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
-    vstarstack.tool.usage.run(project, argv, "planets buildmap", commands)

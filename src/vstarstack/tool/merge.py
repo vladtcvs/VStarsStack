@@ -60,6 +60,3 @@ commands = {
     "simple": (simple_add, "simple add images"),
     "sigma-clip": (sigma_clip, "add images with sigma clipping"),
 }
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    vstarstack.tool.usage.run(project, argv, "merge", commands, autohelp=True)

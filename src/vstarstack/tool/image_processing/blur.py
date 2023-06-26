@@ -44,7 +44,7 @@ def process_dir(argv):
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
         pool.starmap(blur, args)
 
-def process(project: vstarstack.tool.cfg.Project, argv: list):
+def run(project: vstarstack.tool.cfg.Project, argv: list):
     if len(argv) > 0:
         if os.path.isdir(argv[0]):
             process_dir(argv)
@@ -53,7 +53,3 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
     else:
         process_dir([project.config.paths.npy_fixed,
                      project.config.paths.npy_fixed])
-
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    process(project, argv)

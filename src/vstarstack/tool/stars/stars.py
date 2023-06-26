@@ -31,9 +31,6 @@ commands = {
     "detect": (vstarstack.tool.stars.detect.run, "detect stars"),
     "describe": (vstarstack.tool.stars.describe.run, "find descriptions for each image"),
     "match": (vstarstack.tool.stars.match.run, "match stars between images"),
-    "cluster": (vstarstack.tool.stars.build_clusters.run, "find matching stars clusters between images"),
+    "cluster": (vstarstack.tool.stars.build_clusters.run,
+                "find matching stars clusters between images"),
 }
-
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    vstarstack.tool.usage.run(project, argv, "stars", commands, autohelp=True)

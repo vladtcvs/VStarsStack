@@ -25,6 +25,3 @@ commands = {
     "configure": (_enable_planets, "configure planets in project"),
     "buildmap": (vstarstack.tool.planets.buildmap.run, "build planet surface map"),
 }
-
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    vstarstack.tool.usage.run(project, argv, "planets", commands, autohelp=True)
