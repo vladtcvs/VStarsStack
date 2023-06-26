@@ -15,6 +15,7 @@
 
 import zipfile
 import json
+from typing import Tuple, List
 import numpy as np
 
 class InvalidParameterException(Exception):
@@ -42,7 +43,7 @@ class DataFrame:
 
         self.channels = {}
 
-    def add_channel(self, data, name, **options):
+    def add_channel(self, data : np.ndarray, name : str, **options):
         """Add channel image to dataframe"""
         # some required options
         if "weight" not in options:
@@ -57,14 +58,14 @@ class DataFrame:
             "options": options,
         }
 
-    def replace_channel(self, data, name):
+    def replace_channel(self, data : np.ndarray, name : str):
         """Replace channel image"""
         if name not in self.channels:
             return False
         self.channels[name]["data"] = data
         return True
 
-    def add_channel_link(self, name, linked, link_type):
+    def add_channel_link(self, name : str, linked : str, link_type : str):
         """Create link between 2 channels"""
         if name not in self.channels or linked not in self.channels:
             return
@@ -73,7 +74,7 @@ class DataFrame:
             self.links[link_type] = {}
         self.links[link_type][name] = linked
 
-    def remove_channel(self, name):
+    def remove_channel(self, name : str):
         """Remove channel from dataframe"""
         if name in self.channels:
             self.channels.pop(name)
@@ -88,7 +89,7 @@ class DataFrame:
             for dname in remove:
                 self.links[linktype].pop(dname)
 
-    def rename_channel(self, name, target):
+    def rename_channel(self, name : str, target : str):
         """Rename channel"""
         if name not in self.channels:
             return
@@ -106,15 +107,15 @@ class DataFrame:
                 if self.links[linktype][dname] == name:
                     self.links[linktype][dname] = target
 
-    def add_parameter(self, value, name):
+    def add_parameter(self, value, name : str):
         """Add parameter"""
         self.params[name] = value
 
-    def get_channel(self, channel):
+    def get_channel(self, channel) -> Tuple[dict, np.ndarray]:
         """Get channel image"""
         return self.channels[channel]["data"], self.channels[channel]["options"]
 
-    def get_channels(self):
+    def get_channels(self) -> List[str]:
         """Get list of channels"""
         return list(self.channels.keys())
 
@@ -122,7 +123,7 @@ class DataFrame:
     def _store_json(value, file):
         file.write(bytes(json.dumps(value, indent=4, ensure_ascii=False), 'utf8'))
 
-    def store(self, fname, compress=None):
+    def store(self, fname : str, compress : bool = None):
         """Save dataframe to file"""
         if compress is None:
             compress = True
@@ -149,7 +150,7 @@ class DataFrame:
                     self._store_json(channel["options"], f)
 
     @staticmethod
-    def load(fname):
+    def load(fname : str):
         """Load dataframe from file"""
         try:
             with zipfile.ZipFile(fname, "r") as zip_file:
