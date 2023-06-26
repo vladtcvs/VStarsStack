@@ -32,6 +32,7 @@ extension-pkg-allow-list=
 # run arbitrary code. (This is an alternative name to extension-pkg-allow-list
 # for backward compatibility.)
 extension-pkg-whitelist=cv2,
+    vstarstack.library.projection, 
     vstarstack.library.projection.perspective,
     vstarstack.library.projection.orthographic,
     vstarstack.library.projection.equirectangular
@@ -204,6 +205,9 @@ good-names=i,
            F,
            kw,
            kh,
+           a,
+           b,
+           c,
            _
 
 # Good variable names regexes, separated by a comma. If names match any regex,
