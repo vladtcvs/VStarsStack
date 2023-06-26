@@ -32,7 +32,7 @@ extension-pkg-allow-list=
 # run arbitrary code. (This is an alternative name to extension-pkg-allow-list
 # for backward compatibility.)
 extension-pkg-whitelist=cv2,
-    vstarstack.library.projection, 
+    vstarstack.library.projection,
     vstarstack.library.projection.perspective,
     vstarstack.library.projection.orthographic,
     vstarstack.library.projection.equirectangular
@@ -67,7 +67,13 @@ ignore-patterns=^\.#
 # (useful for modules/projects where namespaces are manipulated during runtime
 # and thus existing member attributes cannot be deduced by static analysis). It
 # supports qualified module names, as well as Unix pattern matching.
-ignored-modules=
+ignored-modules=cv2,
+    vstarstack.library.projection,
+    vstarstack.library.projection.perspective,
+    vstarstack.library.projection.orthographic,
+    vstarstack.library.projection.equirectangular,
+    vstarstack.library.fine_shift
+
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
@@ -208,6 +214,18 @@ good-names=i,
            a,
            b,
            c,
+           Y,
+           Cb,
+           Cr,
+           R,
+           G,
+           B,
+           w_Y,
+           w_R,
+           w_G,
+           w_B,
+           w_Cb,
+           w_Cr,
            _
 
 # Good variable names regexes, separated by a comma. If names match any regex,
