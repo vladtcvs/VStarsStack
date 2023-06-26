@@ -22,33 +22,15 @@ def generate_mask(name):
         [[0, 0], [0, 0]],  # green
         [[0, 0], [0, 0]],  # blue
     ], dtype='float')
-    if name[0] == "R":
-        mask[0][0][0] = 1
-    elif name[0] == "G":
-        mask[1][0][0] = 1
-    elif name[0] == "B":
-        mask[2][0][0] = 1
+    pixels = ((0,0),(0,1),(1,0),(1,1))
 
-    if name[1] == "R":
-        mask[0][0][1] = 1
-    elif name[1] == "G":
-        mask[1][0][1] = 1
-    elif name[1] == "B":
-        mask[2][0][1] = 1
-
-    if name[2] == "R":
-        mask[0][1][0] = 1
-    elif name[2] == "G":
-        mask[1][1][0] = 1
-    elif name[2] == "B":
-        mask[2][1][0] = 1
-
-    if name[3] == "R":
-        mask[0][1][1] = 1
-    elif name[3] == "G":
-        mask[1][1][1] = 1
-    elif name[3] == "B":
-        mask[2][1][1] = 1
+    for i, crd in enumerate(pixels):
+        if name[i] == "R":
+            mask[0][crd[0]][crd[1]] = 1
+        elif name[i] == "G":
+            mask[1][crd[0]][crd[1]] = 1
+        elif name[i] == "B":
+            mask[2][crd[0]][crd[1]] = 1
 
     for i in range(mask.shape[0]):
         mask[i,:,:] = mask[i,:,:] / np.sum(mask[i,:,:])
