@@ -13,7 +13,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-def select_base_image(shifts : dict):
+def select_base_image(shifts : dict) -> str:
     """Select image which wouldn't move"""
 
     name0 = None
