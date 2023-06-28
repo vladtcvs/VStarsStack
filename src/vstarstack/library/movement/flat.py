@@ -15,15 +15,17 @@
 
 import math
 import json
+from typing import List
 import numpy as np
 
 import vstarstack.library.common
+from vstarstack.library.common import norm
 import vstarstack.library.movement.basic_movement
 
 class Movement(vstarstack.library.movement.basic_movement.Movement):
     """Flat movements of plane"""
 
-    def apply(self, positions, proj):
+    def apply(self, positions : list, proj) -> List:
         """Apply movement"""
         npositions = []
         for y, x in positions:
@@ -33,7 +35,7 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
 
         return npositions
 
-    def reverse(self, positions, proj):
+    def reverse(self, positions : list, proj) -> List:
         """Apply reverse movement"""
         npositions = []
         for y, x in positions:
@@ -45,55 +47,49 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
 
         return npositions
 
-    def magnitude(self):
+    def magnitude(self) -> float:
         """Magnitude of movement"""
         return self.dx**2 + self.dy**2 + self.a**2
 
-    # move pi1, pi2 to p1, p2
     def __init__(self, angle, dy, dx):
         self.dx = dx
         self.dy = dy
         self.a = angle
 
-    def serialize(self):
+    def serialize(self) -> str:
         """Serialize movement"""
         return json.dumps({"dy": self.dy, "dx": self.dx, "angle": self.a*180/math.pi})
 
     @staticmethod
-    def deserialize(ser):
+    def deserialize(ser : str):
         """Deserialize movement"""
         s = json.loads(ser)
         return Movement(s["angle"]*math.pi/180, s["dy"], s["dx"])
 
     @staticmethod
-    def build(pi1, pi2, p1, p2, debug=False):
+    def build(point1_from, point2_from, point1_to, point2_to, debug=False):
         """Build movement by 2 pairs of points"""
-        diy, dix = vstarstack.library.common.norm((pi2[0] - pi1[0], pi2[1] - pi1[1]))
-        dy, dx = vstarstack.library.common.norm((p2[0] - p1[0], p2[1] - p1[1]))
+        dir_from = norm((point2_from[0] - point1_from[0], point2_from[1] - point1_from[1]))
+        dir_to = norm((point2_to[0] - point1_to[0], point2_to[1] - point1_to[1]))
 
-        cosa = diy*dy + dix*dx
-        sina = dix*dy - diy*dx
+        cosa = dir_from[0]*dir_to[0] + dir_from[1]*dir_to[1]
+        sina = dir_from[1]*dir_to[0] - dir_from[0]*dir_to[1]
 
-        if cosa > 1:
-            cosa = 1
-        if cosa < -1:
-            cosa = -1
+        cosa = np.clip(cosa, -1, 1)
+        sina = np.clip(sina, -1, 1)
 
-        a = math.asin(sina)
-
+        angle = math.asin(sina)
         if cosa < 0:
-            a = math.pi - a
+            angle = math.pi - angle
 
-        dx = 0
-        dy = 0
-        transformation = Movement(a, dy, dx)
-        ty, tx = transformation.apply([(pi1[0], pi1[1])], None)[0]
-        dy = p1[0] - ty
-        dx = p1[1] - tx
-        return Movement(a, dy, dx)
+        transformation = Movement(angle, 0, 0)
+        point1_rotated = transformation.apply([point1_from], None)[0]
+        dy = point1_to[0] - point1_rotated[0]
+        dx = point1_to[1] - point1_rotated[1]
+        return Movement(angle, dy, dx)
 
     @staticmethod
-    def average(transformations):
+    def average(transformations : list):
         """average on multiple movements"""
         angles = []
         dxs = []
