@@ -16,6 +16,8 @@ import math
 import json
 
 import vstarstack.library.movement.find_shift
+import vstarstack.library.movement.select_shift
+
 from vstarstack.library.movement.sphere import Movement
 
 thr = 1e-6
@@ -115,3 +117,39 @@ def test_cluster_movements_3():
     assert abs(quat["rot"][1] - math.sin(1/2)) < thr
     assert abs(quat["rot"][2] - 0) < thr
     assert abs(quat["rot"][3] - math.cos(1/2)) < thr
+
+def test_cluster_movements_4():
+    clusters = [
+        {
+            "frame1": {
+                "lon": 0,
+                "lat": 0,
+            },
+            "frame2": {
+                "lon": 0,
+                "lat": -1,
+            },
+            "frame3": {
+                "lon": 0,
+                "lat": 1,
+            },
+        },
+        {
+            "frame1": {
+                "lon": 1,
+                "lat": 0,
+            },
+            "frame2": {
+                "lon": 1.2368643351396535,
+                "lat": -0.4719777676633856,
+            },
+            "frame3": {
+                "lon": 1.2368643351396535,
+                "lat": 0.4719777676633856,
+            }
+        }
+    ]
+
+    movements = vstarstack.library.movement.find_shift.build_movements(Movement, clusters)
+    basic = vstarstack.library.movement.select_shift.select_base_image(movements)
+    assert basic == "frame1"
