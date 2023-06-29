@@ -17,23 +17,15 @@ import vstarstack.library.data
 
 def generate_mask(name):
     """Generate mask by name"""
-    used_colors = set()
-    mask = {
-        "L" : [[0, 0], [0, 0]],  # luminocity
-        "R" : [[0, 0], [0, 0]],  # red
-        "G" : [[0, 0], [0, 0]],  # green
-        "B" : [[0, 0], [0, 0]],  # blue
-        "Y" : [[0, 0], [0, 0]],  # yellow
-        "M" : [[0, 0], [0, 0]],  # magenta
-        "C" : [[0, 0], [0, 0]],  # cyan
-    }
+    used_colors = set(name)
+    mask = {}
+    for color in used_colors:
+        mask[color] = [[0, 0], [0, 0]]
+
     pixels = ((0,0),(0,1),(1,0),(1,1))
 
     for i, crd in enumerate(pixels):
-        if name[i] not in mask:
-            raise Exception(f"Unsupported color {name[i]}")
         mask[name[i]][crd[0]][crd[1]] = 1
-        used_colors.add(name[i])
 
     result_mask = {}
     for color in used_colors:
