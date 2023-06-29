@@ -34,9 +34,6 @@ def generate_mask(name):
         result_mask[color] = color_mask
     return result_mask
 
-def _getcolor(img, mask):
-    return np.sum(img*mask)
-
 def debayer_image(image : np.ndarray,
                   weight : np.ndarray,
                   mask : dict):
@@ -52,13 +49,31 @@ def debayer_image(image : np.ndarray,
         layers[color] = np.zeros(cshape)
         weights[color] = np.zeros(cshape)
 
-    for y in range(int(h/2)):
-        for x in range(int(w/2)):
-            cut = image[2*y:2*y+2, 2*x:2*x+2]
-            wcut = weight[2*y:2*y+2, 2*x:2*x+2]
-            for color in mask:
-                layers[color][y][x] = _getcolor(cut, mask[color])
-                weights[color][y][x] = _getcolor(wcut, mask[color])
+    if h % 2 == 1:
+        image = image[0:h-1,:]
+        weight = weight[0:h-1,:]
+        h -= 1
+    if w % 2 == 1:
+        image = image[:,0:w-1]
+        weight = weight[:,0:w-1]
+        w -= 1
+
+    for color in mask:
+        k00 = mask[color][0,0]
+        k01 = mask[color][0,1]
+        k10 = mask[color][1,0]
+        k11 = mask[color][1,1]
+        image00 = image[0::2, 0::2]
+        image01 = image[0::2, 1::2]
+        image10 = image[1::2, 0::2]
+        image11 = image[1::2, 1::2]
+        weight00 = weight[0::2, 0::2]
+        weight01 = weight[0::2, 1::2]
+        weight10 = weight[1::2, 0::2]
+        weight11 = weight[1::2, 1::2]
+
+        layers[color] = k00 * image00 + k01 * image01 + k10 * image10 + k11 * image11
+        weights[color] = k00 * weight00 + k01 * weight01 + k10 * weight10 + k11 * weight11
 
     return layers, weights
 
