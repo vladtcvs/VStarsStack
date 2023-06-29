@@ -17,78 +17,70 @@ import vstarstack.library.data
 
 def generate_mask(name):
     """Generate mask by name"""
-    mask = np.array([
-        [[0, 0], [0, 0]],  # red
-        [[0, 0], [0, 0]],  # green
-        [[0, 0], [0, 0]],  # blue
-    ], dtype='float')
+    used_colors = set()
+    mask = {
+        "L" : [[0, 0], [0, 0]],  # luminocity
+        "R" : [[0, 0], [0, 0]],  # red
+        "G" : [[0, 0], [0, 0]],  # green
+        "B" : [[0, 0], [0, 0]],  # blue
+        "Y" : [[0, 0], [0, 0]],  # yellow
+        "M" : [[0, 0], [0, 0]],  # magenta
+        "C" : [[0, 0], [0, 0]],  # cyan
+    }
     pixels = ((0,0),(0,1),(1,0),(1,1))
 
     for i, crd in enumerate(pixels):
-        if name[i] == "R":
-            mask[0][crd[0]][crd[1]] = 1
-        elif name[i] == "G":
-            mask[1][crd[0]][crd[1]] = 1
-        elif name[i] == "B":
-            mask[2][crd[0]][crd[1]] = 1
+        if name[i] not in mask:
+            raise Exception(f"Unsupported color {name[i]}")
+        mask[name[i]][crd[0]][crd[1]] = 1
+        used_colors.add(name[i])
 
-    for i in range(mask.shape[0]):
-        mask[i,:,:] = mask[i,:,:] / np.sum(mask[i,:,:])
-
-    return mask
+    result_mask = {}
+    for color in used_colors:
+        color_mask = np.array(mask[color])
+        color_mask = color_mask / np.sum(color_mask)
+        result_mask[color] = color_mask
+    return result_mask
 
 def _getcolor(img, mask):
     return np.sum(img*mask)
 
 def debayer_image(image : np.ndarray,
                   weight : np.ndarray,
-                  mask : np.ndarray):
+                  mask : dict):
     """Process debayer on image"""
     h = image.shape[0]
     w = image.shape[1]
 
     cshape = (int(h/2), int(w/2))
 
-    R = np.zeros(cshape)
-    G = np.zeros(cshape)
-    B = np.zeros(cshape)
-
-    w_R = np.zeros(cshape)
-    w_G = np.zeros(cshape)
-    w_B = np.zeros(cshape)
+    layers = {}
+    weights = {}
+    for color in mask:
+        layers[color] = np.zeros(cshape)
+        weights[color] = np.zeros(cshape)
 
     for y in range(int(h/2)):
         for x in range(int(w/2)):
             cut = image[2*y:2*y+2, 2*x:2*x+2]
             wcut = weight[2*y:2*y+2, 2*x:2*x+2]
-            R[y][x] = _getcolor(cut, mask[0])
-            G[y][x] = _getcolor(cut, mask[1])
-            B[y][x] = _getcolor(cut, mask[2])
+            for color in mask:
+                layers[color][y][x] = _getcolor(cut, mask[color])
+                weights[color][y][x] = _getcolor(wcut, mask[color])
 
-            w_R[y][x] = _getcolor(wcut, mask[0])
-            w_G[y][x] = _getcolor(wcut, mask[1])
-            w_B[y][x] = _getcolor(wcut, mask[2])
-
-    return R, G, B, w_R, w_G, w_B
+    return layers, weights
 
 def debayer_dataframe(dataframe : vstarstack.library.data.DataFrame,
-                      mask : np.ndarray,
+                      mask : dict,
                       raw_channel_name : str):
     """Debayer dataframe"""
     raw, _ = dataframe.get_channel(raw_channel_name)
     weight, _ = dataframe.get_channel(dataframe.links["weight"][raw_channel_name])
 
-    R, G, B, w_R, w_G, w_B = debayer_image(raw, weight, mask)
-    dataframe.add_channel(R, "R", brightness=True)
-    dataframe.add_channel(G, "G", brightness=True)
-    dataframe.add_channel(B, "B", brightness=True)
-
-    dataframe.add_channel(w_R, "weight-R", weight=True)
-    dataframe.add_channel(w_G, "weight-G", weight=True)
-    dataframe.add_channel(w_B, "weight-B", weight=True)
-
-    dataframe.add_channel_link("R", "weight-R", "weight")
-    dataframe.add_channel_link("G", "weight-G", "weight")
-    dataframe.add_channel_link("B", "weight-B", "weight")
+    layers, weights = debayer_image(raw, weight, mask)
+    for color in layers:
+        dataframe.add_channel(layers[color], color, brightness=True)
+        dataframe.add_channel(weights[color], f"weight-{color}", weight=True)
+        dataframe.add_channel_link(color, f"weight-{color}", "weight")
 
     return dataframe
