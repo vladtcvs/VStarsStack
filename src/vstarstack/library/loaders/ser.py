@@ -44,7 +44,7 @@ def _read_to_npy(file, bpp, little_endian, shape):
     block = np.array(list(file.read(num_b)), dtype=np.uint32)
     block = block.reshape((num, bpp))
     for i in range(bpp):
-        if little_endian:
+        if not little_endian:
             block[:, i] *= 2**(8*i)
         else:
             block[:, i] *= 2**(8*(bpp-i))
