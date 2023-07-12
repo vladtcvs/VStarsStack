@@ -147,7 +147,7 @@ def _cut(_project, argv):
     out = argv[5]
 
     dataframe = vstarstack.library.data.DataFrame.load(path)
-    result = border(dataframe, left, top, right, bottom)
+    result = cut(dataframe, left, top, right, bottom)
     result.store(out)
 
 def _rename_channel(_project, argv):
