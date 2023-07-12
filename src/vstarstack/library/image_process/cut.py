@@ -14,10 +14,12 @@
 
 import vstarstack.library.data
 
-def border(dataframe : vstarstack.library.data.DataFrame,
-           bw_left : int, bw_top : int,
-           bw_right : int, bw_bottom : int):
-    """Remove image borders"""
+def cut(dataframe : vstarstack.library.data.DataFrame,
+           left : int, top : int,
+           right : int, bottom : int):
+    """Cut part of image"""
+
+    result = vstarstack.library.data.DataFrame(params=dataframe.params)
 
     for channel in dataframe.get_channels():
         image, opts = dataframe.get_channel(channel)
@@ -29,23 +31,11 @@ def border(dataframe : vstarstack.library.data.DataFrame,
         w_channel = dataframe.links["weight"][channel]
         weight, _ = dataframe.get_channel(w_channel)
 
-        w = image.shape[1]
-        h = image.shape[0]
+        image = image[top:bottom,left:right]
+        weight = weight[top:bottom,left:right]
 
-        image[0:bw_top, :] = 0
-        weight[0:bw_top, :] = 0
+        result.add_channel(image, channel, **opts)
+        result.add_channel(weight, w_channel, weight=True)
+        result.add_channel_link(channel, w_channel, "weight")
 
-        image[(h-bw_bottom):h, :] = 0
-        weight[(h-bw_bottom):h, :] = 0
-
-        image[:, 0:bw_left] = 0
-        weight[:, 0:bw_left] = 0
-
-        image[:, (w-bw_right):w] = 0
-        weight[:, (w-bw_right):w] = 0
-
-        dataframe.add_channel(image, channel, **opts)
-        dataframe.add_channel(weight, w_channel, weight=True)
-        dataframe.add_channel_link(channel, w_channel, "weight")
-
-    return dataframe
+    return result

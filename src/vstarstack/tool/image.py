@@ -19,6 +19,7 @@ import imageio
 import matplotlib.pyplot as plt
 
 from vstarstack.library.image_process.border import border
+from vstarstack.library.image_process.cut import cut
 import vstarstack.library.data
 import vstarstack.library.common
 import vstarstack.tool.usage
@@ -146,9 +147,8 @@ def _cut(_project, argv):
     out = argv[5]
 
     dataframe = vstarstack.library.data.DataFrame.load(path)
-    border(dataframe, left, top, right, bottom)
-    dataframe.store(out)
-
+    result = border(dataframe, left, top, right, bottom)
+    result.store(out)
 
 def _rename_channel(_project, argv):
     name = argv[0]
