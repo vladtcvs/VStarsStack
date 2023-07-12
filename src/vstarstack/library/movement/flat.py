@@ -67,6 +67,10 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
         return Movement(s["angle"]*math.pi/180, s["dy"], s["dx"])
 
     @staticmethod
+    def identity():
+        return Movement(0, 0, 0)
+
+    @staticmethod
     def build(point1_from, point2_from, point1_to, point2_to, debug=False):
         """Build movement by 2 pairs of points"""
         dir_from = norm((point2_from[0] - point1_from[0], point2_from[1] - point1_from[1]))

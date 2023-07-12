@@ -46,3 +46,8 @@ class Movement(ABC):
     @abstractmethod
     def deserialize(ser):
         """Build movement from serialized movement description"""
+
+    @staticmethod
+    @abstractmethod
+    def identity():
+        """Build identity movement"""

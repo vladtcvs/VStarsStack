@@ -12,6 +12,8 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+from vstarstack.library.movement.basic_movement import Movement
+
 def find_movement(movement, star_pairs):
     """Find shift, using set of stars"""
     movements = []
@@ -23,7 +25,7 @@ def find_movement(movement, star_pairs):
             movements.append(mov)
     return movement.average(movements, 80)
 
-def build_movements(movement, clusters : list):
+def build_movements(movement : Movement, clusters : list):
     """Build movements between different images"""
     names = []
     for cluster in clusters:
@@ -32,10 +34,15 @@ def build_movements(movement, clusters : list):
                 names.append(name)
 
     movements = {}
+    errors = []
 
     for name1 in names:
         movements[name1] = {}
         for name2 in names:
+            if name1 == name2:
+                movements[name1][name2] = movement.identity()
+                continue
+
             stars = []
             for cluster in clusters:
                 if name1 not in cluster:
@@ -48,5 +55,8 @@ def build_movements(movement, clusters : list):
                 stars.append((star_from, star_to))
 
             if len(stars) >= 2:
-                movements[name1][name2] = find_movement(movement, stars)
-    return movements
+                try:
+                    movements[name1][name2] = find_movement(movement, stars)
+                except:
+                    errors.append((name1, name2))
+    return movements, errors

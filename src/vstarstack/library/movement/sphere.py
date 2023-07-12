@@ -103,8 +103,14 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
         rot = Rotation.from_quat(np.array(quaternion))
         return Movement(rot)
 
-    # move pi1, pi2 to p1, p2
+    # identity
+    @staticmethod
+    def identity():
+        """Build identity movement"""
+        rot = Rotation.identity()
+        return Movement(rot)
 
+    # move pi1, pi2 to p1, p2
     @staticmethod
     def build(point1_from, point2_from, point1_to, point2_to, debug=False):
         """Build movement by 2 pairs of points"""
