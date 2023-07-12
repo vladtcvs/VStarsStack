@@ -32,17 +32,17 @@ def border(dataframe : vstarstack.library.data.DataFrame,
         w = image.shape[1]
         h = image.shape[0]
 
-        image[0:bw_top, :, :] = 0
-        image[(h-bw_bottom):h, :, :] = 0
+        image[0:bw_top, :] = 0
+        image[(h-bw_bottom):h, :] = 0
 
-        image[:, 0:bw_left, :] = 0
-        image[:, (w-bw_right):w, :] = 0
+        image[:, 0:bw_left] = 0
+        image[:, (w-bw_right):w] = 0
 
-        weight[0:bw_top, :, :] = 0
-        weight[(h-bw_bottom):h, :, :] = 0
+        weight[0:bw_top, :] = 0
+        weight[(h-bw_bottom):h, :] = 0
 
-        weight[:, 0:bw_left, :] = 0
-        weight[:, (w-bw_right):w, :] = 0
+        weight[:, 0:bw_left] = 0
+        weight[:, (w-bw_right):w] = 0
 
         dataframe.add_channel(image, channel, **opts)
         dataframe.add_channel(weight, w_channel, weight=True)
