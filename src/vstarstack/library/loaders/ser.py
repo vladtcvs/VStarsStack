@@ -13,6 +13,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import sys
 import math
 import numpy as np
 
@@ -43,7 +44,7 @@ def _read_to_npy(file, bpp, little_endian, shape):
     block = np.array(list(file.read(num_b)), dtype=np.uint32)
     block = block.reshape((num, bpp))
     for i in range(bpp):
-        if little_endian:
+        if not little_endian:
             block[:, i] *= 2**(8*i)
         else:
             block[:, i] *= 2**(8*(bpp-i))
@@ -57,8 +58,8 @@ def readser(fname: str):
     with open(fname, "rb") as file:
         fileid = file.read(14)
         if fileid != b'LUCAM-RECORDER':
-            print("Invalid header, skipping")
-            return
+            print(f"Possibly invalid header {fileid.decode('utf8')}", file=sys.stderr)
+
         _luid = _serread4(file)
         colorid = _serread4(file)
         le16bit = _serread4(file)
@@ -72,20 +73,65 @@ def readser(fname: str):
         telescope = file.read(40).decode('utf8')
         datetime = _serread(file, 8, True)
         datetime_utc = _serread(file, 8, True)
-
+        opts = {}
         if colorid == 0:
             shape = (height, width, 1)
-            channels = ["Y"]
+            channels = ["L"]        # luminocity
+            image_format = "flat"
+            opts["brightness"] = True
+        elif colorid == 8:
+            shape = (height, width, 1)
+            channels = ["raw"]
+            image_format = "bayerRGGB"
+            opts["encoded"] = True
+        elif colorid == 9:
+            shape = (height, width, 1)
+            channels = ["raw"]
+            image_format = "bayerGRBG"
+            opts["encoded"] = True
+        elif colorid == 10:
+            shape = (height, width, 1)
+            channels = ["raw"]
+            image_format = "bayerGBRG"
+            opts["encoded"] = True
+        elif colorid == 11:
+            shape = (height, width, 1)
+            channels = ["raw"]
+            image_format = "bayerBGGR"
+            opts["encoded"] = True
+        elif colorid == 16:
+            shape = (height, width, 1)
+            channels = ["raw"]
+            image_format = "bayerCYYM"
+            opts["encoded"] = True
+        elif colorid == 17:
+            shape = (height, width, 1)
+            channels = ["raw"]
+            image_format = "bayerYCMY"
+            opts["encoded"] = True
+        elif colorid == 18:
+            shape = (height, width, 1)
+            channels = ["raw"]
+            image_format = "bayerYMCY"
+            opts["encoded"] = True
+        elif colorid == 19:
+            shape = (height, width, 1)
+            channels = ["raw"]
+            image_format = "bayerMYYC"
+            opts["encoded"] = True
         elif colorid == 100:
             shape = (height, width, 3)
             channels = ["R", "G", "B"]
+            image_format = "flat"
+            opts["brightness"] = True
         elif colorid == 101:
             shape = (height, width, 3)
             channels = ["B", "G", "R"]
+            image_format = "flat"
+            opts["brightness"] = True
         else:
             print(f"Unsupported colorid = {colorid}")
             return
-
         tags = {
             "depth": depth,
             "observer": observer,
@@ -98,6 +144,7 @@ def readser(fname: str):
         params = {
             "w": width,
             "h": height,
+            "format" : image_format,
         }
 
         for frame_id in range(frames):
@@ -108,8 +155,8 @@ def readser(fname: str):
             weight = np.ones(frame.data.shape)*exptime
             index = 0
             for index, channel in enumerate(channels):
-                dataframe.add_channel(frame[:, :, index], channel)
-                dataframe.add_channel(weight, "weight-"+channel)
+                dataframe.add_channel(frame[:, :, index], channel, **opts)
+                dataframe.add_channel(weight, "weight-"+channel, weight=True)
                 dataframe.add_channel_link(
                     channel, "weight-"+channel, "weight")
             yield dataframe

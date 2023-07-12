@@ -21,7 +21,7 @@ def _indexes(h, w, dy, dx, sy, sx):
     return range(sy, h+sy, dy), range(sx, w+sx, dx)
 
 def yuv_422_image(frame, weight):
-    """Split raw YUV image to Y, Cb, Cr"""
+    """Split raw YUV image to L, Cb, Cr"""
     frame = frame.astype(np.float32)
     h = frame.shape[0]
     w = frame.shape[1]
@@ -70,16 +70,16 @@ def yuv_422_image(frame, weight):
 
 def yuv_422_dataframe(dataframe : vstarstack.library.data.DataFrame,
                       raw_channel_name : str):
-    """Split dataframe with raw YUV image to Y, Cb, Cr"""
+    """Split dataframe with raw YUV image to L, Cb, Cr"""
     raw, _ = dataframe.get_channel(raw_channel_name)
     weight, _ = dataframe.get_channel(dataframe.links["weight"][raw_channel_name])
 
     Y, Cb, Cr, w_Y = yuv_422_image(raw, weight)
 
-    dataframe.add_channel(Y, "Y", brightness=True)
+    dataframe.add_channel(Y, "L", brightness=True)
     dataframe.add_channel(Cb, "Cb")
     dataframe.add_channel(Cr, "Cr")
 
-    dataframe.add_channel(w_Y, "weight-Y", weight=True)
-    dataframe.add_channel_link("Y", "weight-Y", "weight")
+    dataframe.add_channel(w_Y, "weight-L", weight=True)
+    dataframe.add_channel_link("L", "weight-L", "weight")
     return dataframe
