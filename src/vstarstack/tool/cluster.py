@@ -88,12 +88,16 @@ def find_shift(project: vstarstack.tool.cfg.Project, argv: list):
         shifts_f = project.config.paths.relative_shifts
     with open(clusters_f, encoding='utf8') as f:
         clusters = json.load(f)
-    shifts = build_movements(Movement, clusters)
+    shifts, errors = build_movements(Movement, clusters)
     serialized = {}
     for name1,shifts1 in shifts.items():
         serialized[name1] = {}
         for name2 in shifts1:
             serialized[name1][name2] = shifts[name1][name2].serialize()
+    if len(errors) > 0:
+        print("Couldn't build movement for pairs:")
+        for name1, name2 in errors:
+            print(f"\t{name2} -> {name1}")
     with open(shifts_f, "w", encoding='utf8') as f:
         json.dump(serialized, f, ensure_ascii=False, indent=4)
 
