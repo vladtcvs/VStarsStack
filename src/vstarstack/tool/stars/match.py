@@ -42,16 +42,31 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
     starsfiles = vstarstack.library.common.listfiles(starsdir, ".json")
     descs = []
     name_fname = {}
+    w = None
+    h = None
     for name, fname in starsfiles:
         with open(fname, encoding='utf8') as file:
             desc = json.load(file)
+        if w is None or w > desc["w"]:
+            w = desc["w"]
+        if h is None or h > desc["h"]:
+            h = desc["h"]
+
         desc = [describe.Descriptor.deserialize(item["descriptor"]) for item in desc["main"]]
         descs.append((name, desc))
         name_fname[name] = fname
 
-    fov1 = math.atan(project.config.telescope.camera.W / project.config.telescope.scope.F)
-    fov2 = math.atan(project.config.telescope.camera.H / project.config.telescope.scope.F)
+    W = project.config.telescope.camera.pixel_W / 1000 * w
+    H = project.config.telescope.camera.pixel_H / 1000 * h
+    F = project.config.telescope.scope.F
+    fov1 = math.atan(W / F)
+    fov2 = math.atan(H / F)
     fov = min(fov1, fov2)
+
+    print(f"W = {W:.2f} mm")
+    print(f"H = {H:.2f} mm")
+    print(f"F = {F:.2f} mm")
+    print(f"Fov = {fov*180/math.pi:.2f}°")
 
     max_angle_diff = project.config.stars.match.max_angle_diff_k * fov
     max_dangle_diff = project.config.stars.match.max_dangle_diff * math.pi/180

@@ -34,8 +34,8 @@ def _work(reader,
           output_name: str):
     params = {
         "F": project.config.telescope.scope.F,
-        "kh": project.config.telescope.camera.H / project.config.telescope.camera.h,
-        "kw": project.config.telescope.camera.W / project.config.telescope.camera.w,
+        "kh": project.config.telescope.camera.pixel_H / 1000,
+        "kw": project.config.telescope.camera.pixel_W / 1000,
     }
     print(f"File: {input_file}")
     for frame_id, dataframe in enumerate(reader(input_file)):

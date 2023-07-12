@@ -31,10 +31,8 @@ _module_configuration = {
     },
     "telescope": {
         "camera": {
-            "W": (float, 10.0),
-            "H": (float, 10.0),
-            "w": (int, 1000),
-            "h": (int, 1000),
+            "pixel_W": (float, 3.0),
+            "pixel_H": (float, 3.0),
             "format": (str, "flat"),
         },
         "scope": {

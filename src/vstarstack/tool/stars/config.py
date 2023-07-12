@@ -20,9 +20,9 @@ _module_configuration = {
         "mindist" : (float, 0.1),
     },
     "match" : {
-        "max_angle_diff_k": (float, 0.01),
+        "max_angle_diff_k": (float, 0.005),
         "max_size_diff": (float, 0.1),
-        "max_dangle_diff": (float, 4.0),
+        "max_dangle_diff": (float, 2.0),
         "min_matched_ditems": (int, 15),
     },
     "paths" : {
