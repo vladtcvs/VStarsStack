@@ -126,3 +126,17 @@ def test_9():
         assert "data" in dataframe.get_channels()
         layer, opts = dataframe.get_channel("data")
         assert opts["brightness"] is True
+
+def test_10():
+    dataframe = DataFrame()
+
+    layer = np.zeros((100,100))
+    dataframe.add_channel(layer, "data", brightness=True)
+
+    dataframe2 = dataframe.copy()
+
+    data2, _ = dataframe2.get_channel("data")
+    data2[0,0] = 1
+
+    data,_ = dataframe.get_channel("data")
+    assert data[0,0] == 0

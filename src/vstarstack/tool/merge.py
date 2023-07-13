@@ -14,7 +14,7 @@
 
 import vstarstack.library.common
 import vstarstack.library.data
-import vstarstack.library.merging
+import vstarstack.library.merge
 
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
@@ -32,7 +32,7 @@ def simple_add(project: vstarstack.tool.cfg.Project, argv: list):
 
     imgs = vstarstack.library.common.listfiles(path_images, ".zip")
     filenames = [img[1] for img in imgs]
-    dataframe = vstarstack.library.merging.simple_add(FilesImageSource(filenames))
+    dataframe = vstarstack.library.merge.simple_add(FilesImageSource(filenames))
     if dataframe is not None:
         dataframe.store(out)
 
@@ -41,18 +41,21 @@ def sigma_clip(project: vstarstack.tool.cfg.Project, argv: list):
     if len(argv) > 0:
         path_images = argv[0]
         out = argv[1]
-        sigma_k = float(argv[2])
-        sigma_steps = 3
+        kappa1 = float(argv[2])
+        kappa2 = kappa1
+        sigma_steps = 1
     else:
         path_images = project.config.paths.aligned
         out = project.config.paths.output
-        sigma_k = project.config.merge.sigma_clip_coefficient
+        kappa1 = project.config.merge.sigma_clip_coefficient_begin
+        kappa2 = project.config.merge.sigma_clip_coefficient_end
         sigma_steps = project.config.merge.sigma_clip_steps
 
     imgs = vstarstack.library.common.listfiles(path_images, ".zip")
     filenames = [img[1] for img in imgs]
-    dataframe = vstarstack.library.merging.sigma_clip(FilesImageSource(filenames),
-                                                      sigma_k,
+    dataframe = vstarstack.library.merge.kappa_sigma(FilesImageSource(filenames),
+                                                      kappa1,
+                                                      kappa2,
                                                       sigma_steps)
     dataframe.store(out)
 

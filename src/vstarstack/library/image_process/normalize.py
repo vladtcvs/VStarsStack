@@ -17,22 +17,24 @@ import numpy as np
 import vstarstack.library.common
 import vstarstack.library.data
 
-def normalize(dataframe : vstarstack.library.data.DataFrame):
+def normalize(dataframe : vstarstack.library.data.DataFrame, deepcopy=True):
     """Normalize image layers"""
-    for channel in dataframe.get_channels():
-        image, opts = dataframe.get_channel(channel)
+    if deepcopy:
+        new_dataframe = dataframe.copy()
+    else:
+        new_dataframe = dataframe
+    for channel in new_dataframe.get_channels():
+        image, opts = new_dataframe.get_channel(channel)
         if "normalized" in opts and opts["normalized"]:
             continue
-        if opts["weight"]:
+        if not opts["brightness"]:
             continue
-        if opts["encoded"]:
+        if channel not in new_dataframe.links["weight"]:
             continue
-        if channel not in dataframe.links["weight"]:
-            continue
-        weight, _ = dataframe.get_channel(dataframe.links["weight"][channel])
+        weight, _ = new_dataframe.get_channel(new_dataframe.links["weight"][channel])
         image = image / weight
         image[np.where(weight == 0)] = 0
         opts["normalized"] = True
-        dataframe.add_channel(image, channel, **opts)
+        new_dataframe.replace_channel(image, channel)
 
-    return dataframe
+    return new_dataframe
