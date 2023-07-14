@@ -131,7 +131,7 @@ def kappa_sigma(images: vstarstack.library.common.IImageSource,
     lights, weights = _calculate_mean(images,
                                       means,
                                       sigmas,
-                                      kappa)
+                                      kappa2)
 
     result = DataFrame()
     for channel_name, light in lights.items():
