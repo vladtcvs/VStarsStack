@@ -41,8 +41,9 @@ _module_configuration = {
         },
     },
     "merge" : {
-        "sigma_clip_coefficient" : (float, 1.0),
-        "sigma_clip_steps" : (int, 1)
+        "sigma_clip_coefficient_begin" : (float, 4.0),
+        "sigma_clip_coefficient_end" : (float, 2.0),
+        "sigma_clip_steps" : (int, 2),
     },
     "use_modules" : (list, []),
     "cluster" : ("module", {"path" : (str, "clusters.json")}),

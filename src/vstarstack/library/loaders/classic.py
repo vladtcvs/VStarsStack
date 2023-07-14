@@ -51,8 +51,8 @@ def readjpeg(fname: str):
         dataframe.add_channel_link("B", "weight", "weight")
     elif len(rgb.shape) == 2:
         dataframe.add_channel(
-            rgb[:, :], "Y", weight_name="weight", brightness=True)
-        dataframe.add_channel_link("Y", "weight", "weight")
+            rgb[:, :], "L", weight_name="weight", brightness=True)
+        dataframe.add_channel_link("L", "weight", "weight")
     else:
         # unknown shape!
         pass

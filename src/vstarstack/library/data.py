@@ -17,6 +17,8 @@ import zipfile
 import json
 from typing import Tuple, List
 import numpy as np
+from copy import deepcopy
+
 
 class InvalidParameterException(Exception):
     """Invalid parameter in DataFrame"""
@@ -42,6 +44,19 @@ class DataFrame:
         self.links = {"weight": {}}
 
         self.channels = {}
+
+    def copy(self):
+        """Copy dataframe"""
+        new = DataFrame(self.params, self.tags)
+        for name in self.get_channels():
+            channel, opts = self.get_channel(name)
+            opts = dict(opts)
+            
+            new.add_channel(deepcopy(channel), name, **opts)
+        for link_type in self.links:
+            for name in self.links[link_type]:
+                new.add_channel_link(name, self.links[link_type][name], link_type)
+        return new
 
     def add_channel(self, data : np.ndarray, name : str, **options):
         """Add channel image to dataframe"""
