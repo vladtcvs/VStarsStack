@@ -37,7 +37,7 @@ def test_simple_add():
     assert images_equal(summ_weight, weight*2)
 
 
-def test_simple_mean():
+def test_simple_mean_1():
     original_image = next(readjpeg("test_image.png"))
     light = original_image.get_channel("L")[0]
     weight = np.ones(light.shape)
@@ -51,6 +51,35 @@ def test_simple_mean():
     summ_weight = summ.get_channel(wn)[0]
     assert images_equal(summ_light, light)
     assert images_equal(summ_weight, weight*2)
+
+def test_simple_mean_2():
+    peak = 36
+    N = 64
+    original_image = next(readjpeg("test_image.png"))
+    light = original_image.get_channel("L")[0]
+    light = light / np.amax(light)
+    original_image.replace_channel(light, "L")
+    weight = np.ones(light.shape)
+
+    # for repeatability
+    np.random.seed(1)
+    noised = []
+    for _ in range(N):
+        copy = original_image.copy()
+        copy_light = copy.get_channel("L")[0]
+        op = np.amax(copy_light)
+        copy_light = np.random.poisson(copy_light / op * peak) / peak * op
+        copy.replace_channel(copy_light, "L")
+        noised.append(copy)
+    source = ListImageSource(noised)
+
+    summ = vstarstack.library.merge.simple_mean(source)
+    summ_light, opts = summ.get_channel("L")
+    wn = summ.links["weight"]["L"]
+    summ_weight = summ.get_channel(wn)[0]
+    assert images_equal(summ_light, light, 0.1)
+    assert images_equal(summ_weight, weight*N)
+
 
 def test_kappa_sigma_1():
     original_image = next(readjpeg("test_image.png"))
