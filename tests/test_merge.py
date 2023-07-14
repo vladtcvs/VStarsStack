@@ -13,16 +13,19 @@
 #
 
 import numpy as np
+import os
 
 from vstarstack.library.loaders.classic import readjpeg
 import vstarstack.library.merge
 from vstarstack.library.common import ListImageSource
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
 def images_equal(img1, img2, thr = 0.0):
     return np.amax(abs(img1 - img2)) <= thr
 
 def test_simple_add():
-    original_image = next(readjpeg("test_image.png"))
+    original_image = next(readjpeg(os.path.join(dir_path, "test_image.png")))
     light = original_image.get_channel("L")[0]
     weight = np.ones(light.shape)
     copy1 = original_image.copy()
@@ -38,7 +41,7 @@ def test_simple_add():
 
 
 def test_simple_mean_1():
-    original_image = next(readjpeg("test_image.png"))
+    original_image = next(readjpeg(os.path.join(dir_path, "test_image.png")))
     light = original_image.get_channel("L")[0]
     weight = np.ones(light.shape)
     copy1 = original_image.copy()
@@ -55,7 +58,7 @@ def test_simple_mean_1():
 def test_simple_mean_2():
     peak = 36
     N = 64
-    original_image = next(readjpeg("test_image.png"))
+    original_image = next(readjpeg(os.path.join(dir_path, "test_image.png")))
     light = original_image.get_channel("L")[0]
     light = light / np.amax(light)
     original_image.replace_channel(light, "L")
@@ -82,7 +85,7 @@ def test_simple_mean_2():
 
 
 def test_kappa_sigma_1():
-    original_image = next(readjpeg("test_image.png"))
+    original_image = next(readjpeg(os.path.join(dir_path, "test_image.png")))
     light = original_image.get_channel("L")[0]
     weight = np.ones(light.shape)
     copy1 = original_image.copy()
@@ -97,7 +100,7 @@ def test_kappa_sigma_1():
     assert images_equal(summ_weight, weight*2)
 
 def test_kappa_sigma_2():
-    original_image = next(readjpeg("test_image.png"))
+    original_image = next(readjpeg(os.path.join(dir_path, "test_image.png")))
     light = original_image.get_channel("L")[0]
     weight = np.ones(light.shape)
     copy1 = original_image.copy()
@@ -112,7 +115,7 @@ def test_kappa_sigma_2():
     assert images_equal(summ_weight, weight*2)
 
 def test_kappa_sigma_3():
-    original_image = next(readjpeg("test_image.png"))
+    original_image = next(readjpeg(os.path.join(dir_path, "test_image.png")))
     light = original_image.get_channel("L")[0]
     weight = np.ones(light.shape)
     copy1 = original_image.copy()
@@ -129,7 +132,7 @@ def test_kappa_sigma_3():
 def test_kappa_sigma_4():
     peak = 36
     N = 64
-    original_image = next(readjpeg("test_image.png"))
+    original_image = next(readjpeg(os.path.join(dir_path, "test_image.png")))
     light = original_image.get_channel("L")[0]
     light = light / np.amax(light)
     original_image.replace_channel(light, "L")

@@ -14,12 +14,15 @@
 
 import imageio
 import numpy as np
+import os
 
 import vstarstack.library.stars.detect as detect
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
 def test_1():
     """Try detector on stars1.png"""
-    image = imageio.imread('stars2.png')[:,:,0:3]
+    image = imageio.imread(os.path.join(dir_path, "stars2.png"))[:,:,0:3]
     image = image / np.amax(image)
     gray = image[:,:,0]
     stars = detect.detect_stars(gray)
