@@ -125,6 +125,8 @@ def find_stars(binary_image : np.ndarray,
                                 cv2.RETR_EXTERNAL,
                                 cv2.CHAIN_APPROX_SIMPLE)
     contours = imutils.grab_contours(contours)
+    if len(contours) == 0:
+        return []
     contours = imutils.contours.sort_contours(contours)[0]
 
     stars = []
