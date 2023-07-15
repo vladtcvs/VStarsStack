@@ -21,6 +21,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pylint
           python -m pip install pytest
+          python -m pip install pytest-cov
           python -m pip install -r requirements.txt
       - name: Lint with pylint
         run: |
@@ -34,4 +35,4 @@ jobs:
           vstarstack
       - name: Test with pytest
         run: |
-          cd tests && pytest
+          pytest --cov-fail-under=25 --cov=vstarstack tests/
