@@ -20,8 +20,9 @@ import imutils.contours
 
 from skimage import measure
 
-INSIDE_COEFF = 0.55
-OUTSIDE_COEFF = 0.4
+DETECTOR_BLUR_SIZE = 40
+INSIDE_COEFF = 0.5
+OUTSIDE_COEFF = 0.37
 BRIGHTNESS_OVER_AREA = 2
 BORDER_WIDTH = 10
 MIN_STAR_R = 2
@@ -55,6 +56,7 @@ def check_star(binary_image : np.ndarray, x : int, y : int, min_r : int, max_r :
     low_r = min_r
     high_r = max_r
     patch = _make_patch(binary_image, x, y, low_r*2)
+
     if patch is None or check_round(patch, low_r) > 0:
         # Not a star - too low white pixels inside minimal circle
         return False, None
@@ -71,6 +73,7 @@ def check_star(binary_image : np.ndarray, x : int, y : int, min_r : int, max_r :
     while high_r - low_r > 1:
         middle_r = int((low_r+high_r)/2+0.5)
         patch = _make_patch(binary_image, x, y, middle_r*2)
+
         atmiddle = check_round(patch, middle_r)
         if atmiddle == 0:
             return True, middle_r
@@ -80,9 +83,22 @@ def check_star(binary_image : np.ndarray, x : int, y : int, min_r : int, max_r :
             high_r = middle_r
     middle_r = int((high_r + low_r)/2+0.5)
     patch = _make_patch(binary_image, x, y, middle_r*2)
-    atmiddle = check_round(patch, middle_r)
-    if atmiddle == 0:
-        return True, middle_r
+    
+    result_r = middle_r
+    atresult = check_round(patch, result_r)
+    if atresult == 0:
+        return True, result_r
+
+    result_r = high_r
+    atresult = check_round(patch, result_r)
+    if atresult == 0:
+        return True, result_r
+
+    result_r = low_r
+    atresult = check_round(patch, result_r)
+    if atresult == 0:
+        return True, result_r
+
     return False, None
 
 def calculate_brightness(image : np.ndarray, x : int, y : int, r : int):
@@ -120,7 +136,6 @@ def find_stars(binary_image : np.ndarray,
         mask = cv2.add(mask, label_mask)
 
     mask = mask.copy()
-
     contours = cv2.findContours(mask,
                                 cv2.RETR_EXTERNAL,
                                 cv2.CHAIN_APPROX_SIMPLE)
@@ -136,6 +151,7 @@ def find_stars(binary_image : np.ndarray,
         (center_x, center_y), _ = cv2.minEnclosingCircle(contour)
         center_x = int(center_x+0.5)
         center_y = int(center_y+0.5)
+
         is_star, radius = check_star(mask, center_x, center_y, min_r, max_r)
         if not is_star:
             continue
@@ -150,7 +166,7 @@ def detect_stars(image : np.ndarray):
     """Detect stars on image"""
     width = image.shape[1]
     height = image.shape[0]
-    blur_size = int(MAX_STAR_R*2)
+    blur_size = DETECTOR_BLUR_SIZE
     if blur_size % 2 == 0:
         blur_size += 1
 
@@ -169,26 +185,33 @@ def detect_stars(image : np.ndarray):
     mask[:, (width-BORDER_WIDTH):width] = 0
     mask[(height-BORDER_WIDTH):height, :] = 0
 
+    #print(min_pixels, num_pixels, max_pixels)
     return find_stars(mask, image, MIN_STAR_R, MAX_STAR_R)
 
 def configure_detector(*,
                        min_r = None,
-                       max_r=None,
+                       max_r = None,
                        border = None,
                        brightness_over_area = None,
                        inside_coeff = None,
-                       outside_coeff = None):
+                       outside_coeff = None,
+                       blur_size = None):
     """Configure detector parameters"""
+    global DETECTOR_BLUR_SIZE
     global MIN_STAR_R
     global MAX_STAR_R
     global BORDER_WIDTH
     global BRIGHTNESS_OVER_AREA
     global INSIDE_COEFF
     global OUTSIDE_COEFF
+    if blur_size is not None:
+        DETECTOR_BLUR_SIZE = blur_size
     if min_r is not None:
         MIN_STAR_R = min_r
     if max_r is not None:
         MAX_STAR_R = max_r
+        if MAX_STAR_R*2 > DETECTOR_BLUR_SIZE:
+            DETECTOR_BLUR_SIZE = int(MAX_STAR_R * 2)
     if border is not None:
         BORDER_WIDTH = border
     if brightness_over_area is not None:
