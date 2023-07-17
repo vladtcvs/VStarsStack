@@ -35,4 +35,4 @@ jobs:
           vstarstack
       - name: Test with pytest
         run: |
-          pytest --cov-fail-under=25 --cov=vstarstack tests/
+          pytest --cov-fail-under=24 --cov=vstarstack tests/

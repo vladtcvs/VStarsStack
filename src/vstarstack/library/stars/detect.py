@@ -20,11 +20,13 @@ import imutils.contours
 
 from skimage import measure
 
-THRESHOLD_BLOCK_SIZE=11
-THRESHOLD_C=-15
-BORDER_WIDTH = 10
-MIN_STAR_R = 2
-MAX_STAR_R = 20
+_detector_cfg = {
+    "THRESHOLD_BLOCK_SIZE" : 11,
+    "THRESHOLD_C" : -15,
+    "BORDER_WIDTH" : 10,
+    "MIN_STAR_R" : 2,
+    "MAX_STAR_R" : 20,
+}
 
 def calculate_brightness(image : np.ndarray, x : int, y : int, r : int):
     """Calculate brightness of a star at (x,y) with radius r"""
@@ -49,8 +51,8 @@ def _find_stars(gray_image : np.ndarray):
                                    255,
                                    cv2.ADAPTIVE_THRESH_MEAN_C,
                                    cv2.THRESH_BINARY,
-                                   THRESHOLD_BLOCK_SIZE,
-                                   THRESHOLD_C)
+                                   _detector_cfg["THRESHOLD_BLOCK_SIZE"],
+                                   _detector_cfg["THRESHOLD_C"])
     
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
     blob = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
@@ -85,9 +87,9 @@ def _find_stars(gray_image : np.ndarray):
         center_x = int(center_x+0.5)
         center_y = int(center_y+0.5)
 
-        if radius < MIN_STAR_R:
+        if radius < _detector_cfg["MIN_STAR_R"]:
             continue
-        if radius > MAX_STAR_R:
+        if radius > _detector_cfg["MAX_STAR_R"]:
             continue
 
         brightness = calculate_brightness(gray_image, center_x, center_y, int(radius+0.5))
@@ -98,7 +100,6 @@ def _find_stars(gray_image : np.ndarray):
 
 def detect_stars(image : np.ndarray):
     """Detect stars on image"""
-
     return _find_stars(image)
 
 def configure_detector(*,
@@ -108,18 +109,14 @@ def configure_detector(*,
                        thresh_block_size = None,
                        thresh_c = None):
     """Configure detector parameters"""
-    global MIN_STAR_R
-    global MAX_STAR_R
-    global BORDER_WIDTH
-    global THRESHOLD_BLOCK_SIZE
-    global THRESHOLD_C
+    global _detector_cfg
     if min_r is not None:
-        MIN_STAR_R = min_r
+        _detector_cfg["MIN_STAR_R"] = min_r
     if max_r is not None:
-        MAX_STAR_R = max_r
+        _detector_cfg["MAX_STAR_R"] = max_r
     if border is not None:
-        BORDER_WIDTH = border
+        _detector_cfg["BORDER_WIDTH"] = border
     if thresh_block_size is not None:
-        THRESHOLD_BLOCK_SIZE = thresh_block_size
+        _detector_cfg["THRESHOLD_BLOCK_SIZE"] = thresh_block_size
     if thresh_c is not None:
-        THRESHOLD_C = thresh_c
+        _detector_cfg["THRESHOLD_C"] = thresh_c
