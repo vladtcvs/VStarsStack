@@ -21,8 +21,8 @@ import imutils.contours
 from skimage import measure
 
 _detector_cfg = {
-    "THRESHOLD_BLOCK_SIZE" : 11,
-    "THRESHOLD_C" : -15,
+    "THRESHOLD_BLOCK_SIZE" : 31,
+    "THRESHOLD_COEFF" : 1.17,
     "BORDER_WIDTH" : 10,
     "MIN_STAR_R" : 2,
     "MAX_STAR_R" : 20,
@@ -40,6 +40,15 @@ def calculate_brightness(image : np.ndarray, x : int, y : int, r : int):
     #intensity = np.sum(masked) / np.sum(pos_mask)
     #return intensity * r
 
+
+def _threshold(image, radius, ratio):
+    kernel = np.zeros((2*radius+1, 2*radius+1))
+    cv2.circle(kernel, (radius, radius), radius, 1, -1)
+    kernel = kernel / np.sum(kernel)
+    filtered = cv2.filter2D(image, ddepth=-1, kernel=kernel)
+    mask = (image > filtered*ratio).astype('uint8')
+    return mask
+
 def _find_stars(gray_image : np.ndarray):
     """Find stars on image"""
     shape = gray_image.shape
@@ -47,12 +56,8 @@ def _find_stars(gray_image : np.ndarray):
     gray_image = cv2.GaussianBlur(gray_image, (3, 3), 0)
     gray_image = (gray_image / np.amax(gray_image) * 255).astype('uint8')
 
-    thresh = cv2.adaptiveThreshold(gray_image,
-                                   255,
-                                   cv2.ADAPTIVE_THRESH_MEAN_C,
-                                   cv2.THRESH_BINARY,
-                                   _detector_cfg["THRESHOLD_BLOCK_SIZE"],
-                                   _detector_cfg["THRESHOLD_C"])
+    thresh = _threshold(gray_image, _detector_cfg["THRESHOLD_BLOCK_SIZE"],
+                                    _detector_cfg["THRESHOLD_COEFF"])
     
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
     blob = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
@@ -107,7 +112,7 @@ def configure_detector(*,
                        max_r = None,
                        border = None,
                        thresh_block_size = None,
-                       thresh_c = None):
+                       thresh_coeff = None):
     """Configure detector parameters"""
     global _detector_cfg
     if min_r is not None:
@@ -118,5 +123,5 @@ def configure_detector(*,
         _detector_cfg["BORDER_WIDTH"] = border
     if thresh_block_size is not None:
         _detector_cfg["THRESHOLD_BLOCK_SIZE"] = thresh_block_size
-    if thresh_c is not None:
-        _detector_cfg["THRESHOLD_C"] = thresh_c
+    if thresh_coeff is not None:
+        _detector_cfg["THRESHOLD_COEFF"] = thresh_coeff
