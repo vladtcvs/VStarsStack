@@ -31,6 +31,7 @@ def get_expected_position(id):
     return None, None
 
 def run_test(id):
+    detect.configure_detector(max_r=10)
     x, y = get_expected_position(id)
     fname = os.path.join(dir_path, "stars/star_%s.png" % id)
     image = next(vstarstack.library.loaders.classic.readjpeg(fname))
@@ -72,3 +73,5 @@ def test_10():
 
 def test_11():
     run_test("011")
+
+#test_1()
