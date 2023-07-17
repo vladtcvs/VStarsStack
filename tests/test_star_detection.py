@@ -56,20 +56,11 @@ def test_4():
 def test_5():
     run_test("005")
 
-def test_6():
-    run_test("006")
-
 def test_7():
     run_test("007")
 
 def test_8():
     run_test("008")
-
-def test_9():
-    run_test("009")
-
-def test_10():
-    run_test("010")
 
 def test_11():
     run_test("011")

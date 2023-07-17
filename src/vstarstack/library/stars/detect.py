@@ -22,7 +22,7 @@ from skimage import measure
 
 _detector_cfg = {
     "THRESHOLD_BLOCK_SIZE" : 31,
-    "THRESHOLD_COEFF" : 1.17,
+    "THRESHOLD_COEFF" : 1.2,
     "BORDER_WIDTH" : 10,
     "MIN_STAR_R" : 2,
     "MAX_STAR_R" : 20,
@@ -31,15 +31,13 @@ _detector_cfg = {
 def calculate_brightness(image : np.ndarray, x : int, y : int, r : int):
     """Calculate brightness of a star at (x,y) with radius r"""
     patch = image[y-r:y+r+1, x-r:x+r+1]
+    if patch.shape[0] != 2*r+1 or patch.shape[1] != 2*r+1:
+        return None
     pos_mask = np.zeros(patch.shape)
     cv2.circle(pos_mask, (r, r), r, 1, -1)
-
     masked = patch * pos_mask
     brightness = math.sqrt(np.sum(masked) / math.pi)
     return brightness
-    #intensity = np.sum(masked) / np.sum(pos_mask)
-    #return intensity * r
-
 
 def _threshold(image, radius, ratio):
     kernel = np.zeros((2*radius+1, 2*radius+1))
@@ -98,6 +96,8 @@ def _find_stars(gray_image : np.ndarray):
             continue
 
         brightness = calculate_brightness(gray_image, center_x, center_y, int(radius+0.5))
+        if brightness is None:
+            continue
         stars.append({"x": center_x, "y": center_y, "size": brightness, "radius" : radius})
 
     stars.sort(key=lambda s: s["size"], reverse=True)
