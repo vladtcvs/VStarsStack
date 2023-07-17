@@ -42,8 +42,6 @@ def build_descriptions(image_description: dict,
     main = get_brightest(image_description["stars"], num_main, mindistance)
     descriptors = describe.build_descriptors(main, use_angles)
 
-    image_description.pop("stars")
-
     image_description["main"] = []
     for item, desc in zip(main, descriptors):
         record = {
