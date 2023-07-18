@@ -33,6 +33,6 @@ jobs:
       - name: Test that tools launches
         run: |
           vstarstack
-      - name: Test with pytest
+      - name: Test library with pytest
         run: |
-          pytest --cov-fail-under=24 --cov=vstarstack tests/
+          pytest --cov-fail-under=33 --cov=vstarstack.library tests/
