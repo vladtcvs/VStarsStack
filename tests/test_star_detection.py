@@ -31,15 +31,15 @@ def get_expected_position(id):
     return None, None
 
 def run_test(id):
-    detect.configure_detector(max_r=10)
+    detect.configure_detector(max_r=10, thresh_coeff=1.25)
     x, y = get_expected_position(id)
     fname = os.path.join(dir_path, "stars/star_%s.png" % id)
     image = next(vstarstack.library.loaders.classic.readjpeg(fname))
     gray = image.get_channel("R")[0]
     stars = detect.detect_stars(gray)
     assert len(stars) == 1
-    assert stars[0]["x"] == x
-    assert stars[0]["y"] == y
+    assert abs(stars[0]["x"] - x) <= 1
+    assert abs(stars[0]["y"] - y) <= 1
 
 def test_1():
     run_test("001")

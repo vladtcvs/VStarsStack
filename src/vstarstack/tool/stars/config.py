@@ -29,7 +29,7 @@ _module_configuration = {
         "matchfile" : (str, "match_table.json"),
     },
     "use_angles": (bool, True),
-    "brightness_over_neighbours": (float, 0.04),
+    "brightness_over_neighbours": (float, 2.0),
 }
 
 configuration = Configuration(_module_configuration)

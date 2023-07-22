@@ -22,7 +22,7 @@ from skimage import measure
 
 _detector_cfg = {
     "THRESHOLD_BLOCK_SIZE" : 31,
-    "THRESHOLD_COEFF" : 1.2,
+    "THRESHOLD_COEFF" : 2.0,
     "BORDER_WIDTH" : 10,
     "MIN_STAR_R" : 2,
     "MAX_STAR_R" : 20,

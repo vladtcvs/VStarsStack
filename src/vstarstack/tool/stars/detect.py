@@ -72,6 +72,8 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
         path = project.config.paths.npy_fixed
         jsonpath = project.config.paths.descs
 
+    thr_coeff = project.config.stars.brightness_over_neighbours
+    detect.configure_detector(thresh_coeff=thr_coeff)
     if os.path.isdir(path):
         _process_dir(path, jsonpath)
     else:
