@@ -15,6 +15,43 @@
 import os
 _PRGNAME = "vstarstack"
 
+def complete_path_in_dir(dirname : str | None, prefix : str):
+    paths = os.listdir(dirname)
+    variants = []
+    for path in paths:
+        if not path.startswith(prefix):
+            continue
+        if os.path.isdir(os.path.join(dirname, path)):
+            variants.append((path, True))
+        else:
+            variants.append((path, False))
+    return sorted(variants, key=lambda item : item[0])
+
+def autocomplete_files(prefix : str):
+    """Autocomplete path"""
+    pos = prefix.rfind(os.sep)
+    if pos == -1:
+        variants = complete_path_in_dir(None, prefix)
+        comps = []
+        for path, isdir in variants:
+            if isdir:
+                comps.append(path + os.sep)
+            else:
+                comps.append(path)
+        return comps
+
+    dirname = prefix[:pos]
+    last = prefix[pos+1:]
+    variants = complete_path_in_dir(dirname, last)
+    comps = []
+    for path, isdir in variants:
+        if isdir:
+            comps.append(os.path.join(dirname,  path + os.sep))
+        else:
+            comps.append(os.path.join(dirname, path))
+    return comps
+
+
 def autocompletion(commands : dict, argv : list):
     """Autocompletion"""
     if len(argv) == 0:
@@ -26,12 +63,11 @@ def autocompletion(commands : dict, argv : list):
             submodule = commands[cmd][0]
             if isinstance(submodule, dict):
                 return autocompletion(submodule, argv[1:])
-            files = os.listdir()
             if len(argv) > 1:
                 last = argv[-1]
             else:
                 last = ""
-            return [file for file in files if file.startswith(last)]
+            return autocomplete_files(last)
 
     variants = []
     for cmd in commands:
