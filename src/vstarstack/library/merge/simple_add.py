@@ -21,12 +21,14 @@ def simple_add(images : vstarstack.library.common.IImageSource) -> DataFrame:
     """Just add images"""
 
     summary = {}
+    params = {}
     summary_weight = {}
 
     if images.empty():
         return None
 
     for img in images.items():
+        params = img.params
         for channel_name in img.get_channels():
             channel, opts = img.get_channel(channel_name)
             if not opts["brightness"]:
@@ -49,7 +51,7 @@ def simple_add(images : vstarstack.library.common.IImageSource) -> DataFrame:
                 except Exception:
                     print("Can not add image. Skipping")
 
-    result = vstarstack.library.data.DataFrame()
+    result = vstarstack.library.data.DataFrame(params=params)
     for channel_name, channel in summary.items():
         print(channel_name)
         result.add_channel(channel, channel_name, brightness=True)

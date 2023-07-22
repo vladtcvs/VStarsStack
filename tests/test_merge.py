@@ -38,7 +38,8 @@ def test_simple_add():
     summ_weight = summ.get_channel(wn)[0]
     assert images_equal(summ_light, light*2)
     assert images_equal(summ_weight, weight*2)
-
+    assert summ.params["w"] == copy1.params["w"]
+    assert summ.params["h"] == copy1.params["h"]
 
 def test_simple_mean_1():
     original_image = next(readjpeg(os.path.join(dir_path, "test_image.png")))
@@ -54,6 +55,8 @@ def test_simple_mean_1():
     summ_weight = summ.get_channel(wn)[0]
     assert images_equal(summ_light, light)
     assert images_equal(summ_weight, weight*2)
+    assert summ.params["w"] == copy1.params["w"]
+    assert summ.params["h"] == copy1.params["h"]
 
 def test_simple_mean_2():
     peak = 36
@@ -98,6 +101,8 @@ def test_kappa_sigma_1():
     summ_weight = summ.get_channel(wn)[0]
     assert images_equal(summ_light, light)
     assert images_equal(summ_weight, weight*2)
+    assert summ.params["w"] == copy1.params["w"]
+    assert summ.params["h"] == copy1.params["h"]
 
 def test_kappa_sigma_2():
     original_image = next(readjpeg(os.path.join(dir_path, "test_image.png")))

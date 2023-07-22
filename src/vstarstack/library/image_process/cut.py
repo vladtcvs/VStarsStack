@@ -20,7 +20,19 @@ def cut(dataframe : vstarstack.library.data.DataFrame,
     """Cut part of image"""
 
     result = vstarstack.library.data.DataFrame(params=dataframe.params)
+    original_cox = 0
+    original_coy = 0
+    if "center_offset_x" in dataframe.params:
+        original_cox = dataframe.params["center_offset_x"]
+    if "center_offset_y" in dataframe.params:
+        original_coy = dataframe.params["center_offset_y"]
 
+    original_w = dataframe.params["w"]
+    original_h = dataframe.params["h"]
+    cutted_w = right - left
+    cutted_h = bottom - top
+    assert cutted_w > 0
+    assert cutted_h > 0
     for channel in dataframe.get_channels():
         image, opts = dataframe.get_channel(channel)
         if opts["encoded"]:
@@ -38,4 +50,8 @@ def cut(dataframe : vstarstack.library.data.DataFrame,
         result.add_channel(weight, w_channel, weight=True)
         result.add_channel_link(channel, w_channel, "weight")
 
+    result.params["w"] = cutted_w
+    result.params["h"] = cutted_h
+    result.params["center_offset_x"] = (left + right)/2 - original_w / 2 + original_cox
+    result.params["center_offset_y"] = (top + bottom)/2 - original_h / 2 + original_coy
     return result
