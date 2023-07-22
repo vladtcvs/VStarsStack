@@ -21,7 +21,11 @@ def complete_path_in_dir(dirname : str | None, prefix : str):
     for path in paths:
         if not path.startswith(prefix):
             continue
-        if os.path.isdir(os.path.join(dirname, path)):
+        if dirname is not None:
+            full_path = os.path.join(dirname, path)
+        else:
+            full_path = path
+        if os.path.isdir(full_path):
             variants.append((path, True))
         else:
             variants.append((path, False))
