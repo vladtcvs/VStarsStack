@@ -59,7 +59,7 @@ def _process_path(reader, exts, project: vstarstack.tool.cfg.Project, argv : lis
     output_dir = argv[1]
     files = []
     for ext in exts:
-        files += vstarstack.library.common.listfiles(input_dir, ext)
+        files += vstarstack.library.common.listfiles(input_dir, ext, recursive=True)
 
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
         args = [(reader, project, filename, output_dir, name) for name, filename in files]
