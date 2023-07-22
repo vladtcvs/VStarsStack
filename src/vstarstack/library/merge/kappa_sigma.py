@@ -119,6 +119,11 @@ def kappa_sigma(images: vstarstack.library.common.IImageSource,
     """Sigma clipped summary of images"""
     means = {}
     sigmas = {}
+    params = {}
+
+    first = next(images.items())
+    if first is not None:
+        params = first.params
 
     for step in range(steps):
         if steps > 1:
@@ -133,7 +138,7 @@ def kappa_sigma(images: vstarstack.library.common.IImageSource,
                                       sigmas,
                                       kappa2)
 
-    result = DataFrame()
+    result = DataFrame(params=params)
     for channel_name, light in lights.items():
         weight = weights[channel_name]
         result.add_channel(light, channel_name, brightness=True)
