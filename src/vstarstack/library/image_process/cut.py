@@ -20,7 +20,8 @@ def cut(dataframe : vstarstack.library.data.DataFrame,
     """Cut part of image"""
 
     result = vstarstack.library.data.DataFrame(params=dataframe.params)
-
+    w = right - left
+    h = bottom - top
     for channel in dataframe.get_channels():
         image, opts = dataframe.get_channel(channel)
         if opts["encoded"]:
@@ -38,4 +39,6 @@ def cut(dataframe : vstarstack.library.data.DataFrame,
         result.add_channel(weight, w_channel, weight=True)
         result.add_channel_link(channel, w_channel, "weight")
 
+    result.params["w"] = w
+    result.params["h"] = h
     return result
