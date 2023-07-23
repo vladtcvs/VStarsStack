@@ -107,3 +107,23 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
         dx = np.average(dxs)
         transformation = Movement(angle, dy, dx)
         return transformation
+
+    def __mul__(self, other):
+        """Multiply movements"""
+        angle1 = self.a
+        dx1 = self.dx
+        dy1 = self.dy
+
+        angle2 = other.a
+        dx2 = other.dx
+        dy2 = other.dy
+
+        angle = angle1 + angle2
+        dx = dx2 * math.cos(angle1) - dy2 * math.sin(angle1) + dx1
+        dy = dx2 * math.sin(angle1) + dy2 * math.cos(angle1) + dy1
+        return Movement(angle, dy, dx)
+
+    def inverse(self):
+        idx = -self.dx * math.cos(self.a) - self.dy * math.sin(self.a)
+        idy = -self.dy * math.cos(self.a) + self.dx * math.sin(self.a)
+        return Movement(-self.a, idy, idx)

@@ -212,3 +212,12 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
         rot = Rotation.from_rotvec(rotvec)
         transformation = Movement(rot)
         return transformation
+
+    def __mul__(self, other):
+        """Multiply movements"""
+        rot1 = self.rot
+        rot2 = other.rot
+        return Movement(rot1 * rot2)
+
+    def inverse(self):
+        return Movement(self.rev)

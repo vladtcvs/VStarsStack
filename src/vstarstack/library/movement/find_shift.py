@@ -60,3 +60,52 @@ def build_movements(movement : Movement, clusters : list):
                 except:
                     errors.append((name1, name2))
     return movements, errors
+
+def complete_movements(movement : Movement, movements : dict, compose : bool):
+    names = set()
+    for name1 in movements:
+        names.add(name1)
+        for name2 in movements[name1]:
+            names.add(name2)
+    changed = True
+
+    while changed:
+        changed = False
+        created = []
+
+        # create identity
+        for name in names:
+            if name not in movements:
+                created.append((name, name, movement.identity()))
+            elif name not in movements[name]:
+                created.append((name, name, movement.identity()))
+
+        # create inversed movements
+        for name1 in movements:
+            for name2 in movements[name1]:
+                if name1 not in movements[name2]:
+                    inversed = movements[name1][name2].inverse()
+                    created.append((name2, name1, inversed))
+
+        if len(created) == 0 and compose:
+            # create composed methods
+            for name1 in movements:
+                for name2 in movements[name1]:
+                    if name2 not in movements:
+                        continue
+                    for name3 in movements[name2]:
+                        if name3 in movements[name1]:
+                            continue
+                        # create movement by composition
+                        mov12 = movements[name1][name2]
+                        mov23 = movements[name2][name3]
+                        movement = mov12 * mov23
+                        created.append((name1, name3, movement))
+
+        for name1, name2, movement in created:
+            if name1 not in movements:
+                movements[name1] = {}
+            movements[name1][name2] = movement
+            changed = True
+
+    return movements

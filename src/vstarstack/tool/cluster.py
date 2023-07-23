@@ -22,7 +22,7 @@ import vstarstack.tool.cfg
 import vstarstack.tool.usage
 
 import vstarstack.library.data
-from vstarstack.library.movement.find_shift import build_movements
+from vstarstack.library.movement.find_shift import build_movements, complete_movements
 from vstarstack.library.movement.sphere import Movement
 
 def display(_project: vstarstack.tool.cfg.Project, argv: list):
@@ -80,6 +80,7 @@ def display(_project: vstarstack.tool.cfg.Project, argv: list):
 
 def find_shift(project: vstarstack.tool.cfg.Project, argv: list):
     """Display clusters"""
+    compose = project.config.cluster.compose_movements
     if len(argv) >= 2:
         clusters_f = argv[0]
         shifts_f = argv[1]
@@ -89,6 +90,7 @@ def find_shift(project: vstarstack.tool.cfg.Project, argv: list):
     with open(clusters_f, encoding='utf8') as f:
         clusters = json.load(f)
     shifts, errors = build_movements(Movement, clusters)
+    shifts = complete_movements(shifts, compose)
     serialized = {}
     for name1,shifts1 in shifts.items():
         serialized[name1] = {}

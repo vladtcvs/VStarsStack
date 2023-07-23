@@ -46,7 +46,10 @@ _module_configuration = {
         "sigma_clip_steps" : (int, 2),
     },
     "use_modules" : (list, []),
-    "cluster" : ("module", {"path" : (str, "clusters.json")}),
+    "cluster" : ("module", {
+        "path" : (str, "clusters.json"),
+        "compose_movements" : (bool, True),
+    }),
     "stars" : ("module", vstarstack.tool.stars.config.configuration),
     "objects" : ("module", vstarstack.tool.objects.config.configuration),
     "planets" : ("module", vstarstack.tool.planets.config.configuration),

@@ -84,14 +84,24 @@ class DescriptorMatcher:
                     break
         return matches
 
+def select_matching_images(first_item : int, num_of_descs : int, max_compares : int):
+    if max_compares == 0 or num_of_descs <= max_compares:
+        return range(num_of_descs)
+    indexes = []
+    for index in range(max_compares):
+        indexes.append((index + first_item + 1) % num_of_descs)
+    return indexes
+
 def build_stars_match_table(matcher : DescriptorMatcher,
-                            descs : list[list[describe.Descriptor]]):
+                            descs : list[list[describe.Descriptor]],
+                            max_compares : int):
     """
     Find stars matches between all images
 
     Arguments:
     * matcher - descriptor matcher
     * descs   - list of list of descriptors
+    * max_compares - maximal amount of compares. unlimited if 0
 
     Function create stars match table
     """
@@ -99,9 +109,11 @@ def build_stars_match_table(matcher : DescriptorMatcher,
     matches = {}
     for i, stars1 in enumerate(descs):
         matches[i] = {}
-        for j, stars2 in enumerate(descs):
+        indexes = select_matching_images(i, len(descs), max_compares)
+        for j in indexes:
             if i == j:
                 continue
+            stars2 = descs[j]
             matches[i][j] = matcher.build_match(stars1, stars2)
 
     return matches

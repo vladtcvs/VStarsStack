@@ -30,6 +30,7 @@ _module_configuration = {
     },
     "use_angles": (bool, True),
     "brightness_over_neighbours": (float, 2.0),
+    "max_compares": (int, 0),
 }
 
 configuration = Configuration(_module_configuration)

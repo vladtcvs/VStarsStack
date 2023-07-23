@@ -245,7 +245,7 @@ def test_match_net_1():
 
     matcher = match.DescriptorMatcher(1, 1e-3, 1e-3, 1e-2)
 
-    match_table = match.build_stars_match_table(matcher, lists)
+    match_table = match.build_stars_match_table(matcher, lists, 0)
 
     assert match_table[0][1][0]==0
     assert match_table[0][1][1]==2
@@ -325,7 +325,7 @@ def test_cluster_1():
     lists = [descriptors_1, descriptors_2]
 
     matcher = match.DescriptorMatcher(1, 1e-3, 1e-3, 1e-2)
-    match_table = match.build_stars_match_table(matcher, lists)
+    match_table = match.build_stars_match_table(matcher, lists, 0)
     clusters = cluster.find_clusters_in_match_table(match_table)
     assert len(clusters) == 3
     assert_has_cluster(clusters, {0:0, 1:0})

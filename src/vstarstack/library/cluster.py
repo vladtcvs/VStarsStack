@@ -18,12 +18,12 @@ class BadClusterException(Exception):
         Exception.__init__(self, "Bad cluster")
 
 def _get_new_object(match_table, star_cluster_assignment):
-    for imid1 in match_table:
-        for imid2 in match_table[imid1]:
-            for starid1 in match_table[imid1][imid2]:
-                if imid1 not in star_cluster_assignment or          \
-                    starid1 not in star_cluster_assignment[imid1]:
-                    return imid1, starid1
+    for image_id1 in match_table:
+        for image_id2 in match_table[image_id1]:
+            for star_id1 in match_table[image_id1][image_id2]:
+                if image_id1 not in star_cluster_assignment or          \
+                    star_id1 not in star_cluster_assignment[image_id1]:
+                    return image_id1, star_id1
     return None, None
 
 def _propagate_cluster_assignment(image_id : int,
