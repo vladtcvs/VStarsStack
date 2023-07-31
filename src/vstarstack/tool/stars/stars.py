@@ -30,7 +30,8 @@ def _enable_stars(project : vstarstack.tool.cfg.Project, _argv: list[str]):
 commands = {
     "config": (_enable_stars, "configure stars pipeline"),
     "detect": (vstarstack.tool.stars.detect.run, "detect stars"),
-    "show": (vstarstack.tool.stars.show.run, "display detected stars", "npy/light.zip channel descs/desc.json"),
+    "show": (vstarstack.tool.stars.show.show, "display detected stars", "npy/light.zip channel descs/desc.json"),
+    "show-match": (vstarstack.tool.stars.show.show_match, "display matched stars", "npy/light1.zip npy/light2.zip descs/desc1.json descs/desc2.json match_table.json"),
     "describe": (vstarstack.tool.stars.describe.run, "find descriptions for each image"),
     "match": (vstarstack.tool.stars.match.run, "match stars between images"),
     "cluster": (vstarstack.tool.stars.build_clusters.run,
