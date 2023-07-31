@@ -30,6 +30,7 @@ def _propagate_cluster_assignment(image_id : int,
                                   star_id : int,
                                   match_table : dict,
                                   star_cluster_assignment : dict):
+    changed = False
     cluster_id = star_cluster_assignment[image_id][star_id]
     for image_id2, matches in match_table[image_id].items():
         if star_id in matches:
@@ -41,9 +42,8 @@ def _propagate_cluster_assignment(image_id : int,
                     raise BadClusterException()
             else:
                 star_cluster_assignment[image_id2][star_id2] = cluster_id
-                _propagate_cluster_assignment(image_id2, star_id2,
-                                              match_table,
-                                              star_cluster_assignment)
+                changed = True
+    return changed
 
 def find_clusters_in_match_table(match_table : dict):
     """Build cluster of object from match table"""
@@ -62,8 +62,11 @@ def find_clusters_in_match_table(match_table : dict):
             object_cluster_assignment[image_id] = {}
         object_cluster_assignment[image_id][star_id] = cluster_id
         try:
-            _propagate_cluster_assignment(image_id, star_id,
-                                          match_table, object_cluster_assignment)
+            while _propagate_cluster_assignment(image_id,
+                                                star_id,
+                                                match_table,
+                                                object_cluster_assignment):
+                pass
         except BadClusterException:
             bad_clusters.append(cluster_id)
 

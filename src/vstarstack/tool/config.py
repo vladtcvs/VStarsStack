@@ -28,6 +28,7 @@ _module_configuration = {
         "descs" : (str, "descs", {"directory" : True}),
         "relative_shifts": (str, "shifts.json"),
         "absolute_shifts": (str, "shift.json"),
+        "shift_errors" : (str, "errors.csv"),
     },
     "telescope": {
         "camera": {
