@@ -331,3 +331,89 @@ def test_cluster_1():
     assert_has_cluster(clusters, {0:0, 1:0})
     assert_has_cluster(clusters, {0:1, 1:2})
     assert_has_cluster(clusters, {0:2, 1:1})
+
+def test_cluster_2():
+    stars1 = [
+        {
+            "id" : 1,
+            "lon" : 0,
+            "lat" : 0,
+            "size" : 1
+        },
+        {
+            "id" : 2,
+            "lon" : 1e-3,
+            "lat" : 0,
+            "size" : 2
+        },
+        {
+            "id" : 3,
+            "lon" : 0,
+            "lat" : 2e-3,
+            "size" : 3
+        }
+    ]
+    stars2 = [
+        {
+            "id" : 1,
+            "lon" : 0,
+            "lat" : 0,
+            "size" : 1
+        },
+        {
+            "id" : 2,
+            "lon" : 0,
+            "lat" : 1e-3,
+            "size" : 2
+        },
+        {
+            "id" : 3,
+            "lon" : 2e-3,
+            "lat" : 0,
+            "size" : 3
+        }
+    ]
+    stars3 = [
+        {
+            "id" : 1,
+            "lon" : 0,
+            "lat" : 0,
+            "size" : 1
+        },
+        {
+            "id" : 2,
+            "lon" : 0,
+            "lat" : 1e-3,
+            "size" : 2
+        },
+        {
+            "id" : 3,
+            "lon" : 2e-3,
+            "lat" : 0,
+            "size" : 3
+        }
+    ]
+    
+    descriptors_1 = describe.build_descriptors(stars1, True, None)
+    assert len(descriptors_1) == 3
+    descriptors_2 = describe.build_descriptors(stars2, True, None)
+    assert len(descriptors_2) == 3
+    descriptors_3 = describe.build_descriptors(stars3, True, None)
+    assert len(descriptors_3) == 3
+    
+    lists = [descriptors_1, descriptors_2, descriptors_3]
+
+    matcher = match.DescriptorMatcher(1, 1e-3, 1e-3, 1e-2)
+    match_table = match.build_stars_match_table(matcher, lists, 0)
+
+    match_table[0].pop(2)
+    match_table[1].pop(0)
+    match_table[2].pop(0)
+    match_table[2].pop(1)
+
+    clusters = cluster.find_clusters_in_match_table(match_table)
+    assert len(clusters) == 3
+
+    assert_has_cluster(clusters, {0:0, 1:0, 2:0})
+    assert_has_cluster(clusters, {0:1, 1:1, 2:1})
+    assert_has_cluster(clusters, {0:2, 1:2, 2:2})
