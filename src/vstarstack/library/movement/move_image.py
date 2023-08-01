@@ -64,9 +64,11 @@ def move_image(image : np.ndarray,
     return shifted, shifted_weight_layer
 
 def move_dataframe(dataframe : DataFrame,
-                   transformation : basic_movement.Movement):
+                   transformation : basic_movement.Movement,
+                   proj = None):
     """Apply movement to dataframe"""
-    proj = vstarstack.library.projection.tools.get_projection(dataframe)
+    if proj is None:
+        proj = vstarstack.library.projection.tools.get_projection(dataframe)
 
     for channel in dataframe.get_channels():
         image, opts = dataframe.get_channel(channel)

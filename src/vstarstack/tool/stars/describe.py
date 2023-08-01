@@ -39,7 +39,9 @@ def build_descriptions(image_description: dict,
                        use_angles : bool):
     """Build descriptors for first num_main brightest stars"""
     mindistance = min(image_description["h"], image_description["w"]) * mindist
-    main = get_brightest(image_description["stars"], num_main, mindistance)
+    stars = image_description["stars"]
+    stars = sorted(stars, key=lambda item: item["size"], reverse=True)
+    main = get_brightest(stars, num_main, mindistance)
     descriptors = describe.build_descriptors(main, use_angles)
 
     image_description["main"] = []

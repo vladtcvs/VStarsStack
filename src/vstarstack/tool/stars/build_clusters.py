@@ -21,6 +21,17 @@ import vstarstack.tool.cfg
 import vstarstack.library.common
 import vstarstack.library.cluster
 
+def _prepare_match_table(match_table):
+    mt = {}
+    for image_id1 in match_table:
+        mt[image_id1] = {}
+        for image_id2 in match_table[image_id1]:
+            mt[image_id1][image_id2] = {}
+            for star_id1 in match_table[image_id1][image_id2]:
+                star_id2 = match_table[image_id1][image_id2][star_id1]
+                mt[image_id1][image_id2][int(star_id1)] = star_id2
+    return mt
+
 def run(project: vstarstack.tool.cfg.Project, argv: list):
     if len(argv) >= 2:
         descs_path = argv[0]
@@ -32,11 +43,13 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
         cluster_f = project.config.cluster.path
 
     with open(match_table_f, encoding='utf8') as f:
-        match_table = json.load(f)
+        match_table = _prepare_match_table(json.load(f))
 
+    print("Find star index cluster")
     clusters = vstarstack.library.cluster.find_clusters_in_match_table(match_table)
     dclusters = sorted(clusters, key=lambda x : len(x), reverse=True)
     dclusters = [item for item in dclusters if len(item) > 1]
+    print("Done")
 
     stars_files = vstarstack.library.common.listfiles(descs_path, ".json")
     descs = {}

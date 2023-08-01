@@ -14,6 +14,7 @@
 
 import os
 import json
+import csv
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -22,7 +23,7 @@ import vstarstack.tool.cfg
 import vstarstack.tool.usage
 
 import vstarstack.library.data
-from vstarstack.library.movement.find_shift import build_movements
+from vstarstack.library.movement.find_shift import build_movements, complete_movements
 from vstarstack.library.movement.sphere import Movement
 
 def display(_project: vstarstack.tool.cfg.Project, argv: list):
@@ -80,15 +81,19 @@ def display(_project: vstarstack.tool.cfg.Project, argv: list):
 
 def find_shift(project: vstarstack.tool.cfg.Project, argv: list):
     """Display clusters"""
+    compose = project.config.cluster.compose_movements
     if len(argv) >= 2:
         clusters_f = argv[0]
         shifts_f = argv[1]
+        error_f = "shift_errors.csv"
     else:
         clusters_f = project.config.cluster.path
         shifts_f = project.config.paths.relative_shifts
+        error_f = project.config.paths.shift_errors
     with open(clusters_f, encoding='utf8') as f:
         clusters = json.load(f)
     shifts, errors = build_movements(Movement, clusters)
+    shifts = complete_movements(Movement, shifts, compose)
     serialized = {}
     for name1,shifts1 in shifts.items():
         serialized[name1] = {}
@@ -96,10 +101,16 @@ def find_shift(project: vstarstack.tool.cfg.Project, argv: list):
             serialized[name1][name2] = shifts[name1][name2].serialize()
     if len(errors) > 0:
         print("Couldn't build movement for pairs:")
-        for name1, name2 in errors:
-            print(f"\t{name2} -> {name1}")
+        with open(error_f, "w", encoding='utf8') as f:
+            writer = csv.writer(f)
+            writer.writerow(["name2", "name1"])
+            for name1, name2 in errors:
+                print(f"\t{name2} -> {name1}")
+                writer.writerow([name2,name1])
+        
     with open(shifts_f, "w", encoding='utf8') as f:
         json.dump(serialized, f, ensure_ascii=False, indent=4)
+    
 
 commands = {
     "display": (display,

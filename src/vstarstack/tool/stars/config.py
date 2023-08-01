@@ -16,20 +16,21 @@ from vstarstack.tool.configuration import Configuration
 
 _module_configuration = {
     "describe" : {
-        "num_main" : (int, 20),
-        "mindist" : (float, 0.1),
+        "num_main" : (int, 15),
+        "mindist" : (float, 0.05),
     },
     "match" : {
         "max_angle_diff_k": (float, 0.005),
-        "max_size_diff": (float, 0.1),
-        "max_dangle_diff": (float, 2.0),
-        "min_matched_ditems": (int, 15),
+        "max_size_diff": (float, 0.2),
+        "max_dangle_diff": (float, 1.5),
+        "min_matched_ditems": (int, 20),
     },
     "paths" : {
         "matchfile" : (str, "match_table.json"),
     },
     "use_angles": (bool, True),
     "brightness_over_neighbours": (float, 2.0),
+    "max_compares": (int, 0),
 }
 
 configuration = Configuration(_module_configuration)

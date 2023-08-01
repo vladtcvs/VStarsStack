@@ -51,3 +51,11 @@ class Movement(ABC):
     @abstractmethod
     def identity():
         """Build identity movement"""
+
+    @abstractmethod
+    def inverse(self):
+        """Inverted movement"""
+
+    @abstractmethod
+    def __mul__(self, other):
+        """Multiply movements"""

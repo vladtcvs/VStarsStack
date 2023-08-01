@@ -20,6 +20,7 @@ import vstarstack.tool.usage
 import vstarstack.tool.cfg
 import vstarstack.library.common
 
+from vstarstack.library.stars.match import select_matching_images
 from vstarstack.library.stars.match import DescriptorMatcher
 from vstarstack.library.stars import describe
 
@@ -39,6 +40,7 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
         starsdir = project.config.paths.descs
         matchfile = project.config.stars.paths.matchfile
 
+    max_compares = project.config.stars.max_compares
     starsfiles = vstarstack.library.common.listfiles(starsdir, ".json")
     descs = []
     name_fname = {}
@@ -77,12 +79,16 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
                                 max_angle_diff,
                                 max_dangle_diff,
                                 max_size_diff)
-    total = len(starsfiles)**2
-    print(f"total = {total}")
+    total = 0
     args = []
-    for desc1 in descs:
-        for desc2 in descs:
+    for index1, desc1 in enumerate(descs):
+        indexes = select_matching_images(index1, len(descs), max_compares)
+        for index2 in indexes:
+            desc2 = descs[index2]
             args.append((matcher, desc1[0], desc2[0], desc1[1], desc2[1]))
+            total += 1
+
+    print(f"total = {total}")
     match_table = {}
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
         results = pool.starmap(match_stars, args)
