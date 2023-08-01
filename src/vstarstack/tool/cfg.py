@@ -47,8 +47,9 @@ class Project(object):
     """Holder for configuration"""
     def __init__(self, config_data : dict = None):
         self.config = Configuration(vstarstack.tool.config._module_configuration)
+        self.updated = False
         if config_data is not None:
-            self.config.load_configuration(config_data)
+            self.updated = self.config.load_configuration(config_data)
 
 _PROJECT = None
 
@@ -64,6 +65,14 @@ def get_project(filename=None):
         with open(filename, encoding='utf8') as f:
             config = json.load(f)
         _PROJECT = Project(config)
+        if _PROJECT.updated:
+            print("Config updated, saving")
+            try:
+                with open(filename, "w", encoding='utf8') as f:
+                    json.dump(_PROJECT.config.write_configuration(),
+                              f, indent=4, ensure_ascii=False)
+            except:
+                print("Can't update project file")
     return _PROJECT
 
 def store_project(project : Project = None, filename=None):

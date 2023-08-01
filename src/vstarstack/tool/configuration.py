@@ -59,20 +59,23 @@ class Configuration:
             data[key] = getattr(self, key).write_configuration()
         return data
 
-    def load_configuration(self, saved):
+    def load_configuration(self, saved) -> bool:
         """Load configuration from file"""
+        updated = False
         self.used_modules = []
         for key, _ in self.fields.items():
             if key in saved:
                 setattr(self, key, saved[key])
             else:
-                setattr(self, key, None)
+                updated = True
         for key in self.listed_modules:
             if key not in saved:
                 continue
-            getattr(self, key).load_configuration(saved[key])
+            updated_sub = getattr(self, key).load_configuration(saved[key])
+            updated = updated or updated_sub
             if key not in self.builtin_modules:
                 self.used_modules.append(key)
+        return updated
 
     def enable_module(self, module):
         """Enable module"""
