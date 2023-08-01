@@ -28,6 +28,7 @@ def show(project: vstarstack.tool.cfg.Project, argv: list):
     channel = argv[1]
     with open(argv[2], encoding='utf8') as f:
         descs = json.load(f)
+    show_all = vstarstack.tool.cfg.get_param("all", bool, False)
     slope = vstarstack.tool.cfg.get_param("multiply", float, 1)
     layer, _ = image.get_channel(channel)
     layer = np.clip(layer/np.amax(layer)*slope, 0, 1)
@@ -37,8 +38,13 @@ def show(project: vstarstack.tool.cfg.Project, argv: list):
     showed[:,:,0] = layer
     showed[:,:,1] = layer
     showed[:,:,2] = layer
-    for star in descs["stars"]:
+    if show_all:
+        items = descs["stars"]
+    else:
+        items = [item["star"] for item in descs["main"]]
+    for star in items:
         cv2.circle(showed, (star["x"], star["y"]), int(star["size"]+11), (255,0,0), 1)
+
     plt.imshow(showed)
     plt.show()
 
