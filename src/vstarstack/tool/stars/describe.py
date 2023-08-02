@@ -14,6 +14,7 @@
 import json
 import os
 
+import vstarstack.tool.common
 import vstarstack.tool.cfg
 import vstarstack.library.common
 
@@ -64,7 +65,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
     num_main = project.config.stars.describe.num_main
     mindist = project.config.stars.describe.mindist
 
-    files = vstarstack.library.common.listfiles(path, ".json")
+    files = vstarstack.tool.common.listfiles(path, ".json")
 
     for name, filename in files:
         print(name)
@@ -75,5 +76,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
                                          mindist,
                                          project.config.stars.use_angles)
 
-        with open(os.path.join(outpath, name + ".json"), "w", encoding='utf8') as f:
+        jsonfname = os.path.join(outpath, name + ".json")
+        vstarstack.tool.common.check_dir_exists(jsonfname)
+        with open(jsonfname, "w", encoding='utf8') as f:
             json.dump(description, f, indent=4)

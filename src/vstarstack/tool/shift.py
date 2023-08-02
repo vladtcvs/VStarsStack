@@ -27,6 +27,8 @@ import vstarstack.library.common
 import vstarstack.library.movement.select_shift
 import vstarstack.library.movement.move_image
 
+import vstarstack.tool.common
+
 def select_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
     """Select optimal shift source"""
     if len(argv) >= 2:
@@ -51,6 +53,7 @@ def _make_shift(name : str, filename : str, shift : Movement, outfname : str):
     print(f"Processing {name}")
     dataframe = vstarstack.library.data.DataFrame.load(filename)
     result = vstarstack.library.movement.move_image.move_dataframe(dataframe, shift)
+    vstarstack.tool.common.check_dir_exists(outfname)
     result.store(outfname)
 
 def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
@@ -70,7 +73,7 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
     for name,shift_ser in serialized.items():
         shifts[name] = Movement.deserialize(shift_ser)
 
-    images = vstarstack.library.common.listfiles(npy_dir, ".zip")
+    images = vstarstack.tool.common.listfiles(npy_dir, ".zip")
     args = [(name, filename, shifts[name], os.path.join(shifted_dir, name + ".zip")) 
             for name, filename in images]
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:

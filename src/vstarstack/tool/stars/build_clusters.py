@@ -17,7 +17,7 @@ import json
 
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
-
+import vstarstack.tool.common
 import vstarstack.library.common
 import vstarstack.library.cluster
 
@@ -51,7 +51,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
     dclusters = [item for item in dclusters if len(item) > 1]
     print("Done")
 
-    stars_files = vstarstack.library.common.listfiles(descs_path, ".json")
+    stars_files = vstarstack.tool.common.listfiles(descs_path, ".json")
     descs = {}
     for name, fname in stars_files:
         with open(fname, encoding='utf8') as file:

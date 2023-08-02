@@ -13,6 +13,7 @@
 #
 import os
 
+import vstarstack.tool.common
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
 import vstarstack.library.common
@@ -26,6 +27,7 @@ def _process_file_flatten(input_fname : str,
     dataframe = vstarstack.library.data.DataFrame.load(input_fname)
     flat = vstarstack.library.data.DataFrame.load(flat_fname)
     result = vstarstack.library.calibration.flat.flatten(dataframe, flat)
+    vstarstack.tool.common.check_dir_exists(output_fname)
     result.store(output_fname)
 
 def _process_file_remove_dark(input_fname : str,
@@ -34,12 +36,13 @@ def _process_file_remove_dark(input_fname : str,
     dataframe = vstarstack.library.data.DataFrame.load(input_fname)
     dark = vstarstack.library.data.DataFrame.load(dark_fname)
     result = vstarstack.library.calibration.dark.remove_dark(dataframe, dark)
+    vstarstack.tool.common.check_dir_exists(output_fname)
     result.store(output_fname)
 
 def _process_dir_flatten(input_path : str,
                          flat_fname : str,
                          output_path : str):
-    files = vstarstack.library.common.listfiles(input_path, ".zip")
+    files = vstarstack.tool.common.listfiles(input_path, ".zip")
     for name, filename in files:
         print(f"Processing {name}")
         output_fname = os.path.join(output_path, name + ".zip")
@@ -48,7 +51,7 @@ def _process_dir_flatten(input_path : str,
 def _process_dir_remove_dark(input_path : str,
                       dark_fname : str,
                       output_path : str):
-    files = vstarstack.library.common.listfiles(input_path, ".zip")
+    files = vstarstack.tool.common.listfiles(input_path, ".zip")
     for name, filename in files:
         print(f"Processing {name}")
         output_fname = os.path.join(output_path, name + ".zip")
@@ -78,7 +81,7 @@ def _process_build_dark(_project : vstarstack.tool.cfg.Project,
                         argv : list[str]):
     input_path = argv[0]
     dark_fname = argv[1]
-    files = vstarstack.library.common.listfiles(input_path, ".zip")
+    files = vstarstack.tool.common.listfiles(input_path, ".zip")
     darks = [item[1] for item in files]
     src = vstarstack.library.common.FilesImageSource(darks)
     dark = vstarstack.library.calibration.dark.prepare_darks(src)
@@ -89,7 +92,7 @@ def _process_build_flat_simple(_project : vstarstack.tool.cfg.Project,
     input_path = argv[0]
     flat_fname = argv[1]
     smooth = vstarstack.tool.cfg.get_param("smooth", int, 31)
-    files = vstarstack.library.common.listfiles(input_path, ".zip")
+    files = vstarstack.tool.common.listfiles(input_path, ".zip")
     flats = [item[1] for item in files]
     src = vstarstack.library.common.FilesImageSource(flats)
     flat = vstarstack.library.calibration.flat.prepare_flat_simple(src, smooth)
@@ -102,10 +105,11 @@ def _process_build_flat_sky(_project : vstarstack.tool.cfg.Project,
     smooth = vstarstack.tool.cfg.get_param("smooth", int, 31)
     if smooth % 2 == 0:
         smooth += 1
-    files = vstarstack.library.common.listfiles(input_path, ".zip")
+    files = vstarstack.tool.common.listfiles(input_path, ".zip")
     flats = [item[1] for item in files]
     src = vstarstack.library.common.FilesImageSource(flats)
     flat = vstarstack.library.calibration.flat.prepare_flat_sky(src, smooth)
+    vstarstack.tool.common.check_dir_exists(flat_fname)
     flat.store(flat_fname)
 
 commands = {

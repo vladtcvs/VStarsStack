@@ -16,6 +16,7 @@ import os
 import json
 import numpy  as np
 
+import vstarstack.tool.common
 import vstarstack.tool.cfg
 import vstarstack.library.data
 import vstarstack.library.common
@@ -53,11 +54,12 @@ def _process_file(fname, jsonfile):
         "w": image.params["w"],
     }
 
+    vstarstack.tool.common.check_dir_exists(jsonfile)
     with open(jsonfile, "w", encoding="utf8") as f:
         json.dump(desc, f, indent=4)
 
 def _process_dir(path, jsonpath):
-    files = vstarstack.library.common.listfiles(path, ".zip")
+    files = vstarstack.tool.common.listfiles(path, ".zip")
 
     for name, filename in files:
         print(name)

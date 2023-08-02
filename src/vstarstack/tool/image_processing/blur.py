@@ -20,11 +20,14 @@ import vstarstack.library.common
 import vstarstack.library.data
 import vstarstack.library.image_process.blur
 
+import vstarstack.tool.common
+
 def blur(name, fname, outname, size):
     print(name)
 
     img = vstarstack.library.data.DataFrame.load(fname)
     img = vstarstack.library.image_process.blur.blur(img, size)
+    vstarstack.tool.common.check_dir_exists(outname)
     img.store(outname)
 
 def process_file(argv):
@@ -39,7 +42,7 @@ def process_dir(argv):
     inpath = argv[0]
     outpath = argv[1]
     size = int(argv[2])
-    files = vstarstack.library.common.listfiles(inpath, ".zip")
+    files = vstarstack.tool.common.listfiles(inpath, ".zip")
     args = [(name, fname, os.path.join(outpath, name + ".zip"), size) for name, fname in files]
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
         pool.starmap(blur, args)

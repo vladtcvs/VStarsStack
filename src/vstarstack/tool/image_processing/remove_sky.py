@@ -21,7 +21,7 @@ import vstarstack.tool.cfg
 import vstarstack.library.common
 import vstarstack.library.data
 import vstarstack.library.image_process.remove_sky
-
+import vstarstack.tool.common
 
 def remove_sky(name, infname, outfname, model):
     """Remove sky from file"""
@@ -29,6 +29,7 @@ def remove_sky(name, infname, outfname, model):
 
     img = vstarstack.library.data.DataFrame.load(infname)
     vstarstack.library.image_process.remove_sky.remove_sky(img, model)
+    vstarstack.tool.common.check_dir_exists(outfname)
     img.store(outfname)
 
 
@@ -44,7 +45,7 @@ def process_dir(argv, model_name):
     """Remove sky from all files in directory"""
     inpath = argv[0]
     outpath = argv[1]
-    files = vstarstack.library.common.listfiles(inpath, ".zip")
+    files = vstarstack.tool.common.listfiles(inpath, ".zip")
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
         pool.starmap(remove_sky, [(name, fname, os.path.join(
             outpath, name + ".zip"), model_name) for name, fname in files])

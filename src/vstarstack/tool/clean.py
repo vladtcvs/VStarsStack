@@ -14,6 +14,7 @@
 
 import os
 
+import vstarstack.tool.common
 import vstarstack.library.common
 import vstarstack.tool.cfg
 
@@ -23,7 +24,7 @@ def run(project: vstarstack.tool.cfg.Project, _argv: list):
     shifted = project.config.paths.aligned
 
     for path in [orig, fixed, shifted]:
-        files = vstarstack.library.common.listfiles(path, ".zip")
+        files = vstarstack.tool.common.listfiles(path, ".zip")
         for _, filename in files:
             print(filename)
             os.remove(filename)

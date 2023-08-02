@@ -20,6 +20,7 @@ import vstarstack.library.data
 import vstarstack.tool.cfg
 import vstarstack.library.common
 import vstarstack.tool.usage
+import vstarstack.tool.common
 
 import vstarstack.library.objects.brightness_detector as bd
 import vstarstack.library.objects.disc_detector as dd
@@ -67,11 +68,12 @@ def _process_file(project, filename, descfilename, detector):
 
     if len(planets) > 0:
         desc["object"] = planets[0]
+        vstarstack.tool.common.check_dir_exists(descfilename)
         with open(descfilename, "w", encoding='utf8') as f:
             json.dump(desc, f, indent=4)
 
 def _process_path(project, npys, descs, detector):
-    files = vstarstack.library.common.listfiles(npys, ".zip")
+    files = vstarstack.tool.common.listfiles(npys, ".zip")
     for name, filename in files:
         print(name)
         out = os.path.join(descs, name + ".json")

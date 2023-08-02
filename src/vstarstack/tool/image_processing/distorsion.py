@@ -21,6 +21,7 @@ import vstarstack.tool.usage
 import vstarstack.library.common
 import vstarstack.library.image_process.distorsion
 import vstarstack.library.data
+import vstarstack.tool.common
 
 def dedistorsion(distorsion : vstarstack.library.image_process.distorsion.Distorsion,
                  name : str,
@@ -30,6 +31,7 @@ def dedistorsion(distorsion : vstarstack.library.image_process.distorsion.Distor
     print(f"Processing {name}")
     dataframe = vstarstack.library.data.DataFrame.load(infname)
     dataframe = vstarstack.library.image_process.distorsion.fix_distorsion(dataframe, distorsion)
+    vstarstack.tool.common.check_dir_exists(outfname)
     dataframe.store(outfname)
 
 def _process_file(distorsion : vstarstack.library.image_process.distorsion.Distorsion,
@@ -43,7 +45,7 @@ def _process_dir(distorsion : vstarstack.library.image_process.distorsion.Distor
                 argv: list):
     inpath = argv[0]
     outpath = argv[1]
-    files = vstarstack.library.common.listfiles(inpath, ".zip")
+    files = vstarstack.tool.common.listfiles(inpath, ".zip")
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
         pool.starmap(dedistorsion, [(distorsion, name, fname, os.path.join(
             outpath, name + ".zip")) for name, fname in files])
