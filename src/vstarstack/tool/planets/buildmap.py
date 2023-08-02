@@ -19,6 +19,7 @@ import vstarstack.tool.cfg
 import vstarstack.tool.usage
 import vstarstack.library.common
 import vstarstack.library.planetmap
+import vstarstack.tool.common
 
 def _process_file(project : vstarstack.tool.cfg.Project,
                  filename : str,
@@ -28,7 +29,7 @@ def _process_file(project : vstarstack.tool.cfg.Project,
 def _process_path(project : vstarstack.tool.cfg.Project,
                  images_path : str,
                  maps_path : str):
-    files = vstarstack.library.common.listfiles(images_path, ".zip")
+    files = vstarstack.tool.common.listfiles(images_path, ".zip")
     for name, filename in files:
         print(name)
         out = os.path.join(maps_path, name + ".zip")

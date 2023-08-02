@@ -19,7 +19,7 @@ import vstarstack.tool.usage
 import vstarstack.library.common
 import vstarstack.library.data
 import vstarstack.library.image_process.border
-
+import vstarstack.tool.common
 
 def border(name, fname, outname, bw_left, bw_top, bw_right, bw_bottom):
     print(name)
@@ -28,6 +28,7 @@ def border(name, fname, outname, bw_left, bw_top, bw_right, bw_bottom):
     img = vstarstack.library.image_process.border.border(img,
                                                          bw_left, bw_top,
                                                          bw_right, bw_bottom)
+    vstarstack.tool.common.check_dir_exists(outname)
     img.store(outname)
 
 def process_file(argv):
@@ -65,7 +66,7 @@ def process_dir(argv):
         brd_right = int(bbw[0])
         brd_bottom = int(bbw[0])
 
-    files = vstarstack.library.common.listfiles(inpath, ".zip")
+    files = vstarstack.tool.common.listfiles(inpath, ".zip")
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
         pool.starmap(border, [(name, fname, os.path.join(outpath, name + ".zip"),
                  brd_left, brd_top, brd_right, brd_bottom) for name, fname in files])

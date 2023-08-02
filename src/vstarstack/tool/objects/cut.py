@@ -17,6 +17,7 @@ import os
 import vstarstack.tool.cfg
 import vstarstack.library.common
 import vstarstack.library.data
+import vstarstack.tool.common
 
 def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
     if len(argv) < 3:
@@ -35,7 +36,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
 
     require_size = project.config.objects.require_size
 
-    files = vstarstack.library.common.listfiles(jsonpath, ".json")
+    files = vstarstack.tool.common.listfiles(jsonpath, ".json")
     for name, filename in files:
         print(f"Loading info: {name}")
         with open(filename, encoding='utf8') as f:
@@ -101,6 +102,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
                 "y2": bottom
             }
             image.add_channel(img, channel, **opts)
+            vstarstack.tool.common.check_dir_exists(filename)
             with open(filename, "w", encoding='utf8') as f:
                 json.dump(detection, f, indent=4, ensure_ascii=False)
 
@@ -108,4 +110,5 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
             image.add_channel_link(ch, value, "weight")
 
         outname = os.path.join(cutpath, name + ".zip")
+        vstarstack.tool.common.check_dir_exists(outname)
         image.store(outname)

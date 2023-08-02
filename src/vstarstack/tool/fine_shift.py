@@ -23,6 +23,8 @@ import vstarstack.tool.cfg
 import vstarstack.library.data
 import vstarstack.library.common
 
+import vstarstack.tool.common
+
 ncpu = vstarstack.tool.cfg.nthreads
 
 def create_aligner(project: vstarstack.tool.cfg.Project):
@@ -57,6 +59,7 @@ def process_alignment(name : str,
     descriptor["fine_shift"] = {}
     descriptor["fine_shift"]["descriptor"] = data
 
+    vstarstack.tool.common.check_dir_exists(outpath)
     with open(outpath, "w", encoding='utf8') as f:
         json.dump(descriptor, f, indent=4, ensure_ascii=False)
 
@@ -106,6 +109,7 @@ def apply_alignment_file(name : str,
 
     dataframe = vstarstack.library.data.DataFrame.load(image_f)
     dataframe = aligner.apply_alignment(dataframe, descriptor)
+    vstarstack.tool.common.check_dir_exists(output_f)
     dataframe.store(output_f)
 
 def _apply_alignment_file_wrapper(arg):
@@ -124,7 +128,7 @@ def apply_alignment(project: vstarstack.tool.cfg.Project, argv: list):
 
     aligner = create_aligner(project)
     if os.path.isdir(npys):
-        files = vstarstack.library.common.listfiles(npys, ".zip")
+        files = vstarstack.tool.common.listfiles(npys, ".zip")
         with mp.Pool(ncpu) as pool:
             args = [(name,
                      fname,

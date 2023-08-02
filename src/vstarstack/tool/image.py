@@ -21,7 +21,8 @@ import matplotlib.pyplot as plt
 from vstarstack.library.image_process.border import border
 from vstarstack.library.image_process.cut import cut
 import vstarstack.library.data
-import vstarstack.library.common
+import vstarstack.tool.common
+
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 
@@ -135,6 +136,7 @@ def _convert(_project, argv):
 
         img = img*65535
         img = img.astype('uint16')
+        vstarstack.tool.common.check_dir_exists(fname)
         imageio.imwrite(fname, img)
 
 
@@ -148,6 +150,7 @@ def _cut(_project, argv):
 
     dataframe = vstarstack.library.data.DataFrame.load(path)
     result = cut(dataframe, left, top, right, bottom)
+    vstarstack.tool.common.check_dir_exists(out)
     result.store(out)
 
 def _rename_channel(_project, argv):
@@ -157,6 +160,7 @@ def _rename_channel(_project, argv):
     print(name)
     dataframe = vstarstack.library.data.DataFrame.load(name)
     dataframe.rename_channel(channel, target)
+    vstarstack.tool.common.check_dir_exists(name)
     dataframe.store(name)
 
 def _exposures(_project, argv):

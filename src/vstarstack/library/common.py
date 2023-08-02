@@ -77,26 +77,6 @@ def getpixel(img, y, x, interpolate=True):
     return getpixel_none(img, y, x)
 
 
-def listfiles(path, ext=None, recursive=False):
-    images = []
-    for f in os.listdir(path):
-        filename = os.path.abspath(os.path.join(path, f))
-
-        if recursive and os.path.isdir(filename):
-            bdname = os.path.basename(filename)
-            rimages = listfiles(os.path.join(path, filename), ext, True)
-            rimages = [(bdname + "_" + item[0], item[1]) for item in rimages]
-            images += rimages
-
-        if not os.path.isfile(filename):
-            continue
-        if (ext is not None) and (f[-len(ext):].lower() != ext):
-            continue
-
-        name = os.path.splitext(f)[0]
-        images.append((name, filename))
-    images.sort(key=lambda item: item[0])
-    return images
 
 
 def length(vec):

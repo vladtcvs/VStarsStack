@@ -25,6 +25,7 @@ import vstarstack.tool.image_processing.remove_sky
 import vstarstack.tool.image_processing.border
 import vstarstack.tool.image_processing.normalize
 import vstarstack.tool.image_processing.blur
+import vstarstack.tool.common
 
 def copy(project: vstarstack.tool.cfg.Project, argv: list):
     """Copy files"""
@@ -34,7 +35,7 @@ def copy(project: vstarstack.tool.cfg.Project, argv: list):
     else:
         orig = project.config.paths.npy_orig
         fixed = project.config.paths.npy_fixed
-    files = vstarstack.library.common.listfiles(orig, ".zip")
+    files = vstarstack.tool.common.listfiles(orig, ".zip")
     for name, fname in files:
         print("Copying ", name)
         fname_out = os.path.join(fixed, name + ".zip")

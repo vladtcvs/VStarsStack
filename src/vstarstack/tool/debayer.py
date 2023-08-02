@@ -18,6 +18,7 @@ import vstarstack.library.data
 import vstarstack.library.debayer.bayer
 import vstarstack.library.debayer.yuv422
 
+import vstarstack.tool.common
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
 import vstarstack.library.common
@@ -38,10 +39,11 @@ def _process_file(default_format, fname, output):
         dataframe = vstarstack.library.debayer.yuv422.yuv_422_dataframe(dataframe, "raw")
     else:
         return
+    vstarstack.tool.common.check_dir_exists(output)
     dataframe.store(output)
 
 def _process_path(default_format, input_path, output_path):
-    files = vstarstack.library.common.listfiles(input_path, ".zip")
+    files = vstarstack.tool.common.listfiles(input_path, ".zip")
     for name, fname in files:
         print(name)
         _process_file(default_format, fname, os.path.join(output_path, name + ".zip"))

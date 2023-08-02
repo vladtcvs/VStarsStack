@@ -16,6 +16,7 @@ import multiprocessing as mp
 import json
 import math
 
+import vstarstack.tool.common
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 import vstarstack.library.common
@@ -41,7 +42,7 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
         matchfile = project.config.stars.paths.matchfile
 
     max_compares = project.config.stars.max_compares
-    starsfiles = vstarstack.library.common.listfiles(starsdir, ".json")
+    starsfiles = vstarstack.tool.common.listfiles(starsdir, ".json")
     descs = []
     name_fname = {}
     w = None

@@ -20,12 +20,14 @@ import vstarstack.tool.cfg
 import vstarstack.library.common
 import vstarstack.library.data
 import vstarstack.library.image_process.normalize
+import vstarstack.tool.common
 
 def normalize(name, infname, outfname):
     """Normalize image"""
     print(name)
     img = vstarstack.library.data.DataFrame.load(infname)
     img = vstarstack.library.image_process.normalize.normalize(img)
+    vstarstack.tool.common.check_dir_exists(outfname)
     img.store(outfname)
 
 def _process_file(argv):
@@ -44,7 +46,7 @@ def _process_dir(argv):
         outpath = argv[1]
     else:
         outpath = inpath
-    files = vstarstack.library.common.listfiles(inpath, ".zip")
+    files = vstarstack.tool.common.listfiles(inpath, ".zip")
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
         pool.starmap(normalize, [(name, fname, os.path.join(
             outpath, name + ".zip")) for name, fname in files])
