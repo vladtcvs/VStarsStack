@@ -82,4 +82,8 @@ def yuv_422_dataframe(dataframe : vstarstack.library.data.DataFrame,
 
     dataframe.add_channel(w_Y, "weight-L", weight=True)
     dataframe.add_channel_link("L", "weight-L", "weight")
+
+    dataframe.params["format"] = "flat"
+    dataframe.remove_channel(dataframe.links["weight"][raw_channel_name])
+    dataframe.remove_channel(raw_channel_name)
     return dataframe
