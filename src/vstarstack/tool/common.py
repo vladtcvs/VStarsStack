@@ -38,6 +38,8 @@ def listfiles(path, ext=None, recursive=False):
 
 def check_dir_exists(filename):
     dirname = os.path.dirname(filename)
+    if dirname == "":
+        return
     if os.path.isdir(dirname):
         return
     os.makedirs(dirname, exist_ok=True)
