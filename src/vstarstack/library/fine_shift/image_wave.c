@@ -53,14 +53,28 @@ static void set_array(double *array, int w, int h, int x, int y, int axis, doubl
 static double get_array(const double *array, int w, int h, int x, int y, int axis)
 {
     if (x >= w)
-        x = w-1;
+        return NAN;
     if (x < 0)
-        x = 0;
+        return NAN;
     if (y >= h)
-        y = h - 1;
+        return NAN;
     if (y < 0)
-        y = 0;
+        return NAN;
     return array[y*(w*2) + x*2 + axis];
+}
+
+void print_array(double *array, int Nw, int Nh)
+{
+    int i, j;
+    for (i = 0; i < Nh; i++)
+    {
+        for (j = 0; j < Nw; j++)
+        {
+            printf("%lf ", get_array(array, Nw, Nh, j, i, 0));
+        }
+        printf("\n");
+    }
+    printf("\n");
 }
 
 /*
@@ -82,15 +96,39 @@ static void init_array(double *array, int w, int h, double dx, double dy)
 /*
  * Linear interpolation. x lies between points of f0 and f1
  */
-static double bli(double f0, double f1, double x)
+static double linear_interpolation(double f0, double f1, double x)
 {
     return f0 * (1-x) + f1 * x;
 }
 
 /*
+ * Quadratic interpolation with extra area in negative direction
+ */
+static double quadratic_interpolation_neg(double fm1, double f0, double f1, double x)
+{
+    double a, b, c;
+    c = f0;
+    b = (f1 - fm1)/2;
+    a = f1 - b - c;
+    return a*x*x + b*x + c;
+}
+
+/*
+ * Quadratic interpolation with extra area in positive direction
+ */
+static double quadratic_interpolation_pos(double f0, double f1, double f2, double x)
+{
+    double a, b, c;
+    c = f0;
+    b = (4*f1 - f2 - 3*c)/2;
+    a = f1 - b - c;
+    return a*x*x + b*x + c;
+}
+
+/*
  * Cubic interpolation. x lies between points of f0 and f1
  */
-static double bci(double fm1, double f0, double f1, double f2, double x)
+static double cubic_interpolation(double fm1, double f0, double f1, double f2, double x)
 {
     double a, b, c, d;
     d = f0;
@@ -100,31 +138,55 @@ static double bci(double fm1, double f0, double f1, double f2, double x)
     return a*x*x*x + b*x*x + c*x + d;
 }
 
-/*
- * Bilinear interpolation. Use linear interpolation for x and y axes
- */
-static void bilinear_interpolation(struct ImageWaveObject *self, const double *array,
-                                    int xi, int yi, double dx, double dy,
-                                    double *shift_x, double *shift_y)
+static double interpolation_1d(double fm1, double f0, double f1, double f2, double x)
 {
-    double left_top_x = get_array(array, self->Nw, self->Nh, xi, yi, 0);
-    double right_top_x = get_array(array, self->Nw, self->Nh, xi+1, yi, 0);
-    double left_bottom_x = get_array(array, self->Nw, self->Nh, xi, yi+1, 0);
-    double right_bottom_x = get_array(array, self->Nw, self->Nh, xi+1, yi+1, 0);
-
-    double left_top_y = get_array(array, self->Nw, self->Nh, xi, yi, 1);
-    double right_top_y = get_array(array, self->Nw, self->Nh, xi+1, yi, 1);
-    double left_bottom_y = get_array(array, self->Nw, self->Nh, xi, yi+1, 1);
-    double right_bottom_y = get_array(array, self->Nw, self->Nh, xi+1, yi+1, 1);
-
-    *shift_x = bli(bli(left_top_x, right_top_x, dx), bli(left_bottom_x, right_bottom_x, dx), dy);    
-    *shift_y = bli(bli(left_top_y, right_top_y, dx), bli(left_bottom_y, right_bottom_y, dx), dy);    
+    if (isnan(f0))
+    {
+        if(x < 1-1e-12)
+            return NAN;
+        else
+            return f1;
+    }
+    if (isnan(f1))
+    {
+        if (x > 1e-12)
+            return NAN;
+        else
+            return f0;
+    }
+    if (isnan(fm1) && isnan(f2))
+    {
+        return linear_interpolation(f0, f1, x);
+    }
+    if (isnan(fm1))
+    {
+        return quadratic_interpolation_pos(f0, f1, f2, x);
+    }
+    if (isnan(f2))
+    {
+        return quadratic_interpolation_neg(fm1, f0, f1, x);
+    }
+    return cubic_interpolation(fm1, f0, f1, f2, x);
 }
+
+static double interpolation_2d(double fm1m1, double f0m1, double f1m1, double f2m1,
+                               double fm10,  double f00,  double f10,  double f20,
+                               double fm11,  double f01,  double f11,  double f21,
+                               double fm12,  double f02,  double f12,  double f22,
+                               double x, double y)
+{
+    double fm1 = interpolation_1d(fm1m1, fm10, fm11, fm12, y);
+    double f0  = interpolation_1d(f0m1,  f00,  f01,  f02,  y);
+    double f1  = interpolation_1d(f1m1,  f10,  f11,  f12,  y);
+    double f2  = interpolation_1d(f2m1,  f20,  f21,  f22,  y);
+    return interpolation_1d(fm1, f0, f1, f2, x);
+}
+
 
 /*
  * Bicubic interpolation. Use linear interpolation for x and y axes
  */
-static void bicubic_interpolation(struct ImageWaveObject *self, const double *array,
+static void interpolation(struct ImageWaveObject *self, const double *array,
                                   int xi, int yi, double dx, double dy,
                                   double *shift_x, double *shift_y)
 {
@@ -148,12 +210,11 @@ static void bicubic_interpolation(struct ImageWaveObject *self, const double *ar
     double x_12 = get_array(array, self->Nw, self->Nh, xi+1, yi+2, 0);
     double x_22 = get_array(array, self->Nw, self->Nh, xi+2, yi+2, 0);
 
-    *shift_x = bci(bci(x_m1m1, x_0m1, x_1m1, x_2m1, dx),
-                   bci(x_m10, x_00, x_10, x_20, dx),
-                   bci(x_m11, x_01, x_11, x_21, dx),
-                   bci(x_m12, x_02, x_12, x_22, dx),
-                   dy);
-
+    *shift_x = interpolation_2d(x_m1m1, x_0m1, x_1m1, x_2m1,
+                                x_m10,  x_00,  x_10,  x_20,
+                                x_m11,  x_01,  x_11,  x_21,
+                                x_m12,  x_02,  x_12,  x_22,
+                                dx, dy);
     double y_m1m1 = get_array(array, self->Nw, self->Nh, xi-1, yi-1, 1);
     double y_0m1 = get_array(array, self->Nw, self->Nh, xi, yi-1, 1);
     double y_1m1 = get_array(array, self->Nw, self->Nh, xi+1, yi-1, 1);
@@ -174,11 +235,11 @@ static void bicubic_interpolation(struct ImageWaveObject *self, const double *ar
     double y_12 = get_array(array, self->Nw, self->Nh, xi+1, yi+2, 1);
     double y_22 = get_array(array, self->Nw, self->Nh, xi+2, yi+2, 1);
 
-    *shift_y = bci(bci(y_m1m1, y_0m1, y_1m1, y_2m1, dx),
-                   bci(y_m10, y_00, y_10, y_20, dx),
-                   bci(y_m11, y_01, y_11, y_21, dx),
-                   bci(y_m12, y_02, y_12, y_22, dx),
-                   dy);
+    *shift_y = interpolation_2d(y_m1m1, y_0m1, y_1m1, y_2m1,
+                                y_m10,  y_00,  y_10,  y_20,
+                                y_m11,  y_01,  y_11,  y_21,
+                                y_m12,  y_02,  y_12,  y_22,
+                                dx, dy);
 }
 
 /*
@@ -198,7 +259,7 @@ static void interpolate(struct ImageWaveObject *self, double *array,
 
     double shift_x, shift_y;
 
-    bicubic_interpolation(self, array, xi, yi, dx, dy, &shift_x, &shift_y);
+    interpolation(self, array, xi, yi, dx, dy, &shift_x, &shift_y);
 
     *rx = x + shift_x;
     *ry = y + shift_y;
@@ -350,12 +411,10 @@ void approximate(struct ImageWaveObject *self, double dh, size_t Nsteps,
     dx /= N;
     dy /= N;
 
-    init_array(self->array, self->Nw, self->Nh, dx, dy);
+    init_array(self->array, self->Nw, self->Nh, dx, dy);    
 
     for (i = 0; i < Nsteps; i++)
-    {
         approximate_step(self, dh, targets, points, N);
-    }
 }
 
 static int init(struct ImageWaveObject *self, double w, double h, double Nw, double Nh, double spk)

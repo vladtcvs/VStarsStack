@@ -29,8 +29,8 @@ def test_identity():
 def test_approximate_identity():
     wave = vstarstack.library.fine_shift.image_wave.ImageWave(10, 10, 2, 2, 0.01)
     targets = [(5, 5)]
-    measured = [(5, 5)]
-    wave.approximate(targets, measured, N, dh)
+    points = [(5, 5)]
+    wave.approximate(targets, points, N, dh)
     x, y = wave.interpolate(5, 5)
 
     assert abs(x-5) < 5e-3
@@ -40,19 +40,19 @@ def test_approximate_identity():
 def test_approximate_single():
     wave = vstarstack.library.fine_shift.image_wave.ImageWave(10.0, 10.0, 2, 2, 0.01)
     targets = [(5.0, 5.0)]
-    measured = [(5.2, 5.0)]
-    wave.approximate(targets, measured, N, dh)
+    points = [(5.2, 5.0)]
+    wave.approximate(targets, points, N, dh)
     x, y = wave.interpolate(5.2, 5.0)
 
     assert abs(x-5.0) < 5e-3
     assert abs(y-5.0) < 5e-3
 
 
-def test_approximate_parabola():
+def test_approximate_parabola1():
     wave = vstarstack.library.fine_shift.image_wave.ImageWave(10, 10, 3, 3, 0.01)
     targets = [(5, 0), (5, 5), (5, 10)]
-    measured = [(5, 0), (5.1, 5), (5, 10)]
-    wave.approximate(targets, measured, N, dh)
+    points = [(5, 0), (5.1, 5), (5, 10)]
+    wave.approximate(targets, points, N, dh)
     x, y = wave.interpolate(5.1, 5)
 
     assert abs(x-5) < 5e-3
