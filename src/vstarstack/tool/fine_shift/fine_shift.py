@@ -12,84 +12,16 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-
-import os
-import json
-import multiprocessing as mp
-
-from vstarstack.library.fine_shift.fine_shift import Aligner
-import vstarstack.tool.usage
 import vstarstack.tool.cfg
 import vstarstack.tool.configuration
-import vstarstack.library.data
-import vstarstack.library.common
+import vstarstack.tool.fine_shift.align
 
-import vstarstack.tool.common
-
-ncpu = vstarstack.tool.cfg.nthreads
-
-def create_aligner(project: vstarstack.tool.cfg.Project, W: int, H: int):
-    """Create aligner for the project"""
-    num_steps = project.config.fine_shift.Nsteps
-    dh = project.config.fine_shift.dh
-    gridW = project.config.fine_shift.gridW
-    gridH = project.config.fine_shift.gridH
-    spk = project.config.fine_shift.stretchPenaltyCoefficient
-    min_points = project.config.fine_shift.points_min_len
-
-    aligner = Aligner(W, H, gridW, gridH, spk, num_steps, min_points, dh)
-    return aligner
-
-def align_file(project : vstarstack.tool.cfg.Project,
-               name : str,
-               input_image_f : str,
-               cluster_f : str,
-               output_image_f : str):
-    """Apply alignment to each file"""
-    print(name)
-    if not os.path.exists(input_image_f):
-        return
-    with open(cluster_f, encoding='utf8') as f:
-        clusters = json.load(f)
-
-    df = vstarstack.library.data.DataFrame.load(input_image_f)
-    w = df.params["w"]
-    h = df.params["h"]
-    aligner = create_aligner(project, w, h)
-
-    # find alignment
-    desc = aligner.process_alignment(name, clusters)
-
-    # apply alignment to file
-    df = aligner.apply_alignment(df, desc)
-
-    vstarstack.tool.common.check_dir_exists(output_image_f)
-    df.store(output_image_f)
-
-def _align_file_wrapper(arg):
-    align_file(*arg)
-
-def align(project: vstarstack.tool.cfg.Project, argv: list):
-    if len(argv) >= 3:
-        npys = argv[0]
-        cluster_f = argv[1]
-        outputs = argv[2]
-    else:
-        npys = project.config.paths.npy_fixed
-        cluster_f = project.config.cluster.path
-        outputs = project.config.paths.aligned
-
-    files = vstarstack.tool.common.listfiles(npys, ".zip")
-    with mp.Pool(ncpu) as pool:
-        args = [(project,
-                 name,
-                 input_image_f,
-                 cluster_f,
-                 os.path.join(outputs, name + ".zip"))
-                 for name, input_image_f in files]
-        for _ in pool.imap_unordered(_align_file_wrapper, args):
-            pass
+def _enable_fine_shift(project : vstarstack.tool.cfg.Project, _argv: list[str]):
+    project.config.enable_module("stars")
+    project.config.enable_module("cluster")
+    vstarstack.tool.cfg.store_project()
 
 commands = {
-    "align": (align, "align images", "npys/ clusters.json output/"),
+    "config": (_enable_fine_shift, "configure fine_shift pipeline"),
+    "align": (vstarstack.tool.fine_shift.align.align, "align images"),
 }
