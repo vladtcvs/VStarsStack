@@ -338,14 +338,14 @@ void approximate(struct ImageWaveObject *self, double dh, size_t Nsteps,
                         double *targets, double *points, size_t N)
 {
     size_t i;
-    if (N == 0 || Nsteps == 0)
+    if (N == 0)
         return;
 
     double dx = 0, dy = 0;
     for (i = 0; i < N; i++)
     {
-        dx += targets[2*N] - points[2*N];
-        dy += targets[2*N+1] - points[2*N+1];
+        dx += targets[2*i] - points[2*i];
+        dy += targets[2*i+1] - points[2*i+1];
     }
     dx /= N;
     dy /= N;
@@ -533,7 +533,6 @@ static PyObject *ImageWave_approximate(PyObject *_self, PyObject *args, PyObject
         targets_array[2*i] = target_x;
         targets_array[2*i+1] = target_y;
     }
-
     approximate(self, dh, Nsteps, targets_array, points_array, Npoints);
     free(targets_array);
     free(points_array);
