@@ -27,7 +27,7 @@ import vstarstack.tool.stars.stars
 import vstarstack.tool.cluster
 import vstarstack.tool.shift
 import vstarstack.tool.image_processing.fixes
-import vstarstack.tool.fine_shift
+import vstarstack.tool.fine_shift.fine_shift
 import vstarstack.tool.objects.objects
 import vstarstack.tool.calibration
 
@@ -59,6 +59,6 @@ commands = {
               "image processing (show, convert, etc)"),
     "clean": (vstarstack.tool.clean.run,
               "remove temporary files"),
-    "fine-shift": (vstarstack.tool.fine_shift.commands,
+    "fine-shift": (vstarstack.tool.fine_shift.fine_shift.commands,
                    "fine shift images"),
 }

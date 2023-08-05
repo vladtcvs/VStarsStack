@@ -17,6 +17,7 @@ from vstarstack.tool.configuration import Configuration
 import vstarstack.tool.stars.config
 import vstarstack.tool.objects.config
 import vstarstack.tool.planets.config
+import vstarstack.tool.fine_shift.config
 
 _module_configuration = {
     "paths": {
@@ -54,6 +55,7 @@ _module_configuration = {
     "stars" : ("module", vstarstack.tool.stars.config.configuration),
     "objects" : ("module", vstarstack.tool.objects.config.configuration),
     "planets" : ("module", vstarstack.tool.planets.config.configuration),
+    "fine_shift" : ("module", vstarstack.tool.fine_shift.config.configuration),
 }
 
 configuration = Configuration(_module_configuration)

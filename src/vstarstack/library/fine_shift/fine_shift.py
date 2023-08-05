@@ -19,8 +19,8 @@ import vstarstack.library.data
 import vstarstack.library.common
 
 def _cluster_average(cluster):
-    xs = [item["x"] for item in cluster]
-    ys = [item["y"] for item in cluster]
+    xs = [cluster[name]["x"] for name in cluster]
+    ys = [cluster[name]["y"] for name in cluster]
     av = {
         "x" : sum(xs) / len(xs),
         "y" : sum(ys) / len(ys),

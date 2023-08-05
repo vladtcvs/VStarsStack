@@ -39,11 +39,17 @@ struct ImageWaveObject
     double *array_gradient;
 };
 
+/*
+ * Set shift array at (x,y)
+ */
 static void set_array(double *array, int w, int h, int x, int y, int axis, double val)
 {
     array[y*(w*2) + x*2 + axis] = val;
 }
 
+/*
+ * Get shift array at (x,y)
+ */
 static double get_array(const double *array, int w, int h, int x, int y, int axis)
 {
     if (x >= w)
@@ -57,6 +63,9 @@ static double get_array(const double *array, int w, int h, int x, int y, int axi
     return array[y*(w*2) + x*2 + axis];
 }
 
+/*
+ * Init shift array with specified (dx, dy)
+ */
 static void init_array(double *array, int w, int h, double dx, double dy)
 {
     int xi, yi;
@@ -70,11 +79,17 @@ static void init_array(double *array, int w, int h, double dx, double dy)
     }
 }
 
-static double bli(double left, double right, double x)
+/*
+ * Linear interpolation. x lies between points of f0 and f1
+ */
+static double bli(double f0, double f1, double x)
 {
-    return left * (1-x) + right * x;
+    return f0 * (1-x) + f1 * x;
 }
 
+/*
+ * Cubic interpolation. x lies between points of f0 and f1
+ */
 static double bci(double fm1, double f0, double f1, double f2, double x)
 {
     double a, b, c, d;
@@ -85,6 +100,9 @@ static double bci(double fm1, double f0, double f1, double f2, double x)
     return a*x*x*x + b*x*x + c*x + d;
 }
 
+/*
+ * Bilinear interpolation. Use linear interpolation for x and y axes
+ */
 static void bilinear_interpolation(struct ImageWaveObject *self, const double *array,
                                     int xi, int yi, double dx, double dy,
                                     double *shift_x, double *shift_y)
@@ -103,6 +121,9 @@ static void bilinear_interpolation(struct ImageWaveObject *self, const double *a
     *shift_y = bli(bli(left_top_y, right_top_y, dx), bli(left_bottom_y, right_bottom_y, dx), dy);    
 }
 
+/*
+ * Bicubic interpolation. Use linear interpolation for x and y axes
+ */
 static void bicubic_interpolation(struct ImageWaveObject *self, const double *array,
                                   int xi, int yi, double dx, double dy,
                                   double *shift_x, double *shift_y)
@@ -160,6 +181,9 @@ static void bicubic_interpolation(struct ImageWaveObject *self, const double *ar
                    dy);
 }
 
+/*
+ * Interpolate values in shift array
+ */
 static void interpolate(struct ImageWaveObject *self, double *array,
                 double x, double y, double *rx, double *ry)
 {
@@ -180,6 +204,13 @@ static void interpolate(struct ImageWaveObject *self, double *array,
     *ry = y + shift_y;
 }
 
+/*
+ * Calculate penalty of shifts. We want to minimize it
+ * Penalty contains of 2 parts:
+ * 1. Penalty of points. It calculates from difference between actual
+ * points shift and calculated from shift array
+ * 2. Penalty of stretch. It calculates from difference between array shift values
+ */
 static double penalty(struct ImageWaveObject *self, double *array,
                         double *targets, double *points, size_t N)
 {
@@ -220,6 +251,9 @@ static double penalty(struct ImageWaveObject *self, double *array,
     return penalty_points * 1 + penalty_stretch * self->stretch_penalty_k;
 }
 
+/*
+ * Calculate partial derivative of penalty by shift by axis <axis> at (x,y)
+ */
 static double partial(struct ImageWaveObject *self,
                         int yi, int xi, int axis,
                         double *targets, double *points, size_t N)
@@ -237,6 +271,9 @@ static double partial(struct ImageWaveObject *self,
     return (penlaty_p-penlaty_m)/(2*h);
 }
 
+/*
+ * Step of gradient descent
+ */
 void approximate_step(struct ImageWaveObject *self, double dh,
                         double *targets, double *points, size_t N)
 {
