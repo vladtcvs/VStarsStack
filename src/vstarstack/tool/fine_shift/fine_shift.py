@@ -17,8 +17,7 @@ import vstarstack.tool.configuration
 import vstarstack.tool.fine_shift.align
 
 def _enable_fine_shift(project : vstarstack.tool.cfg.Project, _argv: list[str]):
-    project.config.enable_module("stars")
-    project.config.enable_module("cluster")
+    project.config.enable_module("fine_shift")
     vstarstack.tool.cfg.store_project()
 
 commands = {

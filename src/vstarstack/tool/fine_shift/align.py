@@ -59,9 +59,11 @@ def align_file(project : vstarstack.tool.cfg.Project,
 
     # find alignment
     desc = aligner.process_alignment(name, clusters)
+    print(f"{name} - align found")
 
     # apply alignment to file
     df = aligner.apply_alignment(df, desc)
+    print(f"{name} - aligned")
 
     vstarstack.tool.common.check_dir_exists(output_image_f)
     df.store(output_image_f)
