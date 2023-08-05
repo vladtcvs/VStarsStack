@@ -205,6 +205,7 @@ def build_index_clusters(matches : dict):
                         name2: id2,
                     }
                     clusters.append(cluster)
+    clusters = [item for item in clusters if len(item) > 1]
     return clusters
 
 def build_crd_clusters(index_clusters : dict, points : dict):
