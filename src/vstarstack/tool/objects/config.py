@@ -29,6 +29,20 @@ _module_configuration = {
         "min_diameter": (int, 20),
         "max_diameter": (int, 40),
     }),
+    "features" : ("module", {
+        "detector" : (str, "brightness"),
+        "num_splits" : (int, 4),
+        "max_feature_delta" : (int, 10),
+        "features_percent" : (int, 20),
+        "bright_spots": {
+            "blurSize" : (int, 21),
+            "k_thr" : (float, 1.15),
+            "minValue" : (float, 0.1),
+            "minPixel" : (int, 5),
+            "maxPixel" : (int, 20),
+        },
+        "orb" : {},
+    }),
 }
 
 configuration = Configuration(_module_configuration)

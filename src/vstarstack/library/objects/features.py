@@ -12,8 +12,6 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import os
-import json
 import cv2
 import numpy as np
 
@@ -99,7 +97,7 @@ def select_keypoints(image, fun, num_split, detector):
 def build_keypoints(image : np.ndarray,
                     num_split : int,
                     detector_type : str,
-                    params : dict):
+                    params : dict | None):
     """
     Build keypoints and calculate their descriptors
 
@@ -109,7 +107,7 @@ def build_keypoints(image : np.ndarray,
         detector_type : ORB or brightness
         params        : parameters
 
-    Return: list of pairs keypoint:descriptor
+    Return: list of keypoint and list of descriptors
     """
     orb = cv2.ORB_create()
 
@@ -123,23 +121,23 @@ def build_keypoints(image : np.ndarray,
 
     kps = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in keypoints]
     _, descs = orb.compute(image, kps)
-    return zip(keypoints, descs)
+    return keypoints, descs
 
-def match_images(keypoints : dict,
+def match_images(points : dict, descs : dict,
                  max_feature_delta : float,
                  features_percent : float):
     """Match images"""
     bf_matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = {}
-    for name1 in keypoints:
+    for name1 in points:
         matches[name1] = {}
-        points1 = [item[0] for item in keypoints[name1]]
-        descs1 = [item[1] for item in keypoints[name1]]
-
-        for name2 in keypoints:
+        points1 = points[name1]
+        descs1 = descs[name1]
+            
+        for name2 in points:
             matches[name1][name2] = []
-            points2 = [item[0] for item in keypoints[name2]]
-            descs2 = [item[1] for item in keypoints[name2]]
+            points2 = points[name2]
+            descs2 = descs[name2]
             print(f"\t{name1} <-> {name2}")
 
             imatches = bf_matcher.match(descs1, descs2)
@@ -185,12 +183,62 @@ def match_images(keypoints : dict,
 
     return matches
 
-def draw_matches(points, matches, channel, name1, name2):
+def build_index_clusters(matches : dict):
+    """Build clusters of features"""
+    clusters = []
+    for name1 in matches:
+        for name2 in matches[name1]:
+            matches_list = matches[name1][name2]
+            for match in matches_list:
+                id1 = match[0]
+                id2 = match[1]
+                for cluster in clusters:
+                    if name1 in cluster and cluster[name1] == id1:
+                        cluster[name2] = id2
+                        break
+                    if name2 in cluster and cluster[name2] == id2:
+                        cluster[name1] = id1
+                        break
+                else:
+                    cluster = {
+                        name1: id1,
+                        name2: id2,
+                    }
+                    clusters.append(cluster)
+    return clusters
+
+def build_crd_clusters(index_clusters : dict, points : dict):
+    """Build coordinate clusters """
+    crd_clusters = []
+    print(points.keys())
+    for cluster in index_clusters:
+        crd_cluster = {}
+        for name in cluster:
+            index = cluster[name]
+            crd_cluster[name] = points[name][index]
+        crd_clusters.append(crd_cluster)
+    return crd_clusters
+
+def build_clusters(points : dict, descs : dict,
+                   max_feature_delta : float,
+                   features_percent : float):
+    """Build clusters"""
+    matches = match_images(points, descs, max_feature_delta, features_percent)
+    index_clusters = build_index_clusters(matches)
+    crd_clusters = build_crd_clusters(index_clusters, points)
+    return crd_clusters
+
+def draw_matches(points : dict,
+                 fnames : dict,
+                 matches : dict,
+                 channel : str,
+                 name1 : str,
+                 name2 : str):
     """Draw matches"""
-    points1 = points[channel][name1]["points"]
-    points2 = points[channel][name2]["points"]
-    fname1 = points[channel][name1]["fname"]
-    fname2 = points[channel][name2]["fname"]
+    points1 = points[name1]
+    points2 = points[name2]
+    fname1 = fnames[name1]
+    fname2 = fnames[name2]
 
     d1 = vstarstack.library.data.DataFrame.load(fname1)
     img1, _ = d1.get_channel(channel)
@@ -200,8 +248,8 @@ def draw_matches(points, matches, channel, name1, name2):
     img1 = (img1 / np.amax(img1) * 255).astype(np.uint8)
     img2 = (img2 / np.amax(img2) * 255).astype(np.uint8)
 
-    ms = matches[channel][name1][name2]
-    matches_fmt = [cv2.DMatch(msitem[0], msitem[1], 0) for msitem in ms]
+    ms = matches[name1][name2]
+    matches_fmt = [cv2.DMatch(msitem[1], msitem[2], 0) for msitem in ms]
 
     kps1 = [cv2.KeyPoint(point["x"], point["y"], point["size"])
             for point in points1]
@@ -213,51 +261,3 @@ def draw_matches(points, matches, channel, name1, name2):
                            flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
     plt.imshow(img3)
     plt.show()
-
-
-def build_index_clusters(matches):
-    """Build clusters of features"""
-    clusters = {}
-    for channel in matches:
-        clusters[channel] = []
-        channel_matches = matches[channel]
-        for name1 in channel_matches:
-            for name2 in channel_matches[name1]:
-                matches_list = channel_matches[name1][name2]
-                for match in matches_list:
-                    id1 = match[0]
-                    id2 = match[1]
-                    for cluster in clusters[channel]:
-                        if name1 in cluster and cluster[name1] == id1:
-                            cluster[name2] = id2
-                            break
-                        if name2 in cluster and cluster[name2] == id2:
-                            cluster[name1] = id1
-                            break
-                    else:
-                        cluster = {
-                            name1: id1,
-                            name2: id2,
-                        }
-                        clusters[channel].append(cluster)
-    return clusters
-
-def build_crd_clusters(index_clusters, keypoints):
-    """Build coordinate clusters """
-    crd_clusters = []
-    for cluster in index_clusters:
-        crd_cluster = []
-        for name in cluster:
-            index = cluster[name]
-            crd_cluster[name] = keypoints[name][index][0]
-        crd_clusters.append(crd_cluster)
-    return crd_clusters
-
-def build_clusters(keypoints : dict,
-                   max_feature_delta : float,
-                   features_percent : float):
-    """Build clusters"""
-    matches = match_images(keypoints, max_feature_delta, features_percent)
-    index_clusters = build_index_clusters(matches)
-    crd_clusters = build_crd_clusters(index_clusters, keypoints)
-    return crd_clusters
