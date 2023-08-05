@@ -27,11 +27,8 @@ import vstarstack.tool.common
 
 ncpu = vstarstack.tool.cfg.nthreads
 
-def create_aligner(project: vstarstack.tool.cfg.Project):
+def create_aligner(project: vstarstack.tool.cfg.Project, W: int, H: int):
     """Create aligner for the project"""
-    W = project.config.telescope.camera.w
-    H = project.config.telescope.camera.h
-
     num_steps = project.config.fine_shift.Nsteps
     dh = project.config.fine_shift.dh
     gridW = project.config.fine_shift.gridW
@@ -74,7 +71,9 @@ def find_alignment(project: vstarstack.tool.cfg.Project, argv: list):
     with open(clusters, encoding='utf8') as f:
         clusters = json.load(f)
 
-    aligner = create_aligner(project)
+    
+
+    aligner = create_aligner(project, W, H)
     cluster_len_k = project.config.fine_shift.cluster_len_k
     maxcllen = max([len(cluster) for cluster in clusters])
     names = []
