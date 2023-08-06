@@ -46,9 +46,14 @@ int  image_wave_init(struct ImageWave *self, int w, int h,
                      double Nw, double Nh, double spk);
 void image_wave_finalize(struct ImageWave *self);
 
-void   image_wave_init_shift_array(double *array, int w, int h, double dx, double dy);
+void image_wave_init_shift_array(double *array, int w, int h, double dx, double dy);
 void image_wave_print_array(const struct ImageWaveGrid *array);
 
+
+/* Common math methods */
+void image_wave_move_along_gradient(struct ImageWave *self,
+                                    struct ImageWaveGrid *gradient,
+                                    double dh);
 
 /*
  * Set shift array at (x,y)
