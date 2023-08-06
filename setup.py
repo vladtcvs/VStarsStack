@@ -13,6 +13,7 @@
 #
 
 import os
+import numpy as np
 from setuptools import setup, Extension
 
 perspective = Extension(name="vstarstack.library.projection.perspective",
@@ -25,7 +26,12 @@ orthographic = Extension(name="vstarstack.library.projection.orthographic",
        sources=["src/vstarstack/library/projection/orthographic.c"])
 
 image_wave = Extension(name="vstarstack.library.fine_shift.image_wave",
-       sources=["src/vstarstack/library/fine_shift/image_wave.c"])
+       sources=["src/vstarstack/library/fine_shift/image_wave.c",
+                "src/vstarstack/library/fine_shift/image_wave_interpolation.c",
+                "src/vstarstack/library/fine_shift/image_wave_targets.c",
+                "src/vstarstack/library/fine_shift/image_wave_module.c",
+                "src/vstarstack/library/fine_shift/image_wave_image.c",
+                ], include_dirs=[np.get_include()])
 
 root = os.path.join(os.path.abspath(os.path.dirname(__file__)), "src")
 result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(root)

@@ -14,7 +14,9 @@
 
 import vstarstack.tool.cfg
 import vstarstack.tool.configuration
-import vstarstack.tool.fine_shift.align
+import vstarstack.tool.fine_shift.align_clusters
+import vstarstack.tool.fine_shift.align_correlation
+import vstarstack.tool.fine_shift.align_apply
 
 def _enable_fine_shift(project : vstarstack.tool.cfg.Project, _argv: list[str]):
     project.config.enable_module("fine_shift")
@@ -22,5 +24,13 @@ def _enable_fine_shift(project : vstarstack.tool.cfg.Project, _argv: list[str]):
 
 commands = {
     "config": (_enable_fine_shift, "configure fine_shift pipeline"),
-    "align": (vstarstack.tool.fine_shift.align.align, "align images"),
+    "find-align-by-clusters": (vstarstack.tool.fine_shift.align_clusters.align,
+                               "align images using clusters",
+                               "npy/ clusters.json aligns/"),
+    "find-align-by-correlation": (vstarstack.tool.fine_shift.align_correlation.align,
+                                  "align images using correlation",
+                                  "npy/ aligns/"),
+    "apply-align": (vstarstack.tool.fine_shift.align_apply.apply,
+                    "apply aligns to images",
+                    "npy/ aligns/ aligned/"),
 }

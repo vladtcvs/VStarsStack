@@ -21,6 +21,7 @@ _module_configuration = {
     "gridH" : (int, 64),
     "stretchPenaltyCoefficient" : (float, 0.01),
     "points_min_len" : (int, 0),
+    "aligns" : (str, "aligns/"),
 }
 
 configuration = vstarstack.tool.configuration.Configuration(_module_configuration)

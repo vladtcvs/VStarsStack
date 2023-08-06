@@ -57,6 +57,31 @@ def getpixel_linear(img, y, x):
 
     return True, imm * ymc*xmc + imp * ymc*xpc + ipm * ypc*xmc + ipp * ypc*xpc
 
+def df_to_light(df : vstarstack.library.data.DataFrame):
+    light = None
+    weight = None
+    for channel in df.get_channels():
+        layer, opts = df.get_channel(channel)
+        layer_w = None
+        if not opts["brightness"]:
+            continue
+        if channel in df.links["weight"]:
+            layer_w,_ = df.get_channel(df.links["weight"][channel])
+
+        if light is None:
+            light = layer
+            if layer_w is not None:
+                weight = layer_w
+        else:
+            light = light + layer
+            if layer_w is not None:
+                weight = weight + layer_w
+
+    if weight is not None:
+        light = light / weight
+        light[np.where(weight == 0)] = 0
+        weight[np.where(weight != 0)] = 1
+    return light, weight
 
 def getpixel_none(img, y, x):
     x = round(x)

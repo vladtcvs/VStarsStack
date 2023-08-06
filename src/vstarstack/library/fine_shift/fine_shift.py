@@ -39,10 +39,10 @@ class Aligner:
         self.min_points = min_points
         self.dh = dh
 
-    def process_alignment(self,
-                          name : str,
-                          clusters : list):
-        """Find alignment of image `name`"""
+    def process_alignment_by_clusters(self,
+                                      name : str,
+                                      clusters : list):
+        """Find alignment of image `name` using clusters"""
         points = []
         targets = []
         for cluster in clusters:
@@ -63,23 +63,34 @@ class Aligner:
             print("\tskip - too low points")
             return None
         wave = ImageWave(self.W, self.H, self.gridW, self.gridH, self.spk)
-        wave.approximate(targets, points, self.num_steps, self.dh)
+        wave.approximate_by_targets(targets, points, self.num_steps, self.dh)
         descriptor = wave.data()
         return descriptor
 
-    def find_all_alignments(self,
-                            clusters : list):
-        """Build all alignment descriptors"""
+    def find_all_alignments_by_clusters(self,
+                                        clusters : list):
+        """Build alignment descriptor using clusters"""
         names = []
         for cluster in clusters:
             names += cluster.keys()
         names = set(names)
         descs = {}
         for name in names:
-            desc = self.process_alignment(name, clusters)
+            desc = self.process_alignment_by_clusters(name, clusters)
             if desc is not None:
                 descs[name] = desc
         return descs
+
+    def process_alignment_by_correlation(self,
+                                         image1 : np.ndarray,
+                                         mask1 : np.ndarray,
+                                         image2 : np.ndarray,
+                                         mask2 : np.ndarray):
+        """Build alignment descriptor of image1 using correlations"""
+        wave = ImageWave(self.W, self.H, self.gridW, self.gridH, self.spk)
+        wave.approximate_by_correlation(image1, image2)
+        descriptor = wave.data()
+        return descriptor
 
     def apply_alignment(self,
                         dataframe : vstarstack.library.data.DataFrame,
@@ -90,11 +101,7 @@ class Aligner:
             image, opts = dataframe.get_channel(channel)
             if opts["encoded"]:
                 continue
-            fixed = np.zeros(image.shape)
-            for y in range(fixed.shape[0]):
-                for x in range(fixed.shape[1]):
-                    ox, oy = wave.interpolate(x, y)
-                    fixed[y, x] = vstarstack.library.common.getpixel(image, oy, ox)[1]
-
+            image = image.astype('double')
+            fixed = wave.apply_shift(image)
             dataframe.replace_channel(fixed, channel)
         return dataframe
