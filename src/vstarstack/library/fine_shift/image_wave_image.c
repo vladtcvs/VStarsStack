@@ -39,6 +39,7 @@ static double image_wave_get_pixel(const struct ImageWaveGrid *image, int x, int
 
 /* Apply shift array to image */
 void image_wave_shift_image(struct ImageWave *self,
+                            const struct ImageWaveGrid *array,
                             const struct ImageWaveGrid *input_image,
                             struct ImageWaveGrid *output_image)
 {
@@ -47,7 +48,7 @@ void image_wave_shift_image(struct ImageWave *self,
         for (x = 0; x < output_image->w; x++)
         {
             double oy, ox;
-            image_wave_shift_interpolate(self, &self->array, x, y, &ox, &oy);
+            image_wave_shift_interpolate(self, array, x, y, &ox, &oy);
             double val = image_wave_get_pixel(input_image, ox, oy);
             if (isnan(val))
                 val = 0;

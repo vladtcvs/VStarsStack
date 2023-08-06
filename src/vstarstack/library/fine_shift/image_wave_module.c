@@ -185,6 +185,13 @@ static PyObject *ImageWave_approximate_by_correlation(PyObject *_self,
         .h = dims1[0],
     };
 
+    struct ImageWaveGrid tmp = {
+        .array = malloc(dims1[0] * dims1[1] * sizeof(double)),
+        .naxis = 1,
+        .w = dims1[1],
+        .h = dims1[0],
+    };
+
     npy_intp *dims2 = PyArray_SHAPE(image2);
     struct ImageWaveGrid img2 = {
         .array = PyArray_DATA(image2),
@@ -193,7 +200,9 @@ static PyObject *ImageWave_approximate_by_correlation(PyObject *_self,
         .h = dims2[0],
     };
 
-    image_wave_approximate_by_correlation(&self->wave, dh, Nsteps, &img1, &img2);
+    image_wave_approximate_by_correlation(&self->wave, dh, Nsteps, &img1, &img2, &tmp);
+
+    free(tmp.array);
 
     Py_INCREF(Py_True);
     return Py_True;
@@ -244,7 +253,7 @@ static PyObject *ImageWave_apply_shift(PyObject *_self,
         .h = dims[0],
     };
 
-    image_wave_shift_image(&self->wave, &img, &out);
+    image_wave_shift_image(&self->wave, &self->wave.array, &img, &out);
     Py_INCREF(output_image);
     return (PyObject *)output_image;
 }

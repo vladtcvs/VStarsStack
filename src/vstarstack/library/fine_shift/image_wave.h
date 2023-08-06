@@ -87,7 +87,7 @@ double image_wave_interpolation_2d(double fm1m1, double f0m1, double f1m1, doubl
                         double x, double y);
 
 void image_wave_shift_interpolate(struct ImageWave *self,
-                                  struct ImageWaveGrid *array,
+                                  const struct ImageWaveGrid *array,
                                   double x, double y,
                                   double *rx, double *ry);
 
@@ -99,6 +99,7 @@ double image_wave_interpolation(const struct ImageWaveGrid *array,
 /* Image related methods */
 
 void image_wave_shift_image(struct ImageWave *self,
+                            const struct ImageWaveGrid *array,
                             const struct ImageWaveGrid *input_image,
                             struct ImageWaveGrid *output_image);
 
@@ -112,4 +113,5 @@ void image_wave_approximate_by_targets(struct ImageWave *self, double dh, size_t
 void image_wave_approximate_by_correlation(struct ImageWave *self,
                                            double dh, size_t Nsteps,
                                            const struct ImageWaveGrid *image1,
-                                           const struct ImageWaveGrid *image2);
+                                           const struct ImageWaveGrid *image2,
+                                           struct ImageWaveGrid *tmp);

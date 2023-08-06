@@ -27,6 +27,7 @@ import vstarstack.library.common
 import vstarstack.tool.common
 
 ncpu = vstarstack.tool.cfg.nthreads
+ncpu = 1
 
 def create_aligner(project: vstarstack.tool.cfg.Project, W: int, H: int):
     """Create aligner for the project"""

@@ -60,15 +60,17 @@ static double correlation(const struct ImageWaveGrid *image1,
 
     if (bottom1 == 0 || bottom2 == 0)
         return 0;
-    return 1 - top / sqrt(bottom1 * bottom2);
+    return top / sqrt(bottom1 * bottom2);
 }
 
 static double penalty(struct ImageWave *self,
                       struct ImageWaveGrid *array,
                       const struct ImageWaveGrid *image1,
-                      const struct ImageWaveGrid *image2)
+                      const struct ImageWaveGrid *image2,
+                      struct ImageWaveGrid *tmp)
 {
-    double corr = correlation(image1, image2);
+    image_wave_shift_image(self, array, image1, tmp);
+    double corr = correlation(tmp, image2);
 
     double penalty_stretch = 0;
     int xi, yi;
@@ -96,7 +98,8 @@ static double penalty(struct ImageWave *self,
 static double partial(struct ImageWave *self,
                       int yi, int xi, int axis,
                       const struct ImageWaveGrid *image1,
-                      const struct ImageWaveGrid *image2)
+                      const struct ImageWaveGrid *image2,
+                      struct ImageWaveGrid *tmp)
 {
     double h = 1e-9;
     memcpy(self->array_p.array, self->array.array, self->Nw*self->Nh*2*sizeof(double));
@@ -106,22 +109,23 @@ static double partial(struct ImageWave *self,
     image_wave_set_array(&self->array_p, xi, yi, axis, val+h);
     image_wave_set_array(&self->array_m, xi, yi, axis, val-h);
 
-    double penlaty_p = penalty(self, &self->array_p, image1, image2);
-    double penlaty_m = penalty(self, &self->array_m, image1, image2);
+    double penlaty_p = penalty(self, &self->array_p, image1, image2, tmp);
+    double penlaty_m = penalty(self, &self->array_m, image1, image2, tmp);
     return (penlaty_p-penlaty_m)/(2*h);
 }
 
 static void approximate_step(struct ImageWave *self, double dh,
                              const struct ImageWaveGrid *image1,
-                             const struct ImageWaveGrid *image2)
+                             const struct ImageWaveGrid *image2,
+                             struct ImageWaveGrid *tmp)
 {
     int yi, xi;
     for (yi = 0; yi < self->Nh; yi++)
     {
         for (xi = 0; xi < self->Nw; xi++)
         {
-            double gradient_x = partial(self, yi, xi, 0, image1, image2);
-            double gradient_y = partial(self, yi, xi, 1, image1, image2);
+            double gradient_x = partial(self, yi, xi, 0, image1, image2, tmp);
+            double gradient_y = partial(self, yi, xi, 1, image1, image2, tmp);
             image_wave_set_array(&self->array_gradient, xi, yi, 0, gradient_x);
             image_wave_set_array(&self->array_gradient, xi, yi, 1, gradient_y);
         }
@@ -171,15 +175,20 @@ static void approximate_step(struct ImageWave *self, double dh,
             image_wave_set_array(&self->array, xi, yi, 1, arr_y - gradient_y*dh);
         }
     }
+
+    image_wave_shift_image(self, &self->array, image1, tmp);
+    double corr = correlation(tmp, image2);
+    printf("correlation = %lf\n", corr);
 }
 
 void image_wave_approximate_by_correlation(struct ImageWave *self,
                                            double dh, size_t Nsteps,
                                            const struct ImageWaveGrid *image1,
-                                           const struct ImageWaveGrid *image2)
+                                           const struct ImageWaveGrid *image2,
+                                           struct ImageWaveGrid *tmp)
 {
     unsigned i;
     image_wave_init_shift_array(self->array.array, self->array.w, self->array.h, 0, 0);    
     for (i = 0; i < Nsteps; i++)
-        approximate_step(self, dh, image1, image2);
+        approximate_step(self, dh, image1, image2, tmp);
 }
