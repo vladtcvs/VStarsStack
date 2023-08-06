@@ -148,7 +148,7 @@ void image_wave_finalize(struct ImageWave *self)
 }
 
 void image_wave_move_along_gradient(struct ImageWave *self,
-                                    struct ImageWaveGrid *gradient,
+                                    const struct ImageWaveGrid *gradient,
                                     double dh)
 {
     int xi, yi;
@@ -167,20 +167,8 @@ void image_wave_move_along_gradient(struct ImageWave *self,
         }
     }
 
-    if (maxv > 1)
-    {
-        for (yi = 0; yi < self->Nh; yi++)
-        {
-            for (xi = 0; xi < self->Nw; xi++)
-            {
-                double gradient_x = image_wave_get_array(gradient, xi, yi, 0);
-                double gradient_y = image_wave_get_array(gradient, xi, yi, 1);
-
-                image_wave_set_array(&self->array_gradient, xi, yi, 0, gradient_x/maxv);
-                image_wave_set_array(&self->array_gradient, xi, yi, 1, gradient_y/maxv);
-            }
-        }
-    }
+    if (maxv < 1)
+        maxv = 1;
 
     for (yi = 0; yi < self->Nh; yi++)
     {
@@ -192,8 +180,8 @@ void image_wave_move_along_gradient(struct ImageWave *self,
             double arr_x = image_wave_get_array(&self->array, xi, yi, 0);
             double arr_y = image_wave_get_array(&self->array, xi, yi, 1);
 
-            image_wave_set_array(&self->array, xi, yi, 0, arr_x - gradient_x*dh);
-            image_wave_set_array(&self->array, xi, yi, 1, arr_y - gradient_y*dh);
+            image_wave_set_array(&self->array, xi, yi, 0, arr_x - gradient_x * dh / maxv);
+            image_wave_set_array(&self->array, xi, yi, 1, arr_y - gradient_y * dh / maxv);
         }
     }
 }

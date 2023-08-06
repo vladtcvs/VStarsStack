@@ -52,7 +52,7 @@ void image_wave_print_array(const struct ImageWaveGrid *array);
 
 /* Common math methods */
 void image_wave_move_along_gradient(struct ImageWave *self,
-                                    struct ImageWaveGrid *gradient,
+                                    const struct ImageWaveGrid *gradient,
                                     double dh);
 
 /*
