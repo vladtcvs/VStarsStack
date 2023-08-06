@@ -152,7 +152,7 @@ def readser(fname: str):
             frame = _read_to_npy(file, bpp, le16bit, shape)
             dataframe = vstarstack.library.data.DataFrame(params, tags)
             exptime = 1
-            weight = np.ones(frame.data.shape)*exptime
+            weight = np.ones(frame.data.shape[0:2])*exptime
             index = 0
             for index, channel in enumerate(channels):
                 dataframe.add_channel(frame[:, :, index], channel, **opts)
