@@ -55,6 +55,8 @@ void image_wave_move_along_gradient(struct ImageWave *self,
                                     const struct ImageWaveGrid *gradient,
                                     double dh);
 
+double image_wave_stretch_penalty(const struct ImageWaveGrid *array);
+
 /*
  * Set shift array at (x,y)
  */

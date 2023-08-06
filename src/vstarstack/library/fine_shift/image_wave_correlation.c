@@ -23,12 +23,19 @@
 
 static double image_average(const struct ImageWaveGrid *image)
 {
-    double sum = 0;
     int i, j;
+    double sum = 0;
+    int num = 0;
     for (i = 0; i < image->h; i++)
     for (j = 0; j < image->w; j++)
-        sum += image_wave_get_array(image, j, i, 0);
-    return sum / (image->w * image->h);
+    {
+        double val = image_wave_get_array(image, j, i, 0);
+        if (isnan(val))
+            continue;
+        sum += val;
+        num++;
+    }
+    return sum / num;
 }
 
 static double correlation(const struct ImageWaveGrid *image1,
@@ -38,28 +45,28 @@ static double correlation(const struct ImageWaveGrid *image1,
     double average2 = image_average(image2);
 
     double top = 0;
+    double bottom1 = 0, bottom2 = 0;
+
     int i, j;
     for (i = 0; i < image1->h; i++)
     for (j = 0; j < image1->w; j++)
     {
         double pixel1 = image_wave_get_array(image1, j, i, 0);
         double pixel2 = image_wave_get_array(image2, j, i, 0);
+        if (isnan(pixel1) || isnan(pixel2))
+            continue;
+
         top += (pixel1 - average1)*(pixel2 - average2);
-    }
-
-    double bottom1 = 0, bottom2 = 0;
-    for (i = 0; i < image1->h; i++)
-    for (j = 0; j < image1->w; j++)
-    {
-        double pixel1 = image_wave_get_array(image1, j, i, 0);
         bottom1 += SQR(pixel1 - average1);
-
-        double pixel2 = image_wave_get_array(image2, j, i, 0);
         bottom2 += SQR(pixel2 - average2);
     }
 
     if (bottom1 == 0 || bottom2 == 0)
+    {
+        if (bottom1 == 0 && bottom2 == 0)
+            return 1;
         return 0;
+    }
     return top / sqrt(bottom1 * bottom2);
 }
 
@@ -71,27 +78,7 @@ static double penalty(struct ImageWave *self,
 {
     image_wave_shift_image(self, array, image1, tmp);
     double corr = correlation(tmp, image2);
-
-    double penalty_stretch = 0;
-    int xi, yi;
-    for (yi = 0; yi < self->Nh-1; yi++)
-    {
-        for (xi = 0; xi < self->Nw-1; xi++)
-        {
-            double current_x = image_wave_get_array(array, xi, yi, 0);
-            double current_y = image_wave_get_array(array, xi, yi, 1);
-            double right_x = image_wave_get_array(array, xi+1, yi, 0);
-            double right_y = image_wave_get_array(array, xi+1, yi, 1);
-            double bottom_x = image_wave_get_array(array, xi, yi+1, 0);
-            double bottom_y = image_wave_get_array(array, xi, yi+1, 1);
-
-            penalty_stretch += SQR(current_x-right_x);
-            penalty_stretch += SQR(current_y-right_y);
-            
-            penalty_stretch += SQR(current_x-bottom_x);
-            penalty_stretch += SQR(current_y-bottom_y);
-        }
-    }
+    double penalty_stretch = image_wave_stretch_penalty(array);
     return penalty_stretch * self->stretch_penalty_k - corr;
 }
 

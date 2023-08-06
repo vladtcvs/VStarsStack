@@ -185,3 +185,28 @@ void image_wave_move_along_gradient(struct ImageWave *self,
         }
     }
 }
+
+double image_wave_stretch_penalty(const struct ImageWaveGrid *array)
+{
+    double penalty_stretch = 0;
+    int xi, yi;
+    for (yi = 0; yi < array->h - 1; yi++)
+    {
+        for (xi = 0; xi < array->w - 1; xi++)
+        {
+            double current_x = image_wave_get_array(array, xi, yi, 0);
+            double current_y = image_wave_get_array(array, xi, yi, 1);
+            double right_x = image_wave_get_array(array, xi+1, yi, 0);
+            double right_y = image_wave_get_array(array, xi+1, yi, 1);
+            double bottom_x = image_wave_get_array(array, xi, yi+1, 0);
+            double bottom_y = image_wave_get_array(array, xi, yi+1, 1);
+
+            penalty_stretch += SQR(current_x-right_x);
+            penalty_stretch += SQR(current_y-right_y);
+
+            penalty_stretch += SQR(current_x-bottom_x);
+            penalty_stretch += SQR(current_y-bottom_y);
+        }
+    }
+    return penalty_stretch;
+}
