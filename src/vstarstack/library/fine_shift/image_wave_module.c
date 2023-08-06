@@ -177,6 +177,21 @@ static PyObject *ImageWave_approximate_by_correlation(PyObject *_self,
         return Py_None;
     }
 
+    if (PyArray_TYPE(image1) != NPY_DOUBLE)
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    if (PyArray_TYPE(image2) != NPY_DOUBLE)
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+
     npy_intp *dims1 = PyArray_SHAPE(image1);
     struct ImageWaveGrid img1 = {
         .array = PyArray_DATA(image1),

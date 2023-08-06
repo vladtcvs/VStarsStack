@@ -19,6 +19,8 @@
 
 #include "image_wave.h"
 
+#define SQR(x) ((x)*(x))
+
 void image_wave_print_array(const struct ImageWaveGrid *array)
 {
     int i, j, k;

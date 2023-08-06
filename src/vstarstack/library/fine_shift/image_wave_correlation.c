@@ -31,7 +31,9 @@ static double image_average(const struct ImageWaveGrid *image)
     {
         double val = image_wave_get_array(image, j, i, 0);
         if (isnan(val))
+        {
             continue;
+        }
         sum += val;
         num++;
     }
@@ -47,6 +49,11 @@ static double correlation(const struct ImageWaveGrid *image1,
     double top = 0;
     double bottom1 = 0, bottom2 = 0;
 
+    if (image1->w != image2->w || image1->h != image2->h)
+    {
+        printf("Error!\n");
+    }
+
     int i, j;
     for (i = 0; i < image1->h; i++)
     for (j = 0; j < image1->w; j++)
@@ -54,8 +61,10 @@ static double correlation(const struct ImageWaveGrid *image1,
         double pixel1 = image_wave_get_array(image1, j, i, 0);
         double pixel2 = image_wave_get_array(image2, j, i, 0);
         if (isnan(pixel1) || isnan(pixel2))
+        {
             continue;
-
+        }
+        
         top += (pixel1 - average1)*(pixel2 - average2);
         bottom1 += SQR(pixel1 - average1);
         bottom2 += SQR(pixel2 - average2);
@@ -119,10 +128,6 @@ static void approximate_step(struct ImageWave *self, double dh,
     }
 
     image_wave_move_along_gradient(self, &self->array_gradient, dh);
-
-    image_wave_shift_image(self, &self->array, image1, tmp);
-    double corr = correlation(tmp, image2);
-    printf("correlation = %lf\n", corr);
 }
 
 void image_wave_approximate_by_correlation(struct ImageWave *self,
@@ -132,7 +137,20 @@ void image_wave_approximate_by_correlation(struct ImageWave *self,
                                            struct ImageWaveGrid *tmp)
 {
     unsigned i;
-    image_wave_init_shift_array(self->array.array, self->array.w, self->array.h, 0, 0);    
+    
+    image_wave_init_shift_array(self->array.array, self->array.w, self->array.h, 1, 0);    
     for (i = 0; i < Nsteps; i++)
+    {
+        image_wave_shift_image(self, &self->array, image1, tmp);
+        double corr = correlation(tmp, image2);
+        image_wave_print_array(&self->array);
+        printf("correlation = %lf\n", corr);
+
         approximate_step(self, dh, image1, image2, tmp);
+        image_wave_shift_image(self, &self->array, image1, tmp);        
+    }
+    image_wave_shift_image(self, &self->array, image1, tmp);
+    double corr = correlation(tmp, image2);
+    image_wave_print_array(&self->array);
+    printf("correlation = %lf\n", corr);
 }

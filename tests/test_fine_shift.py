@@ -75,7 +75,7 @@ def test_approximate_parabola2():
 
 
 def test_approximate_parabola_long():
-    wave = vstarstack.library.fine_shift.image_wave.ImageWave(10, 10, 30, 30, 0.01)
+    wave = vstarstack.library.fine_shift.image_wave.ImageWave(10, 10, 30, 30, 0.001)
     targets = [(5, 0), (5, 5), (5, 10)]
     measured = [(5, 0), (5.1, 5.1), (5, 10)]
     wave.approximate_by_targets(targets, measured, N, dh)
@@ -96,14 +96,14 @@ def test_fine_shift_by_correlation1():
 
     w = df1.params["w"]
     h = df1.params["h"]
-    wave = vstarstack.library.fine_shift.image_wave.ImageWave(w, h, 2, 2, 0.01)
+    wave = vstarstack.library.fine_shift.image_wave.ImageWave(w, h, 2, 2, 0)
 
-    image1 = df1.get_channel("L")[0]
-    image2 = df2.get_channel("L")[0]
-    wave.approximate_by_correlation(image1, image2, N, 0.5)
+    image1 = df1.get_channel("L")[0].astype('double')
+    image2 = df2.get_channel("L")[0].astype('double')
+    wave.approximate_by_correlation(image1, image2, 0, 0.2)
     data = wave.data()
     print(data)
-    compare_shift_array(data["data"], [0, -1, 0, -1, 0, -1, 0, -1])
+    compare_shift_array(data["data"], [-1, 0, -1, 0, -1, 0, -1, 0])
 
 test_fine_shift_by_correlation1()
 
