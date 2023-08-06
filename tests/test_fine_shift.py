@@ -12,9 +12,13 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import os
+
+from vstarstack.library.loaders.classic import readjpeg
 import vstarstack.library.fine_shift.image_wave
 
-N = 2000
+dir_path = os.path.dirname(os.path.realpath(__file__))
+N = 200
 dh = 0.1
 
 
@@ -80,6 +84,28 @@ def test_approximate_parabola_long():
     assert abs(x-5) < 5e-3
     assert abs(y-5) < 5e-3
 
+def compare_shift_array(array, reference):
+    assert len(array) == len(reference)
+    print(array, reference)
+    for i, v in enumerate(reference):
+        assert abs(v - array[i]) < 1e-3
+
+def test_fine_shift_by_correlation1():
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image2.png")))
+
+    w = df1.params["w"]
+    h = df1.params["h"]
+    wave = vstarstack.library.fine_shift.image_wave.ImageWave(w, h, 2, 2, 0.01)
+
+    image1 = df1.get_channel("L")[0]
+    image2 = df2.get_channel("L")[0]
+    wave.approximate_by_correlation(image1, image2, N, 0.5)
+    data = wave.data()
+    print(data)
+    compare_shift_array(data["data"], [0, -1, 0, -1, 0, -1, 0, -1])
+
+test_fine_shift_by_correlation1()
 
 def test_serialize():
     wave = vstarstack.library.fine_shift.image_wave.ImageWave(10, 10, 3, 3, 0.01)
