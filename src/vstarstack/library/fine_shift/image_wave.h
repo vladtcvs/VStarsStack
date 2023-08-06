@@ -107,3 +107,9 @@ void image_wave_shift_image(struct ImageWave *self,
 void image_wave_approximate_by_targets(struct ImageWave *self, double dh, size_t Nsteps,
                                        double *targets, double *points, size_t N);
 
+
+/* Approximation by correlation methods */
+void image_wave_approximate_by_correlation(struct ImageWave *self,
+                                           double dh, size_t Nsteps,
+                                           const struct ImageWaveGrid *image1,
+                                           const struct ImageWaveGrid *image2);

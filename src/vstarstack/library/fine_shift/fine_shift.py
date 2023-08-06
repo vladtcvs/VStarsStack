@@ -88,7 +88,7 @@ class Aligner:
                                          mask2 : np.ndarray):
         """Build alignment descriptor of image1 using correlations"""
         wave = ImageWave(self.W, self.H, self.gridW, self.gridH, self.spk)
-        wave.approximate_by_correlation(image1, image2)
+        wave.approximate_by_correlation(image1, image2, self.num_steps, self.dh)
         descriptor = wave.data()
         return descriptor
 

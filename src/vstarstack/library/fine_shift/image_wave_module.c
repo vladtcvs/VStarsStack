@@ -163,7 +163,10 @@ static PyObject *ImageWave_approximate_by_correlation(PyObject *_self,
 {
     int Nsteps;
     double dh;
-/*
+
+    PyArrayObject *image1;
+    PyArrayObject *image2;
+
     struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
     static char *kwlist[] = {"image1", "image2", "N", "dh", NULL};
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOid", kwlist,
@@ -173,11 +176,28 @@ static PyObject *ImageWave_approximate_by_correlation(PyObject *_self,
         Py_INCREF(Py_None);
         return Py_None;
     }
-*/
+
+    npy_intp *dims1 = PyArray_SHAPE(image1);
+    struct ImageWaveGrid img1 = {
+        .array = PyArray_DATA(image1),
+        .naxis = 1,
+        .w = dims1[1],
+        .h = dims1[0],
+    };
+
+    npy_intp *dims2 = PyArray_SHAPE(image2);
+    struct ImageWaveGrid img2 = {
+        .array = PyArray_DATA(image2),
+        .naxis = 1,
+        .w = dims2[1],
+        .h = dims2[0],
+    };
+
+    image_wave_approximate_by_correlation(&self->wave, dh, Nsteps, &img1, &img2);
+
     Py_INCREF(Py_True);
     return Py_True;
 }
-
 
 static PyObject *ImageWave_apply_shift(PyObject *_self,
                                        PyObject *args,
