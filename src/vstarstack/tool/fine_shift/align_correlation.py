@@ -41,30 +41,30 @@ def create_aligner(project: vstarstack.tool.cfg.Project, W: int, H: int):
     return aligner
 
 def align_file(project : vstarstack.tool.cfg.Project,
-               name1 : str,
-               name2 : str,
-               input_image1_f : str,
-               input_image2_f : str,
+               name : str,
+               name_ref : str,
+               input_image_f : str,
+               input_image_ref_f : str,
                desc_f : str):
     """Apply alignment to each file"""
-    print(f"{name1} -> {name2}")
-    if not os.path.exists(input_image1_f):
+    print(f"{name} -> {name_ref}")
+    if not os.path.exists(input_image_f):
         return
-    if not os.path.exists(input_image2_f):
+    if not os.path.exists(input_image_ref_f):
         return
 
-    df1 = vstarstack.library.data.DataFrame.load(input_image1_f)
-    df2 = vstarstack.library.data.DataFrame.load(input_image2_f)
-    w = df1.params["w"]
-    h = df1.params["h"]
+    df = vstarstack.library.data.DataFrame.load(input_image_f)
+    df_ref = vstarstack.library.data.DataFrame.load(input_image_ref_f)
+    w = df.params["w"]
+    h = df.params["h"]
     aligner = create_aligner(project, w, h)
 
-    light1, mask1 = vstarstack.library.common.df_to_light(df1)
-    light2, mask2 = vstarstack.library.common.df_to_light(df2)
+    light, mask = vstarstack.library.common.df_to_light(df)
+    light_ref, mask_ref = vstarstack.library.common.df_to_light(df_ref)
 
     # find alignment
-    desc = aligner.process_alignment_by_correlation(light1, mask1, light2, mask2)
-    print(f"{name1} - align to {name2} found")
+    desc = aligner.process_alignment_by_correlation(light, mask, light_ref, mask_ref)
+    print(f"{name} - align to {name_ref} found")
     vstarstack.tool.common.check_dir_exists(desc_f)
     with open(desc_f, "w", encoding='utf8') as f:
         json.dump(desc, f, ensure_ascii=False, indent=2)
