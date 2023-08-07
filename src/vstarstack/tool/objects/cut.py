@@ -65,6 +65,9 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
         top = int(y - maxr)
         bottom = int(y + maxr)
 
+        width = right - left
+        height = bottom - top
+
         left = max(left, 0)
         top = max(top, 0)
 
@@ -108,6 +111,9 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
 
         for ch, value in weight_links.items():
             image.add_channel_link(ch, value, "weight")
+
+        image.params["w"] = width
+        image.params["h"] = height
 
         outname = os.path.join(cutpath, name + ".zip")
         vstarstack.tool.common.check_dir_exists(outname)
