@@ -12,8 +12,11 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <math.h>
 #include "image_wave.h"
+
+#define SQR(x) ((x)*(x))
 
 static void image_wave_set_pixel(struct ImageWaveGrid *image, int x, int y, double val)
 {

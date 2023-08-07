@@ -157,9 +157,9 @@ static PyObject *ImageWave_approximate_by_targets(PyObject *_self,
     return Py_True;
 }
 
-static PyObject *ImageWave_approximate_by_correlation(PyObject *_self,
-                                                      PyObject *args,
-                                                      PyObject *kwds)
+static PyObject *ImageFindCorrelationArray(PyObject *self,
+                                                  PyObject *args,
+                                                  PyObject *kwds)
 {
     int radius;
     double maximal_shift;
@@ -167,7 +167,6 @@ static PyObject *ImageWave_approximate_by_correlation(PyObject *_self,
     PyArrayObject *image;
     PyArrayObject *ref_image;
 
-    struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
     static char *kwlist[] = {"image", "reference_image", "radius", "maximal_shift", NULL};
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOid", kwlist,
                                      &image, &ref_image, &radius, &maximal_shift))
@@ -354,9 +353,6 @@ static PyMethodDef ImageWave_methods[] = {
     {"approximate_by_targets", (PyCFunction)ImageWave_approximate_by_targets, METH_VARARGS | METH_KEYWORDS,
      "find grid values which gives the best fit for points -> targets"},
 
-    {"approximate_by_correlation", (PyCFunction)ImageWave_approximate_by_correlation, METH_VARARGS | METH_KEYWORDS,
-     "find grid values which gives the best correlation between image1 and image2"},
-
     {"apply_shift", (PyCFunction)ImageWave_apply_shift, METH_VARARGS | METH_KEYWORDS,
      "apply shift grid to image"},
 
@@ -384,6 +380,7 @@ static PyTypeObject ImageWave = {
 
 static PyMethodDef methods[] = {
     {"image_correlation", (PyCFunction)ImageCorrelation, METH_VARARGS | METH_KEYWORDS, "find correlation between images"},
+    {"find_shift_array", (PyCFunction)ImageFindCorrelationArray, METH_VARARGS | METH_KEYWORDS, "find shift array between images"},
     {NULL, NULL, 0, NULL},
 };
 
