@@ -40,7 +40,8 @@ void image_wave_approximate_with_images(struct ImageWave *self,
                                         const struct ImageWaveGrid *img,
                                         const struct ImageWaveGrid *ref_img,
                                         int radius,
-                                        double maximal_shift)
+                                        double maximal_shift,
+                                        int subpixels)
 {
     int i, j;
     int w = radius*2+1;
@@ -67,8 +68,8 @@ void image_wave_approximate_with_images(struct ImageWave *self,
         get_area(ref_img, j, i, &ref_area);
         double best_corr = image_wave_correlation(&area, &ref_area);
 
-        for (y = i - maximal_shift; y <= i + maximal_shift; y++)
-        for (x = j - maximal_shift; x <= j + maximal_shift; x++)
+        for (y = i - maximal_shift; y <= i + maximal_shift; y += 1.0 / subpixels)
+        for (x = j - maximal_shift; x <= j + maximal_shift; x += 1.0 / subpixels)
         {
             get_area(img, x, y, &area);
             double corr = image_wave_correlation(&area, &ref_area);

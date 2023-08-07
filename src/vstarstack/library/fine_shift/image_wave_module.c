@@ -399,15 +399,16 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
                                                   PyObject *args,
                                                   PyObject *kwds)
 {
+    int subpixels;
     int radius;
     double maximal_shift;
 
     PyArrayObject *image;
     PyArrayObject *ref_image;
 
-    static char *kwlist[] = {"image", "reference_image", "radius", "maximal_shift", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOid", kwlist,
-                                     &image, &ref_image, &radius, &maximal_shift))
+    static char *kwlist[] = {"image", "reference_image", "radius", "maximal_shift", "subpixels", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOidi", kwlist,
+                                     &image, &ref_image, &radius, &maximal_shift, &subpixels))
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments");
         Py_INCREF(Py_None);
@@ -457,7 +458,7 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
     // TODO: implement filling obj with array of shifts
     struct ImageWaveObject *object = (struct ImageWaveObject *)obj;
     struct ImageWave *wave = &object->wave;
-    image_wave_approximate_with_images(wave, &img, &ref_img, radius, maximal_shift);
+    image_wave_approximate_with_images(wave, &img, &ref_img, radius, maximal_shift, subpixels);
 
     Py_INCREF(obj);
     return obj;

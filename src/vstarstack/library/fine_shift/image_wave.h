@@ -122,4 +122,5 @@ void image_wave_approximate_with_images(struct ImageWave *self,
                                         const struct ImageWaveGrid *img,
                                         const struct ImageWaveGrid *ref_img,
                                         int radius,
-                                        double maximal_shift);
+                                        double maximal_shift,
+                                        int subpixels);
