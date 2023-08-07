@@ -62,12 +62,13 @@ void image_wave_approximate_with_images(struct ImageWave *self,
     for (j = 0; j < self->Nw; j++)
     {
         double x, y;
-        double best_corr = -10;
         double best_x = j, best_y = i;
+        get_area(img, best_x, best_y, &area);
         get_area(ref_img, j, i, &ref_area);
+        double best_corr = image_wave_correlation(&area, &ref_area);
 
-        for (y = i - radius; y <= i + radius; y++)
-        for (x = j - radius; x <= j + radius; x++)
+        for (y = i - maximal_shift; y <= i + maximal_shift; y++)
+        for (x = j - maximal_shift; x <= j + maximal_shift; x++)
         {
             get_area(img, x, y, &area);
             double corr = image_wave_correlation(&area, &ref_area);

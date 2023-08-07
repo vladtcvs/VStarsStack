@@ -305,7 +305,7 @@ static PyMethodDef ImageWave_methods[] = {
     {"approximate_by_targets", (PyCFunction)ImageWave_approximate_by_targets, METH_VARARGS | METH_KEYWORDS,
      "find grid values which gives the best fit for points -> targets"},
 
-    {"find_shift_array", (PyCFunction)ImageWave_find_correlation_array, METH_VARARGS | METH_KEYWORDS,
+    {"find_shift_array", (PyCFunction)ImageWave_find_correlation_array, METH_VARARGS | METH_KEYWORDS | METH_STATIC,
      "find shift array between images"},
 
     {"apply_shift", (PyCFunction)ImageWave_apply_shift, METH_VARARGS | METH_KEYWORDS,
