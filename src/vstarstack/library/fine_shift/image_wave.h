@@ -117,11 +117,11 @@ void image_wave_approximate_by_targets(struct ImageWave *self, double dh, size_t
 
 
 /* Approximation by correlation methods */
-void image_wave_approximate_by_correlation(struct ImageWave *self,
-                                           double dh, size_t Nsteps,
-                                           const struct ImageWaveGrid *image1,
-                                           const struct ImageWaveGrid *image2,
-                                           struct ImageWaveGrid *tmp);
+double image_wave_approximate_by_correlation(struct ImageWave *self,
+                                             double dh, size_t Nsteps,
+                                             const struct ImageWaveGrid *image1,
+                                             const struct ImageWaveGrid *image2,
+                                             struct ImageWaveGrid *tmp);
 
 double image_wave_correlation(const struct ImageWaveGrid *image1,
                               const struct ImageWaveGrid *image2);

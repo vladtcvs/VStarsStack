@@ -215,12 +215,13 @@ static PyObject *ImageWave_approximate_by_correlation(PyObject *_self,
         .h = ref_dims[0],
     };
 
-    image_wave_approximate_by_correlation(&self->wave, dh, Nsteps, &img, &ref_img, &tmp);
-
+    double corr = image_wave_approximate_by_correlation(&self->wave,
+                                                        dh, Nsteps,
+                                                        &img,
+                                                        &ref_img,
+                                                        &tmp);
     free(tmp.array);
-
-    Py_INCREF(Py_True);
-    return Py_True;
+    return PyFloat_FromDouble(corr);
 }
 
 static PyObject *ImageCorrelation(PyObject *self,

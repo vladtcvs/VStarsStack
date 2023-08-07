@@ -126,7 +126,7 @@ static void approximate_step(struct ImageWave *self, double dh,
     image_wave_move_along_gradient(self, &self->array_gradient, dh);
 }
 
-void image_wave_approximate_by_correlation(struct ImageWave *self,
+double image_wave_approximate_by_correlation(struct ImageWave *self,
                                            double dh, size_t Nsteps,
                                            const struct ImageWaveGrid *image,
                                            const struct ImageWaveGrid *ref_image,
@@ -137,17 +137,10 @@ void image_wave_approximate_by_correlation(struct ImageWave *self,
 
     for (i = 0; i < Nsteps; i++)
     {
-/*        image_wave_shift_image(self, &self->array, image, tmp);
-        double corr = image_wave_correlation(tmp, ref_image);
-        image_wave_print_array(&self->array);
-        printf("correlation = %lf\n----\n", corr);
-*/
         approximate_step(self, dh, image, ref_image, tmp);
         image_wave_shift_image(self, &self->array, image, tmp);        
     }
 
     image_wave_shift_image(self, &self->array, image, tmp);
-    double corr = image_wave_correlation(tmp, ref_image);
-    image_wave_print_array(&self->array);
-    printf("correlation = %lf\n", corr);
+    return image_wave_correlation(tmp, ref_image);
 }
