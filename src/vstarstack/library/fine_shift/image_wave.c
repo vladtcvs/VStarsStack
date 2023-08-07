@@ -43,21 +43,15 @@ void image_wave_print_array(const struct ImageWaveGrid *array)
 /*
  * Init shift array with specified (dx, dy)
  */
-void image_wave_init_shift_array(double *array, int w, int h, double dx, double dy)
+void image_wave_init_shift_array(struct ImageWaveGrid *grid, double dx, double dy)
 {
-    struct ImageWaveGrid grid = {
-        .array = array,
-        .w = w,
-        .h = h,
-        .naxis = 2,
-    };
     int xi, yi;
-    for (yi = 0; yi < h; yi++)
+    for (yi = 0; yi < grid->h; yi++)
     {
-        for (xi = 0; xi < w; xi++)
+        for (xi = 0; xi < grid->w; xi++)
         {
-            image_wave_set_array(&grid, xi, yi, 0, dx);
-            image_wave_set_array(&grid, xi, yi, 1, dy);
+            image_wave_set_array(grid, xi, yi, 0, dx);
+            image_wave_set_array(grid, xi, yi, 1, dy);
         }
     }
 }

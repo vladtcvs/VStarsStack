@@ -49,11 +49,7 @@ void image_wave_shift_image(struct ImageWave *self,
         {
             double orig_y, orig_x;
             image_wave_shift_interpolate(self, array, x, y, &orig_x, &orig_y);
-            double val = image_wave_get_pixel(input_image, orig_x, orig_y)+x;
-            if (isnan(val))
-            {
-                val = 1;
-            }
+            double val = image_wave_get_pixel(input_image, orig_x, orig_y);
             image_wave_set_pixel(output_image, x, y, val);
         }
 }

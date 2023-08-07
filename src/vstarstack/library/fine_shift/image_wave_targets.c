@@ -107,7 +107,7 @@ void image_wave_approximate_by_targets(struct ImageWave *self, double dh, size_t
     dx /= N;
     dy /= N;
 
-    image_wave_init_shift_array(self->array.array, self->array.w, self->array.h, dx, dy);    
+    image_wave_init_shift_array(&self->array, dx, dy);    
 
     for (i = 0; i < Nsteps; i++)
         approximate_step(self, dh, targets, points, N);

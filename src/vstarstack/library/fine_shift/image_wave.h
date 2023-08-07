@@ -46,7 +46,7 @@ int  image_wave_init(struct ImageWave *self, int w, int h,
                      double Nw, double Nh, double spk);
 void image_wave_finalize(struct ImageWave *self);
 
-void image_wave_init_shift_array(double *array, int w, int h, double dx, double dy);
+void image_wave_init_shift_array(struct ImageWaveGrid *grid, double dx, double dy);
 void image_wave_print_array(const struct ImageWaveGrid *array);
 
 
@@ -122,3 +122,6 @@ void image_wave_approximate_by_correlation(struct ImageWave *self,
                                            const struct ImageWaveGrid *image1,
                                            const struct ImageWaveGrid *image2,
                                            struct ImageWaveGrid *tmp);
+
+double image_wave_correlation(const struct ImageWaveGrid *image1,
+                              const struct ImageWaveGrid *image2);

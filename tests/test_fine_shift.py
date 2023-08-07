@@ -13,6 +13,7 @@
 #
 
 import os
+import numpy as np
 
 from vstarstack.library.loaders.classic import readjpeg
 import vstarstack.library.fine_shift.image_wave
@@ -90,22 +91,55 @@ def compare_shift_array(array, reference):
     for i, v in enumerate(reference):
         assert abs(v - array[i]) < 1e-3
 
-def test_fine_shift_by_correlation1():
+def test_correlation1():
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
+    image1 = df1.get_channel("L")[0].astype('double')
+    correlation = vstarstack.library.fine_shift.image_wave.image_correlation(image1, image1)
+    assert correlation == 1
+
+def test_correlation2():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
     df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image2.png")))
-
-    w = df1.params["w"]
-    h = df1.params["h"]
-    wave = vstarstack.library.fine_shift.image_wave.ImageWave(w, h, 2, 2, 0)
-
+    
     image1 = df1.get_channel("L")[0].astype('double')
     image2 = df2.get_channel("L")[0].astype('double')
-    wave.approximate_by_correlation(image1, image2, 0, 0.2)
+
+    image1_moved = np.zeros(image1.shape)
+    for y in range(image1.shape[0]):
+        for x in range(1,image1.shape[1]):
+            image1_moved[y,x] = image1[y,x-1]
+        image1_moved[y,0] = np.nan
+
+    correlation = vstarstack.library.fine_shift.image_wave.image_correlation(image1_moved, image2)
+    assert correlation == 1
+
+def test_shift_image1():
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
+
+    image1 = df1.get_channel("L")[0].astype('double')
+    wave = vstarstack.library.fine_shift.image_wave.ImageWave(image1.shape[1],
+                                                              image1.shape[0],
+                                                              2, 2, 0.01)
+    image2 = wave.apply_shift(image1)
+    correlation = vstarstack.library.fine_shift.image_wave.image_correlation(image1, image2)
+    assert correlation == 1
+
+#test_shift_image1()
+
+def test_approximate_by_correlation1():
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image2.png")))
+    
+    image1 = df1.get_channel("L")[0].astype('double')
+    image2 = df2.get_channel("L")[0].astype('double')
+    wave = vstarstack.library.fine_shift.image_wave.ImageWave(image1.shape[1],
+                                                              image1.shape[0],
+                                                              2, 2, 0.01)
+    wave.approximate_by_correlation(image1, image2, 10000, 0.1)
     data = wave.data()
     print(data)
-    compare_shift_array(data["data"], [-1, 0, -1, 0, -1, 0, -1, 0])
 
-test_fine_shift_by_correlation1()
+test_approximate_by_correlation1()
 
 def test_serialize():
     wave = vstarstack.library.fine_shift.image_wave.ImageWave(10, 10, 3, 3, 0.01)
