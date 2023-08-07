@@ -102,5 +102,6 @@ class Aligner:
                 continue
             image = image.astype('double')
             fixed = wave.apply_shift(image)
+            fixed[np.where(np.isnan(fixed))] = 0
             dataframe.replace_channel(fixed, channel)
         return dataframe
