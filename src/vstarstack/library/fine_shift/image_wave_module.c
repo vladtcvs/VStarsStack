@@ -457,7 +457,7 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
     // TODO: implement filling obj with array of shifts
     struct ImageWaveObject *object = (struct ImageWaveObject *)obj;
     struct ImageWave *wave = &object->wave;
-    image_wave_approximate_with_images(wave, &img, &ref_img, radius, &maximal_shift);
+    image_wave_approximate_with_images(wave, &img, &ref_img, radius, maximal_shift);
 
     Py_INCREF(obj);
     return obj;
