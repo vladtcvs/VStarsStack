@@ -444,9 +444,21 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
         .h = ref_dims[0],
     };
 
-    // TODO: implement
+    if (ref_img.w != img.w || ref_img.h != img.h)
+    {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
 
-    return PyFloat_FromDouble(0);
+    PyObject *argList = Py_BuildValue("iiiid", img.w, img.h, img.w, img.h, 0);
+    PyObject *obj = PyObject_CallObject((PyObject *) &ImageWave, argList);
+    Py_DECREF(argList);
+
+    // TODO: implement filling obj with array of shifts
+
+
+    Py_INCREF(obj);
+    return obj;
 }
 
 
