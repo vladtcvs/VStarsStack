@@ -117,3 +117,9 @@ void image_wave_shift_image(struct ImageWave *self,
 /* Approximation by targets methods */
 void image_wave_approximate_by_targets(struct ImageWave *self, double dh, size_t Nsteps,
                                        double *targets, double *points, size_t N);
+
+void image_wave_approximate_with_images(struct ImageWave *self,
+                                        const struct ImageWaveGrid *img,
+                                        const struct ImageWaveGrid *ref_img,
+                                        int radius,
+                                        double maximal_shift);
