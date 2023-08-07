@@ -157,59 +157,6 @@ static PyObject *ImageWave_approximate_by_targets(PyObject *_self,
     return Py_True;
 }
 
-static PyObject *ImageFindCorrelationArray(PyObject *self,
-                                                  PyObject *args,
-                                                  PyObject *kwds)
-{
-    int radius;
-    double maximal_shift;
-
-    PyArrayObject *image;
-    PyArrayObject *ref_image;
-
-    static char *kwlist[] = {"image", "reference_image", "radius", "maximal_shift", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOid", kwlist,
-                                     &image, &ref_image, &radius, &maximal_shift))
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    if (PyArray_TYPE(image) != NPY_DOUBLE)
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    if (PyArray_TYPE(ref_image) != NPY_DOUBLE)
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    npy_intp *dims = PyArray_SHAPE(image);
-    struct ImageWaveGrid img = {
-        .array = PyArray_DATA(image),
-        .naxis = 1,
-        .w = dims[1],
-        .h = dims[0],
-    };
-
-    npy_intp *ref_dims = PyArray_SHAPE(ref_image);
-    struct ImageWaveGrid ref_img = {
-        .array = PyArray_DATA(ref_image),
-        .naxis = 1,
-        .w = ref_dims[1],
-        .h = ref_dims[0],
-    };
-
-    // TODO: implement
-
-    return PyFloat_FromDouble(0);
-}
 
 static PyObject *ImageCorrelation(PyObject *self,
                              PyObject *args,
@@ -346,12 +293,20 @@ static PyObject *ImageWave_data(PyObject *_self, PyObject *args, PyObject *kwds)
 
 static PyObject *ImageWave_fromdata(PyObject *_self, PyObject *args, PyObject *kwds);
 
+static PyObject *ImageWave_find_correlation_array(PyObject *_self,
+                                                  PyObject *args,
+                                                  PyObject *kwds);
+
+
 static PyMethodDef ImageWave_methods[] = {
     {"interpolate", (PyCFunction)ImageWave_interpolate, METH_VARARGS | METH_KEYWORDS,
      "Apply shift grid to coordinates x,y"},
 
     {"approximate_by_targets", (PyCFunction)ImageWave_approximate_by_targets, METH_VARARGS | METH_KEYWORDS,
      "find grid values which gives the best fit for points -> targets"},
+
+    {"find_shift_array", (PyCFunction)ImageWave_find_correlation_array, METH_VARARGS | METH_KEYWORDS,
+     "find shift array between images"},
 
     {"apply_shift", (PyCFunction)ImageWave_apply_shift, METH_VARARGS | METH_KEYWORDS,
      "apply shift grid to image"},
@@ -380,7 +335,6 @@ static PyTypeObject ImageWave = {
 
 static PyMethodDef methods[] = {
     {"image_correlation", (PyCFunction)ImageCorrelation, METH_VARARGS | METH_KEYWORDS, "find correlation between images"},
-    {"find_shift_array", (PyCFunction)ImageFindCorrelationArray, METH_VARARGS | METH_KEYWORDS, "find shift array between images"},
     {NULL, NULL, 0, NULL},
 };
 
@@ -439,6 +393,60 @@ static PyObject *ImageWave_fromdata(PyObject *_self, PyObject *args, PyObject *k
 
     Py_INCREF(obj);
     return obj;
+}
+
+static PyObject *ImageWave_find_correlation_array(PyObject *_self,
+                                                  PyObject *args,
+                                                  PyObject *kwds)
+{
+    int radius;
+    double maximal_shift;
+
+    PyArrayObject *image;
+    PyArrayObject *ref_image;
+
+    static char *kwlist[] = {"image", "reference_image", "radius", "maximal_shift", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOid", kwlist,
+                                     &image, &ref_image, &radius, &maximal_shift))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    if (PyArray_TYPE(image) != NPY_DOUBLE)
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    if (PyArray_TYPE(ref_image) != NPY_DOUBLE)
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    npy_intp *dims = PyArray_SHAPE(image);
+    struct ImageWaveGrid img = {
+        .array = PyArray_DATA(image),
+        .naxis = 1,
+        .w = dims[1],
+        .h = dims[0],
+    };
+
+    npy_intp *ref_dims = PyArray_SHAPE(ref_image);
+    struct ImageWaveGrid ref_img = {
+        .array = PyArray_DATA(ref_image),
+        .naxis = 1,
+        .w = ref_dims[1],
+        .h = ref_dims[0],
+    };
+
+    // TODO: implement
+
+    return PyFloat_FromDouble(0);
 }
 
 
