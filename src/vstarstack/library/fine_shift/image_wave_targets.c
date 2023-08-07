@@ -46,26 +46,7 @@ static double penalty(struct ImageWave *self,
         penalty_points += SQR(tx-sx) + SQR(ty-sy);
     }
 
-    double penalty_stretch = 0;
-    int xi, yi;
-    for (yi = 0; yi < self->Nh-1; yi++)
-    {
-        for (xi = 0; xi < self->Nw-1; xi++)
-        {
-            double current_x = image_wave_get_array(array, xi, yi, 0);
-            double current_y = image_wave_get_array(array, xi, yi, 1);
-            double right_x = image_wave_get_array(array, xi+1, yi, 0);
-            double right_y = image_wave_get_array(array, xi+1, yi, 1);
-            double bottom_x = image_wave_get_array(array, xi, yi+1, 0);
-            double bottom_y = image_wave_get_array(array, xi, yi+1, 1);
-
-            penalty_stretch += SQR(current_x-right_x);
-            penalty_stretch += SQR(current_y-right_y);
-            
-            penalty_stretch += SQR(current_x-bottom_x);
-            penalty_stretch += SQR(current_y-bottom_y);
-        }
-    }
+    double penalty_stretch = image_wave_stretch_penalty(array);
     return penalty_points * 1 + penalty_stretch * self->stretch_penalty_k;
 }
 
@@ -106,50 +87,8 @@ static void approximate_step(struct ImageWave *self, double dh,
             image_wave_set_array(&self->array_gradient, xi, yi, 1, gradient_y);
         }
     }
-    double maxv = 0;
-    for (yi = 0; yi < self->Nh; yi++)
-    {
-        for (xi = 0; xi < self->Nw; xi++)
-        {
-            double gradient_x = image_wave_get_array(&self->array_gradient, xi, yi, 0);
-            double gradient_y = image_wave_get_array(&self->array_gradient, xi, yi, 1);
 
-            if (fabs(gradient_x) > maxv)
-                maxv = fabs(gradient_x);
-            if (fabs(gradient_y) > maxv)
-                maxv = fabs(gradient_y);
-        }
-    }
-
-    if (maxv > 1)
-    {
-        for (yi = 0; yi < self->Nh; yi++)
-        {
-            for (xi = 0; xi < self->Nw; xi++)
-            {
-                double gradient_x = image_wave_get_array(&self->array_gradient, xi, yi, 0);
-                double gradient_y = image_wave_get_array(&self->array_gradient, xi, yi, 1);
-
-                image_wave_set_array(&self->array_gradient, xi, yi, 0, gradient_x/maxv);
-                image_wave_set_array(&self->array_gradient, xi, yi, 1, gradient_y/maxv);
-            }
-        }
-    }
-
-    for (yi = 0; yi < self->Nh; yi++)
-    {
-        for (xi = 0; xi < self->Nw; xi++)
-        {
-            double gradient_x = image_wave_get_array(&self->array_gradient, xi, yi, 0);
-            double gradient_y = image_wave_get_array(&self->array_gradient, xi, yi, 1);
-        
-            double arr_x = image_wave_get_array(&self->array, xi, yi, 0);
-            double arr_y = image_wave_get_array(&self->array, xi, yi, 1);
-
-            image_wave_set_array(&self->array, xi, yi, 0, arr_x - gradient_x*dh);
-            image_wave_set_array(&self->array, xi, yi, 1, arr_y - gradient_y*dh);
-        }
-    }
+    image_wave_move_along_gradient(self, &self->array_gradient, dh);
 }
 
 void image_wave_approximate_by_targets(struct ImageWave *self, double dh, size_t Nsteps,
@@ -168,7 +107,7 @@ void image_wave_approximate_by_targets(struct ImageWave *self, double dh, size_t
     dx /= N;
     dy /= N;
 
-    image_wave_init_shift_array(self->array.array, self->array.w, self->array.h, dx, dy);    
+    image_wave_init_shift_array(&self->array, dx, dy);    
 
     for (i = 0; i < Nsteps; i++)
         approximate_step(self, dh, targets, points, N);

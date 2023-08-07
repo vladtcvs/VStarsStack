@@ -82,13 +82,12 @@ class Aligner:
         return descs
 
     def process_alignment_by_correlation(self,
-                                         image1 : np.ndarray,
-                                         mask1 : np.ndarray,
-                                         image2 : np.ndarray,
-                                         mask2 : np.ndarray):
-        """Build alignment descriptor of image1 using correlations"""
-        wave = ImageWave(self.W, self.H, self.gridW, self.gridH, self.spk)
-        wave.approximate_by_correlation(image1, image2)
+                                         image : np.ndarray,
+                                         mask : np.ndarray,
+                                         image_ref : np.ndarray,
+                                         mask_ref : np.ndarray):
+        """Build alignment descriptor of image using correlations"""
+        wave = ImageWave.find_shift_array(image, image_ref, 5, 3, 4)
         descriptor = wave.data()
         return descriptor
 
@@ -103,5 +102,6 @@ class Aligner:
                 continue
             image = image.astype('double')
             fixed = wave.apply_shift(image)
+            fixed[np.where(np.isnan(fixed))] = 0
             dataframe.replace_channel(fixed, channel)
         return dataframe

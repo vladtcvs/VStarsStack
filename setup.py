@@ -29,6 +29,7 @@ image_wave = Extension(name="vstarstack.library.fine_shift.image_wave",
        sources=["src/vstarstack/library/fine_shift/image_wave.c",
                 "src/vstarstack/library/fine_shift/image_wave_interpolation.c",
                 "src/vstarstack/library/fine_shift/image_wave_targets.c",
+                "src/vstarstack/library/fine_shift/image_wave_correlation.c",
                 "src/vstarstack/library/fine_shift/image_wave_module.c",
                 "src/vstarstack/library/fine_shift/image_wave_image.c",
                 ], include_dirs=[np.get_include()])

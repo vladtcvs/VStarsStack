@@ -155,9 +155,9 @@ static void interpolation(const struct ImageWaveGrid *array,
 }
 
 void image_wave_shift_interpolate(struct ImageWave *self,
-                                 struct ImageWaveGrid *array,
-                                 double x, double y,
-                                 double *rx, double *ry)
+                                  const struct ImageWaveGrid *array,
+                                  double x, double y,
+                                  double *rx, double *ry)
 {
     double sx = self->sx;
     double sy = self->sy;
