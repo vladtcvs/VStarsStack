@@ -104,7 +104,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
                 "x2": right,
                 "y2": bottom
             }
-            image.add_channel(img, channel, **opts)
+            image.replace_channel(img, channel)
             vstarstack.tool.common.check_dir_exists(filename)
             with open(filename, "w", encoding='utf8') as f:
                 json.dump(detection, f, indent=4, ensure_ascii=False)
@@ -116,5 +116,10 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
         image.params["h"] = height
 
         outname = os.path.join(cutpath, name + ".zip")
-        vstarstack.tool.common.check_dir_exists(outname)
-        image.store(outname)
+        if len(image.get_channels()) != 0:
+            vstarstack.tool.common.check_dir_exists(outname)
+            image.store(outname)
+        else:
+            print(f"Skipping {outname}")
+            if os.path.exists(outname):
+                os.remove(outname)
