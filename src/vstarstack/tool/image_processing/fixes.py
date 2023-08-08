@@ -26,6 +26,7 @@ import vstarstack.tool.image_processing.border
 import vstarstack.tool.image_processing.normalize
 import vstarstack.tool.image_processing.blur
 import vstarstack.tool.image_processing.drop_unsharp
+import vstarstack.tool.image_processing.deconvolution
 import vstarstack.tool.common
 
 def copy(project: vstarstack.tool.cfg.Project, argv: list):
@@ -49,5 +50,6 @@ commands = {
     "border": (vstarstack.tool.image_processing.border.run,     "remove border"),
     "normalize": (vstarstack.tool.image_processing.normalize.run,  "normalize to weight"),
     "blur": (vstarstack.tool.image_processing.blur.run,  "gaussian blur"),
+    "deconvolution": (vstarstack.tool.image_processing.deconvolution.run,  "RL deconvolution"),
     "select-sharp" : (vstarstack.tool.image_processing.drop_unsharp.run, "select sharp images", "path/ percent"),
 }
