@@ -112,7 +112,7 @@ def build_keypoints(image : np.ndarray,
     orb = cv2.ORB_create()
 
     image = (image / np.amax(image) * 255).astype(np.uint8)
-    if detector_type == "ORB":
+    if detector_type == "orb":
         keypoints = select_keypoints(image, find_keypoints_orb, num_split, orb)
     elif detector_type == "brightness":
         keypoints = select_keypoints(image, find_keypoints_brightness, num_split, params)
@@ -133,12 +133,12 @@ def match_images(points : dict, descs : dict,
         matches[name1] = {}
         points1 = points[name1]
         descs1 = descs[name1]
-            
+
         for name2 in points:
             matches[name1][name2] = []
             points2 = points[name2]
             descs2 = descs[name2]
-            print(f"\t{name1} <-> {name2}")
+            print(f"\t{name1} <-> {name2} : {len(descs1)}, {len(descs2)}")
 
             imatches = bf_matcher.match(descs1, descs2)
             imatches = sorted(imatches, key=lambda x: x.distance)
