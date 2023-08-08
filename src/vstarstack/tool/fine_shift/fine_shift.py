@@ -29,7 +29,7 @@ commands = {
                                "npy/ clusters.json aligns/"),
     "find-align-by-correlation": (vstarstack.tool.fine_shift.align_correlation.align,
                                   "align images using correlation",
-                                  "npy/ aligns/"),
+                                  "npy/ aligns/ [pre_aligns/]"),
     "apply-align": (vstarstack.tool.fine_shift.align_apply.apply,
                     "apply aligns to images",
                     "npy/ aligns/ aligned/"),

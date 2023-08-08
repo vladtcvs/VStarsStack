@@ -45,7 +45,9 @@ def align_file(project : vstarstack.tool.cfg.Project,
                name_ref : str,
                input_image_f : str,
                input_image_ref_f : str,
-               desc_f : str):
+               align_f : str,
+               pre_align_f : str | None,
+               pre_align_ref_f : str | None):
     """Apply alignment to each file"""
     print(f"{name} -> {name_ref}")
     if not os.path.exists(input_image_f):
@@ -62,12 +64,29 @@ def align_file(project : vstarstack.tool.cfg.Project,
     light, mask = vstarstack.library.common.df_to_light(df)
     light_ref, mask_ref = vstarstack.library.common.df_to_light(df_ref)
 
+    if pre_align_f is None or not os.path.isfile(pre_align_f):
+        pre_align = None
+    else:
+        with open(pre_align_f, encoding='utf8') as f:
+            pre_align = json.load(f)
+
+    if pre_align_ref_f is None or not os.path.isfile(pre_align_ref_f):
+        pre_align_ref = None
+    else:
+        with open(pre_align_ref_f, encoding='utf8') as f:
+            pre_align_ref = json.load(f)
+
     # find alignment
-    desc = aligner.process_alignment_by_correlation(light, mask, light_ref, mask_ref)
+    align = aligner.process_alignment_by_correlation(light,
+                                                     mask,
+                                                     pre_align,
+                                                     light_ref,
+                                                     mask_ref,
+                                                     pre_align_ref)
     print(f"{name} - align to {name_ref} found")
-    vstarstack.tool.common.check_dir_exists(desc_f)
-    with open(desc_f, "w", encoding='utf8') as f:
-        json.dump(desc, f, ensure_ascii=False, indent=2)
+    vstarstack.tool.common.check_dir_exists(align_f)
+    with open(align_f, "w", encoding='utf8') as f:
+        json.dump(align, f, ensure_ascii=False, indent=2)
 
 def _align_file_wrapper(arg):
     align_file(*arg)
@@ -76,9 +95,14 @@ def align(project: vstarstack.tool.cfg.Project, argv: list):
     if len(argv) >= 2:
         npys = argv[0]
         aligns = argv[1]
+        if len(argv) >= 3:
+            pre_aligns = argv[2]
+        else:
+            pre_aligns = None
     else:
         npys = project.config.paths.npy_fixed
         aligns = project.config.fine_shift.aligns
+        pre_aligns = project.config.fine_shift.aligns
 
     files = vstarstack.tool.common.listfiles(npys, ".zip")
     name0, input_image0_f = files[0]
@@ -89,7 +113,9 @@ def align(project: vstarstack.tool.cfg.Project, argv: list):
                  name0,
                  input_image_f,
                  input_image0_f,
-                 os.path.join(aligns, name + ".json"))
+                 os.path.join(aligns, name + ".json"),
+                 os.path.join(pre_aligns, name + ".json") if pre_aligns is not None else None,
+                 os.path.join(pre_aligns, name0 + ".json") if pre_aligns is not None else None)
                  for name, input_image_f in files]
         for _ in pool.imap_unordered(_align_file_wrapper, args):
             pass

@@ -164,7 +164,7 @@ def test_approximate_by_correlation1():
 
     image = df1.get_channel("L")[0].astype('double')
     image_ref = df2.get_channel("L")[0].astype('double')
-    wave = ImageWave.find_shift_array(image, image_ref, 5, 3, 4)
+    wave = ImageWave.find_shift_array(image, None, image_ref, None, 5, 3, 4)
     image_shifted = wave.apply_shift(image)
     correlation = vstarstack.library.fine_shift.image_wave.image_correlation(image_shifted, image_ref)
     assert correlation > 1 - 1e-4

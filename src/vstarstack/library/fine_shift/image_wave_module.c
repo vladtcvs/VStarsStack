@@ -403,12 +403,17 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
     int radius;
     double maximal_shift;
 
+    PyObject *pre_shift, *ref_pre_shift;
     PyArrayObject *image;
     PyArrayObject *ref_image;
 
-    static char *kwlist[] = {"image", "reference_image", "radius", "maximal_shift", "subpixels", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOidi", kwlist,
-                                     &image, &ref_image, &radius, &maximal_shift, &subpixels))
+    static char *kwlist[] = {"image", "image_shift",
+                             "reference_image", "reference_image_shift",
+                             "radius", "maximal_shift", "subpixels", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOidi", kwlist,
+                                     &image, &pre_shift,
+                                     &ref_image, &ref_pre_shift,
+                                     &radius, &maximal_shift, &subpixels))
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments");
         Py_INCREF(Py_None);
@@ -456,10 +461,22 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
     Py_DECREF(argList);
 
     // TODO: implement filling obj with array of shifts
-    struct ImageWaveObject *object = (struct ImageWaveObject *)obj;
-    struct ImageWave *wave = &object->wave;
-    image_wave_approximate_with_images(wave, &img, &ref_img, radius, maximal_shift, subpixels);
+    struct ImageWave *pre_align = NULL;
+    struct ImageWave *ref_pre_align = NULL;
 
+    // Py_None is singleton so we can use '!='
+    if (pre_shift != Py_None)
+        pre_align = &(((struct ImageWaveObject *)pre_shift)->wave);
+    if (ref_pre_shift != Py_None)
+        ref_pre_align = &(((struct ImageWaveObject *)ref_pre_shift)->wave);
+
+    struct ImageWave *align = &(((struct ImageWaveObject *)obj)->wave);
+    image_wave_approximate_with_images(align, &img, pre_align,
+                                       &ref_img, ref_pre_align,
+                                       radius, maximal_shift, subpixels);
+
+    Py_DECREF(pre_shift);
+    Py_DECREF(ref_pre_shift);
     Py_INCREF(obj);
     return obj;
 }
