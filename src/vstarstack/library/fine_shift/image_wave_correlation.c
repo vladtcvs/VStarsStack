@@ -38,7 +38,9 @@ static void get_area(const struct ImageWaveGrid *img,
 
 void image_wave_approximate_with_images(struct ImageWave *self,
                                         const struct ImageWaveGrid *img,
+                                        const struct ImageWave *pre_align,
                                         const struct ImageWaveGrid *ref_img,
+                                        const struct ImageWave *ref_pre_align,
                                         int radius,
                                         double maximal_shift,
                                         int subpixels)
@@ -62,26 +64,60 @@ void image_wave_approximate_with_images(struct ImageWave *self,
     for (i = 0; i < self->Nh; i++)
     for (j = 0; j < self->Nw; j++)
     {
-        double x, y;
-        double best_x = j, best_y = i;
-        get_area(img, best_x, best_y, &area);
-        get_area(ref_img, j, i, &ref_area);
+        double best_orig_x, best_orig_y;
+        if (pre_align == NULL)
+        {
+            best_orig_x = j;
+            best_orig_y = i;
+        }
+        else
+        {
+            image_wave_shift_interpolate(pre_align, &pre_align->array,
+                                         j, i, &best_orig_x, &best_orig_y);
+        }
+
+        get_area(img, best_orig_x, best_orig_y, &area);
+
+        double orig_i, orig_j;
+        if (ref_pre_align == NULL)
+        {
+            orig_i = i;
+            orig_j = j;
+        }
+        else
+        {
+            image_wave_shift_interpolate(ref_pre_align, &ref_pre_align->array,
+                                         j, i, &orig_j, &orig_i);
+        }
+        get_area(ref_img, orig_j, orig_i, &ref_area);
         double best_corr = image_wave_correlation(&area, &ref_area);
 
+        double x, y;
         for (y = i - maximal_shift; y <= i + maximal_shift; y += 1.0 / subpixels)
         for (x = j - maximal_shift; x <= j + maximal_shift; x += 1.0 / subpixels)
         {
-            get_area(img, x, y, &area);
+            double orig_x, orig_y;
+            if (pre_align == NULL)
+            {
+                orig_x = x;
+                orig_y = y;
+            }
+            else
+            {
+                image_wave_shift_interpolate(pre_align, &pre_align->array,
+                                             x, y, &orig_x, &orig_y);
+            }
+            get_area(img, orig_x, orig_y, &area);
             double corr = image_wave_correlation(&area, &ref_area);
             if (corr > best_corr)
             {
                 best_corr = corr;
-                best_x = x;
-                best_y = y;
+                best_orig_x = orig_x;
+                best_orig_y = orig_y;
             }
         }
-        image_wave_set_array(&self->array, j, i, 0, best_x - j);
-        image_wave_set_array(&self->array, j, i, 1, best_y - i);
+        image_wave_set_array(&self->array, j, i, 0, best_orig_x - j);
+        image_wave_set_array(&self->array, j, i, 1, best_orig_y - i);
     }
 
     free(ref_area.array);

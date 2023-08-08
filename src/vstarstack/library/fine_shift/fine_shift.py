@@ -84,18 +84,33 @@ class Aligner:
     def process_alignment_by_correlation(self,
                                          image : np.ndarray,
                                          mask : np.ndarray,
+                                         pre_align : dict | None,
                                          image_ref : np.ndarray,
-                                         mask_ref : np.ndarray):
+                                         mask_ref : np.ndarray,
+                                         pre_align_ref : dict | None):
         """Build alignment descriptor of image using correlations"""
-        wave = ImageWave.find_shift_array(image, image_ref, 5, 3, 4)
-        descriptor = wave.data()
-        return descriptor
+        if image.shape != image_ref.shape:
+            return None
+        h = image.shape[0]
+        w = image.shape[1]
+        if pre_align is not None:
+            pre_wave = ImageWave.from_data(pre_align)
+        else:
+            pre_wave = None
+
+        if pre_align_ref is not None:
+            pre_wave_ref = ImageWave.from_data(pre_align_ref)
+        else:
+            pre_wave_ref = None
+        wave = ImageWave.find_shift_array(image, pre_wave, image_ref, pre_wave_ref, 5, 3, 4)
+        align = wave.data()
+        return align
 
     def apply_alignment(self,
                         dataframe : vstarstack.library.data.DataFrame,
-                        descriptor):
+                        align : dict):
         """Apply alignment descriptor to file"""
-        wave = ImageWave.from_data(descriptor)
+        wave = ImageWave.from_data(align)
         for channel in dataframe.get_channels():
             image, opts = dataframe.get_channel(channel)
             if opts["encoded"]:
