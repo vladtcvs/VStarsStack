@@ -41,10 +41,14 @@ struct ImageWave
     double stretch_penalty_k;
 };
 
+int image_wave_grid_init(struct ImageWaveGrid *grid, int w, int h, int naxis);
+void image_wave_grid_finalize(struct ImageWaveGrid *grid);
+
 /* Initialization methods */
 int  image_wave_init(struct ImageWave *self, int w, int h,
                      double Nw, double Nh, double spk);
 void image_wave_finalize(struct ImageWave *self);
+int image_wave_aux_init(struct ImageWave *self);
 
 void image_wave_init_shift_array(struct ImageWaveGrid *grid, double dx, double dy);
 void image_wave_print_array(const struct ImageWaveGrid *array);

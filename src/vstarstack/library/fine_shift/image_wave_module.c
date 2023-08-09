@@ -150,7 +150,13 @@ static PyObject *ImageWave_approximate_by_targets(PyObject *_self,
         targets_array[2*i] = target_x;
         targets_array[2*i+1] = target_y;
     }
-    image_wave_approximate_by_targets(&self->wave, dh, Nsteps, targets_array, points_array, Npoints);
+    image_wave_aux_init(&self->wave);
+    image_wave_approximate_by_targets(&self->wave,
+                                      dh,
+                                      Nsteps,
+                                      targets_array,
+                                      points_array,
+                                      Npoints);
     free(targets_array);
     free(points_array);
     Py_INCREF(Py_True);
