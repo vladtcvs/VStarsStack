@@ -102,7 +102,7 @@ class Aligner:
             pre_wave_ref = ImageWave.from_data(pre_align_ref)
         else:
             pre_wave_ref = None
-        wave = ImageWave.find_shift_array(image, pre_wave, image_ref, pre_wave_ref, 5, 3, 4)
+        wave = ImageWave.find_shift_array(image, pre_wave, image_ref, pre_wave_ref, 7, 3, 4)
         align = wave.data()
         return align
 

@@ -47,7 +47,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
                output_image_f : str,
                subpixels : int):
     """Apply alignment to each file"""
-    print(name)
+    print(f"{name}: {input_image_f} : {desc_f} -> {output_image_f} [{subpixels}]")
     if not os.path.exists(input_image_f):
         return
     with open(desc_f, encoding='utf8') as f:

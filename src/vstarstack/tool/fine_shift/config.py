@@ -22,7 +22,7 @@ _module_configuration = {
     "stretchPenaltyCoefficient" : (float, 0.01),
     "points_min_len" : (int, 0),
     "aligns" : (str, "aligns/"),
-    "subpixels" : (str, 1),
+    "subpixels" : (int, 1),
 }
 
 configuration = vstarstack.tool.configuration.Configuration(_module_configuration)
