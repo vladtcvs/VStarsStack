@@ -44,14 +44,18 @@ static double image_wave_get_pixel(const struct ImageWaveGrid *image, double x, 
 void image_wave_shift_image(struct ImageWave *self,
                             const struct ImageWaveGrid *array,
                             const struct ImageWaveGrid *input_image,
-                            struct ImageWaveGrid *output_image)
+                            struct ImageWaveGrid *output_image,
+                            int subpixels)
 {
     int y, x;
     for (y = 0; y < output_image->h; y++)
         for (x = 0; x < output_image->w; x++)
         {
             double orig_y, orig_x;
-            image_wave_shift_interpolate(self, array, x, y, &orig_x, &orig_y);
+            image_wave_shift_interpolate(self, array,
+                                         (double)x/subpixels, (double)y/subpixels,
+                                         &orig_x, &orig_y);
+
             double val = image_wave_get_pixel(input_image, orig_x, orig_y);
             image_wave_set_pixel(output_image, x, y, val);
         }

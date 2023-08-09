@@ -108,7 +108,8 @@ class Aligner:
 
     def apply_alignment(self,
                         dataframe : vstarstack.library.data.DataFrame,
-                        align : dict):
+                        align : dict,
+                        subpixels : int):
         """Apply alignment descriptor to file"""
         wave = ImageWave.from_data(align)
         for channel in dataframe.get_channels():
@@ -116,7 +117,7 @@ class Aligner:
             if opts["encoded"]:
                 continue
             image = image.astype('double')
-            fixed = wave.apply_shift(image)
+            fixed = wave.apply_shift(image, subpixels)
             fixed[np.where(np.isnan(fixed))] = 0
             dataframe.replace_channel(fixed, channel)
         return dataframe

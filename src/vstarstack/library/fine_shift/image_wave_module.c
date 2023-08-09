@@ -227,11 +227,12 @@ static PyObject *ImageWave_apply_shift(PyObject *_self,
                                        PyObject *args,
                                        PyObject *kwds)
 {
+    int subpixels;
     PyArrayObject *image;
     struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
-    static char *kwlist[] = {"image", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist,
-                                     &image))
+    static char *kwlist[] = {"image", "subpixels", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Oi", kwlist,
+                                     &image, &subpixels))
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments");
         Py_INCREF(Py_None);
@@ -260,6 +261,9 @@ static PyObject *ImageWave_apply_shift(PyObject *_self,
         .h = dims[0],
     };
 
+    dims[1] *= subpixels;
+    dims[0] *= subpixels;
+
     PyArrayObject *output_image = (PyArrayObject *)PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
     struct ImageWaveGrid out = {
         .array = PyArray_DATA(output_image),
@@ -268,7 +272,7 @@ static PyObject *ImageWave_apply_shift(PyObject *_self,
         .h = dims[0],
     };
 
-    image_wave_shift_image(&self->wave, &self->wave.array, &img, &out);
+    image_wave_shift_image(&self->wave, &self->wave.array, &img, &out, subpixels);
     return (PyObject *)output_image;
 }
 
