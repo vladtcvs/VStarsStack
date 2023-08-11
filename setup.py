@@ -45,7 +45,7 @@ print("Packages: ", result)
 packages = result
 
 setup (name = 'vstarstack',
-       version = '0.0.1',
+       version = '0.1',
        author='Vladislav Tsendrovskii',
        description = 'Stacking astrophotos',
        scripts = ['bin/vstarstack'],
