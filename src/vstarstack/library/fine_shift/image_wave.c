@@ -56,8 +56,60 @@ void image_wave_init_shift_array(struct ImageWaveGrid *grid, double dx, double d
     }
 }
 
-int image_wave_init(struct ImageWave *self, int w, int h, double Nw, double Nh, double spk)
+int image_wave_grid_init(struct ImageWaveGrid *grid, int w, int h, int naxis)
 {
+    if (grid->array != NULL)
+        free(grid->array);
+
+    grid->w = w;
+    grid->h = h;
+    grid->naxis = naxis;
+    grid->array = calloc(w * h * 2, sizeof(double));
+    if (grid->array == NULL)
+        return -1;
+    return 0;
+}
+
+void image_wave_grid_finalize(struct ImageWaveGrid *grid)
+{
+    if (grid->array != NULL)
+    {
+        free(grid->array);
+        grid->array = NULL;
+    }
+}
+
+int image_wave_aux_init(struct ImageWave *self)
+{
+    int w = self->array.w;
+    int h = self->array.h;
+
+    if (image_wave_grid_init(&self->array_p, w, h, 2))
+        return -1;
+
+    if (image_wave_grid_init(&self->array_m, w, h, 2))
+    {
+        image_wave_grid_finalize(&self->array_p);
+        return -1;
+    }
+
+    if (image_wave_grid_init(&self->array_gradient, w, h, 2))
+    {
+        image_wave_grid_finalize(&self->array_p);
+        image_wave_grid_finalize(&self->array_m);
+        return -1;
+    }
+
+    return 0;
+}
+
+int image_wave_init(struct ImageWave *self,
+                    int w, int h,
+                    double Nw, double Nh,
+                    double spk)
+{
+    memset(self, 0, sizeof(struct ImageWave));
+
     if (h <= 0 || w <= 0 || Nw < 2 || Nh < 2)
         return -1;
 
@@ -67,80 +119,23 @@ int image_wave_init(struct ImageWave *self, int w, int h, double Nw, double Nh, 
     self->w = w;
     self->h = h;
 
-    self->array.w = Nw;
-    self->array.h = Nh;
-    self->array.naxis = 2;
-
-    self->array_p.w = Nw;
-    self->array_p.h = Nh;
-    self->array_p.naxis = 2;
-
-    self->array_m.w = Nw;
-    self->array_m.h = Nh;
-    self->array_m.naxis = 2;
-
-    self->array_gradient.w = Nw;
-    self->array_gradient.h = Nh;
-    self->array_gradient.naxis = 2;
-
     self->stretch_penalty_k = spk;
 
     self->sx = ((double)self->w) / (self->Nw - 1);
     self->sy = ((double)self->h) / (self->Nh - 1);
 
-    self->array.array = calloc(self->Nw * self->Nh * 2, sizeof(double));
-    if (!self->array.array)
-    {
+    if (image_wave_grid_init(&self->array, self->Nw, self->Nh, 2))
         return -1;
-    }
 
-    self->array_p.array = calloc(Nw * Nh * 2, sizeof(double));
-    if (!self->array_p.array)
-    {
-        free(self->array.array);
-        return -1;
-    }
-
-    self->array_m.array = calloc(Nw * Nh * 2, sizeof(double));
-    if (!self->array_m.array)
-    {
-        free(self->array_p.array);
-        free(self->array.array);
-        return -1;
-    }
-    self->array_gradient.array = calloc(Nw * Nh * 2, sizeof(double));
-    if (!self->array_gradient.array)
-    {
-        free(self->array_m.array);
-        free(self->array_p.array);
-        free(self->array.array);
-        return -1;
-    }
     return 0;
 }
 
 void image_wave_finalize(struct ImageWave *self)
 {
-    if (self->array_gradient.array)
-    {
-        free(self->array_gradient.array);
-        self->array_gradient.array = NULL;
-    }
-    if (self->array_m.array)
-    {
-        free(self->array_m.array);
-        self->array_m.array = NULL;
-    }
-    if (self->array_p.array)
-    {
-        free(self->array_p.array);
-        self->array_p.array = NULL;
-    }
-    if (self->array.array)
-    {
-        free(self->array.array);
-        self->array.array = NULL;
-    }
+    image_wave_grid_finalize(&self->array_gradient);
+    image_wave_grid_finalize(&self->array_m);
+    image_wave_grid_finalize(&self->array_p);
+    image_wave_grid_finalize(&self->array);
 }
 
 void image_wave_move_along_gradient(struct ImageWave *self,

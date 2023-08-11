@@ -98,6 +98,7 @@ static PyObject *ImageWave_approximate_by_targets(PyObject *_self,
     if (!PyList_Check(targets))
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments - targets MUST be list");
+        Py_INCREF(Py_None);
         return Py_None;
     }
 
@@ -115,6 +116,8 @@ static PyObject *ImageWave_approximate_by_targets(PyObject *_self,
     {
         PyErr_SetString(PyExc_ValueError,
             "invalid function arguments - len(points) MUST be equal to len(targets)");
+        Py_INCREF(Py_None);
+        return Py_None;
     }
 
     double *targets_array = calloc(Npoints * 2, sizeof(double));
@@ -150,7 +153,13 @@ static PyObject *ImageWave_approximate_by_targets(PyObject *_self,
         targets_array[2*i] = target_x;
         targets_array[2*i+1] = target_y;
     }
-    image_wave_approximate_by_targets(&self->wave, dh, Nsteps, targets_array, points_array, Npoints);
+    image_wave_aux_init(&self->wave);
+    image_wave_approximate_by_targets(&self->wave,
+                                      dh,
+                                      Nsteps,
+                                      targets_array,
+                                      points_array,
+                                      Npoints);
     free(targets_array);
     free(points_array);
     Py_INCREF(Py_True);
@@ -186,7 +195,6 @@ static PyObject *ImageCorrelation(PyObject *self,
         Py_INCREF(Py_None);
         return Py_None;
     }
-
 
     npy_intp *dims1 = PyArray_SHAPE(image1);
     struct ImageWaveGrid img1 = {
@@ -261,7 +269,6 @@ static PyObject *ImageWave_apply_shift(PyObject *_self,
     };
 
     image_wave_shift_image(&self->wave, &self->wave.array, &img, &out);
-    Py_INCREF(output_image);
     return (PyObject *)output_image;
 }
 
@@ -360,7 +367,6 @@ static PyObject *ImageWave_fromdata(PyObject *_self, PyObject *args, PyObject *k
 
     PyObject *argList = Py_BuildValue("iiiid", w, h, Nw, Nh, spk);
     PyObject *obj = PyObject_CallObject((PyObject *) &ImageWave, argList);
-
     Py_DECREF(argList);
 
     if (obj == NULL)
@@ -381,17 +387,15 @@ static PyObject *ImageWave_fromdata(PyObject *_self, PyObject *args, PyObject *k
     }
 
     for (yi = 0; yi < Nh; yi++)
-        for (xi = 0; xi < Nw; xi++)
-        {
-            int ind = (yi*Nw+xi)*2;
-            double vx = PyFloat_AsDouble(PyList_GetItem(values, ind));
-            double vy = PyFloat_AsDouble(PyList_GetItem(values, ind+1));
+    for (xi = 0; xi < Nw; xi++)
+    {
+        int ind = (yi*Nw+xi)*2;
+        double vx = PyFloat_AsDouble(PyList_GetItem(values, ind));
+        double vy = PyFloat_AsDouble(PyList_GetItem(values, ind+1));
 
-            image_wave_set_array(&object->wave.array, xi, yi, 0, vx);
-            image_wave_set_array(&object->wave.array, xi, yi, 1, vy);
-        }
-
-    Py_INCREF(obj);
+        image_wave_set_array(&object->wave.array, xi, yi, 0, vx);
+        image_wave_set_array(&object->wave.array, xi, yi, 1, vy);
+    }
     return obj;
 }
 
@@ -460,6 +464,12 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
     PyObject *obj = PyObject_CallObject((PyObject *) &ImageWave, argList);
     Py_DECREF(argList);
 
+    if (obj == NULL)
+    {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
     // TODO: implement filling obj with array of shifts
     struct ImageWave *pre_align = NULL;
     struct ImageWave *ref_pre_align = NULL;
@@ -475,9 +485,6 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
                                        &ref_img, ref_pre_align,
                                        radius, maximal_shift, subpixels);
 
-    Py_DECREF(pre_shift);
-    Py_DECREF(ref_pre_shift);
-    Py_INCREF(obj);
     return obj;
 }
 
