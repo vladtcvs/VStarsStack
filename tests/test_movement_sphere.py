@@ -14,8 +14,9 @@
 
 import sys
 import math
+import numpy as np
 
-import vstarstack.library.projection.perspective as perspective
+from vstarstack.library.projection.projections import PerspectiveProjection
 from vstarstack.library.movement import sphere
 
 sys.path.append('../')
@@ -49,22 +50,21 @@ def test_no_rotation_forward():
     s2lat2 = 0
     s2lon2 = 1
 
-    s1pos1 = (s1lat1, s1lon1)
-    s1pos2 = (s1lat2, s1lon2)
+    s1pos1 = (s1lon1, s1lat1)
+    s1pos2 = (s1lon2, s1lat2)
 
-    s2pos1 = (s2lat1, s2lon1)
-    s2pos2 = (s2lat2, s2lon2)
+    s2pos1 = (s2lon1, s2lat1)
+    s2pos2 = (s2lon2, s2lat2)
 
-    positions = [(h/2, w/2)]
+    positions = np.array([[w/2, h/2]], dtype='double')
 
-    proj = perspective.Projection(W, H, F, w, h)
+    proj = PerspectiveProjection(w, h, W, H, F)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
-    shifted = movement.apply(positions, proj)
+    shifted = movement.apply(positions, proj, proj)
     assert len(shifted) == 1
-    assert abs(shifted[0][0] - h/2) < pixthr
-    assert abs(shifted[0][1] - w/2) < pixthr
-
+    assert abs(shifted[0][0] - w/2) < pixthr
+    assert abs(shifted[0][1] - h/2) < pixthr
 
 def test_no_rotation_reverse():
     s1lat1 = 0
@@ -79,21 +79,21 @@ def test_no_rotation_reverse():
     s2lat2 = 0
     s2lon2 = 1
 
-    s1pos1 = (s1lat1, s1lon1)
-    s1pos2 = (s1lat2, s1lon2)
+    s1pos1 = (s1lon1, s1lat1)
+    s1pos2 = (s1lon2, s1lat2)
 
-    s2pos1 = (s2lat1, s2lon1)
-    s2pos2 = (s2lat2, s2lon2)
+    s2pos1 = (s2lon1, s2lat1)
+    s2pos2 = (s2lon2, s2lat2)
 
-    positions = [(h/2, w/2)]
+    positions = np.array([[w/2, h/2]], dtype='double')
 
-    proj = perspective.Projection(W, H, F, w, h)
+    proj = PerspectiveProjection(w, h, W, H, F)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
-    shifted = movement.reverse(positions, proj)
+    shifted = movement.reverse(positions, proj, proj)
     assert len(shifted) == 1
-    assert abs(shifted[0][0] - h/2) < pixthr
-    assert abs(shifted[0][1] - w/2) < pixthr
+    assert abs(shifted[0][0] - w/2) < pixthr
+    assert abs(shifted[0][1] - h/2) < pixthr
 
 
 def test_lon_rotation_forward():
@@ -111,27 +111,27 @@ def test_lon_rotation_forward():
     s2lat2 = 0
     s2lon2 = 1 + dlon
 
-    s1pos1 = (s1lat1, s1lon1)
-    s1pos2 = (s1lat2, s1lon2)
+    s1pos1 = (s1lon1, s1lat1)
+    s1pos2 = (s1lon2, s1lat2)
 
-    s2pos1 = (s2lat1, s2lon1)
-    s2pos2 = (s2lat2, s2lon2)
+    s2pos1 = (s2lon1, s2lat1)
+    s2pos2 = (s2lon2, s2lat2)
 
     x = w/2
     y = h/2
 
     x_moved_expected = x - w * F/W*math.tan(dlon)
     y_moved_expected = h/2
-    positions = [(y, x)]
+    positions = np.array([[x, y]], dtype='double')
 
-    proj = perspective.Projection(W, H, F, w, h)
+    proj = PerspectiveProjection(w, h, W, H, F)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
-    shifted = movement.apply(positions, proj)
-    assert len(shifted) == 1
-    assert abs(shifted[0][0] - y_moved_expected) < pixthr
-    assert abs(shifted[0][1] - x_moved_expected) < pixthr
+    shifted = movement.apply(positions, proj, proj)
 
+    assert len(shifted) == 1
+    assert abs(shifted[0][0] - x_moved_expected) < pixthr
+    assert abs(shifted[0][1] - y_moved_expected) < pixthr
 
 def test_lon_rotation_reverse():
     dlon = 0.1
@@ -148,26 +148,26 @@ def test_lon_rotation_reverse():
     s2lat2 = 0
     s2lon2 = 1 + dlon
 
-    s1pos1 = (s1lat1, s1lon1)
-    s1pos2 = (s1lat2, s1lon2)
+    s1pos1 = (s1lon1, s1lat1)
+    s1pos2 = (s1lon2, s1lat2)
 
-    s2pos1 = (s2lat1, s2lon1)
-    s2pos2 = (s2lat2, s2lon2)
+    s2pos1 = (s2lon1, s2lat1)
+    s2pos2 = (s2lon2, s2lat2)
 
     x = w/2
     y = h/2
 
     x_moved_expected = x + w * F/W*math.tan(dlon)
     y_moved_expected = h/2
-    positions = [(y, x)]
+    positions = np.array([[x, y]], dtype='double')
 
-    proj = perspective.Projection(W, H, F, w, h)
+    proj = PerspectiveProjection(w, h, W, H, F)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
-    shifted = movement.reverse(positions, proj)
+    shifted = movement.reverse(positions, proj, proj)
     assert len(shifted) == 1
-    assert abs(shifted[0][0] - y_moved_expected) < pixthr
-    assert abs(shifted[0][1] - x_moved_expected) < pixthr
+    assert abs(shifted[0][0] - x_moved_expected) < pixthr
+    assert abs(shifted[0][1] - y_moved_expected) < pixthr
 
 
 def test_neglon_rotation_forward():
@@ -185,28 +185,30 @@ def test_neglon_rotation_forward():
     s2lat2 = 0
     s2lon2 = 1 + dlon
 
-    s1pos1 = (s1lat1, s1lon1)
-    s1pos2 = (s1lat2, s1lon2)
+    s1pos1 = (s1lon1, s1lat1)
+    s1pos2 = (s1lon2, s1lat2)
 
-    s2pos1 = (s2lat1, s2lon1)
-    s2pos2 = (s2lat2, s2lon2)
+    s2pos1 = (s2lon1, s2lat1)
+    s2pos2 = (s2lon2, s2lat2)
 
     x = w/2
     y = h/2
 
     x_moved_expected = x - w * F/W*math.tan(dlon)
     y_moved_expected = h/2
-    positions = [(y, x)]
+    positions = np.array([[x, y]], dtype='double')
 
-    proj = perspective.Projection(W, H, F, w, h)
+    proj = PerspectiveProjection(w, h, W, H, F)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
-    shifted = movement.apply(positions, proj)
+    shifted = movement.apply(positions, proj, proj)
     assert len(shifted) == 1
-    assert abs(shifted[0][0] - y_moved_expected) < pixthr
-    assert abs(shifted[0][1] - x_moved_expected) < pixthr
+    assert abs(shifted[0][0] - x_moved_expected) < pixthr
+    assert abs(shifted[0][1] - y_moved_expected) < pixthr
 
 def test_multiply_1():
+    proj = PerspectiveProjection(w, h, W, H, F)
+
     s1lat1 = 0
     s1lon1 = 0
 
@@ -219,11 +221,11 @@ def test_multiply_1():
     s2lat2 = 0.01
     s2lon2 = 0
 
-    s1pos1 = (s1lat1, s1lon1)
-    s1pos2 = (s1lat2, s1lon2)
+    s1pos1 = (s1lon1, s1lat1)
+    s1pos2 = (s1lon2, s1lat2)
 
-    s2pos1 = (s2lat1, s2lon1)
-    s2pos2 = (s2lat2, s2lon2)
+    s2pos1 = (s2lon1, s2lat1)
+    s2pos2 = (s2lon2, s2lat2)
     movement1 = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     s1lat1 = 0
@@ -238,20 +240,19 @@ def test_multiply_1():
     s2lat2 = 0
     s2lon2 = 1.01
 
-    s1pos1 = (s1lat1, s1lon1)
-    s1pos2 = (s1lat2, s1lon2)
+    s1pos1 = (s1lon1, s1lat1)
+    s1pos2 = (s1lon2, s1lat2)
 
-    s2pos1 = (s2lat1, s2lon1)
-    s2pos2 = (s2lat2, s2lon2)
+    s2pos1 = (s2lon1, s2lat1)
+    s2pos2 = (s2lon2, s2lat2)
     movement2 = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     movement = movement2 * movement1
-    proj = perspective.Projection(W, H, F, w, h)
+    positions = np.array([[w/2, h/2]], dtype='double')
+    expected = proj.reverse(0.01, 0)
 
-    positions = [(h/2, w/2)]
-    expected = proj.reverse(0, 0.01)
+    shifted = movement.apply(positions, proj, proj)
 
-    shifted = movement.apply(positions, proj)
     assert len(shifted) == 1
     compare_points(shifted[0], expected)
 
@@ -268,25 +269,29 @@ def test_inverse():
     s2lat2 = 0.01
     s2lon2 = 0
 
-    s1pos1 = (s1lat1, s1lon1)
-    s1pos2 = (s1lat2, s1lon2)
+    s1pos1 = (s1lon1, s1lat1)
+    s1pos2 = (s1lon2, s1lat2)
 
-    s2pos1 = (s2lat1, s2lon1)
-    s2pos2 = (s2lat2, s2lon2)
+    s2pos1 = (s2lon1, s2lat1)
+    s2pos2 = (s2lon2, s2lat2)
 
-    positions = [s1pos1, s2pos1]
+    proj = PerspectiveProjection(w, h, W, H, F)
 
-    proj = perspective.Projection(W, H, F, w, h)
+    pnt1 = proj.reverse(s1lon1, s1lat1)
+    pnt2 = proj.reverse(s2lon1, s2lat1)
+
+    positions = np.array([pnt1, pnt2], dtype='double')
+
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
     rev_movement = movement.inverse()
     mov1 = movement * rev_movement
     mov2 = rev_movement * movement
 
-    shifted1 = mov1.apply(positions, proj)
-    shifted2 = mov2.apply(positions, proj)
+    shifted1 = mov1.apply(positions, proj, proj)
+    shifted2 = mov2.apply(positions, proj, proj)
     assert len(shifted1) == 2
     assert len(shifted2) == 2
-    compare_points(shifted1[0], s1pos1)
-    compare_points(shifted1[1], s2pos1)
-    compare_points(shifted2[0], s1pos1)
-    compare_points(shifted2[1], s2pos1)
+    compare_points(shifted1[0], pnt1)
+    compare_points(shifted1[1], pnt2)
+    compare_points(shifted2[0], pnt1)
+    compare_points(shifted2[1], pnt2)

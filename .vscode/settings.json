@@ -1,7 +1,10 @@
 {
     "files.associations": {
         "ndarraytypes.h": "c",
-        "random": "c"
+        "random": "c",
+        "math.h": "c",
+        "unistd.h": "c",
+        "sphere.h": "c"
     },
     "editor.tabSize": 4,
     "editor.insertSpaces": true,

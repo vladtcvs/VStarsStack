@@ -16,14 +16,24 @@ import os
 import numpy as np
 from setuptools import setup, Extension
 
-perspective = Extension(name="vstarstack.library.projection.perspective",
-       sources=["src/vstarstack/library/projection/perspective.c"])
+projection = Extension( name="vstarstack.library.projection.projections",
+                        sources=[
+                            "src/vstarstack/library/projection/projections/module.c",
+                            "src/vstarstack/library/projection/projections/lib/perspective.c",
+                            "src/vstarstack/library/projection/projections/lib/orthographic.c",
+                            "src/vstarstack/library/projection/projections/lib/equirectangular.c",
+                        ])
 
-equirectangular = Extension(name="vstarstack.library.projection.equirectangular",
-       sources=["src/vstarstack/library/projection/equirectangular.c"])
-
-orthographic = Extension(name="vstarstack.library.projection.orthographic",
-       sources=["src/vstarstack/library/projection/orthographic.c"])
+movements = Extension(  name="vstarstack.library.movement.movements",
+                        sources=[
+                            "src/vstarstack/library/movement/movements/module.c",
+                            "src/vstarstack/library/movement/movements/lib/sphere.c",
+                            "src/vstarstack/library/movement/movements/lib/flat.c",
+                        ],
+                        include_dirs=[
+                            "src/vstarstack/library/projection/projections",
+                            np.get_include(),
+                        ])
 
 image_wave = Extension(name="vstarstack.library.fine_shift.image_wave",
        sources=["src/vstarstack/library/fine_shift/image_wave.c",
@@ -51,9 +61,8 @@ setup (name = 'vstarstack',
        scripts = ['bin/vstarstack'],
        package_dir = {'': 'src'},
        packages=packages,
-       ext_modules = [perspective,
-                      equirectangular,
-                      orthographic,
+       ext_modules = [projection,
+                      movements,
                       image_wave],
        install_requires = [
               'numpy',

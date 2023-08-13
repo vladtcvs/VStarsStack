@@ -50,8 +50,8 @@ def build_movements(movement : Movement, clusters : list):
                 if name2 not in cluster:
                     continue
 
-                star_to = (cluster[name1]["lat"], cluster[name1]["lon"])
-                star_from = (cluster[name2]["lat"], cluster[name2]["lon"])
+                star_to = (cluster[name1]["lon"], cluster[name1]["lat"])
+                star_from = (cluster[name2]["lon"], cluster[name2]["lat"])
                 stars.append((star_from, star_to))
 
             if len(stars) >= 2:

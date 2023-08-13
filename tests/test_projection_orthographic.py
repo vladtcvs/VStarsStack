@@ -13,7 +13,7 @@
 #
 
 import math
-from vstarstack.library.projection.orthographic import Projection
+from vstarstack.library.projection.projections import OrthographicProjection
 
 def equal(val1, val2):
     """Test that values are same"""
@@ -21,36 +21,36 @@ def equal(val1, val2):
 
 def test_1():
     # sphere
-    proj = Projection(100, 100, 50, 50, 0, 0)
-    lat, lon = proj.project(50, 50)
-    print(lat, lon)
+    proj = OrthographicProjection(100, 100, 50, 50, 0, 0)
+    lon, lat = proj.project(50, 50)
+    print(lon, lat)
     assert equal(lon, 0)
     assert equal(lat, 0)
 
 def test_2():
-    proj = Projection(100, 100, 50, 50, 0, 0)
-    lat, lon = proj.project(50, 75)
+    proj = OrthographicProjection(100, 100, 50, 50, 0, 0)
+    lon, lat = proj.project(75, 50)
     print(lat, lon)
     assert equal(lon, math.pi/2)
     assert equal(lat, 0)
 
 def test_3():
-    proj = Projection(100, 100, 50, 50, 0, 0)
-    lat, lon = proj.project(50, 25)
-    print(lat, lon)
+    proj = OrthographicProjection(100, 100, 50, 50, 0, 0)
+    lon, lat = proj.project(25, 50)
+    print(lon, lat)
     assert equal(lon, -math.pi/2)
     assert equal(lat, 0)
 
 def test_4():
-    proj = Projection(100, 100, 50, 50, 0, 0)
-    lat, lon = proj.project(75, 50)
-    print(lat, lon)
+    proj = OrthographicProjection(100, 100, 50, 50, 0, 0)
+    lon, lat = proj.project(50, 75)
+    print(lon, lat)
     assert equal(lon, 0)
     assert equal(lat, -math.pi/2)
 
 def test_5():
-    proj = Projection(100, 100, 50, 50, 0, 0)
-    lat, lon = proj.project(75, 75)
+    proj = OrthographicProjection(100, 100, 50, 50, 0, 0)
+    lon, lat = proj.project(75, 75)
     print(lat, lon)
     assert lon is None
     assert lat is None

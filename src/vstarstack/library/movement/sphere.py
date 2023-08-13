@@ -20,11 +20,12 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 import vstarstack.library.movement.basic_movement
+from vstarstack.library.movement.movements import SphereMovement
 
 def p2vec(pos):
     """Lon,lat -> x,y,z"""
-    lat = pos[0]
-    lon = pos[1]
+    lon = pos[0]
+    lat = pos[1]
     return np.array([math.cos(lon)*math.cos(lat), math.sin(lon)*math.cos(lat), math.sin(lat)])
 
 
@@ -48,41 +49,19 @@ def vecangle(vec1, vec2):
 class Movement(vstarstack.library.movement.basic_movement.Movement):
     """Class of spherical movements"""
 
-    def apply(self, positions, proj):
+    def apply(self, positions : np.ndarray, input_proj, output_proj):
         """Apply movement"""
-        points = []
-        for y, x in positions:
-            lat, lon = proj.project(y, x)
-            point = p2vec((lat, lon))
-            points.append(point)
-        points = self.rot.apply(points)
-        new_positions = []
-        for point in points:
-            lon = math.atan2(point[1], point[0])
-            lat = math.asin(point[2])
-            y, x = proj.reverse(lat, lon)
-            new_positions.append((y, x))
-        return new_positions
+        return self.mov.apply_forward(positions, input_proj, output_proj)
 
-    def reverse(self, positions, proj):
+    def reverse(self, positions : np.ndarray, input_proj, output_proj):
         """Apply reverse movement"""
-        points = []
-        for y, x in positions:
-            lat, lon = proj.project(y, x)
-            point = p2vec((lat, lon))
-            points.append(point)
-        points = self.rev.apply(points)
-        new_positions = []
-        for point in points:
-            lon = math.atan2(point[1], point[0])
-            lat = math.asin(point[2])
-            y, x = proj.reverse(lat, lon)
-            new_positions.append((y, x))
-        return new_positions
+        return self.mov.apply_reverse(positions, input_proj, output_proj)
 
     def __init__(self, rot):
         self.rot = rot
         self.rev = rot.inv()
+        q = self.rot.as_quat()
+        self.mov = SphereMovement(q[3], q[0], q[1], q[2])
 
     def magnitude(self):
         """Magnitude of movement"""

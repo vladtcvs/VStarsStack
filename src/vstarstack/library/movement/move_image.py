@@ -14,6 +14,8 @@
 #
 
 import numpy as np
+import scipy.ndimage
+
 import vstarstack.library.common
 import vstarstack.library.data
 from vstarstack.library.data import DataFrame
@@ -21,22 +23,22 @@ from vstarstack.library.data import DataFrame
 import vstarstack.library.projection.tools
 import vstarstack.library.movement.basic_movement as basic_movement
 
-def _generate_points(height, width, len0):
+from vstarstack.library.common import getpixel
+
+def _generate_points(height, width):
     """Generate grid of pixel coordinates"""
-    points = []
+    points = np.zeros((height*width, 2), dtype='int')
     for y in range(height):
         for x in range(width):
-            points.append((y, x))
-            if len(points) >= len0:
-                yield points
-                points = []
-    if len(points) > 0:
-        yield points
+            points[y * width + x, 0] = x
+            points[y * width + x, 1] = y
+    return points
 
-def move_image(image : np.ndarray,
-               transformation : basic_movement.Movement,
-               proj,
-               image_weight : float,
+
+def move_image(image: np.ndarray,
+               transformation: basic_movement.Movement,
+               input_proj, output_proj,
+               image_weight: float,
                image_weight_layer=None):
     """Apply movement to image"""
     shape = image.shape
@@ -49,23 +51,26 @@ def move_image(image : np.ndarray,
     if image_weight_layer is None:
         image_weight_layer = np.ones(shape)*image_weight
 
-    for positions in _generate_points(h, w, w*4):
-        original_positions = transformation.reverse(positions, proj)
-        for position, original_position in zip(positions, original_positions):
-            y, x = position
-            orig_y, orig_x = original_position
-            _, pixel = vstarstack.library.common.getpixel(image, orig_y, orig_x, False)
-            _, pixel_weight = vstarstack.library.common.getpixel(
-                image_weight_layer, orig_y, orig_x, False)
+    positions = _generate_points(h, w)
+    original_positions = transformation.reverse(positions.astype('double'), input_proj, output_proj)
+    num = positions.shape[0]
+    transform_array = np.zeros([h, w, 2], dtype='double')
+    for index in range(num):
+        position = positions[index]
+        original_position = original_positions[index]
+        x, y = position[0], position[1]
+        orig_x, orig_y = original_position[0], original_position[1]
+        transform_array[y, x, 0] = orig_y
+        transform_array[y, x, 1] = orig_x
 
-            shifted[y][x] = pixel
-            shifted_weight_layer[y][x] = pixel_weight
-
+    crdtf = lambda pos : tuple(transform_array[pos[0], pos[1], :])
+    shifted = scipy.ndimage.geometric_transform(image, crdtf, order=3)
+    shifted_weight_layer = scipy.ndimage.geometric_transform(image_weight_layer, crdtf, order=3)
     return shifted, shifted_weight_layer
 
-def move_dataframe(dataframe : DataFrame,
-                   transformation : basic_movement.Movement,
-                   proj = None):
+def move_dataframe(dataframe: DataFrame,
+                   transformation: basic_movement.Movement,
+                   proj=None):
     """Apply movement to dataframe"""
     if proj is None:
         proj = vstarstack.library.projection.tools.get_projection(dataframe)
@@ -86,7 +91,7 @@ def move_dataframe(dataframe : DataFrame,
         else:
             weight = np.ones(image.shape)*1
 
-        shifted, shifted_weight = move_image(image, transformation, proj, weight)
+        shifted, shifted_weight = move_image(image, transformation, proj, proj, weight)
         dataframe.add_channel(shifted, channel, **opts)
         dataframe.add_channel(shifted_weight, weight_channel, weight=True)
         dataframe.add_channel_link(channel, weight_channel, "weight")

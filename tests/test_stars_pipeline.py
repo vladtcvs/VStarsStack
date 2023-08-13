@@ -17,7 +17,6 @@ import json
 import matplotlib.pyplot as plt
 
 import vstarstack.library.common
-import vstarstack.library.projection.perspective
 import vstarstack.library.loaders.classic
 import vstarstack.library.stars.detect
 import vstarstack.library.stars.describe
@@ -27,6 +26,8 @@ import vstarstack.library.movement.find_shift
 import vstarstack.library.movement.select_shift
 import vstarstack.library.movement.move_image
 import vstarstack.library.merge
+
+from vstarstack.library.projection.projections import PerspectiveProjection
 
 from vstarstack.library.movement.sphere import Movement
 
@@ -38,7 +39,7 @@ def test_1():
     F = 10000
     w = 1270
     h = 1270
-    proj = vstarstack.library.projection.perspective.Projection(W, H, F, w, h)
+    proj = PerspectiveProjection(w, h, W, H, F)
 
     names = ["1.png", "2.png", "3.png", "4.png"]
     images = []
