@@ -13,6 +13,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import numpy as np
 from abc import ABC, abstractmethod
 
 class MovementException(Exception):
@@ -26,12 +27,12 @@ class Movement(ABC):
     """Interface of movements"""
 
     @abstractmethod
-    def apply(self, positions : list, proj) -> list:
+    def apply(self, positions : np.ndarray) -> np.ndarray:
         """Apply movement to positions"""
         return []
 
     @abstractmethod
-    def reverse(self, positions : list, proj) -> list:
+    def reverse(self, positions : np.ndarray) -> np.ndarray:
         """Apply reverse movement to positions"""
 
     @abstractmethod

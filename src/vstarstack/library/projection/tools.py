@@ -14,7 +14,7 @@
 #
 
 import vstarstack.library.data
-import vstarstack.library.projection.perspective
+import vstarstack.library.projection.projections
 
 def add_description(dataframe : vstarstack.library.data.DataFrame, projection : str, **argv):
     """Add projection description to dataframe"""
@@ -27,6 +27,15 @@ def add_description(dataframe : vstarstack.library.data.DataFrame, projection : 
         dataframe.add_parameter(kh, "perspective_kh")
     elif projection == "equirectangular":
         pass
+    elif projection == "orthographic":
+        a = argv["a"]
+        b = argv["b"]
+        angle = argv["angle"]
+        rot = argv["rot"]
+        dataframe.add_parameter(a, "orthographic_a")
+        dataframe.add_parameter(b, "orthographic_b")
+        dataframe.add_parameter(angle, "orthographic_angle")
+        dataframe.add_parameter(rot, "orthographic_rot")
 
     dataframe.add_parameter(projection, "projection")
 
@@ -40,11 +49,20 @@ def get_projection(dataframe : vstarstack.library.data.DataFrame):
         h = dataframe.params["h"]
         W = w * dataframe.params["perspective_kw"]
         H = h * dataframe.params["perspective_kh"]
-        return vstarstack.library.projection.perspective.Projection(W, H, F, w, h)
+        return vstarstack.library.projection.projections.PerspectiveProjection(w, h, W, H, F)
 
     if dataframe.params["projection"] == "equirectangular":
         w = dataframe.params["w"]
         h = dataframe.params["h"]
-        return vstarstack.library.projection.equirectangular.Projection(w, h)
+        return vstarstack.library.projection.projections.EquirectangularProjection(w, h)
+    
+    if dataframe.params["projection"] == "orthographic":
+        w = dataframe.params["w"]
+        h = dataframe.params["h"]
+        a = dataframe.params["a"]
+        b = dataframe.params["b"]
+        angle = dataframe.params["angle"]
+        rot = dataframe.params["rot"]
+        return vstarstack.library.projection.projections.OrthographicProjection(w, h, a, b, angle, rot)
 
     raise Exception("Unknown projection")

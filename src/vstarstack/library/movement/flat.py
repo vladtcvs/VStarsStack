@@ -25,33 +25,33 @@ import vstarstack.library.movement.basic_movement
 class Movement(vstarstack.library.movement.basic_movement.Movement):
     """Flat movements of plane"""
 
-    def apply(self, positions : list, proj) -> List:
+    def apply(self, positions : np.ndarray) -> List:
         """Apply movement"""
         npositions = []
-        for y, x in positions:
+        for x, y in positions:
             nx = x * math.cos(self.a) - y * math.sin(self.a) + self.dx
             ny = y * math.cos(self.a) + x * math.sin(self.a) + self.dy
-            npositions.append((ny, nx))
+            npositions.append((nx, ny))
 
-        return npositions
+        return np.array(npositions)
 
-    def reverse(self, positions : list, proj) -> List:
+    def reverse(self, positions : np.ndarray) -> List:
         """Apply reverse movement"""
         npositions = []
-        for y, x in positions:
+        for x, y in positions:
             nx = (x-self.dx) * math.cos(self.a) + \
                 (y-self.dy) * math.sin(self.a)
             ny = (y-self.dy) * math.cos(self.a) - \
                 (x-self.dx) * math.sin(self.a)
-            npositions.append((ny, nx))
+            npositions.append((nx, ny))
 
-        return npositions
+        return np.array(npositions)
 
     def magnitude(self) -> float:
         """Magnitude of movement"""
         return self.dx**2 + self.dy**2 + self.a**2
 
-    def __init__(self, angle, dy, dx):
+    def __init__(self, angle, dx, dy):
         self.dx = dx
         self.dy = dy
         self.a = angle
@@ -77,7 +77,7 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
         dir_to = norm((point2_to[0] - point1_to[0], point2_to[1] - point1_to[1]))
 
         cosa = dir_from[0]*dir_to[0] + dir_from[1]*dir_to[1]
-        sina = dir_from[1]*dir_to[0] - dir_from[0]*dir_to[1]
+        sina = dir_from[0]*dir_to[1] - dir_from[1]*dir_to[0]
 
         cosa = np.clip(cosa, -1, 1)
         sina = np.clip(sina, -1, 1)
@@ -87,10 +87,10 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
             angle = math.pi - angle
 
         transformation = Movement(angle, 0, 0)
-        point1_rotated = transformation.apply([point1_from], None)[0]
-        dy = point1_to[0] - point1_rotated[0]
-        dx = point1_to[1] - point1_rotated[1]
-        return Movement(angle, dy, dx)
+        point1_rotated = transformation.apply([point1_from])[0]
+        dx = point1_to[0] - point1_rotated[0]
+        dy = point1_to[1] - point1_rotated[1]
+        return Movement(angle, dx, dy)
 
     @staticmethod
     def average(transformations : list):
@@ -121,9 +121,9 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
         angle = angle1 + angle2
         dx = dx2 * math.cos(angle1) - dy2 * math.sin(angle1) + dx1
         dy = dx2 * math.sin(angle1) + dy2 * math.cos(angle1) + dy1
-        return Movement(angle, dy, dx)
+        return Movement(angle, dx, dy)
 
     def inverse(self):
         idx = -self.dx * math.cos(self.a) - self.dy * math.sin(self.a)
         idy = -self.dy * math.cos(self.a) + self.dx * math.sin(self.a)
-        return Movement(-self.a, idy, idx)
+        return Movement(-self.a, idx, idy)

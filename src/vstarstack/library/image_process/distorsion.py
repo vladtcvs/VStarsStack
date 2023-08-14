@@ -17,7 +17,6 @@ import numpy as np
 
 import vstarstack.library.data
 import vstarstack.library.common
-import vstarstack.library.projection.perspective
 import vstarstack.library.projection.tools
 
 class Distorsion:

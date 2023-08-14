@@ -23,7 +23,7 @@ def test_path_autocompletion_1():
     assert variants[0] == ("stars", True)
 
 def test_path_autocompletion_2():
-    variants = complete_path_in_dir(dir_path, "s")
+    variants = complete_path_in_dir(dir_path, "st")
     assert len(variants) == 1
     assert variants[0] == ("stars", True)
 

@@ -29,6 +29,9 @@ import vstarstack.library.movement.move_image
 
 import vstarstack.tool.common
 
+ncpu = vstarstack.tool.cfg.nthreads
+#ncpu = 1
+
 def select_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
     """Select optimal shift source"""
     if len(argv) >= 2:
@@ -52,9 +55,12 @@ def select_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
 def _make_shift(name : str, filename : str, shift : Movement, outfname : str):
     print(f"Processing {name}")
     dataframe = vstarstack.library.data.DataFrame.load(filename)
+    print(f"Loaded {name}")
     result = vstarstack.library.movement.move_image.move_dataframe(dataframe, shift)
+    print(f"Transformed {name}")
     vstarstack.tool.common.check_dir_exists(outfname)
     result.store(outfname)
+    print(f"Saved {name}")
 
 def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
     """Apply shifts to images"""
@@ -76,8 +82,10 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
     images = vstarstack.tool.common.listfiles(npy_dir, ".zip")
     args = [(name, filename, shifts[name], os.path.join(shifted_dir, name + ".zip")) 
             for name, filename in images]
-    with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
+    with mp.Pool(ncpu) as pool:
         pool.starmap(_make_shift, args)
+    #for arg in args:
+    #    _make_shift(*arg)
 
 commands = {
     "select-shift": (select_shift,

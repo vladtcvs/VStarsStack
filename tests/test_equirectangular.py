@@ -14,7 +14,7 @@
 
 import math
 
-import vstarstack.library.projection.equirectangular
+import vstarstack.library.projection.projections
 
 thr = 1e-6
 
@@ -28,8 +28,8 @@ def test_center_f():
     lon_expected = 0
     lat_expected = 0
 
-    proj = vstarstack.library.projection.equirectangular.Projection(w, h)
-    lat, lon = proj.project(y, x)
+    proj = vstarstack.library.projection.projections.EquirectangularProjection(w, h)
+    lon, lat = proj.project(x, y)
     assert abs(lat - lat_expected) < thr
     assert abs(lon - lon_expected) < thr
 
@@ -44,8 +44,8 @@ def test_center_r():
     x_expected = 750
     y_expected = 500
 
-    proj = vstarstack.library.projection.equirectangular.Projection(w, h)
-    y, x = proj.reverse(lat, lon)
+    proj = vstarstack.library.projection.projections.EquirectangularProjection(w, h)
+    x, y = proj.reverse(lon, lat)
     assert abs(y - y_expected) < thr
     assert abs(x - x_expected) < thr
 
@@ -60,8 +60,8 @@ def test_left_f():
     lon_expected = math.pi
     lat_expected = 0
 
-    proj = vstarstack.library.projection.equirectangular.Projection(w, h)
-    lat, lon = proj.project(y, x)
+    proj = vstarstack.library.projection.projections.EquirectangularProjection(w, h)
+    lon, lat = proj.project(x, y)
     assert abs(lat - lat_expected) < thr
     assert abs(lon - lon_expected) < thr
 
@@ -76,8 +76,8 @@ def test_left_r():
     lon = math.pi
     lat = 0
 
-    proj = vstarstack.library.projection.equirectangular.Projection(w, h)
-    y, x = proj.reverse(lat, lon)
+    proj = vstarstack.library.projection.projections.EquirectangularProjection(w, h)
+    x, y = proj.reverse(lon, lat)
 
     assert abs(y - y_expected) < thr
     assert abs(x - x_expected) < thr
@@ -93,8 +93,8 @@ def test_top_f():
     lon_expected = 0
     lat_expected = math.pi/2
 
-    proj = vstarstack.library.projection.equirectangular.Projection(w, h)
-    lat, lon = proj.project(y, x)
+    proj = vstarstack.library.projection.projections.EquirectangularProjection(w, h)
+    lon, lat = proj.project(x, y)
     assert abs(lat - lat_expected) < thr
     assert abs(lon - lon_expected) < thr
 
@@ -109,8 +109,8 @@ def test_top_r():
     lon = 0
     lat = math.pi/2
 
-    proj = vstarstack.library.projection.equirectangular.Projection(w, h)
-    y, x = proj.reverse(lat, lon)
+    proj = vstarstack.library.projection.projections.EquirectangularProjection(w, h)
+    x, y = proj.reverse(lon, lat)
 
     assert abs(y - y_expected) < thr
     assert abs(x - x_expected) < thr

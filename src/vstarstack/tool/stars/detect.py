@@ -28,7 +28,7 @@ def detect_stars(projection,
     """Detect stars on image"""
     stars = detect.detect_stars(gray)
     for star in stars:
-        star["lat"], star["lon"] = projection.project(star["y"], star["x"])
+        star["lon"], star["lat"] = projection.project(star["x"], star["y"])
     return sorted(stars, key=lambda x: x["size"], reverse=True)
 
 def _process_file(fname, jsonfile):

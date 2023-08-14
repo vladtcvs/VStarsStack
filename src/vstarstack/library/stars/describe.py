@@ -18,7 +18,7 @@ import numpy as np
 
 def project_star(star : dict, proj):
     """Project star to sphere"""
-    lat, lon = proj.project(star["y"], star["x"])
+    lon, lat = proj.project(star["x"], star["y"])
     star["lon"] = lon
     star["lat"] = lat
     return star
