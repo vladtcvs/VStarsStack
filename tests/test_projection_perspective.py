@@ -132,3 +132,17 @@ def test_top_r():
 
     assert abs(y - y_expected) < thr
     assert abs(x - x_expected) < thr
+
+def test_custom_1():
+    w = 4640
+    h = 3506
+    F = 420
+    W = w*0.0038
+    H = h*0.0038
+
+    x = 1725
+    y = 2224
+    proj = PerspectiveProjection(w, h, W, H, F)
+    lon, lat = proj.project(x, y)
+    
+    assert abs(lon - 0.0053832813307391) < thr
