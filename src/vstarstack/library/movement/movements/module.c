@@ -153,7 +153,7 @@ static PyObject *apply_action(PyObject *_self,
     }
 
     size_t num = dims[0];
-    printf("Processing %i points\n", (int)num);
+    //printf("Processing %i points\n", (int)num);
 
     const double *posi = PyArray_DATA(points);
 

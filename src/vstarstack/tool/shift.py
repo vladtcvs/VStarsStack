@@ -55,12 +55,12 @@ def select_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
 def _make_shift(name : str, filename : str, shift : Movement, outfname : str):
     print(f"Processing {name}")
     dataframe = vstarstack.library.data.DataFrame.load(filename)
-    print("Loaded")
+    print(f"Loaded {name}")
     result = vstarstack.library.movement.move_image.move_dataframe(dataframe, shift)
-    print("Transformed")
+    print(f"Transformed {name}")
     vstarstack.tool.common.check_dir_exists(outfname)
     result.store(outfname)
-    print("Saved")
+    print(f"Saved {name}")
 
 def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
     """Apply shifts to images"""
