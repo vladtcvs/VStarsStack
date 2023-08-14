@@ -13,6 +13,7 @@
 #
 
 import os
+import math
 import numpy as np
 import imageio
 
@@ -26,11 +27,25 @@ import vstarstack.tool.common
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 
-POWER = 1
 SLOPE = vstarstack.tool.cfg.get_param("multiply", float, 1)
 FLOOR = vstarstack.tool.cfg.get_param("clip_floor", bool, False)
 
-def _make_frames(dataframe, channels, *, slope=1, power=1, clip_floor=False):
+def compress_clip(img, slope):
+    amax = np.amax(img)
+    img = img / amax
+    img = np.clip(img*slope, 0, 1)
+    return img
+
+def compress_atan(img, slope):
+    amax = np.amax(img)
+    img = img / amax
+    img = np.arctan(img * math.pi/2 * slope) / math.pi * 2
+    return img
+
+def compress(img, slope):
+    return compress_atan(img, slope)
+
+def _make_frames(dataframe, channels, *, compress_fun, slope=1):
     if channels == "RGB":
         r, _ = dataframe.get_channel("R")
         g, _ = dataframe.get_channel("G")
@@ -40,10 +55,8 @@ def _make_frames(dataframe, channels, *, slope=1, power=1, clip_floor=False):
         rgb[:, :, 0] = r
         rgb[:, :, 1] = g
         rgb[:, :, 2] = b
-        amax = np.amax(rgb)
-        rgb = rgb / amax
-        rgb = np.clip(rgb*slope, 0, 1)**power
-
+        
+        rgb = compress_fun(rgb, slope)
         frames = {"RGB": rgb}
 
     else:
@@ -61,12 +74,7 @@ def _make_frames(dataframe, channels, *, slope=1, power=1, clip_floor=False):
                 amin = max(np.amin(img), 0)
                 amax = np.amax(img)
                 print(f"{channel}: {amin} - {amax}")
-                if clip_floor:
-                    if amax - amin > 0:
-                        img = (img - amin)/(amax-amin)
-                else:
-                    img = img / amax
-                img = np.clip(img*slope, 0, 1)**power
+                img = compress_fun(img, slope)
 
             frames[channel] = img
     return frames
@@ -85,9 +93,8 @@ def _show(_project, argv):
     dataframe = vstarstack.library.data.DataFrame.load(path)
     frames = _make_frames(dataframe,
                           channel,
-                          slope=SLOPE,
-                          power=POWER,
-                          clip_floor=FLOOR)
+                          compress_fun=compress,
+                          slope=SLOPE)
 
     nch = len(frames)
     fig, axs = plt.subplots(1, nch)
@@ -121,7 +128,7 @@ def _convert(_project, argv):
         channels = None
 
     dataframe = vstarstack.library.data.DataFrame.load(path)
-    frames = _make_frames(dataframe, channels, slope=SLOPE, power=POWER)
+    frames = _make_frames(dataframe, channels, compress_fun=compress, slope=SLOPE)
 
     nch = len(frames)
 
