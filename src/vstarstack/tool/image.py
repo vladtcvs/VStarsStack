@@ -29,6 +29,7 @@ import vstarstack.tool.cfg
 
 SLOPE = vstarstack.tool.cfg.get_param("multiply", float, 1)
 FLOOR = vstarstack.tool.cfg.get_param("clip_floor", bool, False)
+HDR = vstarstack.tool.cfg.get_param("hdr", bool, False)
 
 def compress_clip(img, slope):
     amax = np.amax(img)
@@ -37,34 +38,35 @@ def compress_clip(img, slope):
     return img
 
 def compress_atan(img, slope):
-    amax = np.amax(img)
-    img = img / amax
+    img = img / np.amax(img)
+    img = np.clip(img, 0, 1)
     img = np.arctan(img * math.pi/2 * slope) / math.pi * 2
+    img = img / np.amax(img)
     return img
 
 def compress(img, slope):
-    return compress_atan(img, slope)
+    if HDR:
+        return compress_atan(img, slope)
+    return compress_clip(img, slope)
 
-def _make_frames(dataframe, channels, *, compress_fun, slope=1):
-    if channels == "RGB":
-        r, _ = dataframe.get_channel("R")
-        g, _ = dataframe.get_channel("G")
-        b, _ = dataframe.get_channel("B")
+def _make_frames(dataframe, channels):
+    frames = {}
+    if channels is None:
+        channels = dataframe.get_channels()
 
-        rgb = np.zeros((r.shape[0], r.shape[1], 3))
-        rgb[:, :, 0] = r
-        rgb[:, :, 1] = g
-        rgb[:, :, 2] = b
-        
-        rgb = compress_fun(rgb, slope)
-        frames = {"RGB": rgb}
+    for channel in channels:
+        if channel == "RGB":
+            r, _ = dataframe.get_channel("R")
+            g, _ = dataframe.get_channel("G")
+            b, _ = dataframe.get_channel("B")
 
-    else:
-        frames = {}
-        if channels is None:
-            channels = dataframe.get_channels()
+            rgb = np.zeros((r.shape[0], r.shape[1], 3))
+            rgb[:, :, 0] = r
+            rgb[:, :, 1] = g
+            rgb[:, :, 2] = b
 
-        for channel in channels:
+            frames["RGB"] = rgb
+        else:
             print("Channel = ", channel)
             img, options = dataframe.get_channel(channel)
             print("Shape = ", img.shape)
@@ -74,7 +76,6 @@ def _make_frames(dataframe, channels, *, compress_fun, slope=1):
                 amin = max(np.amin(img), 0)
                 amax = np.amax(img)
                 print(f"{channel}: {amin} - {amax}")
-                img = compress_fun(img, slope)
 
             frames[channel] = img
     return frames
@@ -82,19 +83,12 @@ def _make_frames(dataframe, channels, *, compress_fun, slope=1):
 
 def _show(_project, argv):
     path = argv[0]
-    if len(argv) > 1:
-        if argv[1] == "RGB":
-            channel = "RGB"
-        else:
-            channel = argv[1:]
-    else:
-        channel = None
+    channels = None
+    if len(argv[1:]) > 0:
+        channels = argv[1:]
 
     dataframe = vstarstack.library.data.DataFrame.load(path)
-    frames = _make_frames(dataframe,
-                          channel,
-                          compress_fun=compress,
-                          slope=SLOPE)
+    frames = _make_frames(dataframe, channels)
 
     nch = len(frames)
     fig, axs = plt.subplots(1, nch)
@@ -107,9 +101,13 @@ def _show(_project, argv):
         else:
             subplot = axs
         img = frames[channel].astype(np.float64)
-        img = img / np.amax(img)
-        subplot.imshow(img, cmap="gray", vmin=0, vmax=1.0)
-        subplot.set_title(channel)
+        img = compress(img, SLOPE)
+        if len(img.shape) == 2:
+            subplot.imshow(img, cmap="gray", vmin=0, vmax=1.0)
+            subplot.set_title(channel)
+        else:
+            subplot.imshow(img, vmin=0, vmax=1.0)
+            subplot.set_title(channel)
         index += 1
 
     plt.show()
@@ -120,29 +118,33 @@ def _convert(_project, argv):
     out = argv[1]
 
     if len(argv) > 2:
-        if argv[2] == "RGB":
-            channels = "RGB"
-        else:
-            channels = argv[2:]
+        channels = argv[2:]
     else:
         channels = None
 
     dataframe = vstarstack.library.data.DataFrame.load(path)
-    frames = _make_frames(dataframe, channels, compress_fun=compress, slope=SLOPE)
+    frames = _make_frames(dataframe, channels)
 
     nch = len(frames)
 
     out = os.path.abspath(out)
     path = os.path.dirname(out)
     name, ext = os.path.splitext(os.path.basename(out))
+    ext = ext[1:]
     for channels, img in frames.items():
         if nch > 1:
             fname = os.path.join(path, f"{name}_{channels}.{ext}")
         else:
             fname = out
 
-        img = img*65535
-        img = img.astype('uint16')
+        img = compress(img, SLOPE)
+        img = img / np.amax(img)
+        if ext in ["tiff"]:
+            img = img * 65535
+            img = img.astype('uint16')
+        else:
+            img = img*255
+            img = img.astype('uint8')
         vstarstack.tool.common.check_dir_exists(fname)
         imageio.imwrite(fname, img)
 
