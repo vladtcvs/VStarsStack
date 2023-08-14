@@ -42,10 +42,13 @@ static bool generic_forward_project(void *self,
     PyObject *_lat = PyTuple_GetItem(res, 1);
     PyObject *_lon = PyTuple_GetItem(res, 0);
     if (_lat == NULL || _lon == NULL)
+    {
+        Py_DECREF(res);
         return false;
+    }
     *lat = PyFloat_AsDouble(_lat);
     *lon = PyFloat_AsDouble(_lon);
-    //printf("xy %lf:%lf -> lonlat %lf:%lf\n", x, y, *lon, *lat);
+    Py_DECREF(res);
     return true;
 }
 
@@ -58,10 +61,13 @@ static bool generic_reverse_project(void *self,
     PyObject *_y = PyTuple_GetItem(res, 1);
     PyObject *_x = PyTuple_GetItem(res, 0);
     if (_y == NULL || _x == NULL)
+    {
+        Py_DECREF(res);
         return false;
+    }
     *y = PyFloat_AsDouble(_y);
     *x = PyFloat_AsDouble(_x);
-    //printf("lonlat %lf:%lf -> xy %lf:%lf\n", lon, lat, *x, *y);
+    Py_DECREF(res);
     return true;
 }
 
@@ -87,9 +93,17 @@ static int SphereMovements_init(PyObject *_self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-bool is_perspective(PyObject *obj)
+static void SphereMovements_finalize(PyObject *_self)
 {
-    return false;
+    PyObject *error_type, *error_value, *error_traceback;
+
+    /* Save the current exception, if any. */
+    PyErr_Fetch(&error_type, &error_value, &error_traceback);
+
+    struct SphereMovementObject *self = (struct SphereMovementObject *)_self;
+
+    /* Restore the saved exception. */
+    PyErr_Restore(error_type, error_value, error_traceback);
 }
 
 typedef void (*action_f)(struct SphereMovement *mov,
@@ -139,6 +153,7 @@ static PyObject *apply_action(PyObject *_self,
     }
 
     size_t num = dims[0];
+    printf("Processing %i points\n", (int)num);
 
     const double *posi = PyArray_DATA(points);
 
@@ -158,21 +173,6 @@ static PyObject *apply_action(PyObject *_self,
         .forward = generic_forward_project,
         .reverse = generic_reverse_project,
     };
-/*
-    if (is_perspective(input_proj))
-    {
-        in_proj.projection = &(((struct PerspectiveProjectionObject *)input_proj)->proj);
-        in_proj.forward = perspective_projection_project;
-        in_proj.reverse = perspective_projection_reverse;
-    }
-
-    if (is_perspective(output_proj))
-    {
-        out_proj.projection = &(((struct PerspectiveProjectionObject *)output_proj)->proj);
-        out_proj.forward = perspective_projection_project;
-        out_proj.reverse = perspective_projection_reverse;
-    }
-    */
 
     PyArrayObject *output_points = (PyArrayObject *)PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
     if (output_points == NULL)
@@ -218,6 +218,7 @@ static PyTypeObject _SphereMovement = {
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
     .tp_init = SphereMovements_init,
+    .tp_finalize = SphereMovements_finalize,
     .tp_methods = _SphereMovements_methods,
 };
 

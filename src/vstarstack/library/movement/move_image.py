@@ -52,7 +52,9 @@ def move_image(image: np.ndarray,
         image_weight_layer = np.ones(shape)*image_weight
 
     positions = _generate_points(h, w)
-    original_positions = transformation.reverse(positions.astype('double'), input_proj, output_proj)
+    original_positions = transformation.reverse(positions.astype('double'),
+                                                input_proj,
+                                                output_proj)
     num = positions.shape[0]
     transform_array = np.zeros([h, w, 2], dtype='double')
     for index in range(num):

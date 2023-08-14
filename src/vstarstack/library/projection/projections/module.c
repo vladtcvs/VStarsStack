@@ -95,14 +95,13 @@ static PyObject *Projection_reverse(void *proj,
     double x, y;
     double lon, lat;
     static char *kwlist[] = {"lon", "lat", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "dd", kwlist,
-                                     &lon, &lat))
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "dd", kwlist, &lon, &lat))
         return Py_BuildValue("(OO)", Py_None, Py_None);
 
-    //printf("lat %lf lon %lf\n", lat, lon);
     if (!function(proj, lat, lon, &y, &x))
         return Py_BuildValue("(OO)", Py_None, Py_None);
-    //printf("x %lf y %lf\n", x, y);
+
     return Py_BuildValue("(dd)", x, y);
 }
 
