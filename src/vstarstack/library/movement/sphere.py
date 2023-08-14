@@ -15,6 +15,7 @@
 
 import math
 import json
+from typing import Any
 import numpy as np
 
 from scipy.spatial.transform import Rotation
@@ -62,6 +63,9 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
         self.rev = rot.inv()
         q = self.rot.as_quat()
         self.mov = SphereMovement(q[3], q[0], q[1], q[2])
+
+    def __reduce__(self) -> str | tuple[Any, ...]:
+        return (self.__class__, (self.rot, ))
 
     def magnitude(self):
         """Magnitude of movement"""
