@@ -16,6 +16,7 @@ import os
 import math
 import numpy as np
 import imageio
+from astropy.io import fits
 
 import matplotlib.pyplot as plt
 
@@ -131,22 +132,32 @@ def _convert(_project, argv):
     path = os.path.dirname(out)
     name, ext = os.path.splitext(os.path.basename(out))
     ext = ext[1:]
-    for channels, img in frames.items():
-        if nch > 1:
-            fname = os.path.join(path, f"{name}_{channels}.{ext}")
-        else:
-            fname = out
 
-        img = compress(img, SLOPE)
-        img = img / np.amax(img)
-        if ext in ["tiff"]:
-            img = img * 65535
-            img = img.astype('uint16')
-        else:
-            img = img*255
-            img = img.astype('uint8')
-        vstarstack.tool.common.check_dir_exists(fname)
-        imageio.imwrite(fname, img)
+    if ext == "fits":
+        vstarstack.tool.common.check_dir_exists(path)
+        for channel, img in frames.items():
+            img = (img*SLOPE).astype('uint64')
+            hdu = fits.PrimaryHDU(img)
+            hdul = fits.HDUList([hdu])
+            fname = os.path.join(path, f"{name}_{channel}.{ext}")
+            hdul.writeto(fname)
+    else:
+        for channels, img in frames.items():
+            if nch > 1:
+                fname = os.path.join(path, f"{name}_{channels}.{ext}")
+            else:
+                fname = out
+
+            img = compress(img, SLOPE)
+            img = img / np.amax(img)
+            if ext in ["tiff"]:
+                img = img * 65535
+                img = img.astype('uint16')
+            else:
+                img = img*255
+                img = img.astype('uint8')
+            vstarstack.tool.common.check_dir_exists(fname)
+            imageio.imwrite(fname, img)
 
 
 def _cut(_project, argv):
