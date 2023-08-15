@@ -71,7 +71,7 @@ def _make_frames(dataframe, channels):
             img, options = dataframe.get_channel(channel)
             print("Shape = ", img.shape)
 
-            if options["brightness"]:
+            if options["brightness"] or options["weight"]:
                 img = img.astype(np.float64)
                 amin = max(np.amin(img), 0)
                 amax = np.amax(img)
