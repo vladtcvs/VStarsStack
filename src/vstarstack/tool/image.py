@@ -51,12 +51,14 @@ def compress(img, slope):
 
 def convert_to_uint16(img, slope, maxshift):
     compressed = None
+    img = img / np.amax(img)
     for shifti in range(1024):
         shift = shifti / 1024 * maxshift
         compressed = compress(img + shift, slope)
         intimg = (compressed*65535).astype('int')
-        count_0 = len(np.where(intimg == 0))
-        count_1 = len(np.where(intimg == 1))
+        count_0 = intimg[np.where(intimg == 0)].size
+        count_1 = intimg[np.where(intimg == 1)].size
+        print(shift, count_0, count_1)
         if count_0 <= count_1:
             return compressed
     return compressed
@@ -159,7 +161,7 @@ def _convert(_project, argv):
             else:
                 fname = out
 
-            img =  convert_to_uint16(img, SLOPE, 0.01)
+            img =  convert_to_uint16(img, SLOPE, 0.005)
             if ext not in ["tiff", "png"]:
                 img = (img / 256).astype('uint8')
             vstarstack.tool.common.check_dir_exists(fname)
