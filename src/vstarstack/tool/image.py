@@ -33,14 +33,13 @@ FLOOR = vstarstack.tool.cfg.get_param("clip_floor", bool, False)
 HDR = vstarstack.tool.cfg.get_param("hdr", bool, False)
 
 def compress_clip(img, slope):
-    amax = np.amax(img)
-    img = img / amax
-    img = np.clip(img*slope, 0, 1)
+    img = img / np.amax(img)
+    img = np.clip(img*slope, -1, 1)
     return img
 
 def compress_atan(img, slope):
     img = img / np.amax(img)
-    img = np.clip(img, 0, 1)
+    img = np.clip(img, -1, 1)
     img = np.arctan(img * math.pi/2 * slope) / math.pi * 2
     img = img / np.amax(img)
     return img
@@ -49,6 +48,20 @@ def compress(img, slope):
     if HDR:
         return compress_atan(img, slope)
     return compress_clip(img, slope)
+
+def convert_to_uint16(img, slope, maxshift):
+    compressed = None
+    img = img / np.amax(img)
+    for shifti in range(1024):
+        shift = shifti / 1024 * maxshift
+        compressed = compress(img + shift, slope)
+        intimg = (compressed*65535).astype('int')
+        count_0 = intimg[np.where(intimg == 0)].size
+        count_1 = intimg[np.where(intimg == 1)].size
+        print(shift, count_0, count_1)
+        if count_0 <= count_1:
+            return compressed
+    return compressed
 
 def _make_frames(dataframe, channels):
     frames = {}
@@ -148,17 +161,11 @@ def _convert(_project, argv):
             else:
                 fname = out
 
-            img = compress(img, SLOPE)
-            img = img / np.amax(img)
-            if ext in ["tiff"]:
-                img = img * 65535
-                img = img.astype('uint16')
-            else:
-                img = img*255
-                img = img.astype('uint8')
+            img =  convert_to_uint16(img, SLOPE, 0.005)
+            if ext not in ["tiff", "png"]:
+                img = (img / 256).astype('uint8')
             vstarstack.tool.common.check_dir_exists(fname)
             imageio.imwrite(fname, img)
-
 
 def _cut(_project, argv):
     path = argv[0]
