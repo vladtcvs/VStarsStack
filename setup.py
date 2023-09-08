@@ -73,7 +73,7 @@ setup (name = 'vstarstack',
               'exifread',
               'opencv-python',
               'scikit-image',
-              'scipy',
+              'scipy >= 1.11.0',
               'imutils',
               'matplotlib',
        ]

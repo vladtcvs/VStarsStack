@@ -13,6 +13,7 @@
 #
 
 import numpy as np
+import scipy
 
 from vstarstack.library.fine_shift.image_wave import ImageWave
 import vstarstack.library.data
@@ -108,7 +109,8 @@ class CorrelationAlignedBuilder:
                        image : np.ndarray,
                        pre_align : dict | None,
                        image_ref : np.ndarray,
-                       pre_align_ref : dict | None):
+                       pre_align_ref : dict | None,
+                       smooth : int | None):
         """Build alignment descriptor of image using correlations"""
         if image.shape != image_ref.shape:
             return None
@@ -125,4 +127,14 @@ class CorrelationAlignedBuilder:
                                           image_ref, pre_wave_ref,
                                           self.r, self.shift, self.subp)
         align = wave.data()
+        print(f"smooth = {smooth}")
+        if smooth is not None:
+            data = align["data"]
+            Nw = align["Nw"]
+            Nh = align["Nh"]
+            data = np.array(data, dtype='double')
+            data = data.reshape((Nh, Nw, 2))
+            data = scipy.ndimage.gaussian_filter(data, sigma=smooth, axes=(0,1))
+            data = list(data.reshape((Nh*Nw*2,)))
+            align["data"] = data
         return align

@@ -71,7 +71,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
 
     # find alignment
     alignment = aligner_factory.find_alignment(light, pre_align,
-                                               light_ref, pre_align_ref)
+                                               light_ref, pre_align_ref, 3)
     print(f"{name} - align to {name_ref} found")
     vstarstack.tool.common.check_dir_exists(align_f)
     with open(align_f, "w", encoding='utf8') as f:
