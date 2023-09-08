@@ -299,6 +299,7 @@ static PyObject *ImageWave_data(PyObject *_self, PyObject *args, PyObject *kwds)
                                         "h", self->wave.h,
                                         "spk", self->wave.stretch_penalty_k,
                                         "data", data);
+    Py_DECREF(data);
     return result;
 }
 
@@ -430,6 +431,10 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
 
     if (PyArray_TYPE(image) != NPY_DOUBLE)
     {
+        Py_DECREF(image);
+        Py_DECREF(ref_image);
+        Py_DECREF(pre_shift);
+        Py_DECREF(ref_pre_shift);
         PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
         Py_INCREF(Py_None);
         return Py_None;
@@ -437,6 +442,10 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
 
     if (PyArray_TYPE(ref_image) != NPY_DOUBLE)
     {
+        Py_DECREF(image);
+        Py_DECREF(ref_image);
+        Py_DECREF(pre_shift);
+        Py_DECREF(ref_pre_shift);
         PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
         Py_INCREF(Py_None);
         return Py_None;
@@ -460,6 +469,10 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
 
     if (ref_img.w != img.w || ref_img.h != img.h)
     {
+        Py_DECREF(image);
+        Py_DECREF(ref_image);
+        Py_DECREF(pre_shift);
+        Py_DECREF(ref_pre_shift);
         Py_INCREF(Py_None);
         return Py_None;
     }
@@ -470,6 +483,10 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
 
     if (obj == NULL)
     {
+        Py_DECREF(image);
+        Py_DECREF(ref_image);
+        Py_DECREF(pre_shift);
+        Py_DECREF(ref_pre_shift);
         Py_INCREF(Py_None);
         return Py_None;
     }
@@ -489,6 +506,10 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
                                        &ref_img, ref_pre_align,
                                        radius, maximal_shift, subpixels);
 
+    Py_DECREF(image);
+    Py_DECREF(ref_image);
+    Py_DECREF(pre_shift);
+    Py_DECREF(ref_pre_shift);
     return obj;
 }
 
