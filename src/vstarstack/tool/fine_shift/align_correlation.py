@@ -17,7 +17,7 @@ import os
 import json
 import multiprocessing as mp
 
-from vstarstack.library.fine_shift.fine_shift import Aligner
+from vstarstack.library.fine_shift.fine_shift import CorrelationAlignedBuilder
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 import vstarstack.tool.configuration
@@ -30,15 +30,8 @@ ncpu = vstarstack.tool.cfg.nthreads
 
 def create_aligner(project: vstarstack.tool.cfg.Project, W: int, H: int):
     """Create aligner for the project"""
-    num_steps = project.config.fine_shift.Nsteps
-    dh = project.config.fine_shift.dh
-    gridW = project.config.fine_shift.gridW
-    gridH = project.config.fine_shift.gridH
-    spk = project.config.fine_shift.stretchPenaltyCoefficient
-    min_points = project.config.fine_shift.points_min_len
-
-    aligner = Aligner(W, H, gridW, gridH, spk, num_steps, min_points, dh)
-    return aligner
+    aligner_factory = CorrelationAlignedBuilder(7, 3, 2)
+    return aligner_factory
 
 def align_file(project : vstarstack.tool.cfg.Project,
                name : str,
@@ -59,10 +52,10 @@ def align_file(project : vstarstack.tool.cfg.Project,
     df_ref = vstarstack.library.data.DataFrame.load(input_image_ref_f)
     w = df.params["w"]
     h = df.params["h"]
-    aligner = create_aligner(project, w, h)
+    aligner_factory = create_aligner(project, w, h)
 
-    light, mask = vstarstack.library.common.df_to_light(df)
-    light_ref, mask_ref = vstarstack.library.common.df_to_light(df_ref)
+    light, _ = vstarstack.library.common.df_to_light(df)
+    light_ref, _ = vstarstack.library.common.df_to_light(df_ref)
 
     if pre_align_f is None or not os.path.isfile(pre_align_f):
         pre_align = None
@@ -77,16 +70,12 @@ def align_file(project : vstarstack.tool.cfg.Project,
             pre_align_ref = json.load(f)
 
     # find alignment
-    align = aligner.process_alignment_by_correlation(light,
-                                                     mask,
-                                                     pre_align,
-                                                     light_ref,
-                                                     mask_ref,
-                                                     pre_align_ref)
+    alignment = aligner_factory.find_alignment(light, pre_align,
+                                               light_ref, pre_align_ref)
     print(f"{name} - align to {name_ref} found")
     vstarstack.tool.common.check_dir_exists(align_f)
     with open(align_f, "w", encoding='utf8') as f:
-        json.dump(align, f, ensure_ascii=False, indent=2)
+        json.dump(alignment, f, ensure_ascii=False, indent=2)
 
 def _align_file_wrapper(arg):
     align_file(*arg)

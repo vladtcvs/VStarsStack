@@ -28,18 +28,6 @@ import vstarstack.tool.common
 
 ncpu = vstarstack.tool.cfg.nthreads
 
-def create_aligner(project: vstarstack.tool.cfg.Project, W: int, H: int):
-    """Create aligner for the project"""
-    num_steps = project.config.fine_shift.Nsteps
-    dh = project.config.fine_shift.dh
-    gridW = project.config.fine_shift.gridW
-    gridH = project.config.fine_shift.gridH
-    spk = project.config.fine_shift.stretchPenaltyCoefficient
-    min_points = project.config.fine_shift.points_min_len
-
-    aligner = Aligner(W, H, gridW, gridH, spk, num_steps, min_points, dh)
-    return aligner
-
 def align_file(project : vstarstack.tool.cfg.Project,
                name : str,
                input_image_f : str,
@@ -54,9 +42,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
         descriptor = json.load(f)
 
     df = vstarstack.library.data.DataFrame.load(input_image_f)
-    w = df.params["w"]
-    h = df.params["h"]
-    aligner = create_aligner(project, w, h)
+    aligner = Aligner()
 
     # apply alignment to file
     df = aligner.apply_alignment(df, descriptor, subpixels)
