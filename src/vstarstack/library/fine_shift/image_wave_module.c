@@ -280,17 +280,19 @@ static PyObject *ImageWave_data(PyObject *_self, PyObject *args, PyObject *kwds)
 {
     struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
     int xi, yi;
-    PyObject *data = PyList_New(self->wave.array.w * self->wave.array.h * 2);
+    PyObject *data = PyList_New(0);
     for (yi = 0; yi < self->wave.array.h; yi++)
         for (xi = 0; xi < self->wave.array.w; xi++)
         {
-            double vx = image_wave_get_array(&self->wave.array,
-                                             xi, yi, 0);
-            double vy = image_wave_get_array(&self->wave.array,
-                                             xi, yi, 1);
+            double vx = image_wave_get_array(&self->wave.array, xi, yi, 0);
+            double vy = image_wave_get_array(&self->wave.array, xi, yi, 1);
 
-            PyList_SetItem(data, yi*self->wave.array.w*2 + xi*2, PyFloat_FromDouble(vx));
-            PyList_SetItem(data, yi*self->wave.array.w*2 + xi*2 + 1, PyFloat_FromDouble(vy));
+            PyObject *vxv = PyFloat_FromDouble(vx);
+            PyObject *vyv = PyFloat_FromDouble(vy);
+            PyList_Append(data, vxv);
+            PyList_Append(data, vyv);
+            Py_DECREF(vxv);
+            Py_DECREF(vyv);
         }
     PyObject *result = Py_BuildValue("{s:i,s:i,s:i,s:i,s:d,s:O}",
                                         "Nw", self->wave.array.w,
@@ -431,10 +433,6 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
 
     if (PyArray_TYPE(image) != NPY_DOUBLE)
     {
-        Py_DECREF(image);
-        Py_DECREF(ref_image);
-        Py_DECREF(pre_shift);
-        Py_DECREF(ref_pre_shift);
         PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
         Py_INCREF(Py_None);
         return Py_None;
@@ -442,10 +440,6 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
 
     if (PyArray_TYPE(ref_image) != NPY_DOUBLE)
     {
-        Py_DECREF(image);
-        Py_DECREF(ref_image);
-        Py_DECREF(pre_shift);
-        Py_DECREF(ref_pre_shift);
         PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
         Py_INCREF(Py_None);
         return Py_None;
@@ -469,10 +463,6 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
 
     if (ref_img.w != img.w || ref_img.h != img.h)
     {
-        Py_DECREF(image);
-        Py_DECREF(ref_image);
-        Py_DECREF(pre_shift);
-        Py_DECREF(ref_pre_shift);
         Py_INCREF(Py_None);
         return Py_None;
     }
@@ -483,10 +473,6 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
 
     if (obj == NULL)
     {
-        Py_DECREF(image);
-        Py_DECREF(ref_image);
-        Py_DECREF(pre_shift);
-        Py_DECREF(ref_pre_shift);
         Py_INCREF(Py_None);
         return Py_None;
     }
@@ -506,10 +492,6 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
                                        &ref_img, ref_pre_align,
                                        radius, maximal_shift, subpixels);
 
-    Py_DECREF(image);
-    Py_DECREF(ref_image);
-    Py_DECREF(pre_shift);
-    Py_DECREF(ref_pre_shift);
     return obj;
 }
 
