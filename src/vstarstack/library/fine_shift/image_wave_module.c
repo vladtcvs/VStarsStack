@@ -227,11 +227,12 @@ static PyObject *ImageWave_apply_shift(PyObject *_self,
                                        PyObject *args,
                                        PyObject *kwds)
 {
+    int subpixels;
     PyArrayObject *image;
     struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
-    static char *kwlist[] = {"image", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist,
-                                     &image))
+    static char *kwlist[] = {"image", "subpixels", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Oi", kwlist,
+                                     &image, &subpixels))
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments");
         Py_INCREF(Py_None);
@@ -260,6 +261,9 @@ static PyObject *ImageWave_apply_shift(PyObject *_self,
         .h = dims[0],
     };
 
+    dims[1] *= subpixels;
+    dims[0] *= subpixels;
+
     PyArrayObject *output_image = (PyArrayObject *)PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
     struct ImageWaveGrid out = {
         .array = PyArray_DATA(output_image),
@@ -268,7 +272,7 @@ static PyObject *ImageWave_apply_shift(PyObject *_self,
         .h = dims[0],
     };
 
-    image_wave_shift_image(&self->wave, &self->wave.array, &img, &out);
+    image_wave_shift_image(&self->wave, &self->wave.array, &img, &out, subpixels);
     return (PyObject *)output_image;
 }
 
@@ -276,17 +280,19 @@ static PyObject *ImageWave_data(PyObject *_self, PyObject *args, PyObject *kwds)
 {
     struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
     int xi, yi;
-    PyObject *data = PyList_New(self->wave.array.w * self->wave.array.h * 2);
+    PyObject *data = PyList_New(0);
     for (yi = 0; yi < self->wave.array.h; yi++)
         for (xi = 0; xi < self->wave.array.w; xi++)
         {
-            double vx = image_wave_get_array(&self->wave.array,
-                                             xi, yi, 0);
-            double vy = image_wave_get_array(&self->wave.array,
-                                             xi, yi, 1);
+            double vx = image_wave_get_array(&self->wave.array, xi, yi, 0);
+            double vy = image_wave_get_array(&self->wave.array, xi, yi, 1);
 
-            PyList_SetItem(data, yi*self->wave.array.w*2 + xi*2, PyFloat_FromDouble(vx));
-            PyList_SetItem(data, yi*self->wave.array.w*2 + xi*2 + 1, PyFloat_FromDouble(vy));
+            PyObject *vxv = PyFloat_FromDouble(vx);
+            PyObject *vyv = PyFloat_FromDouble(vy);
+            PyList_Append(data, vxv);
+            PyList_Append(data, vyv);
+            Py_DECREF(vxv);
+            Py_DECREF(vyv);
         }
     PyObject *result = Py_BuildValue("{s:i,s:i,s:i,s:i,s:d,s:O}",
                                         "Nw", self->wave.array.w,
@@ -295,6 +301,7 @@ static PyObject *ImageWave_data(PyObject *_self, PyObject *args, PyObject *kwds)
                                         "h", self->wave.h,
                                         "spk", self->wave.stretch_penalty_k,
                                         "data", data);
+    Py_DECREF(data);
     return result;
 }
 

@@ -13,6 +13,7 @@
 #
 
 import numpy as np
+import scipy
 
 from vstarstack.library.fine_shift.image_wave import ImageWave
 import vstarstack.library.data
@@ -29,6 +30,25 @@ def _cluster_average(cluster):
 
 class Aligner:
     """Alignment calculator"""
+
+    def apply_alignment(self,
+                        dataframe : vstarstack.library.data.DataFrame,
+                        align : dict,
+                        subpixels : int):
+        """Apply alignment descriptor to file"""
+        wave = ImageWave.from_data(align)
+        for channel in dataframe.get_channels():
+            image, opts = dataframe.get_channel(channel)
+            if opts["encoded"]:
+                continue
+            image = image.astype('double')
+            fixed = wave.apply_shift(image, subpixels)
+            fixed[np.where(np.isnan(fixed))] = 0
+            dataframe.replace_channel(fixed, channel)
+        return dataframe
+
+class ClusterAlignerBuilder:
+
     def __init__(self, W, H, gridW, gridH, spk, num_steps, min_points, dh):
         self.W = W
         self.H = H
@@ -39,9 +59,7 @@ class Aligner:
         self.min_points = min_points
         self.dh = dh
 
-    def process_alignment_by_clusters(self,
-                                      name : str,
-                                      clusters : list):
+    def find_alignment(self, name : str, clusters : list) -> dict:
         """Find alignment of image `name` using clusters"""
         points = []
         targets = []
@@ -67,8 +85,7 @@ class Aligner:
         descriptor = wave.data()
         return descriptor
 
-    def find_all_alignments_by_clusters(self,
-                                        clusters : list):
+    def find_all_alignments(self, clusters : list) -> dict:
         """Build alignment descriptor using clusters"""
         names = []
         for cluster in clusters:
@@ -81,18 +98,22 @@ class Aligner:
                 descs[name] = desc
         return descs
 
-    def process_alignment_by_correlation(self,
-                                         image : np.ndarray,
-                                         mask : np.ndarray,
-                                         pre_align : dict | None,
-                                         image_ref : np.ndarray,
-                                         mask_ref : np.ndarray,
-                                         pre_align_ref : dict | None):
+class CorrelationAlignedBuilder:
+
+    def __init__(self, radius : int, maximal_shift : float, subpixels : int):
+        self.r = radius
+        self.shift = maximal_shift
+        self.subp = subpixels
+
+    def find_alignment(self,
+                       image : np.ndarray,
+                       pre_align : dict | None,
+                       image_ref : np.ndarray,
+                       pre_align_ref : dict | None,
+                       smooth : int | None):
         """Build alignment descriptor of image using correlations"""
         if image.shape != image_ref.shape:
             return None
-        h = image.shape[0]
-        w = image.shape[1]
         if pre_align is not None:
             pre_wave = ImageWave.from_data(pre_align)
         else:
@@ -102,21 +123,18 @@ class Aligner:
             pre_wave_ref = ImageWave.from_data(pre_align_ref)
         else:
             pre_wave_ref = None
-        wave = ImageWave.find_shift_array(image, pre_wave, image_ref, pre_wave_ref, 5, 3, 4)
+        wave = ImageWave.find_shift_array(image, pre_wave,
+                                          image_ref, pre_wave_ref,
+                                          self.r, self.shift, self.subp)
         align = wave.data()
+        print(f"smooth = {smooth}")
+        if smooth is not None:
+            data = align["data"]
+            Nw = align["Nw"]
+            Nh = align["Nh"]
+            data = np.array(data, dtype='double')
+            data = data.reshape((Nh, Nw, 2))
+            data = scipy.ndimage.gaussian_filter(data, sigma=smooth, axes=(0,1))
+            data = list(data.reshape((Nh*Nw*2,)))
+            align["data"] = data
         return align
-
-    def apply_alignment(self,
-                        dataframe : vstarstack.library.data.DataFrame,
-                        align : dict):
-        """Apply alignment descriptor to file"""
-        wave = ImageWave.from_data(align)
-        for channel in dataframe.get_channels():
-            image, opts = dataframe.get_channel(channel)
-            if opts["encoded"]:
-                continue
-            image = image.astype('double')
-            fixed = wave.apply_shift(image)
-            fixed[np.where(np.isnan(fixed))] = 0
-            dataframe.replace_channel(fixed, channel)
-        return dataframe

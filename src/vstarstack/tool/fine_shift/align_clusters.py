@@ -17,7 +17,7 @@ import os
 import json
 import multiprocessing as mp
 
-from vstarstack.library.fine_shift.fine_shift import Aligner
+from vstarstack.library.fine_shift.fine_shift import ClusterAlignerBuilder
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 import vstarstack.tool.configuration
@@ -37,8 +37,8 @@ def create_aligner(project: vstarstack.tool.cfg.Project, W: int, H: int):
     spk = project.config.fine_shift.stretchPenaltyCoefficient
     min_points = project.config.fine_shift.points_min_len
 
-    aligner = Aligner(W, H, gridW, gridH, spk, num_steps, min_points, dh)
-    return aligner
+    aligner_factory = ClusterAlignerBuilder(W, H, gridW, gridH, spk, num_steps, min_points, dh)
+    return aligner_factory
 
 def align_file(project : vstarstack.tool.cfg.Project,
                name : str,
@@ -55,14 +55,14 @@ def align_file(project : vstarstack.tool.cfg.Project,
     df = vstarstack.library.data.DataFrame.load(input_image_f)
     w = df.params["w"]
     h = df.params["h"]
-    aligner = create_aligner(project, w, h)
+    aligner_factory = create_aligner(project, w, h)
 
     # find alignment
-    desc = aligner.process_alignment_by_clusters(name, clusters)
+    alignment = aligner_factory.find_alignment(name, clusters)
     print(f"{name} - align found")
     vstarstack.tool.common.check_dir_exists(desc_f)
     with open(desc_f, "w", encoding='utf8') as f:
-        json.dump(desc, f, ensure_ascii=False, indent=2)
+        json.dump(alignment, f, ensure_ascii=False, indent=2)
 
 def _align_file_wrapper(arg):
     align_file(*arg)

@@ -32,5 +32,5 @@ commands = {
                                   "npy/ aligns/ [pre_aligns/]"),
     "apply-align": (vstarstack.tool.fine_shift.align_apply.apply,
                     "apply aligns to images",
-                    "npy/ aligns/ aligned/"),
+                    "npy/ aligns/ aligned/ [subpixels]"),
 }

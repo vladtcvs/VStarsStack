@@ -28,37 +28,28 @@ import vstarstack.tool.common
 
 ncpu = vstarstack.tool.cfg.nthreads
 
-def create_aligner(project: vstarstack.tool.cfg.Project, W: int, H: int):
-    """Create aligner for the project"""
-    num_steps = project.config.fine_shift.Nsteps
-    dh = project.config.fine_shift.dh
-    gridW = project.config.fine_shift.gridW
-    gridH = project.config.fine_shift.gridH
-    spk = project.config.fine_shift.stretchPenaltyCoefficient
-    min_points = project.config.fine_shift.points_min_len
-
-    aligner = Aligner(W, H, gridW, gridH, spk, num_steps, min_points, dh)
-    return aligner
-
 def align_file(project : vstarstack.tool.cfg.Project,
                name : str,
                input_image_f : str,
                desc_f : str,
-               output_image_f : str):
+               output_image_f : str,
+               subpixels : int):
     """Apply alignment to each file"""
-    print(name)
+    print(f"{name}: {input_image_f} : {desc_f} -> {output_image_f} [{subpixels}]")
+
     if not os.path.exists(input_image_f):
         return
+    if not os.path.exists(desc_f):
+        return
+
     with open(desc_f, encoding='utf8') as f:
         descriptor = json.load(f)
 
     df = vstarstack.library.data.DataFrame.load(input_image_f)
-    w = df.params["w"]
-    h = df.params["h"]
-    aligner = create_aligner(project, w, h)
+    aligner = Aligner()
 
     # apply alignment to file
-    df = aligner.apply_alignment(df, descriptor)
+    df = aligner.apply_alignment(df, descriptor, subpixels)
     print(f"{name} - aligned")
 
     vstarstack.tool.common.check_dir_exists(output_image_f)
@@ -72,9 +63,14 @@ def apply(project: vstarstack.tool.cfg.Project, argv: list):
         npys = argv[0]
         aligns = argv[1]
         outputs = argv[2]
+        if len(argv) >= 4:
+            subpixels = int(argv[3])
+        else:
+            subpixels = 1
     else:
         npys = project.config.paths.npy_fixed
         aligns = project.config.fine_shift.aligns
+        subpixels = project.config.fine_shift.subpixels
         outputs = project.config.paths.aligned
 
     files = vstarstack.tool.common.listfiles(npys, ".zip")
@@ -83,7 +79,8 @@ def apply(project: vstarstack.tool.cfg.Project, argv: list):
                  name,
                  input_image_f,
                  os.path.join(aligns, name + ".json"),
-                 os.path.join(outputs, name + ".zip"))
+                 os.path.join(outputs, name + ".zip"),
+                 subpixels)
                  for name, input_image_f in files]
         for _ in pool.imap_unordered(_align_file_wrapper, args):
             pass

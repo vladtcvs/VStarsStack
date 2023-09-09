@@ -115,7 +115,8 @@ double image_wave_interpolation(const struct ImageWaveGrid *array,
 void image_wave_shift_image(struct ImageWave *self,
                             const struct ImageWaveGrid *array,
                             const struct ImageWaveGrid *input_image,
-                            struct ImageWaveGrid *output_image);
+                            struct ImageWaveGrid *output_image,
+                            int subpixels);
 
 
 /* Approximation by targets methods */
