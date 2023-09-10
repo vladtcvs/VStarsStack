@@ -46,6 +46,9 @@ def _process_file(name, default_format, fname, output):
     vstarstack.tool.common.check_dir_exists(output)
     dataframe.store(output)
 
+def _process_file_wrapper(arg):
+    _process_file(*arg)
+
 def _process_path(default_format, input_path, output_path):
     files = vstarstack.tool.common.listfiles(input_path, ".zip")
     with mp.Pool(nthreads) as pool:
@@ -54,7 +57,7 @@ def _process_path(default_format, input_path, output_path):
                  fname,
                  os.path.join(output_path, name + ".zip"))
                  for name, fname in files]
-        for _ in pool.imap_unordered(_process_file, args):
+        for _ in pool.imap_unordered(_process_file_wrapper, args):
             pass
 
 def _process(project: vstarstack.tool.cfg.Project, argv: list):
