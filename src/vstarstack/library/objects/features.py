@@ -104,7 +104,7 @@ def build_keypoints(image : np.ndarray,
     Arguments:
         image         : image with target image
         num_split     : split image to num_split subimages
-        detector_type : ORB or brightness
+        detector_type : orb or brightness
         params        : parameters
 
     Return: list of keypoint and list of descriptors
@@ -112,7 +112,7 @@ def build_keypoints(image : np.ndarray,
     orb = cv2.ORB_create()
 
     image = (image / np.amax(image) * 255).astype(np.uint8)
-    if detector_type == "ORB":
+    if detector_type == "orb":
         keypoints = select_keypoints(image, find_keypoints_orb, num_split, orb)
     elif detector_type == "brightness":
         keypoints = select_keypoints(image, find_keypoints_brightness, num_split, params)
