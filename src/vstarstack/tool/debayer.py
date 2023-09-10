@@ -13,6 +13,7 @@
 #
 
 import os
+import multiprocessing as mp
 
 import vstarstack.library.data
 import vstarstack.library.debayer.bayer
@@ -23,7 +24,10 @@ import vstarstack.tool.cfg
 import vstarstack.tool.usage
 import vstarstack.library.common
 
-def _process_file(default_format, fname, output):
+nthreads = vstarstack.tool.cfg.nthreads
+
+def _process_file(name, default_format, fname, output):
+    print(name)
     dataframe = vstarstack.library.data.DataFrame.load(fname)
     if "format" in dataframe.params:
         mode = dataframe.params["format"]
@@ -44,9 +48,14 @@ def _process_file(default_format, fname, output):
 
 def _process_path(default_format, input_path, output_path):
     files = vstarstack.tool.common.listfiles(input_path, ".zip")
-    for name, fname in files:
-        print(name)
-        _process_file(default_format, fname, os.path.join(output_path, name + ".zip"))
+    with mp.Pool(nthreads) as pool:
+        args = [(name,
+                 default_format,
+                 fname,
+                 os.path.join(output_path, name + ".zip"))
+                 for name, fname in files]
+        for _ in pool.imap_unordered(_process_file, args):
+            pass
 
 def _process(project: vstarstack.tool.cfg.Project, argv: list):
     default_format = project.config.telescope.camera.format
@@ -56,7 +65,7 @@ def _process(project: vstarstack.tool.cfg.Project, argv: list):
         if os.path.isdir(input_path):
             _process_path(default_format, input_path, output_path)
         else:
-            _process_file(default_format, input_path, output_path)
+            _process_file(input_path, default_format, input_path, output_path)
     else:
         _process_path(default_format,
                       project.config.paths.npy_orig,
