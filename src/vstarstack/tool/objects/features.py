@@ -30,7 +30,7 @@ def find_keypoints(files, num_splits, detector_type, param):
 
     for fname in files:
         name = os.path.splitext(os.path.basename(fname))[0]
-        print(name)
+        #print(name)
         fnames[name] = fname
         dataframe = vstarstack.library.data.DataFrame.load(fname)
         for channel in dataframe.get_channels():
@@ -63,9 +63,10 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
     num_splits = project.config.objects.features.num_splits
     max_feature_delta = project.config.objects.features.max_feature_delta
     features_percent = project.config.objects.features.features_percent / 100
-    
+
     if detector_type == "orb":
         param = None
+        print("Using ORB detector")
     elif detector_type == "brightness":
         param = {
             "blur_size" : project.config.objects.features.bright_spots.blurSize,
@@ -74,13 +75,16 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
             "min_pixel" : project.config.objects.features.bright_spots.minPixel,
             "max_pixel" : project.config.objects.features.bright_spots.maxPixel,
         }
+        print("Using brightness detector")
 
     files = vstarstack.tool.common.listfiles(inputs, ".zip")
     files = [filename for _, filename in files]
     points, descs, _ = find_keypoints(files, num_splits, detector_type, param)
+    print("Found keypoints")
 
     total_clusters = []
     for channel in points:
+        print(f"\tBuild clusters for {channel} channel")
         crd_clusters = build_clusters(points[channel],
                                       descs[channel],
                                       max_feature_delta,
@@ -88,6 +92,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
 
         total_clusters += crd_clusters
 
+    print("Builded clusters")
     vstarstack.tool.common.check_dir_exists(clusters_fname)
     with open(clusters_fname, "w") as f:
         json.dump(total_clusters, f, indent=4, ensure_ascii=False)

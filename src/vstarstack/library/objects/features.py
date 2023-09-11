@@ -27,8 +27,12 @@ def find_keypoints_orb(image, base_x, base_y, detector):
     cpts = []
     points = detector.detect(image, mask=None)
     for point in points:
-        cpts.append(
-            {"x": point.pt[0]+base_x, "y": point.pt[1]+base_y, "size": point.size})
+        pdesc = {
+                "x": point.pt[0]+base_x,
+                "y": point.pt[1]+base_y,
+                "size": point.size,
+                }
+        cpts.append(pdesc)
     return cpts
 
 def find_keypoints_brightness(image, base_x, base_y, detector):
@@ -133,12 +137,19 @@ def match_images(points : dict, descs : dict,
         matches[name1] = {}
         points1 = points[name1]
         descs1 = descs[name1]
-            
+
+        if descs1 is None:
+            print(f"Skipping {name1}")
+            continue
+
         for name2 in points:
             matches[name1][name2] = []
             points2 = points[name2]
             descs2 = descs[name2]
-            print(f"\t{name1} <-> {name2}")
+
+            if descs2 is None:
+                print(f"Skipping {name2}")
+                continue
 
             imatches = bf_matcher.match(descs1, descs2)
             imatches = sorted(imatches, key=lambda x: x.distance)
@@ -211,7 +222,7 @@ def build_index_clusters(matches : dict):
 def build_crd_clusters(index_clusters : dict, points : dict):
     """Build coordinate clusters """
     crd_clusters = []
-    print(points.keys())
+    #print(points.keys())
     for cluster in index_clusters:
         crd_cluster = {}
         for name in cluster:
@@ -224,8 +235,11 @@ def build_clusters(points : dict, descs : dict,
                    max_feature_delta : float,
                    features_percent : float):
     """Build clusters"""
+    print("Match images")
     matches = match_images(points, descs, max_feature_delta, features_percent)
+    print("Build index clusters")
     index_clusters = build_index_clusters(matches)
+    print("Build coordinate clusters")
     crd_clusters = build_crd_clusters(index_clusters, points)
     return crd_clusters
 
