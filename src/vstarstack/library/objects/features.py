@@ -22,7 +22,18 @@ import matplotlib.pyplot as plt
 import vstarstack.library.data
 import vstarstack.tool.cfg
 
-def find_keypoints_orb(image, base_x, base_y, detector):
+def get_subimage(image, num_splits):
+    image_shape = image.shape
+    for i in range(num_splits):
+        base_y = int(image_shape[0]/num_splits*i)
+        next_y = int(image_shape[0]/num_splits*(i+1))
+        for j in range(num_splits):
+            base_x = int(image_shape[1]/num_splits*j)
+            next_x = int(image_shape[1]/num_splits*(j+1))
+            subimage = image[base_y:next_y, base_x:next_x]
+            yield subimage, base_x, base_y
+
+def _find_keypoints_orb(image, base_x, base_y, detector):
     """Find keypoints with ORB detector"""
     cpts = []
     points = detector.detect(image, mask=None)
@@ -35,13 +46,20 @@ def find_keypoints_orb(image, base_x, base_y, detector):
         cpts.append(pdesc)
     return cpts
 
-def find_keypoints_brightness(image, base_x, base_y, detector):
+def find_keypoints_orb(image, num_splits):
+    points = []
+    orb = cv2.ORB_create()
+    for subimage, bx, by in get_subimage(image, num_splits):
+        points += _find_keypoints_orb(subimage, bx, by, orb)
+    return points
+
+def _find_keypoints_brightness(image, base_x, base_y, params):
     """Find keypoints with brightness detector"""
-    blur_size = int(detector["blur_size"])
-    k_thr = detector["k_thr"]
-    minv = detector["min_value"]
-    min_pixel = detector["min_pixel"]
-    max_pixel = detector["max_pixel"]
+    blur_size = int(params["blur_size"])
+    k_thr = params["k_thr"]
+    minv = params["min_value"]
+    min_pixel = params["min_pixel"]
+    max_pixel = params["max_pixel"]
 
     if blur_size % 2 == 0:
         blur_size += 1
@@ -83,25 +101,14 @@ def find_keypoints_brightness(image, base_x, base_y, detector):
 
     return keypoints
 
-def select_keypoints(image, fun, num_split, detector):
-    """Find keypoints"""
-    shape = image.shape
-    keypoints = []
+def find_keypoints_brightness(image, num_splits, params):
+    points = []
+    for subimage, bx, by in get_subimage(image, num_splits):
+        points += _find_keypoints_brightness(subimage, bx, by, params)
+    return points
 
-    for i in range(num_split):
-        base_y = int(shape[0]/num_split*i)
-        next_y = int(shape[0]/num_split*(i+1))
-        for j in range(num_split):
-            base_x = int(shape[1]/num_split*j)
-            next_x = int(shape[1]/num_split*(j+1))
-            subimage = image[base_y:next_y, base_x:next_x]
-            keypoints += fun(subimage, base_x, base_y, detector)
-    return keypoints
-
-def build_keypoints(image : np.ndarray,
-                    num_split : int,
-                    detector_type : str,
-                    params : dict | None):
+def describe_keypoints(image : np.ndarray,
+                       keypoints : list) -> list:
     """
     Build keypoints and calculate their descriptors
 
@@ -114,18 +121,9 @@ def build_keypoints(image : np.ndarray,
     Return: list of keypoint and list of descriptors
     """
     orb = cv2.ORB_create()
-
-    image = (image / np.amax(image) * 255).astype(np.uint8)
-    if detector_type == "orb":
-        keypoints = select_keypoints(image, find_keypoints_orb, num_split, orb)
-    elif detector_type == "brightness":
-        keypoints = select_keypoints(image, find_keypoints_brightness, num_split, params)
-    else:
-        raise Exception(f"Invalid detector type {detector_type}")
-
     kps = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in keypoints]
     _, descs = orb.compute(image, kps)
-    return keypoints, descs
+    return descs
 
 def match_images(points : dict, descs : dict,
                  max_feature_delta : float,
