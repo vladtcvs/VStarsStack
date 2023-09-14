@@ -19,7 +19,9 @@ import numpy as np
 import vstarstack.tool.common
 import vstarstack.tool.cfg
 import vstarstack.library.data
-from vstarstack.library.objects.features import build_keypoints
+from vstarstack.library.objects.features import find_keypoints_orb
+from vstarstack.library.objects.features import find_keypoints_brightness
+from vstarstack.library.objects.features import describe_keypoints
 from vstarstack.library.objects.features import build_clusters
 
 
@@ -41,13 +43,17 @@ def find_keypoints(files, num_splits, detector_type, param):
                 points[channel] = {}
                 descs[channel] = {}
 
-            keypoints, keydescs = build_keypoints(image,
-                                        num_splits,
-                                        detector_type,
-                                        param)
+            if detector_type == "orb":
+                keypoints = find_keypoints_orb(image, num_splits)
+            elif detector_type == "brightness":
+                keypoints = find_keypoints_brightness(image, num_splits, param)
+            else:
+                raise Exception(f"Invalid detector {detector_type}")
+
+            descs = describe_keypoints(image, keypoints)
 
             points[channel][name] = keypoints
-            descs[channel][name] = keydescs
+            descs[channel][name] = descs
 
     return points, descs, fnames
 
