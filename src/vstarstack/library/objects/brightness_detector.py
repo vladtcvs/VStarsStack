@@ -27,7 +27,16 @@ def detect(layer : np.ndarray,
     max_pixels = math.ceil(math.pi/4*max_size**2)
 
     blurred = cv2.GaussianBlur(layer, (5, 5), 0)
-    blurred = blurred / np.amax(blurred) * 255
+
+    size = min(layer.shape)
+    sky_blur = int(size / 2)
+    if sky_blur % 2 == 0:
+        sky_blur = sky_blur + 1
+    sky = cv2.GaussianBlur(layer, (sky_blur, sky_blur), 0)
+    blurred = blurred - sky
+    blurred = blurred / np.amax(blurred)
+    blurred = np.clip(blurred, 0, 1)
+    blurred = (blurred * 255).astype('uint8')
 
     thresh = cv2.threshold(blurred, int(thr*255), 255, cv2.THRESH_BINARY)[1]
 
