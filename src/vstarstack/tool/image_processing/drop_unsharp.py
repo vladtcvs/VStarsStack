@@ -9,9 +9,10 @@ import vstarstack.tool.common
 def measure_sharpness(img : np.ndarray) -> float:
     sx = scipy.ndimage.sobel(img, axis=0, mode='constant')
     sy = scipy.ndimage.sobel(img, axis=1, mode='constant')
-    sobel = np.hypot(sx, sy)
+    sobel = np.sqrt(sx**2 + sy**2)
     metric = np.sum(sobel)
-    return metric
+    summ = np.sum(img)
+    return metric / summ
 
 def measure_sharpness_df(df : vstarstack.library.data.DataFrame) -> float:
     metric = 0
@@ -45,8 +46,14 @@ def run(project : vstarstack.tool.cfg.Project, argv : list[str]):
     percent = int(argv[1])
     files = vstarstack.tool.common.listfiles(path, ".zip")
     fnames = [item[1] for item in files]
-    good = select_sharpests(fnames, percent)
+    sharpests = select_sharpests(fnames, percent)
+    for i,fname in enumerate(sharpests):
+        basename = os.path.basename(fname)
+        dirname = os.path.dirname(fname)
+        basename = "%06i_%s" % (i, basename)
+        os.rename(fname,  os.path.join(dirname, basename))
+        fnames.remove(fname)
+
     for fname in fnames:
-        if fname not in good:
-            print(f"Removing {fname}")
-            os.remove(fname)
+        print(f"Removing {fname}")
+        os.remove(fname)
