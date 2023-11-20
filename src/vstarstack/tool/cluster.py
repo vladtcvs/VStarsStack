@@ -92,7 +92,7 @@ def find_shift(project: vstarstack.tool.cfg.Project, argv: list):
         error_f = project.config.paths.shift_errors
     with open(clusters_f, encoding='utf8') as f:
         clusters = json.load(f)
-    shifts, errors = build_movements(Movement, clusters)
+    shifts, errors = build_movements(Movement, clusters, None)
     shifts = complete_movements(Movement, shifts, compose)
     serialized = {}
     for name1,shifts1 in shifts.items():
@@ -111,6 +111,43 @@ def find_shift(project: vstarstack.tool.cfg.Project, argv: list):
     with open(shifts_f, "w", encoding='utf8') as f:
         json.dump(serialized, f, ensure_ascii=False, indent=4)
     
+def find_shift_to_selected(project: vstarstack.tool.cfg.Project, argv: list):
+    """Display clusters"""
+    compose = project.config.cluster.compose_movements
+    if len(argv) >= 3:
+        clusters_f = argv[0]
+        shifts_f = argv[1]
+        basic_image = argv[2]
+        error_f = "shift_errors.csv"
+    elif len(argv) >= 1:
+        clusters_f = project.config.cluster.path
+        shifts_f = project.config.paths.absolute_shifts
+        error_f = project.config.paths.shift_errors
+        basic_image = argv[0]
+    else:
+        print("Invalid args")
+        return
+    with open(clusters_f, encoding='utf8') as f:
+        clusters = json.load(f)
+    shifts, errors = build_movements(Movement, clusters, basic_image)
+    shifts = complete_movements(Movement, shifts, compose)
+    serialized = {}
+    shifts1 = shifts[basic_image]
+    for name2 in shifts1:
+        serialized[name2] = shifts[basic_image][name2].serialize()
+
+    if len(errors) > 0:
+        print("Couldn't build movement for pairs:")
+        with open(error_f, "w", encoding='utf8') as f:
+            writer = csv.writer(f)
+            writer.writerow(["name2", "name1"])
+            for name1, name2 in errors:
+                print(f"\t{name2} -> {name1}")
+                writer.writerow([name2,name1])
+
+    with open(shifts_f, "w", encoding='utf8') as f:
+        json.dump(serialized, f, ensure_ascii=False, indent=4)
+
 
 commands = {
     "display": (display,
@@ -119,4 +156,7 @@ commands = {
     "find-shift": (find_shift,
                    "Find shifts from cluster file",
                    "cluster.json shifts.json"),
+    "find-shift-to-selected": (find_shift_to_selected,
+                   "Find shifts from cluster file, but only to selected image",
+                   "cluster.json shifts.json <basic_image>"),
 }

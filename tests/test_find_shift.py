@@ -12,11 +12,12 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import numpy as np
 from scipy.spatial.transform import Rotation
 
 from vstarstack.library.movement.sphere import Movement
-import vstarstack.library.movement.find_shift
+
+from vstarstack.library.movement.find_shift import build_movements
+from vstarstack.library.movement.find_shift import complete_movements
 
 thr = 1e-6
 
@@ -49,7 +50,7 @@ def test_1():
             }
         },
     ]
-    movements, errors = vstarstack.library.movement.find_shift.build_movements(Movement, clusters)
+    movements, errors = build_movements(Movement, clusters, None)
     assert len(errors) == 0
     assert "image1" in movements
     assert "image2" in movements
@@ -94,12 +95,12 @@ def test_2():
             }
         },
     ]
-    movements, errors = vstarstack.library.movement.find_shift.build_movements(Movement, clusters)
+    movements, errors = build_movements(Movement, clusters, None)
     assert len(errors) == 0
     assert "image1" in movements
     assert "image2" in movements
     assert "image3" in movements
-    
+
     mov = movements["image1"]["image2"]
     compare_movements(mov.rot, Rotation.from_rotvec((0, 0, -0.1)))
     mov = movements["image2"]["image1"]
@@ -149,13 +150,13 @@ def test_3():
             }
         },
     ]
-    movements, errors = vstarstack.library.movement.find_shift.build_movements(Movement, clusters)
+    movements, errors = build_movements(Movement, clusters, None)
     assert len(errors) == 0
     assert "image1" in movements
     assert "image2" in movements
     assert "image3" in movements
     assert "image4" in movements
-    
+
     movements["image1"].pop("image1")
     movements["image1"].pop("image3")
     movements["image1"].pop("image4")
@@ -173,7 +174,7 @@ def test_3():
     movements["image4"].pop("image3")
     movements["image4"].pop("image4")
 
-    movements = vstarstack.library.movement.find_shift.complete_movements(Movement, movements, True)
+    movements = complete_movements(Movement, movements, True)
     identity = Movement.identity()
     
     for name1 in movements:
@@ -224,7 +225,7 @@ def test_4():
             }
         },
     ]
-    movements, errors = vstarstack.library.movement.find_shift.build_movements(Movement, clusters)
+    movements, errors = build_movements(Movement, clusters, None)
     assert len(errors) == 0
     assert "image1" in movements
     assert "image2" in movements
@@ -251,7 +252,7 @@ def test_4():
     movements["image4"].pop("image3")
     movements["image4"].pop("image4")
 
-    movements = vstarstack.library.movement.find_shift.complete_movements(Movement, movements, True)
+    movements = complete_movements(Movement, movements, True)
 
     compare_movements(orig14.rot, movements["image1"]["image4"].rot)
     compare_movements(orig41.rot, movements["image4"]["image1"].rot)
