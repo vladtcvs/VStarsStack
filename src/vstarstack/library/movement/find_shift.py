@@ -86,8 +86,10 @@ def complete_movements(movement : Movement, movements : dict, compose : bool):
                 created.append((name, name, movement.identity()))
 
         # create inversed movements
-        for name1 in movements:
-            for name2 in movements[name1]:
+        for name1 in list(movements.keys()):
+            for name2 in list(movements[name1].keys()):
+                if name2 not in movements:
+                    movements[name2] = {}
                 if name1 not in movements[name2]:
                     inversed = movements[name1][name2].inverse()
                     created.append((name2, name1, inversed))
