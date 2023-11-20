@@ -15,8 +15,9 @@
 import math
 import json
 
-import vstarstack.library.movement.find_shift
 import vstarstack.library.movement.select_shift
+
+from vstarstack.library.movement.find_shift import build_movements
 
 from vstarstack.library.movement.sphere import Movement
 
@@ -46,7 +47,7 @@ def test_cluster_movements_1():
         }
     ]
 
-    movements, errors = vstarstack.library.movement.find_shift.build_movements(Movement, clusters)
+    movements, errors = build_movements(Movement, clusters, None)
     assert len(errors) == 0
     movement = movements["frame1"]["frame2"]
     ser = movement.serialize()
@@ -77,7 +78,7 @@ def test_cluster_movements_2():
         }
     ]
 
-    movements, errors = vstarstack.library.movement.find_shift.build_movements(Movement, clusters)
+    movements, errors = build_movements(Movement, clusters, None)
     assert len(errors) == 0
     movement = movements["frame2"]["frame1"]
     ser = movement.serialize()
@@ -111,7 +112,7 @@ def test_cluster_movements_3():
         }
     ]
 
-    movements, errors = vstarstack.library.movement.find_shift.build_movements(Movement, clusters)
+    movements, errors = build_movements(Movement, clusters, None)
     assert len(errors) == 0
     movement = movements["frame2"]["frame1"]
     ser = movement.serialize()
@@ -153,7 +154,7 @@ def test_cluster_movements_4():
         }
     ]
 
-    movements, errors = vstarstack.library.movement.find_shift.build_movements(Movement, clusters)
+    movements, errors = build_movements(Movement, clusters, None)
     assert len(errors) == 0
     basic = vstarstack.library.movement.select_shift.select_base_image(movements)
     assert basic == "frame1"

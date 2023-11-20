@@ -25,7 +25,7 @@ def find_movement(movement, star_pairs):
             movements.append(mov)
     return movement.average(movements, 80)
 
-def build_movements(movement : Movement, clusters : list):
+def build_movements(movement : Movement, clusters : list, basic_image : str | None):
     """Build movements between different images"""
     names = []
     for cluster in clusters:
@@ -36,7 +36,11 @@ def build_movements(movement : Movement, clusters : list):
     movements = {}
     errors = []
 
-    for name1 in names:
+    used_names = names
+    if basic_image is not None:
+        used_names = [basic_image]
+
+    for name1 in used_names:
         movements[name1] = {}
         for name2 in names:
             if name1 == name2:
@@ -57,11 +61,12 @@ def build_movements(movement : Movement, clusters : list):
             if len(stars) >= 2:
                 try:
                     movements[name1][name2] = find_movement(movement, stars)
-                except:
+                except Exception as _:
                     errors.append((name1, name2))
     return movements, errors
 
 def complete_movements(movement : Movement, movements : dict, compose : bool):
+    """Calculate movements for absent pair of images"""
     names = set()
     for name1 in movements:
         names.add(name1)
@@ -81,8 +86,10 @@ def complete_movements(movement : Movement, movements : dict, compose : bool):
                 created.append((name, name, movement.identity()))
 
         # create inversed movements
-        for name1 in movements:
-            for name2 in movements[name1]:
+        for name1 in list(movements.keys()):
+            for name2 in list(movements[name1].keys()):
+                if name2 not in movements:
+                    movements[name2] = {}
                 if name1 not in movements[name2]:
                     inversed = movements[name1][name2].inverse()
                     created.append((name2, name1, inversed))
