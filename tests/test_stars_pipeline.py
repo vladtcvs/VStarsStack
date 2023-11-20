@@ -77,7 +77,7 @@ def test_1():
     for sc in star_clusters:
         assert len(sc) == 4
 
-    shifts, errors = vstarstack.library.movement.find_shift.build_movements(Movement, star_clusters)
+    shifts, errors = vstarstack.library.movement.find_shift.build_movements(Movement, star_clusters, None)
     assert len(errors) == 0
     assert len(shifts) == 4
     for name in shifts:
