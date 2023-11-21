@@ -10,3 +10,4 @@ scipy
 imutils
 matplotlib
 pytest
+pytz

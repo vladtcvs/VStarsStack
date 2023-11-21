@@ -76,5 +76,6 @@ setup (name = 'vstarstack',
               'scipy >= 1.11.0',
               'imutils',
               'matplotlib',
+              'pytz',
        ]
 )
