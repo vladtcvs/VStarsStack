@@ -30,6 +30,7 @@ import vstarstack.tool.image_processing.fixes
 import vstarstack.tool.fine_shift.fine_shift
 import vstarstack.tool.objects.objects
 import vstarstack.tool.calibration
+import vstarstack.tool.analyzers.analyzers
 
 commands = {
     "readimage": (vstarstack.tool.readimage.commands,
@@ -61,4 +62,6 @@ commands = {
               "remove temporary files"),
     "fine-shift": (vstarstack.tool.fine_shift.fine_shift.commands,
                    "fine shift images"),
+    "analyzers": (vstarstack.tool.analyzers.analyzers.commands,
+                   "analyze images"),
 }
