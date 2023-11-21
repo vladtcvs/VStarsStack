@@ -32,7 +32,11 @@ def get_param(name, type_of_var, default):
             continue
         if items[0] != name:
             continue
-        return type_of_var(items[1])
+        if type_of_var == bool:
+            value = (items[1] == "True")
+        else:
+            value = type_of_var(items[1])
+        return value
     return default
 
 

@@ -31,6 +31,7 @@ import vstarstack.tool.cfg
 SLOPE = vstarstack.tool.cfg.get_param("multiply", float, 1)
 FLOOR = vstarstack.tool.cfg.get_param("clip_floor", bool, False)
 HDR = vstarstack.tool.cfg.get_param("hdr", bool, False)
+NORM = vstarstack.tool.cfg.get_param("normalize", bool, True)
 
 def compress_clip(img, slope):
     img = img / np.amax(img)
@@ -116,6 +117,7 @@ def _show(_project, argv):
             subplot = axs
         img = frames[channel].astype(np.float64)
         img = compress(img, SLOPE)
+
         if len(img.shape) == 2:
             subplot.imshow(img, cmap="gray", vmin=0, vmax=1.0)
             subplot.set_title(channel)
@@ -149,7 +151,10 @@ def _convert(_project, argv):
     if ext == "fits":
         vstarstack.tool.common.check_dir_exists(path)
         for channel, img in frames.items():
-            img = (img*SLOPE).astype('uint64')
+            if NORM:
+                img = (img*SLOPE).astype('uint64')
+            else:
+                img = img.astype('uint64')
             hdu = fits.PrimaryHDU(img)
             hdul = fits.HDUList([hdu])
             fname = os.path.join(path, f"{name}_{channel}.{ext}")
@@ -161,9 +166,12 @@ def _convert(_project, argv):
             else:
                 fname = out
 
-            img =  convert_to_uint16(img, SLOPE, 0.005)
-            if ext not in ["tiff", "png"]:
-                img = (img / 256).astype('uint8')
+            if NORM:
+                img =  convert_to_uint16(img, SLOPE, 0.005)
+                if ext not in ["tiff", "png"]:
+                    img = (img / 256).astype('uint8')
+            else:
+                img = img.astype('uint16')
             vstarstack.tool.common.check_dir_exists(fname)
             imageio.imwrite(fname, img)
 
