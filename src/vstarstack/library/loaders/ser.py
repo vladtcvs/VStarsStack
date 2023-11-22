@@ -183,10 +183,9 @@ def readser(fname: str):
                 print(f"\tprocessing frame {frame_id}")
                 utc = _serread(trailer_f, 8, True)
                 utc = _convert_timestamp(utc)
-                frame_tags = dict(tags)
-                frame_tags["DATE-OBS"] = utc
                 frame = _read_to_npy(file, bpp, le16bit, shape)
-                dataframe = vstarstack.library.data.DataFrame(params, frame_tags)
+                params["UTC"] = utc
+                dataframe = vstarstack.library.data.DataFrame(params, tags)
                 exptime = 1
                 weight = np.ones(frame.data.shape[0:2])*exptime
                 index = 0
