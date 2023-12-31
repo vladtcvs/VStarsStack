@@ -30,6 +30,7 @@ _module_configuration = {
         "relative_shifts": (str, "shifts.json"),
         "absolute_shifts": (str, "shift.json"),
         "shift_errors" : (str, "errors.csv"),
+        "photometry" : (str, "photometry", {"directory" : True}),
     },
     "telescope": {
         "camera": {

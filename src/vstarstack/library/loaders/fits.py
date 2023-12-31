@@ -40,6 +40,8 @@ def readfits(filename: str):
             "w": shape[2],
             "h": shape[1],
         }
+        if "DATE-OBS" in tags:
+            params["UTC"] = tags["DATE-OBS"]
 
         dataframe = vstarstack.library.data.DataFrame(params, tags)
 

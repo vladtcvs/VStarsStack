@@ -12,10 +12,13 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import os
+import csv
 import numpy as np
 import cv2
-import csv
 
+
+from vstarstack.tool.cfg import Project
 from vstarstack.library.data import DataFrame
 import vstarstack.tool.common
 
@@ -36,23 +39,44 @@ def summ_pixels_df(image : DataFrame, x : int, y : int, radius : int) -> dict:
             vals[cn] = summ_pixels(channel, x, y, radius)
     return vals
 
-def _measure_pixels(_project, argv):
-    path = argv[0]
-    x = int(argv[1])
-    y = int(argv[2])
-    r = int(argv[3])
-    output = argv[4]
+def _measure_pixels(project : Project, argv : list[str], method : str):
+    options = {}
+    manual_params = False
+
+    if method == "summ":
+        if len(argv) >= 5:
+            manual_params = True
+
+    if manual_params:
+        path = argv[0]
+        output = argv[1]
+        x = int(argv[2])
+        y = int(argv[3])
+        if method == "summ":
+            options["radius"] = int(argv[4])
+    else:
+        path = project.config.paths.aligned
+        output_dir = project.config.paths.photometry
+        x = int(argv[0])
+        y = int(argv[1])
+        if method == "summ":
+            options["radius"] = int(argv[2])
+        output = os.path.join(output_dir, f"photometry_{x}_{y}.csv")
+
+    vstarstack.tool.common.check_dir_exists(output)
     results = {}
     channels = set()
     timestamps = {}
     for name, fname in vstarstack.tool.common.listfiles(path, ".zip"):
         df = DataFrame.load(fname)
-        if 'DATE-OBS' in df.tags:
-            ts = df.tags['DATE-OBS']
+        if 'UTC' in df.params:
+            ts = df.params['UTC']
         else:
             ts = '-'
         timestamps[name] = ts
-        results[name] = summ_pixels_df(df, x, y, r)
+        if method == "summ":
+            results[name] = summ_pixels_df(df, x, y, **options)
+
         for cn in results[name]:
             channels.add(cn)
     channels = list(channels)
@@ -70,5 +94,7 @@ def _measure_pixels(_project, argv):
             writer.writerow([name, timestamp] + values)
 
 commands = {
-    "summ": (_measure_pixels, "calculate sum of pixels of star", "path/ x y radius output.csv"),
+    "summ": (lambda project, argv: _measure_pixels(project, argv, "summ"),
+             "calculate sum of pixels of star",
+             "path/ output.csv x y radius"),
 }
