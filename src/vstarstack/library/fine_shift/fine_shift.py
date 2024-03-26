@@ -100,10 +100,14 @@ class ClusterAlignerBuilder:
 
 class CorrelationAlignedBuilder:
 
-    def __init__(self, radius : int, maximal_shift : float, subpixels : int):
+    def __init__(self, radius : int,
+                 maximal_shift : float,
+                 correlation_grid : int,
+                 subpixels : int):
         self.r = radius
         self.shift = maximal_shift
         self.subp = subpixels
+        self.grid = correlation_grid
 
     def find_alignment(self,
                        image : np.ndarray,
@@ -125,7 +129,7 @@ class CorrelationAlignedBuilder:
             pre_wave_ref = None
         wave = ImageWave.find_shift_array(image, pre_wave,
                                           image_ref, pre_wave_ref,
-                                          self.r, self.shift, self.subp)
+                                          self.r, self.shift, self.grid, self.subp)
         align = wave.data()
         print(f"smooth = {smooth}")
         if smooth is not None:

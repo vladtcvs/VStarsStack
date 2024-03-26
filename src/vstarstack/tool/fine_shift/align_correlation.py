@@ -31,9 +31,10 @@ ncpu = vstarstack.tool.cfg.nthreads
 def create_aligner(project: vstarstack.tool.cfg.Project,
                    radius: int,
                    max_shift: int,
+                   correlation_grid,
                    subpixels: int):
     """Create aligner for the project"""
-    aligner_factory = CorrelationAlignedBuilder(radius, max_shift, subpixels)
+    aligner_factory = CorrelationAlignedBuilder(radius, max_shift, correlation_grid, subpixels)
     return aligner_factory
 
 def align_file(project : vstarstack.tool.cfg.Project,
@@ -53,9 +54,10 @@ def align_file(project : vstarstack.tool.cfg.Project,
 
     df = vstarstack.library.data.DataFrame.load(input_image_f)
     df_ref = vstarstack.library.data.DataFrame.load(input_image_ref_f)
-    shift = project.config.fine_shift.max_shift
-    print(f"Maximal shift: {shift}")
-    aligner_factory = create_aligner(project, 7, shift, 2)
+    max_shift = project.config.fine_shift.max_shift
+    grid = project.config.fine_shift.correlation_grid
+    print(f"Maximal shift: {max_shift}")
+    aligner_factory = create_aligner(project, 7, max_shift, grid, 2)
 
     light, _ = vstarstack.library.common.df_to_light(df)
     light_ref, _ = vstarstack.library.common.df_to_light(df_ref)

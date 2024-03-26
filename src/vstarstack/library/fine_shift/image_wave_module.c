@@ -413,6 +413,7 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
     int subpixels;
     int radius;
     double maximal_shift;
+    int grid;
 
     PyObject *pre_shift, *ref_pre_shift;
     PyArrayObject *image;
@@ -420,11 +421,11 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
 
     static char *kwlist[] = {"image", "image_shift",
                              "reference_image", "reference_image_shift",
-                             "radius", "maximal_shift", "subpixels", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOidi", kwlist,
+                             "radius", "maximal_shift", "grid", "subpixels", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOidii", kwlist,
                                      &image, &pre_shift,
                                      &ref_image, &ref_pre_shift,
-                                     &radius, &maximal_shift, &subpixels))
+                                     &radius, &maximal_shift, &grid, &subpixels))
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments");
         Py_INCREF(Py_None);
