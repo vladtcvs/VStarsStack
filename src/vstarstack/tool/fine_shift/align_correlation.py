@@ -53,9 +53,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
 
     df = vstarstack.library.data.DataFrame.load(input_image_f)
     df_ref = vstarstack.library.data.DataFrame.load(input_image_ref_f)
-    w = df.params["w"]
-    h = df.params["h"]
-    shift = max(int(max(w,h)/20), 3)
+    shift = project.config.fine_shift.max_shift
     print(f"Maximal shift: {shift}")
     aligner_factory = create_aligner(project, 7, shift, 2)
 
