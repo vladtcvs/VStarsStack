@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <math.h>
+
 /**
  * \brief Image data
  */
@@ -23,3 +25,35 @@ struct ImageGrid
     int h;         ///< Image height
     double *array; ///< Image pixel data
 };
+
+/**
+ * \brief Set pixel at pos (x,y)
+ * \param image Image array
+ * \param x x
+ * \param y y
+ * \param val pixel value
+ */
+static inline void image_grid_set_pixel(struct ImageGrid *image,
+                                        int x, int y, double val)
+{
+    image->array[y * image->w + x] = val;
+}
+
+/**
+ * \brief Get pixel at pos (x,y)
+ * \param image Image array
+ * \param x x
+ * \param y y
+ * \return pixel value
+ */
+double image_grid_get_pixel(const struct ImageGrid *image,
+                            double x, double y);
+
+/**
+ * \brief Global correlation between 2 images
+ * \param image1 first image
+ * \param image2 second image
+ * \return correlator
+ */
+double image_grid_correlation(const struct ImageGrid *image1,
+                              const struct ImageGrid *image2);

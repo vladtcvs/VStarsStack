@@ -18,27 +18,6 @@
 
 #define SQR(x) ((x)*(x))
 
-static void image_wave_set_pixel(struct ImageWaveGrid *image, int x, int y, double val)
-{
-    image_wave_set_array(image, x, y, 0, val);
-}
-
-static double image_wave_get_pixel(const struct ImageWaveGrid *image, double x, double y)
-{
-    if (x < 0)
-        return NAN;
-    if (y < 0)
-        return NAN;
-    if (x >= image->w)
-        return NAN;
-    if (y >= image->h)
-        return NAN;
-
-    double dx = x - floor(x);
-    double dy = y - floor(y);
-    return image_wave_interpolation(image, floor(x), floor(y), 0, dx, dy);
-}
-
 
 /* Apply shift array to image */
 void image_wave_shift_image(struct ImageWave *self,

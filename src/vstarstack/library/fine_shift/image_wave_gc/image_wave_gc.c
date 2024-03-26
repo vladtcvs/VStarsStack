@@ -113,8 +113,8 @@ static double image_wave_gc_stretch_penalty(const struct ImageWaveGrid *array)
  * \param dh step of gradient descent
  */
 static void image_wave_gc_move_along_gradient(struct ImageWaveGrid *array,
-                                    const struct ImageWaveGrid *gradient,
-                                    double dh)
+                                              const struct ImageWaveGrid *gradient,
+                                              double dh)
 {
     int xi, yi;
     double maxv = 0;

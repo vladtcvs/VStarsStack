@@ -17,17 +17,7 @@
 #include <math.h>
 #include <stddef.h>
 
-#include "image_grid.h"
-
-/**
- * \brief Global correlation between 2 images
- * \param image1 first image
- * \param image2 second image
- * \return correlator
- */
-double image_wave_gc_correlation(const struct ImageGrid *image1,
-                                 const struct ImageGrid *image2);
-
+#include "../image_grid/image_grid.h"
 
 /**
  * \brief Image movements grid
@@ -47,7 +37,7 @@ struct ImageWaveGrid
  * \param grid_w Grid width
  * \param grid_h Grid height
  * \param image_w Image width
- * \param image_height
+ * \param image_height Image height
  */
 int image_wave_grid_init(struct ImageWaveGrid *grid,
                          int grid_w, int grid_h,
@@ -79,6 +69,7 @@ void image_wave_grid_constant_shift(struct ImageWaveGrid *grid, double dx, doubl
  * \param x x
  * \param y y
  * \param axis axis (0 for 'y' axis, 1 for 'x' axis)
+ * \param val value
  */
 static inline void image_wave_set_array(struct ImageWaveGrid *grid,
                                         int x, int y, int axis,
@@ -93,6 +84,7 @@ static inline void image_wave_set_array(struct ImageWaveGrid *grid,
  * \param x x
  * \param y y
  * \param axis axis (0 for 'y' axis, 1 for 'x' axis)
+ * \return value
  */
 static inline double image_wave_get_array(const struct ImageWaveGrid *grid,
                                           int x, int y, int axis)
