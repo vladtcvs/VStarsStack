@@ -50,10 +50,9 @@ def find_keypoints(files, num_splits, detector_type, param):
             else:
                 raise Exception(f"Invalid detector {detector_type}")
 
-            descs = describe_keypoints(image, keypoints)
-
+            ds = describe_keypoints(image, keypoints)
             points[channel][name] = keypoints
-            descs[channel][name] = descs
+            descs[channel][name] = ds
 
     return points, descs, fnames
 

@@ -122,6 +122,8 @@ def describe_keypoints(image : np.ndarray,
     """
     orb = cv2.ORB_create()
     kps = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in keypoints]
+    image = np.clip(image / np.amax(image), 0, 1)*255
+    image = image.astype('uint8')
     _, descs = orb.compute(image, kps)
     return descs
 
