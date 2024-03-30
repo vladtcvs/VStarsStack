@@ -57,3 +57,14 @@ double image_grid_get_pixel(const struct ImageGrid *image,
  */
 double image_grid_correlation(const struct ImageGrid *image1,
                               const struct ImageGrid *image2);
+
+/**
+ * \brief Get area of image 'img' and place it to 'area'
+ * \param img Source image
+ * \param x x position of area center
+ * \param y y position of area center
+ * \param area allocated ImageGrid for area content with specified w and h
+ */
+void image_grid_get_area(const struct ImageGrid *img,
+                         double x, double y,
+                         struct ImageGrid *area);

@@ -13,7 +13,8 @@
  */
 
 #include <math.h>
-#include "image_grid.h"
+#include <image_grid.h>
+#include <interpolation.h>
 
 #define SQR(x) ((x)*(x))
 
@@ -96,31 +97,15 @@ static double image_grid_interpolation(const struct ImageGrid *array,
                                        int xi, int yi,
                                        double dx, double dy)
 {
-    double x_m1m1 = image_grid_get_array(array, xi-1, yi-1);
-    double x_0m1 = image_grid_get_array(array, xi, yi-1);
-    double x_1m1 = image_grid_get_array(array, xi+1, yi-1);
-    double x_2m1 = image_grid_get_array(array, xi+2, yi-1);
-
-    double x_m10 = image_grid_get_array(array, xi-1, yi);
     double x_00 = image_grid_get_array(array, xi, yi);
     double x_10 = image_grid_get_array(array, xi+1, yi);
-    double x_20 = image_grid_get_array(array, xi+2, yi);
-
-    double x_m11 = image_grid_get_array(array, xi-1, yi+1);
+ 
     double x_01 = image_grid_get_array(array, xi, yi+1);
     double x_11 = image_grid_get_array(array, xi+1, yi+1);
-    double x_21 = image_grid_get_array(array, xi+2, yi+1);
-    
-    double x_m12 = image_grid_get_array(array, xi-1, yi+2);
-    double x_02 = image_grid_get_array(array, xi, yi+2);
-    double x_12 = image_grid_get_array(array, xi+1, yi+2);
-    double x_22 = image_grid_get_array(array, xi+2, yi+2);
-
-    return interpolation_2d(x_m1m1, x_0m1, x_1m1, x_2m1,
-                            x_m10,  x_00,  x_10,  x_20,
-                            x_m11,  x_01,  x_11,  x_21,
-                            x_m12,  x_02,  x_12,  x_22,
-                            dx, dy);
+ 
+    return interpolation_2d_linear(x_00,  x_10,
+                                   x_01,  x_11,
+                                   dx, dy);
 }
 
 double image_grid_get_pixel(const struct ImageGrid *image, double x, double y)
@@ -140,4 +125,21 @@ double image_grid_get_pixel(const struct ImageGrid *image, double x, double y)
         return image_grid_interpolation(image, floor(x), floor(y), dx, dy);
     else
         return image_grid_get_array(image, (int)x, (int)y);
+}
+
+void image_grid_get_area(const struct ImageGrid *img,
+                         double x, double y,
+                         struct ImageGrid *area)
+{
+    int i, j;
+    int w = area->w;
+    int h = area->h;
+    for (i = 0; i < h; i++)
+    for (j = 0; j < w; j++)
+    {
+        double px = x + j - (w-1)/2.0;
+        double py = y + i - (h-1)/2.0;
+        double val = image_grid_get_pixel(img, px, py);
+        image_grid_set_pixel(area, j, i, val);
+    }
 }

@@ -14,24 +14,22 @@
 
 #pragma once
 
-#include "../image_wave/image_wave.h"
+#include <image_deform.h>
 
 /**
  * \brief Helper structure to find movement grid by global correlation
  */
 struct ImageWaveGlobalCorrelator
 {
-    struct ImageWaveGrid array;          ///< Movements grid
-    struct ImageWaveGrid array_p;        ///< Helper field for gradient calculation
-    struct ImageWaveGrid array_m;        ///< Helper field for gradient calculation
-    struct ImageWaveGrid array_gradient; ///< Global correlation gradient
+    struct ImageDeform array;          ///< Movements grid
+    struct ImageDeform array_p;        ///< Helper field for gradient calculation
+    struct ImageDeform array_m;        ///< Helper field for gradient calculation
+    struct ImageDeform array_gradient; ///< Global correlation gradient
 
     int image_w;                ///< Image width 
     int image_h;                ///< Image height
     int grid_w;                 ///< Grid width
     int grid_h;                 ///< Grid height
-    double sx;                  ///< Stretch between grid and image
-    double sy;                  ///< Stretch between grid and image
     double stretch_penalty_k;   ///< Penalty for image stretching
 };
 
@@ -54,3 +52,17 @@ int  image_wave_gc_init(struct ImageWaveGlobalCorrelator *self,
  * \param self structure pointer
  */
 void image_wave_gc_finalize(struct ImageWaveGlobalCorrelator *self);
+
+/**
+ * \brief Find global correlator
+ * \param self global correlator
+ * \param dh step of descent
+ * \param Nsteps amount of steps
+ * \param targets target points
+ * \param expected_after_shift source point positions
+ * \param N num of points
+ */
+void image_wave_gc_find(struct ImageWaveGlobalCorrelator *self, double dh, size_t Nsteps,
+                        double *targets,
+                        double *expected_after_shift,
+                        size_t N);

@@ -9,11 +9,11 @@ double image_grid_interpolation_2d(double fm1m1, double f0m1, double f1m1, doubl
                         double x, double y);
 
 void image_wave_shift_interpolate(const struct ImageWave *self,
-                                  const struct ImageWaveGrid *array,
+                                  const struct ImageDeform *array,
                                   double x, double y,
                                   double *rx, double *ry);
 
-double image_wave_interpolation(const struct ImageWaveGrid *array,
+double image_wave_interpolation(const struct ImageDeform *array,
                                 int xi, int yi, int axis, 
                                 double dx, double dy);
 
@@ -21,9 +21,9 @@ double image_wave_interpolation(const struct ImageWaveGrid *array,
 /* Image related methods */
 
 void image_wave_shift_image(struct ImageWave *self,
-                            const struct ImageWaveGrid *array,
-                            const struct ImageWaveGrid *input_image,
-                            struct ImageWaveGrid *output_image,
+                            const struct ImageDeform *array,
+                            const struct ImageDeform *input_image,
+                            struct ImageDeform *output_image,
                             int subpixels);
 
 
@@ -32,9 +32,9 @@ void image_wave_approximate_by_targets(struct ImageWave *self, double dh, size_t
                                        double *targets, double *points, size_t N);
 
 void image_wave_approximate_with_images(struct ImageWave *self,
-                                        const struct ImageWaveGrid *img,
+                                        const struct ImageDeform *img,
                                         const struct ImageWave *pre_align,
-                                        const struct ImageWaveGrid *ref_img,
+                                        const struct ImageDeform *ref_img,
                                         const struct ImageWave *ref_pre_align,
                                         int radius,
                                         double maximal_shift,

@@ -4,7 +4,10 @@
         "random": "c",
         "math.h": "c",
         "unistd.h": "c",
-        "sphere.h": "c"
+        "sphere.h": "c",
+        "image_grid.h": "c",
+        "image_deform.h": "c",
+        "image_deform_gc.h": "c"
     },
     "editor.tabSize": 4,
     "editor.insertSpaces": true,

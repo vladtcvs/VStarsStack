@@ -19,27 +19,11 @@
 
 #include "image_wave.h"
 
-static void get_area(const struct ImageWaveGrid *img,
-                     double x, double y,
-                     struct ImageWaveGrid *area)
-{
-    int i, j;
-    int w = area->w;
-    int h = area->h;
-    for (i = 0; i < h; i++)
-    for (j = 0; j < w; j++)
-    {
-        double px = x + j - (w-1)/2.0;
-        double py = y + i - (h-1)/2.0;
-        double val = image_wave_get_array(img, px, py, 0);
-        image_wave_set_array(area, j, i, 0, val);
-    }
-}
 
 void image_wave_approximate_with_images(struct ImageWave *self,
-                                        const struct ImageWaveGrid *img,
+                                        const struct ImageDeform *img,
                                         const struct ImageWave *pre_align,
-                                        const struct ImageWaveGrid *ref_img,
+                                        const struct ImageDeform *ref_img,
                                         const struct ImageWave *ref_pre_align,
                                         int radius,
                                         double maximal_shift,
@@ -48,13 +32,13 @@ void image_wave_approximate_with_images(struct ImageWave *self,
     int i, j;
     int w = radius*2+1;
     int h = w;
-    struct ImageWaveGrid area = {
+    struct ImageDeform area = {
         .naxis = 1,
         .w = w,
         .h = w,
         .array = calloc(w*h, sizeof(double)),
     };
-    struct ImageWaveGrid ref_area = {
+    struct ImageDeform ref_area = {
         .naxis = 1,
         .w = w,
         .h = w,
