@@ -30,7 +30,7 @@ int image_grid_init(struct ImageGrid *image, int width, int height)
     return 0;
 }
 
-void image_grid_finaize(struct ImageGrid *image)
+void image_grid_finalize(struct ImageGrid *image)
 {
     if (image->array != NULL)
     {

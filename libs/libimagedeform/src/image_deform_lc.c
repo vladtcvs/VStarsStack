@@ -70,7 +70,7 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
     int w = radius*2+1;
     int h = w;
     struct ImageGrid area;
-    struct ImageDeform ref_area;
+    struct ImageGrid ref_area;
 
     image_grid_init(&area, w, h);
     image_grid_init(&ref_area, w, h);
@@ -107,10 +107,10 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
                 best_y = iter_y;
             }
         }
-        image_deform_set_array(&self->array, j, i, 0, best_y - y);
-        image_deform_set_array(&self->array, j, i, 1, best_x - x);
+        image_deform_set_shift(&self->array, j, i, 0, best_y - y);
+        image_deform_set_shift(&self->array, j, i, 1, best_x - x);
     }
 
-    image_deform_finalize(&area);
-    image_deform_finalize(&ref_area);
+    image_grid_finalize(&area);
+    image_grid_finalize(&ref_area);
 }

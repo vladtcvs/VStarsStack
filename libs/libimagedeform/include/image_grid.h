@@ -49,7 +49,7 @@ int image_grid_init(struct ImageGrid *image, int width, int height);
  * 
  * @param image image structure
  */
-void image_grid_finaize(struct ImageGrid *image);
+void image_grid_finalize(struct ImageGrid *image);
 
 /**
  * \brief Set pixel at pos (x,y)
