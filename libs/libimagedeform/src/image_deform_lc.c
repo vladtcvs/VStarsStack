@@ -37,6 +37,25 @@ void image_deform_lc_finalize(struct ImageDeformLocalCorrelator *self)
     image_deform_finalize(&self->array);
 }
 
+static void image_deform_lc_get_area(const struct ImageGrid *img,
+                                     const struct ImageDeform *pre_align,
+                                     struct ImageGrid *area,
+                                     double x, double y)
+{
+    double pre_aligned_x;
+    double pre_aligned_y;
+    if (pre_align == NULL)
+    {
+        pre_aligned_x = x;
+        pre_aligned_y = y;
+    }
+    else
+    {
+        image_deform_apply_point(pre_align, x, y, &pre_aligned_x, &pre_aligned_y);
+    }
+
+    image_grid_get_area(img, pre_aligned_x, pre_aligned_y, area);
+}
 
 void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
                           const struct ImageGrid *img,
@@ -59,62 +78,37 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
     for (i = 0; i < self->grid_h; i++)
     for (j = 0; j < self->grid_w; j++)
     {
+        // Find how we should modify img to fit to ref_img
         int x = j * self->pixels;
         int y = i * self->pixels;
 
-        double best_orig_x, best_orig_y;
-        if (pre_align == NULL)
-        {
-            best_orig_x = x;
-            best_orig_y = y;
-        }
-        else
-        {
-            image_deform_apply_point(pre_align, x, y, &best_orig_x, &best_orig_y);
-        }
+        // Init with no shift
+        double best_x = x, best_y = y;
+        image_deform_lc_get_area(img, pre_align, &area, x, y);
+        image_deform_lc_get_area(ref_img, ref_pre_align, &ref_area, x, y);
+        double best_corr = image_grid_correlation(&area, &ref_area);
 
-        image_grid_get_area(img, best_orig_x, best_orig_y, &area);
-
-        double orig_y, orig_x;
-        if (ref_pre_align == NULL)
+        // Find shift where best correlation between area in img and ref_img
+        double iter_x, iter_y;
+        for (iter_y = y - maximal_shift; iter_y <= y + maximal_shift; iter_y += 1.0 / subpixels)
+        for (iter_x = x - maximal_shift; iter_x <= x + maximal_shift; iter_x += 1.0 / subpixels)
         {
-            orig_i = i;
-            orig_j = j;
-        }
-        else
-        {
-            image_wave_shift_interpolate(ref_pre_align, &ref_pre_align->array,
-                                         j, i, &orig_j, &orig_i);
-        }
-        get_area(ref_img, orig_j, orig_i, &ref_area);
-        double best_corr = image_wave_correlation(&area, &ref_area);
-
-        double x, y;
-        for (y = i - maximal_shift; y <= i + maximal_shift; y += 1.0 / subpixels)
-        for (x = j - maximal_shift; x <= j + maximal_shift; x += 1.0 / subpixels)
-        {
-            double orig_x, orig_y;
-            if (pre_align == NULL)
+            if (iter_x == x && iter_y == y)
             {
-                orig_x = x;
-                orig_y = y;
+                // We have already calculated it
+                continue;
             }
-            else
-            {
-                image_wave_shift_interpolate(pre_align, &pre_align->array,
-                                             x, y, &orig_x, &orig_y);
-            }
-            get_area(img, orig_x, orig_y, &area);
-            double corr = image_wave_correlation(&area, &ref_area);
+            image_deform_lc_get_area(img, pre_align, &area, iter_x, iter_y);
+            double corr = image_grid_correlation(&area, &ref_area);
             if (corr > best_corr)
             {
                 best_corr = corr;
-                best_orig_x = orig_x;
-                best_orig_y = orig_y;
+                best_x = iter_x;
+                best_y = iter_y;
             }
         }
-        image_wave_set_array(&self->array, j, i, 0, best_orig_x - j);
-        image_wave_set_array(&self->array, j, i, 1, best_orig_y - i);
+        image_deform_set_array(&self->array, j, i, 0, best_y - y);
+        image_deform_set_array(&self->array, j, i, 1, best_x - x);
     }
 
     image_deform_finalize(&area);
