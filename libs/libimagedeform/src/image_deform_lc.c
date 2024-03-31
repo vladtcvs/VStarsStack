@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Vladislav Tsendrovskii
+ * Copyright (c) 2022-2024 Vladislav Tsendrovskii
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,54 +15,67 @@
 #include <memory.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
+
+#include <image_deform_lc.h>
+
+int  image_deform_lc_init(struct ImageDeformLocalCorrelator *self,
+                          int image_w, int image_h, int pixels)
+{
+    self->image_w = image_w;
+    self->image_h = image_h;
+    self->pixels = pixels;
+    self->grid_w = ceil((double)image_w/pixels);
+    self->grid_h = ceil((double)image_h/pixels);
+    if (image_deform_init(&self->array, self->grid_w, self->grid_h, self->image_w, self->image_h) != 0)
+        return -1;
+    return 0;
+}
+
+void image_deform_lc_finalize(struct ImageDeformLocalCorrelator *self)
+{
+    image_deform_finalize(&self->array);
+}
 
 
-#include "image_wave.h"
-
-
-void image_wave_approximate_with_images(struct ImageWave *self,
-                                        const struct ImageDeform *img,
-                                        const struct ImageWave *pre_align,
-                                        const struct ImageDeform *ref_img,
-                                        const struct ImageWave *ref_pre_align,
-                                        int radius,
-                                        double maximal_shift,
-                                        int subpixels)
+void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
+                          const struct ImageGrid *img,
+                          const struct ImageDeform *pre_align,
+                          const struct ImageGrid *ref_img,
+                          const struct ImageDeform *ref_pre_align,
+                          int radius,
+                          double maximal_shift,
+                          int subpixels)
 {
     int i, j;
     int w = radius*2+1;
     int h = w;
-    struct ImageDeform area = {
-        .naxis = 1,
-        .w = w,
-        .h = w,
-        .array = calloc(w*h, sizeof(double)),
-    };
-    struct ImageDeform ref_area = {
-        .naxis = 1,
-        .w = w,
-        .h = w,
-        .array = calloc(w*h, sizeof(double)),
-    };
+    struct ImageGrid area;
+    struct ImageDeform ref_area;
 
-    for (i = 0; i < self->Nh; i++)
-    for (j = 0; j < self->Nw; j++)
+    image_grid_init(&area, w, h);
+    image_grid_init(&ref_area, w, h);
+
+    for (i = 0; i < self->grid_h; i++)
+    for (j = 0; j < self->grid_w; j++)
     {
+        int x = j * self->pixels;
+        int y = i * self->pixels;
+
         double best_orig_x, best_orig_y;
         if (pre_align == NULL)
         {
-            best_orig_x = j;
-            best_orig_y = i;
+            best_orig_x = x;
+            best_orig_y = y;
         }
         else
         {
-            image_wave_shift_interpolate(pre_align, &pre_align->array,
-                                         j, i, &best_orig_x, &best_orig_y);
+            image_deform_apply_point(pre_align, x, y, &best_orig_x, &best_orig_y);
         }
 
-        get_area(img, best_orig_x, best_orig_y, &area);
+        image_grid_get_area(img, best_orig_x, best_orig_y, &area);
 
-        double orig_i, orig_j;
+        double orig_y, orig_x;
         if (ref_pre_align == NULL)
         {
             orig_i = i;
@@ -104,6 +117,6 @@ void image_wave_approximate_with_images(struct ImageWave *self,
         image_wave_set_array(&self->array, j, i, 1, best_orig_y - i);
     }
 
-    free(ref_area.array);
-    free(area.array);
+    image_deform_finalize(&area);
+    image_deform_finalize(&ref_area);
 }

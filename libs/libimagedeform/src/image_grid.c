@@ -12,64 +12,31 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
 #include <math.h>
+
 #include <image_grid.h>
 #include <interpolation.h>
 
 #define SQR(x) ((x)*(x))
 
-double image_grid_correlation(const struct ImageGrid *image1,
-                              const struct ImageGrid *image2)
+int image_grid_init(struct ImageGrid *image, int width, int height)
 {
-    double top = 0;
-    double bottom1 = 0, bottom2 = 0;
+    image->h = height;
+    image->w = width;
+    image->array = calloc(width*height, sizeof(double));
+    if (image->array == NULL)
+        return -1;
+    return 0;
+}
 
-    if (image1->w != image2->w || image1->h != image2->h)
+void image_grid_finaize(struct ImageGrid *image)
+{
+    if (image->array != NULL)
     {
-        printf("Error!\n");
-        return NAN;
+        free(image->array);
+        image->array = NULL;
     }
-
-    double average1 = 0, average2 = 0;
-    int nump = 0;
-
-    int i, j;
-    for (i = 0; i < image1->h; i++)
-    for (j = 0; j < image1->w; j++)
-    {
-        double pixel1 = image_wave_get_array(image1, j, i, 0);
-        double pixel2 = image_wave_get_array(image2, j, i, 0);
-        if (isnan(pixel1) || isnan(pixel2))
-            continue;
-
-        average1 += pixel1;
-        average2 += pixel2;
-        nump++;
-    }
-
-    average1 /= nump;
-    average2 /= nump;
-
-    for (i = 0; i < image1->h; i++)
-    for (j = 0; j < image1->w; j++)
-    {
-        double pixel1 = image_wave_get_array(image1, j, i, 0);
-        double pixel2 = image_wave_get_array(image2, j, i, 0);
-        if (isnan(pixel1) || isnan(pixel2))
-            continue;
-
-        top += (pixel1 - average1)*(pixel2 - average2);
-        bottom1 += SQR(pixel1 - average1);
-        bottom2 += SQR(pixel2 - average2);
-    }
-
-    if (bottom1 == 0 || bottom2 == 0)
-    {
-        if (bottom1 == 0 && bottom2 == 0)
-            return 1;
-        return 0;
-    }
-    return top / sqrt(bottom1 * bottom2);
 }
 
 /**
@@ -93,6 +60,16 @@ static double image_grid_get_array(const struct ImageGrid *grid,
     return grid->array[y * grid->w + x];
 }
 
+/**
+ * @brief Interpolate image pixels
+ * 
+ * @param array image
+ * @param xi x of pixel
+ * @param yi y of pixel
+ * @param dx x position between pixels
+ * @param dy y position between pixels
+ * @return interpolated value
+ */
 static double image_grid_interpolation(const struct ImageGrid *array,
                                        int xi, int yi,
                                        double dx, double dy)
@@ -121,7 +98,7 @@ double image_grid_get_pixel(const struct ImageGrid *image, double x, double y)
 
     double dx = x - floor(x);
     double dy = y - floor(y);
-    if (dx != 0 || dy != 0)
+    if (dx > 1e-3 || dy > 1e-3)
         return image_grid_interpolation(image, floor(x), floor(y), dx, dy);
     else
         return image_grid_get_array(image, (int)x, (int)y);
@@ -142,4 +119,58 @@ void image_grid_get_area(const struct ImageGrid *img,
         double val = image_grid_get_pixel(img, px, py);
         image_grid_set_pixel(area, j, i, val);
     }
+}
+
+double image_grid_correlation(const struct ImageGrid *image1,
+                              const struct ImageGrid *image2)
+{
+    double top = 0;
+    double bottom1 = 0, bottom2 = 0;
+
+    if (image1->w != image2->w || image1->h != image2->h)
+        return NAN;
+
+    double average1 = 0, average2 = 0;
+    int nump = 0;
+
+    int i, j;
+    for (i = 0; i < image1->h; i++)
+    for (j = 0; j < image1->w; j++)
+    {
+        double pixel1 = image_grid_get_array(image1, j, i);
+        double pixel2 = image_grid_get_array(image2, j, i);
+        if (isnan(pixel1) || isnan(pixel2))
+            continue;
+
+        average1 += pixel1;
+        average2 += pixel2;
+        nump++;
+    }
+
+    if (nump == 0)
+        return NAN;
+
+    average1 /= nump;
+    average2 /= nump;
+
+    for (i = 0; i < image1->h; i++)
+    for (j = 0; j < image1->w; j++)
+    {
+        double pixel1 = image_grid_get_array(image1, j, i);
+        double pixel2 = image_grid_get_array(image2, j, i);
+        if (isnan(pixel1) || isnan(pixel2))
+            continue;
+
+        top += (pixel1 - average1)*(pixel2 - average2);
+        bottom1 += SQR(pixel1 - average1);
+        bottom2 += SQR(pixel2 - average2);
+    }
+
+    if (bottom1 == 0 || bottom2 == 0)
+    {
+        if (bottom1 == 0 && bottom2 == 0)
+            return 1;
+        return 0;
+    }
+    return top / sqrt(bottom1 * bottom2);
 }

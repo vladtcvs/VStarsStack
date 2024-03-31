@@ -19,7 +19,7 @@
 /**
  * \brief Helper structure to find movement grid by global correlation
  */
-struct ImageWaveGlobalCorrelator
+struct ImageDeformGlobalCorrelator
 {
     struct ImageDeform array;          ///< Movements grid
     struct ImageDeform array_p;        ///< Helper field for gradient calculation
@@ -34,24 +34,25 @@ struct ImageWaveGlobalCorrelator
 };
 
 /**
- * \brief Init ImageWaveGlobalCorrelator
+ * \brief Init ImageDeformGlobalCorrelator
  * \param self structure pointer
  * \param grid_w grid width
  * \param grid_h grid height
  * \param image_w image width
  * \param image_h image heigth
  * \param spk penalty for image stretching
+ * \return 0 for success, -1 for fail
  */
-int  image_wave_gc_init(struct ImageWaveGlobalCorrelator *self,
-                        int grid_w, int grid_h,
-                        int image_w, int image_h,
-                        double spk);
+int  image_deform_gc_init(struct ImageDeformGlobalCorrelator *self,
+                          int grid_w, int grid_h,
+                          int image_w, int image_h,
+                          double spk);
 
 /**
- * \brief Deallocate content of ImageWaveGlobalCorrelation
+ * \brief Deallocate content of ImageDeformGlobalCorrelation
  * \param self structure pointer
  */
-void image_wave_gc_finalize(struct ImageWaveGlobalCorrelator *self);
+void image_deform_gc_finalize(struct ImageDeformGlobalCorrelator *self);
 
 /**
  * \brief Find global correlator
@@ -61,8 +62,9 @@ void image_wave_gc_finalize(struct ImageWaveGlobalCorrelator *self);
  * \param targets target points
  * \param expected_after_shift source point positions
  * \param N num of points
+ * \return ImageDeform structure
  */
-void image_wave_gc_find(struct ImageWaveGlobalCorrelator *self, double dh, size_t Nsteps,
-                        double *targets,
-                        double *expected_after_shift,
-                        size_t N);
+struct ImageDeform* image_deform_gc_find(struct ImageDeformGlobalCorrelator *self, double dh, size_t Nsteps,
+                                         double *targets,
+                                         double *expected_after_shift,
+                                         size_t N);

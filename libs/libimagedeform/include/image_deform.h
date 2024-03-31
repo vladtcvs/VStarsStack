@@ -14,8 +14,8 @@
 
 #pragma once
 
+#include <stdio.h>
 #include <math.h>
-#include <stddef.h>
 
 #include <image_grid.h>
 
@@ -30,7 +30,7 @@ struct ImageDeform
     int grid_h;     ///< Grid height
     double sx;      ///< Stretch between grid and image
     double sy;      ///< Stretch between grid and image
-    double *array;  ///< Movement data, grid_h x grid_w x 2
+    double *array;  ///< Movement data, grid_h * grid_w * (dy, dx)
 };
 
 /**
@@ -55,7 +55,7 @@ void image_deform_finalize(struct ImageDeform *grid);
  * \brief Print image deform to stdout
  * \param grid image deform object
  */
-void image_deform_print(const struct ImageDeform *grid);
+void image_deform_print(const struct ImageDeform *grid, FILE *out);
 
 /**
  * \brief Set image deform with constant (dx, dy)
@@ -66,52 +66,43 @@ void image_deform_print(const struct ImageDeform *grid);
 void image_deform_constant_shift(struct ImageDeform *grid, double dx, double dy);
 
 /**
- * \brief Set shift at pos (x,y) for axis 1 or 2
- * \param grid Shift array
- * \param x x
- * \param y y
- * \param axis axis (0 for 'y' axis, 1 for 'x' axis)
+ * \brief Set shift at pos (x,y) for axis y (axis=0) or x (axis=1)
+ * \param deform Shift array
+ * \param x x in grid coordinates
+ * \param y y in grid coordinates
+ * \param axis axis. 0 for 'y' axis, 1 for 'x' axis
  * \param val value
  */
-static inline void image_deform_set_array(struct ImageDeform *grid,
-                                         int x, int y, int axis,
-                                         double val)
+static inline void image_deform_set_shift(struct ImageDeform *deform,
+                                          int x, int y, int axis,
+                                          double val)
 {
-    grid->array[y * grid->grid_w * 2 + x*2 + axis] = val;
+    if (x < 0 || y < 0 || x >= deform->grid_w || x >= deform->grid_w || axis < 0 || axis > 1)
+        return;
+    deform->array[y * deform->grid_w * 2 + x*2 + axis] = val;
 }
 
 /**
- * \brief Get shift at pos (x,y) for axis 1 or 2
- * \param grid Shift array
- * \param x x
- * \param y y
- * \param axis axis (0 for 'y' axis, 1 for 'x' axis)
- * \return value
+ * @brief Get shift at pos (x,y)
+ *
+ * @param deform Shift array
+ * @param x x in grid coordinates
+ * @param y y in grid coordinates
+ * @param axis axis. 0 for 'y' axis, 1 for 'x' axis
+ * @return shift by specified axis
  */
-static inline double image_deform_get_array(const struct ImageDeform *grid,
-                                            int x, int y, int axis)
-{
-    if (x >= grid->grid_w)
-        return NAN;
-    if (x < 0)
-        return NAN;
-    if (y >= grid->grid_h)
-        return NAN;
-    if (y < 0)
-        return NAN;
-    return grid->array[y * grid->grid_w * 2 + x*2 + axis];
-}
+double image_deform_get_shift(const struct ImageDeform *deform,
+                              double x, double y, int axis);
 
 /**
  * \brief Apply image deformation to point
  * \param[in] deform deformation structure
- * \param[in] x target x position
- * \param[in] y target y position
- * \param[in] subpixels upscaling coefficient of image during deform
- * \param[out] srcx source x position
- * \param[out] srcy soutce y position
+ * \param[in] x x in image coordinates
+ * \param[in] y y in image coordinates
+ * \param[out] srcx source x positionx in image coordinates
+ * \param[out] srcy soutce y positionx in image coordinates
  */
-void image_deform_apply_point(struct ImageDeform *deform,
+void image_deform_apply_point(const struct ImageDeform *deform,
                               double x, double y,
                               double *srcx, double *srcy);
 
@@ -122,7 +113,7 @@ void image_deform_apply_point(struct ImageDeform *deform,
  * \param output_image resulting image
  * \param subpixels upscaling coefficient of image during deform
  */
-void image_deform_apply_image(struct ImageDeform *deform,
+void image_deform_apply_image(const struct ImageDeform *deform,
                               const struct ImageGrid *input_image,
                               struct ImageGrid *output_image,
                               int subpixels);

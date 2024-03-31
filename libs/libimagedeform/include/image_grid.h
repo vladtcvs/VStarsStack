@@ -14,17 +14,42 @@
 
 #pragma once
 
-#include <math.h>
-
 /**
  * \brief Image data
  */
 struct ImageGrid
 {
-    int w;         ///< Image width
-    int h;         ///< Image height
-    double *array; ///< Image pixel data
+    /**
+     * @brief Image width
+     */
+    int w;
+    /**
+     * @brief Image height
+     */
+    int h;
+    /**
+     * @brief image data
+     * Pixelds data, ordered line by line. Each line has length = image width. 
+     */
+    double *array;
 };
+
+/**
+ * @brief Init image grid with 0
+ * 
+ * @param image image structure
+ * @param width image width
+ * @param height image height
+ * @return int 0 for OK
+ */
+int image_grid_init(struct ImageGrid *image, int width, int height);
+
+/**
+ * @brief Free image grid
+ * 
+ * @param image image structure
+ */
+void image_grid_finaize(struct ImageGrid *image);
 
 /**
  * \brief Set pixel at pos (x,y)
@@ -36,6 +61,8 @@ struct ImageGrid
 static inline void image_grid_set_pixel(struct ImageGrid *image,
                                         int x, int y, double val)
 {
+    if (x < 0 || y < 0 || x >= image->w || y >= image->h)
+        return;
     image->array[y * image->w + x] = val;
 }
 

@@ -13,6 +13,7 @@
  */
 
 #include <image_deform_gc.h>
+#include <string.h>
 
 /**
  * \brief square of 'x'
@@ -21,7 +22,7 @@
  */
 #define SQR(x) ((x)*(x))
 
-int image_wave_gc_init(struct ImageWaveGlobalCorrelator *self,
+int image_deform_gc_init(struct ImageDeformGlobalCorrelator *self,
                        int grid_w, int grid_h,
                        int image_w, int image_h,
                        double spk)
@@ -29,7 +30,7 @@ int image_wave_gc_init(struct ImageWaveGlobalCorrelator *self,
     if (grid_h <= 0 || grid_w <= 0 || image_w < 2 || image_h < 2)
         return -1;
 
-    memset(self, 0, sizeof(struct ImageWaveGlobalCorrelator));
+    memset(self, 0, sizeof(struct ImageDeformGlobalCorrelator));
 
     self->image_w = image_w;
     self->image_h = image_h;
@@ -37,24 +38,21 @@ int image_wave_gc_init(struct ImageWaveGlobalCorrelator *self,
     self->grid_h  = grid_h;
     self->stretch_penalty_k = spk;
 
-    self->sx = ((double)self->grid_w) / (self->image_w - 1);
-    self->sy = ((double)self->grid_h) / (self->image_h - 1);
-
     if (image_deform_init(&self->array, self->grid_w, self->grid_h,
-                             self->image_w, self->image_h))
+                          self->image_w, self->image_h))
     {
         return -1;
     }
 
     if (image_deform_init(&self->array_p, self->grid_w, self->grid_h,
-                             self->image_w, self->image_h))
+                          self->image_w, self->image_h))
     {
         image_deform_finalize(&self->array);
         return -1;
     }
 
     if (image_deform_init(&self->array_m, self->grid_w, self->grid_h,
-                             self->image_w, self->image_h))
+                          self->image_w, self->image_h))
     {
         image_deform_finalize(&self->array_p);
         image_deform_finalize(&self->array);
@@ -62,7 +60,7 @@ int image_wave_gc_init(struct ImageWaveGlobalCorrelator *self,
     }
 
     if (image_deform_init(&self->array_gradient, self->grid_w, self->grid_h,
-                             self->image_w, self->image_h))
+                          self->image_w, self->image_h))
     {
         image_deform_finalize(&self->array_m);
         image_deform_finalize(&self->array_p);
@@ -73,7 +71,7 @@ int image_wave_gc_init(struct ImageWaveGlobalCorrelator *self,
     return 0;
 }
 
-void image_wave_gc_finalize(struct ImageWaveGlobalCorrelator *self)
+void image_deform_gc_finalize(struct ImageDeformGlobalCorrelator *self)
 {
     image_deform_finalize(&self->array_gradient);
     image_deform_finalize(&self->array_m);
@@ -86,20 +84,22 @@ void image_wave_gc_finalize(struct ImageWaveGlobalCorrelator *self)
  * \param array shift array
  * \return stretch penalty
  */
-static double image_wave_gc_stretch_penalty(const struct ImageDeform *array)
+static double image_deform_gc_stretch_penalty(const struct ImageDeform *array)
 {
     double penalty_stretch = 0;
     int xi, yi;
-    for (yi = 0; yi < array->grid_w - 1; yi++)
+    int h = array->grid_h;
+    int w = array->grid_w;
+    for (yi = 0; yi < h - 1; yi++)
     {
-        for (xi = 0; xi < array->grid_h - 1; xi++)
+        for (xi = 0; xi < w - 1; xi++)
         {
-            double current_x = image_deform_get_array(array, xi, yi, 0);
-            double current_y = image_deform_get_array(array, xi, yi, 1);
-            double right_x = image_deform_get_array(array, xi+1, yi, 0);
-            double right_y = image_deform_get_array(array, xi+1, yi, 1);
-            double bottom_x = image_deform_get_array(array, xi, yi+1, 0);
-            double bottom_y = image_deform_get_array(array, xi, yi+1, 1);
+            double current_y = image_deform_get_shift(array, xi, yi, 0);
+            double current_x = image_deform_get_shift(array, xi, yi, 1);
+            double right_y = image_deform_get_shift(array, xi+1, yi, 0);
+            double right_x = image_deform_get_shift(array, xi+1, yi, 1);
+            double bottom_y = image_deform_get_shift(array, xi, yi+1, 0);
+            double bottom_x = image_deform_get_shift(array, xi, yi+1, 1);
 
             penalty_stretch += SQR(current_x-right_x);
             penalty_stretch += SQR(current_y-right_y);
@@ -108,7 +108,7 @@ static double image_wave_gc_stretch_penalty(const struct ImageDeform *array)
             penalty_stretch += SQR(current_y-bottom_y);
         }
     }
-    return penalty_stretch;
+    return penalty_stretch / ((w-1)*(h-1));
 }
 
 /**
@@ -122,36 +122,35 @@ static double image_wave_gc_stretch_penalty(const struct ImageDeform *array)
  *
  * \param self structure with parameters
  * \param grid used image shift array
- * \param expected_after_shift list of target point positions, array Nx2
- * \param points list of original point positions, array Nx2
+ * \param expected_source list of expected source point positions, array N*(y,x)
+ * \param points list of point positions, array N*(y,x)
  * \param N count of points
  * \return penalty
  */
-static double image_wave_gc_penalty(struct ImageWaveGlobalCorrelator *self,
-                                    struct ImageDeform *grid,
-                                    double *expected_after_shift,
-                                    double *points,
-                                    size_t N)
+static double image_deform_gc_penalty(struct ImageDeformGlobalCorrelator *self,
+                                      struct ImageDeform *grid,
+                                      double *expected_source,
+                                      double *points,
+                                      size_t N)
 {
     size_t i;
     double penalty_points = 0;
     for (i = 0; i < N; i++)
     {
-        double x = points[i*2];
-        double y = points[i*2+1];
-        double expected_x = expected_after_shift[i*2];
-        double expected_y = expected_after_shift[i*2+1];
+        double y = points[i*2];
+        double x = points[i*2+1];
+        double expected_y = expected_source[i*2];
+        double expected_x = expected_source[i*2+1];
 
         double shifted_x;
         double shifted_y;
-        image_wave_apply(self, grid, x, y, &shifted_x, &shifted_y);
+        image_deform_apply_point(grid, x, y, &shifted_x, &shifted_y);
         penalty_points += SQR(expected_x-shifted_x) + SQR(expected_y-shifted_y);
     }
 
-    double penalty_stretch = image_wave_gc_stretch_penalty(grid);
-    return penalty_points * 1 + penalty_stretch * self->stretch_penalty_k;
+    double penalty_stretch = image_deform_gc_stretch_penalty(grid);
+    return penalty_points / N + penalty_stretch * self->stretch_penalty_k;
 }
-
 
 /**
  * \brief Add gradient*dh to array to perform gradient descent
@@ -159,9 +158,9 @@ static double image_wave_gc_penalty(struct ImageWaveGlobalCorrelator *self,
  * \param gradient gradient of global correlator by varying array
  * \param dh step of gradient descent
  */
-static void image_wave_gc_move_along_gradient(struct ImageDeform *array,
-                                              const struct ImageDeform *gradient,
-                                              double dh)
+static void image_deform_gc_move_along_gradient(struct ImageDeform *array,
+                                                const struct ImageDeform *gradient,
+                                                double dh)
 {
     int xi, yi;
     double maxv = 0;
@@ -169,8 +168,8 @@ static void image_wave_gc_move_along_gradient(struct ImageDeform *array,
     {
         for (xi = 0; xi < array->grid_w; xi++)
         {
-            double gradient_x = image_deform_get_array(gradient, xi, yi, 0);
-            double gradient_y = image_deform_get_array(gradient, xi, yi, 1);
+            double gradient_x = image_deform_get_shift(gradient, xi, yi, 0);
+            double gradient_y = image_deform_get_shift(gradient, xi, yi, 1);
 
             if (fabs(gradient_x) > maxv)
                 maxv = fabs(gradient_x);
@@ -186,14 +185,14 @@ static void image_wave_gc_move_along_gradient(struct ImageDeform *array,
     {
         for (xi = 0; xi < array->grid_w; xi++)
         {
-            double gradient_x = image_deform_get_array(gradient, xi, yi, 0);
-            double gradient_y = image_deform_get_array(gradient, xi, yi, 1);
-        
-            double arr_x = image_deform_get_array(array, xi, yi, 0);
-            double arr_y = image_deform_get_array(array, xi, yi, 1);
+            double gradient_x = image_deform_get_shift(gradient, xi, yi, 0);
+            double gradient_y = image_deform_get_shift(gradient, xi, yi, 1);
 
-            image_wave_set_array(array, xi, yi, 0, arr_x - gradient_x * dh / maxv);
-            image_wave_set_array(array, xi, yi, 1, arr_y - gradient_y * dh / maxv);
+            double arr_x = image_deform_get_shift(array, xi, yi, 0);
+            double arr_y = image_deform_get_shift(array, xi, yi, 1);
+
+            image_deform_set_shift(array, xi, yi, 0, arr_x - gradient_x * dh / maxv);
+            image_deform_set_shift(array, xi, yi, 1, arr_y - gradient_y * dh / maxv);
         }
     }
 }
@@ -209,22 +208,22 @@ static void image_wave_gc_move_along_gradient(struct ImageDeform *array,
  * \param N num of points
  * \return partial derivative
  */
-static double image_wave_gc_partial(struct ImageWaveGlobalCorrelator *self,
-                                    int yi, int xi, int axis,
-                                    double *targets,
-                                    double *expected_after_shift,
-                                    size_t N)
+static double image_deform_gc_partial(struct ImageDeformGlobalCorrelator *self,
+                                      int yi, int xi, int axis,
+                                      double *targets,
+                                      double *expected_after_shift,
+                                      size_t N)
 {
     double h = 1e-9;
     memcpy(self->array_p.array, self->array.array, self->grid_w*self->grid_h*2*sizeof(double));
     memcpy(self->array_m.array, self->array.array, self->grid_w*self->grid_h*2*sizeof(double));
 
-    double val = image_deform_get_array(&self->array, xi, yi, axis);
-    image_wave_set_array(&self->array_p, xi, yi, axis, val+h);
-    image_wave_set_array(&self->array_m, xi, yi, axis, val-h);
+    double val = image_deform_get_shift(&self->array, xi, yi, axis);
+    image_deform_set_shift(&self->array_p, xi, yi, axis, val+h);
+    image_deform_set_shift(&self->array_m, xi, yi, axis, val-h);
 
-    double penlaty_p = penalty(self, &self->array_p, targets, expected_after_shift, N);
-    double penlaty_m = penalty(self, &self->array_m, targets, expected_after_shift, N);
+    double penlaty_p = image_deform_gc_penalty(self, &self->array_p, targets, expected_after_shift, N);
+    double penlaty_m = image_deform_gc_penalty(self, &self->array_m, targets, expected_after_shift, N);
     return (penlaty_p-penlaty_m)/(2*h);
 }
 
@@ -236,35 +235,35 @@ static double image_wave_gc_partial(struct ImageWaveGlobalCorrelator *self,
  * \param expected_after_shift source point positions
  * \param N num of points
  */
-static void image_wave_gc_descent_step(struct ImageWaveGlobalCorrelator *self,
-                                       double dh,
-                                       double *targets,
-                                       double *expected_after_shift,
-                                       size_t N)
+static void image_deform_gc_descent_step(struct ImageDeformGlobalCorrelator *self,
+                                         double dh,
+                                         double *targets,
+                                         double *expected_after_shift,
+                                         size_t N)
 {
     int yi, xi;
     for (yi = 0; yi < self->grid_h; yi++)
     {
         for (xi = 0; xi < self->grid_w; xi++)
         {
-            double gradient_x = image_wave_gc_partial(self, yi, xi, 0, targets, expected_after_shift, N);
-            double gradient_y = image_wave_gc_partial(self, yi, xi, 1, targets, expected_after_shift, N);
-            image_wave_set_array(&self->array_gradient, xi, yi, 0, gradient_x);
-            image_wave_set_array(&self->array_gradient, xi, yi, 1, gradient_y);
+            double gradient_x = image_deform_gc_partial(self, yi, xi, 1, targets, expected_after_shift, N);
+            double gradient_y = image_deform_gc_partial(self, yi, xi, 0, targets, expected_after_shift, N);
+            image_deform_set_shift(&self->array_gradient, xi, yi, 0, gradient_y);
+            image_deform_set_shift(&self->array_gradient, xi, yi, 1, gradient_x);
         }
     }
 
-    image_wave_gc_move_along_gradient(self, &self->array_gradient, dh);
+    image_deform_gc_move_along_gradient(&self->array, &self->array_gradient, dh);
 }
 
-void image_wave_gc_find(struct ImageWaveGlobalCorrelator *self, double dh, size_t Nsteps,
-                        double *targets,
-                        double *expected_after_shift,
-                        size_t N)
+struct ImageDeform* image_deform_gc_find(struct ImageDeformGlobalCorrelator *self, double dh, size_t Nsteps,
+                                         double *targets,
+                                         double *expected_after_shift,
+                                         size_t N)
 {
     size_t i;
     if (N == 0)
-        return;
+        return NULL;
 
     double dx = 0, dy = 0;
     for (i = 0; i < N; i++)
@@ -275,8 +274,9 @@ void image_wave_gc_find(struct ImageWaveGlobalCorrelator *self, double dh, size_
     dx /= N;
     dy /= N;
 
-    image_wave_grid_constant_shift(&self->array, dx, dy);    
+    image_deform_constant_shift(&self->array, dx, dy);    
 
     for (i = 0; i < Nsteps; i++)
-        image_wave_gc_descent_step(self, dh, targets, expected_after_shift, N);
+        image_deform_gc_descent_step(self, dh, targets, expected_after_shift, N);
+    return &self->array;
 }
