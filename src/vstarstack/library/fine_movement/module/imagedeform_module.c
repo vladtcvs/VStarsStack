@@ -83,6 +83,5 @@ PyInit_module(void)
         return NULL;
     }
 
-    import_array();
     return m;
 }
