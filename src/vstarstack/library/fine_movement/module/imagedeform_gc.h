@@ -9,3 +9,5 @@ struct ImageDeformGlobalCorrelatorObject
     PyObject_HEAD
     struct ImageDeformGlobalCorrelator correlator;
 };
+
+extern PyTypeObject ImageDeformGC;

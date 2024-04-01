@@ -46,7 +46,9 @@ libimagedeform_sources = [libimagedeform_root + "/src/interpolation.c",
 
 imagedeform_root = "src/vstarstack/library/fine_movement/module"
 imagedeform_sources = [imagedeform_root + "/imagegrid.c",
-                       imagedeform_root + "/imagedeform.c"
+                       imagedeform_root + "/imagedeform.c",
+                       imagedeform_root + "/imagedeform_gc.c",
+                       imagedeform_root + "/imagedeform_lc.c",
                         ]
 
 image_wave = Extension(name="vstarstack.library.fine_shift",

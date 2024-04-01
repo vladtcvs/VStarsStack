@@ -23,456 +23,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <image_grid.h>
-#include <image_deform.h>
-#include <image_deform_gc.h>
-#include <image_deform_lc.h>
-
-
-
-static PyObject *ImageWave_interpolate(PyObject *_self, PyObject *args, PyObject *kwds)
-{
-    double x, y;
-    struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
-    static char *kwlist[] = {"x", "y", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "dd", kwlist,
-                                     &x, &y))
-    {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-    double rx, ry;
-    image_wave_shift_interpolate(&self->wave, &self->wave.array, x, y, &rx, &ry);
-    return Py_BuildValue("(dd)", rx, ry);
-}
-
-static PyObject *ImageWave_approximate_by_targets(PyObject *_self,
-                                                  PyObject *args,
-                                                  PyObject *kwds)
-{
-    size_t i;
-    int Nsteps;
-    double dh;
-    PyObject *targets;
-    PyObject *points;
-    struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
-    static char *kwlist[] = {"targets", "points", "N", "dh", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOid", kwlist,
-                                     &targets, &points, &Nsteps, &dh))
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    if (!PyList_Check(targets))
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - targets MUST be list");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    if (!PyList_Check(points))
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - points MUST be list");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    size_t Ntargets = PyList_Size(targets);
-    size_t Npoints = PyList_Size(points);
-
-    if (Ntargets != Npoints)
-    {
-        PyErr_SetString(PyExc_ValueError,
-            "invalid function arguments - len(points) MUST be equal to len(targets)");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    double *targets_array = calloc(Npoints * 2, sizeof(double));
-    if (!targets_array)
-    {
-        PyErr_SetString(PyExc_MemoryError, "insufficient memory");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    double *points_array = calloc(Npoints * 2, sizeof(double));
-    if (!points_array)
-    {
-        free(targets_array);
-        PyErr_SetString(PyExc_MemoryError, "insufficient memory");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    for (i = 0; i < Npoints; i++)
-    {
-        PyObject *pnt = PyList_GetItem(points, i);
-        PyObject *target = PyList_GetItem(targets, i);
-
-        // TODO: add checks of tuples
-        double pnt_x = PyFloat_AsDouble(PyTuple_GetItem(pnt, 0));
-        double pnt_y = PyFloat_AsDouble(PyTuple_GetItem(pnt, 1));
-        double target_x = PyFloat_AsDouble(PyTuple_GetItem(target, 0));
-        double target_y = PyFloat_AsDouble(PyTuple_GetItem(target, 1));
-
-        points_array[2*i] = pnt_x;
-        points_array[2*i+1] = pnt_y;
-        targets_array[2*i] = target_x;
-        targets_array[2*i+1] = target_y;
-    }
-    image_wave_aux_init(&self->wave);
-    image_wave_approximate_by_targets(&self->wave,
-                                      dh,
-                                      Nsteps,
-                                      targets_array,
-                                      points_array,
-                                      Npoints);
-    free(targets_array);
-    free(points_array);
-    Py_INCREF(Py_True);
-    return Py_True;
-}
-
-
-static PyObject *ImageCorrelation(PyObject *self,
-                             PyObject *args,
-                             PyObject *kwds)
-{
-    PyArrayObject *image1;
-    PyArrayObject *image2;
-
-    static char *kwlist[] = {"image1", "image2", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO", kwlist, &image1, &image2))
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    if (PyArray_TYPE(image1) != NPY_DOUBLE)
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    if (PyArray_TYPE(image2) != NPY_DOUBLE)
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    npy_intp *dims1 = PyArray_SHAPE(image1);
-    struct ImageWaveGrid img1 = {
-        .array = PyArray_DATA(image1),
-        .naxis = 1,
-        .w = dims1[1],
-        .h = dims1[0],
-    };
-
-    npy_intp *dims2 = PyArray_SHAPE(image2);
-    struct ImageWaveGrid img2 = {
-        .array = PyArray_DATA(image2),
-        .naxis = 1,
-        .w = dims2[1],
-        .h = dims2[0],
-    };
-
-    if (img1.w != img2.w || img1.h != img2.h)
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be same shape");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    double correlation = image_wave_correlation(&img1, &img2);
-    return PyFloat_FromDouble(correlation);
-}
-
-static PyObject *ImageWave_apply_shift(PyObject *_self,
-                                       PyObject *args,
-                                       PyObject *kwds)
-{
-    int subpixels;
-    PyArrayObject *image;
-    struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
-    static char *kwlist[] = {"image", "subpixels", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Oi", kwlist,
-                                     &image, &subpixels))
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    if (PyArray_NDIM(image) != 2)
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dim == 2");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    if (PyArray_TYPE(image) != NPY_DOUBLE)
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    npy_intp *dims = PyArray_SHAPE(image);
-    struct ImageWaveGrid img = {
-        .array = PyArray_DATA(image),
-        .naxis = 1,
-        .w = dims[1],
-        .h = dims[0],
-    };
-
-    dims[1] *= subpixels;
-    dims[0] *= subpixels;
-
-    PyArrayObject *output_image = (PyArrayObject *)PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
-    struct ImageWaveGrid out = {
-        .array = PyArray_DATA(output_image),
-        .naxis = 1,
-        .w = dims[1],
-        .h = dims[0],
-    };
-
-    image_wave_shift_image(&self->wave, &self->wave.array, &img, &out, subpixels);
-    return (PyObject *)output_image;
-}
-
-static PyObject *ImageWave_data(PyObject *_self, PyObject *args, PyObject *kwds)
-{
-    struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
-    int xi, yi;
-    PyObject *data = PyList_New(0);
-    for (yi = 0; yi < self->wave.array.h; yi++)
-        for (xi = 0; xi < self->wave.array.w; xi++)
-        {
-            double vx = image_wave_get_array(&self->wave.array, xi, yi, 0);
-            double vy = image_wave_get_array(&self->wave.array, xi, yi, 1);
-
-            PyObject *vxv = PyFloat_FromDouble(vx);
-            PyObject *vyv = PyFloat_FromDouble(vy);
-            PyList_Append(data, vxv);
-            PyList_Append(data, vyv);
-            Py_DECREF(vxv);
-            Py_DECREF(vyv);
-        }
-    PyObject *result = Py_BuildValue("{s:i,s:i,s:i,s:i,s:d,s:O}",
-                                        "Nw", self->wave.array.w,
-                                        "Nh", self->wave.array.h,
-                                        "w", self->wave.w,
-                                        "h", self->wave.h,
-                                        "spk", self->wave.stretch_penalty_k,
-                                        "data", data);
-    Py_DECREF(data);
-    return result;
-}
-
-static PyObject *ImageWave_fromdata(PyObject *_self, PyObject *args, PyObject *kwds);
-
-static PyObject *ImageWave_find_correlation_array(PyObject *_self,
-                                                  PyObject *args,
-                                                  PyObject *kwds);
-
-
-static PyMethodDef ImageWave_methods[] = {
-    {"interpolate", (PyCFunction)ImageWave_interpolate, METH_VARARGS | METH_KEYWORDS,
-     "Apply shift grid to coordinates x,y"},
-
-    {"approximate_by_targets", (PyCFunction)ImageWave_approximate_by_targets, METH_VARARGS | METH_KEYWORDS,
-     "find grid values which gives the best fit for points -> targets"},
-
-    {"find_shift_array", (PyCFunction)ImageWave_find_correlation_array, METH_VARARGS | METH_KEYWORDS | METH_STATIC,
-     "find shift array between images"},
-
-    {"apply_shift", (PyCFunction)ImageWave_apply_shift, METH_VARARGS | METH_KEYWORDS,
-     "apply shift grid to image"},
-
-    {"data", (PyCFunction)ImageWave_data, METH_VARARGS | METH_KEYWORDS,
-     "data of ImageWave"},
-
-    {"from_data", (PyCFunction)ImageWave_fromdata, METH_VARARGS | METH_KEYWORDS | METH_STATIC,
-     "generate ImageWave from data"},
-
-    {NULL} /* Sentinel */
-};
-
-static PyTypeObject ImageDeform = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "vstarstack.library.fine_shift.image_deform.ImageDeform",
-    .tp_doc = PyDoc_STR("ImageWave object"),
-    .tp_basicsize = sizeof(struct ImageWaveObject),
-    .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_new = PyType_GenericNew,
-    .tp_init = ImageDeform_init,
-    .tp_finalize = ImageDeform_finalize,
-    .tp_methods = ImageDeform_methods,
-};
-
-static PyMethodDef methods[] = {
-    {"image_correlation", (PyCFunction)ImageCorrelation, METH_VARARGS | METH_KEYWORDS, "find correlation between images"},
-    {NULL, NULL, 0, NULL},
-};
-
-static PyObject *ImageWave_fromdata(PyObject *_self, PyObject *args, PyObject *kwds)
-{
-    int yi, xi;
-    // _self == NULL
-    PyObject *data;
-    static char *kwlist[] = {"data", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &data))
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    int h = PyFloat_AsDouble(PyDict_GetItemString(data, "h"));
-    int w = PyFloat_AsDouble(PyDict_GetItemString(data, "w"));
-    long Nh  = PyLong_AsLong(PyDict_GetItemString(data, "Nh"));
-    long Nw  = PyLong_AsLong(PyDict_GetItemString(data, "Nw"));
-    double spk  = PyFloat_AsDouble(PyDict_GetItemString(data, "spk"));
-    
-
-    PyObject *argList = Py_BuildValue("iiiid", w, h, Nw, Nh, spk);
-    PyObject *obj = PyObject_CallObject((PyObject *) &ImageWave, argList);
-    Py_DECREF(argList);
-
-    if (obj == NULL)
-    {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    struct ImageWaveObject *object = (struct ImageWaveObject *)obj;
-    PyObject *values = PyDict_GetItemString(data, "data");
-
-    if (PyList_Size(values) != Nw*Nh*2)
-    {
-        Py_DECREF(obj);
-        PyErr_SetString(PyExc_ValueError, "invalid values list len");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    for (yi = 0; yi < Nh; yi++)
-    for (xi = 0; xi < Nw; xi++)
-    {
-        int ind = (yi*Nw+xi)*2;
-        double vx = PyFloat_AsDouble(PyList_GetItem(values, ind));
-        double vy = PyFloat_AsDouble(PyList_GetItem(values, ind+1));
-
-        image_wave_set_array(&object->wave.array, xi, yi, 0, vx);
-        image_wave_set_array(&object->wave.array, xi, yi, 1, vy);
-    }
-    return obj;
-}
-
-static PyObject *ImageWave_find_correlation_array(PyObject *_self,
-                                                  PyObject *args,
-                                                  PyObject *kwds)
-{
-    int subpixels;
-    int radius;
-    double maximal_shift;
-    int grid;
-
-    PyObject *pre_shift, *ref_pre_shift;
-    PyArrayObject *image;
-    PyArrayObject *ref_image;
-
-    static char *kwlist[] = {"image", "image_shift",
-                             "reference_image", "reference_image_shift",
-                             "radius", "maximal_shift", "grid", "subpixels", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOidii", kwlist,
-                                     &image, &pre_shift,
-                                     &ref_image, &ref_pre_shift,
-                                     &radius, &maximal_shift, &grid, &subpixels))
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    if (PyArray_TYPE(image) != NPY_DOUBLE)
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    if (PyArray_TYPE(ref_image) != NPY_DOUBLE)
-    {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    npy_intp *dims = PyArray_SHAPE(image);
-    struct ImageWaveGrid img = {
-        .array = PyArray_DATA(image),
-        .naxis = 1,
-        .w = dims[1],
-        .h = dims[0],
-    };
-
-    npy_intp *ref_dims = PyArray_SHAPE(ref_image);
-    struct ImageWaveGrid ref_img = {
-        .array = PyArray_DATA(ref_image),
-        .naxis = 1,
-        .w = ref_dims[1],
-        .h = ref_dims[0],
-    };
-
-    if (ref_img.w != img.w || ref_img.h != img.h)
-    {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    PyObject *argList = Py_BuildValue("iiiid", img.w, img.h, img.w, img.h, 0);
-    PyObject *obj = PyObject_CallObject((PyObject *) &ImageWave, argList);
-    Py_DECREF(argList);
-
-    if (obj == NULL)
-    {
-        Py_INCREF(Py_None);
-        return Py_None;
-    }
-
-    // TODO: implement filling obj with array of shifts
-    struct ImageWave *pre_align = NULL;
-    struct ImageWave *ref_pre_align = NULL;
-
-    // Py_None is singleton so we can use '!='
-    if (pre_shift != Py_None)
-        pre_align = &(((struct ImageWaveObject *)pre_shift)->wave);
-    if (ref_pre_shift != Py_None)
-        ref_pre_align = &(((struct ImageWaveObject *)ref_pre_shift)->wave);
-
-    struct ImageWave *align = &(((struct ImageWaveObject *)obj)->wave);
-    image_wave_approximate_with_images(align, &img, pre_align,
-                                       &ref_img, ref_pre_align,
-                                       radius, maximal_shift, subpixels);
-
-    return obj;
-}
-
+#include "imagegrid.h"
+#include "imagedeform.h"
+#include "imagedeform_gc.h"
+#include "imagedeform_lc.h"
 
 static PyModuleDef image_deformModule = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "vstarstack.library.fine_shift.image_deform",
-    .m_doc = "Fine shift module - image_deform",
+    .m_name = "vstarstack.library.fine_shift",
+    .m_doc = "Image deform module for fine images matching",
     .m_size = -1,
-    .m_methods = methods,
 };
 
 PyMODINIT_FUNC
@@ -486,10 +46,40 @@ PyInit_image_wave(void)
     if (m == NULL)
         return NULL;
 
-    Py_INCREF(&ImageWave);
+    Py_INCREF(&ImageGrid);
+    if (PyModule_AddObject(m, "ImageGrid", (PyObject *)&ImageGrid) < 0)
+    {
+        Py_DECREF(&ImageGrid);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&ImageDeform);
     if (PyModule_AddObject(m, "ImageDeform", (PyObject *)&ImageDeform) < 0)
     {
+        Py_DECREF(&ImageGrid);
         Py_DECREF(&ImageDeform);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&ImageDeformGC);
+    if (PyModule_AddObject(m, "ImageDeformGC", (PyObject *)&ImageDeformGC) < 0)
+    {
+        Py_DECREF(&ImageGrid);
+        Py_DECREF(&ImageDeform);
+        Py_DECREF(&ImageDeformGC);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&ImageDeformLC);
+    if (PyModule_AddObject(m, "ImageDeformLC", (PyObject *)&ImageDeformLC) < 0)
+    {
+        Py_DECREF(&ImageGrid);
+        Py_DECREF(&ImageDeform);
+        Py_DECREF(&ImageDeformGC);
+        Py_DECREF(&ImageDeformLC);
         Py_DECREF(m);
         return NULL;
     }

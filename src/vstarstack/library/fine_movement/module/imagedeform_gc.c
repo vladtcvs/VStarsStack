@@ -94,7 +94,7 @@ static PyObject* ImageDeformGC_correlate(PyObject *_self, PyObject *args, PyObje
     PyObject *argList = Py_BuildValue("iiii", deform->image_w, deform->image_h,
                                               deform->grid_w, deform->grid_h);
     struct ImageDeformObject *deform_obj =
-        (struct ImageGridObject *)PyObject_CallObject((PyObject *)&ImageDeform, argList);
+        (struct ImageDeformObject *)PyObject_CallObject((PyObject *)&ImageDeform, argList);
     Py_DECREF(argList);
 
     image_deform_set_shifts(&deform_obj->deform, deform->array);
