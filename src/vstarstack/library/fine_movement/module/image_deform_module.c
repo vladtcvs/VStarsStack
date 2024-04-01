@@ -30,7 +30,7 @@
 
 static PyModuleDef image_deformModule = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "vstarstack.library.fine_shift",
+    .m_name = "vstarstack.library.fine_movement",
     .m_doc = "Image deform module for fine images matching",
     .m_size = -1,
 };

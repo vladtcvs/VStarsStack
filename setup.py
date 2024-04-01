@@ -51,7 +51,7 @@ imagedeform_sources = [imagedeform_root + "/imagegrid.c",
                        imagedeform_root + "/imagedeform_lc.c",
                         ]
 
-image_wave = Extension(name="vstarstack.library.fine_shift",
+image_deform = Extension(name="vstarstack.library.fine_shift",
        sources=imagedeform_sources+libimagedeform_sources,
        include_dirs=[np.get_include()]+libimagedeform_headers)
 
@@ -74,7 +74,8 @@ setup (name = 'vstarstack',
        packages=packages,
        ext_modules = [projection,
 #                      movements,
-                      image_wave],
+                      image_deform,
+                    ],
        install_requires = [
               'numpy',
               'astropy',
