@@ -1,3 +1,4 @@
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "imagedeform_lc.h"
 #include "imagedeform.h"
 #include "imagegrid.h"
@@ -99,7 +100,7 @@ static PyMethodDef ImageDeformLC_methods[] = {
 
 PyTypeObject ImageDeformLC = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "vstarstack.library.fine_movement.ImageDeformLC",
+    .tp_name = "vstarstack.library.fine_movement.module.ImageDeformLC",
     .tp_doc = PyDoc_STR("ImageDeform Local Correlator object"),
     .tp_basicsize = sizeof(struct ImageDeformLocalCorrelatorObject),
     .tp_itemsize = 0,

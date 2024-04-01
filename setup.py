@@ -49,9 +49,10 @@ imagedeform_sources = [imagedeform_root + "/imagegrid.c",
                        imagedeform_root + "/imagedeform.c",
                        imagedeform_root + "/imagedeform_gc.c",
                        imagedeform_root + "/imagedeform_lc.c",
+                       imagedeform_root + "/imagedeform_module.c",
                         ]
 
-image_deform = Extension(name="vstarstack.library.fine_shift",
+image_deform = Extension(name="vstarstack.library.fine_movement.module",
        sources=imagedeform_sources+libimagedeform_sources,
        include_dirs=[np.get_include()]+libimagedeform_headers)
 

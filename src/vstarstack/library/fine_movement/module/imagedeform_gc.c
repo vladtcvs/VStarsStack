@@ -109,7 +109,7 @@ static PyMethodDef ImageDeformGC_methods[] = {
 
 PyTypeObject ImageDeformGC = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "vstarstack.library.fine_movement.ImageDeformGC",
+    .tp_name = "vstarstack.library.fine_movement.module.ImageDeformGC",
     .tp_doc = PyDoc_STR("ImageDeform Global Correlator object"),
     .tp_basicsize = sizeof(struct ImageDeformGlobalCorrelatorObject),
     .tp_itemsize = 0,

@@ -15,7 +15,7 @@
 import numpy as np
 import scipy
 
-from vstarstack.library.fine_movement import ImageDeform
+from vstarstack.library.fine_movement.module import ImageDeform
 import vstarstack.library.data
 import vstarstack.library.common
 

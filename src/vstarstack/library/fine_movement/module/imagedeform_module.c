@@ -15,13 +15,6 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <structmember.h>
-#include <numpy/ndarraytypes.h>
-#include <numpy/ndarrayobject.h>
-
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "imagegrid.h"
 #include "imagedeform.h"
@@ -30,16 +23,22 @@
 
 static PyModuleDef image_deformModule = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "vstarstack.library.fine_movement",
+    .m_name = "vstarstack.library.fine_movement.module",
     .m_doc = "Image deform module for fine images matching",
     .m_size = -1,
 };
 
 PyMODINIT_FUNC
-PyInit_image_wave(void)
+PyInit_module(void)
 {
     PyObject *m;
+    if (PyType_Ready(&ImageGrid) < 0)
+        return NULL;
     if (PyType_Ready(&ImageDeform) < 0)
+        return NULL;
+    if (PyType_Ready(&ImageDeformGC) < 0)
+        return NULL;
+    if (PyType_Ready(&ImageDeformLC) < 0)
         return NULL;
 
     m = PyModule_Create(&image_deformModule);

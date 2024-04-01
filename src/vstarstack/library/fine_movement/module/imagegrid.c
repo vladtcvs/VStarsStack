@@ -100,7 +100,7 @@ static PyMethodDef ImageGrid_methods[] = {
 
 PyTypeObject ImageGrid = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "vstarstack.library.fine_movement.ImageGrid",
+    .tp_name = "vstarstack.library.fine_movement.module.ImageGrid",
     .tp_doc = PyDoc_STR("ImageGrid object"),
     .tp_basicsize = sizeof(struct ImageGridObject),
     .tp_itemsize = 0,

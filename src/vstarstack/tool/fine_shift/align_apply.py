@@ -17,7 +17,7 @@ import os
 import json
 import multiprocessing as mp
 
-from vstarstack.library.fine_movement.fine_shift import Aligner
+from vstarstack.library.fine_movement.aligner import Aligner
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 import vstarstack.tool.configuration
