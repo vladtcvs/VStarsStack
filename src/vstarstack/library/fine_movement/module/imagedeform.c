@@ -90,9 +90,9 @@ static PyObject *ImageDeform_content(PyObject *_self,
     return (PyObject *)shift_array;
 }
 
-static PyObject *ImageDeform_apply(PyObject *_self,
-                                   PyObject *args,
-                                   PyObject *kwds)
+static PyObject *ImageDeform_apply_image(PyObject *_self,
+                                         PyObject *args,
+                                         PyObject *kwds)
 {
     struct ImageDeformObject *self = (struct ImageDeformObject *)_self;
     static char *kwlist[] = {"image", "subpixels", NULL};
@@ -121,13 +121,34 @@ static PyObject *ImageDeform_apply(PyObject *_self,
     return (PyObject *)image;
 }
 
+static PyObject *ImageDeform_apply_point(PyObject *_self,
+                                         PyObject *args,
+                                         PyObject *kwds)
+{
+    struct ImageDeformObject *self = (struct ImageDeformObject *)_self;
+    static char *kwlist[] = {"x", "y", NULL};
+    double x, y;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "dd", kwlist, &x, &y))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    double sx, sy;
+    image_deform_apply_point(&self->deform, x, y, &sx, &sy);
+    PyObject *res = Py_BuildValue("dd", sx, sy);
+    return res;
+}
+
 static PyMethodDef ImageDeform_methods[] = {
     {"fill", (PyCFunction)ImageDeform_fill, METH_VARARGS | METH_KEYWORDS,
      "Fill image deform from numpy array"},
     {"content", (PyCFunction)ImageDeform_content, METH_VARARGS | METH_KEYWORDS,
      "Return image deform content as numpy array"},
-    {"apply", (PyCFunction)ImageDeform_apply, METH_VARARGS | METH_KEYWORDS,
+    {"apply", (PyCFunction)ImageDeform_apply_image, METH_VARARGS | METH_KEYWORDS,
      "Apply ImageDeform to ImageGrid"},
+     {"apply", (PyCFunction)ImageDeform_apply_point, METH_VARARGS | METH_KEYWORDS,
+     "Apply ImageDeform to point"},
     {NULL} /* Sentinel */
 };
 
