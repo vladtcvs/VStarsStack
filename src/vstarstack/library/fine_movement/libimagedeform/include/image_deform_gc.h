@@ -65,6 +65,6 @@ void image_deform_gc_finalize(struct ImageDeformGlobalCorrelator *self);
  * \return ImageDeform structure
  */
 struct ImageDeform* image_deform_gc_find(struct ImageDeformGlobalCorrelator *self, double dh, size_t Nsteps,
-                                         double *targets,
-                                         double *expected_after_shift,
+                                         const double *targets,
+                                         const double *expected_after_shift,
                                          size_t N);

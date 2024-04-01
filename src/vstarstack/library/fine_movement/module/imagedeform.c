@@ -155,7 +155,7 @@ static PyMethodDef ImageDeform_methods[] = {
 PyTypeObject ImageDeform = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "vstarstack.library.fine_movement.ImageDeform",
-    .tp_doc = PyDoc_STR("ImageGrid object"),
+    .tp_doc = PyDoc_STR("ImageDeform object"),
     .tp_basicsize = sizeof(struct ImageDeformObject),
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,

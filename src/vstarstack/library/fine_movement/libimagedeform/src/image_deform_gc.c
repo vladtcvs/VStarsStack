@@ -129,8 +129,8 @@ static double image_deform_gc_stretch_penalty(const struct ImageDeform *array)
  */
 static double image_deform_gc_penalty(struct ImageDeformGlobalCorrelator *self,
                                       struct ImageDeform *grid,
-                                      double *expected_source,
-                                      double *points,
+                                      const double *expected_source,
+                                      const double *points,
                                       size_t N)
 {
     size_t i;
@@ -210,8 +210,8 @@ static void image_deform_gc_move_along_gradient(struct ImageDeform *array,
  */
 static double image_deform_gc_partial(struct ImageDeformGlobalCorrelator *self,
                                       int yi, int xi, int axis,
-                                      double *targets,
-                                      double *expected_after_shift,
+                                      const double *targets,
+                                      const double *expected_after_shift,
                                       size_t N)
 {
     double h = 1e-9;
@@ -237,8 +237,8 @@ static double image_deform_gc_partial(struct ImageDeformGlobalCorrelator *self,
  */
 static void image_deform_gc_descent_step(struct ImageDeformGlobalCorrelator *self,
                                          double dh,
-                                         double *targets,
-                                         double *expected_after_shift,
+                                         const double *targets,
+                                         const double *expected_after_shift,
                                          size_t N)
 {
     int yi, xi;
@@ -257,8 +257,8 @@ static void image_deform_gc_descent_step(struct ImageDeformGlobalCorrelator *sel
 }
 
 struct ImageDeform* image_deform_gc_find(struct ImageDeformGlobalCorrelator *self, double dh, size_t Nsteps,
-                                         double *targets,
-                                         double *expected_after_shift,
+                                         const double *targets,
+                                         const double *expected_after_shift,
                                          size_t N)
 {
     size_t i;
