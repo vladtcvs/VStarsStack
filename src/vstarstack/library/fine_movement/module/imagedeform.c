@@ -44,34 +44,34 @@ static PyObject *ImageDeform_fill(PyObject *_self,
                                   PyObject *kwds)
 {
     struct ImageDeformObject *self = (struct ImageDeformObject *)_self;
-    static char *kwlist[] = {"image", NULL};
-    PyArrayObject *image;
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &image))
+    static char *kwlist[] = {"shift_array", NULL};
+    PyArrayObject *shift_array;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &shift_array))
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments");
         Py_INCREF(Py_None);
         return Py_None;
     }
-    if (PyArray_TYPE(image) != NPY_DOUBLE)
+    if (PyArray_TYPE(shift_array) != NPY_DOUBLE)
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
         Py_INCREF(Py_None);
         return Py_None;
     }
-    if (PyArray_NDIM(image) != 3)
+    if (PyArray_NDIM(shift_array) != 3)
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dim == 3");
         Py_INCREF(Py_None);
         return Py_None;
     }
-    npy_intp *dims = PyArray_SHAPE(image);
+    npy_intp *dims = PyArray_SHAPE(shift_array);
     if (dims[0] == self->deform.grid_h || dims[1] == self->deform.grid_w || dims[2] != 2)
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments - image should be 3d array of correct size");
         Py_INCREF(Py_None);
         return Py_None;
     }
-    image_deform_set_shifts(&self->deform, PyArray_DATA(image));
+    image_deform_set_shifts(&self->deform, PyArray_DATA(shift_array));
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -145,9 +145,9 @@ static PyMethodDef ImageDeform_methods[] = {
      "Fill image deform from numpy array"},
     {"content", (PyCFunction)ImageDeform_content, METH_VARARGS | METH_KEYWORDS,
      "Return image deform content as numpy array"},
-    {"apply", (PyCFunction)ImageDeform_apply_image, METH_VARARGS | METH_KEYWORDS,
+    {"apply_image", (PyCFunction)ImageDeform_apply_image, METH_VARARGS | METH_KEYWORDS,
      "Apply ImageDeform to ImageGrid"},
-     {"apply", (PyCFunction)ImageDeform_apply_point, METH_VARARGS | METH_KEYWORDS,
+     {"apply_point", (PyCFunction)ImageDeform_apply_point, METH_VARARGS | METH_KEYWORDS,
      "Apply ImageDeform to point"},
     {NULL} /* Sentinel */
 };

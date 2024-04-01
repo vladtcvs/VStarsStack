@@ -38,7 +38,7 @@ static PyObject* ImageDeformGC_correlate(PyObject *_self, PyObject *args, PyObje
     struct ImageDeformGlobalCorrelatorObject *self =
             (struct ImageDeformGlobalCorrelatorObject *)_self;
     static char *kwlist[] = {"points", "expected_points", "dh", "Nsteps", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOd", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOdi", kwlist,
                                      &points, &expected_points, &dh, &Nsteps))
     {
         Py_INCREF(Py_None);

@@ -12,7 +12,7 @@ static int ImageDeformLC_init(PyObject *_self, PyObject *args, PyObject *kwds)
     struct ImageDeformLocalCorrelatorObject *self =
             (struct ImageDeformLocalCorrelatorObject *)_self;
     static char *kwlist[] = {"image_w", "image_h", "pixels", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiiid", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iid", kwlist,
                                      &image_w, &image_h, &pixels))
         return -1;
 
@@ -74,13 +74,18 @@ static PyObject* ImageDeformLC_correlate(PyObject *_self, PyObject *args, PyObje
 
     struct ImageGridObject* _img = (struct ImageGridObject*)img;
     struct ImageGridObject* _ref_img = (struct ImageGridObject*)ref_img;
-    struct ImageDeformObject *_pre_align = (struct ImageDeformObject *)pre_align;
-    struct ImageDeformObject *_ref_pre_align = (struct ImageDeformObject *)ref_pre_align;
 
-    image_deform_lc_find(&self->correlator, &_img->grid, &_pre_align->deform,
-                                            &_ref_img->grid, &_ref_pre_align->deform,
+    struct ImageDeform *pre_align_img = NULL;
+    struct ImageDeform *pre_align_ref_img = NULL;
+    if (!Py_IsNone(pre_align))
+        pre_align_img = &((struct ImageDeformObject *)pre_align)->deform;
+    if (!Py_IsNone(ref_pre_align))
+        pre_align_ref_img = &((struct ImageDeformObject *)ref_pre_align)->deform;
+
+    image_deform_lc_find(&self->correlator, &_img->grid, pre_align_img,
+                                            &_ref_img->grid, pre_align_ref_img,
                                             radius, maximal_shift, subpixels);
-    
+
     const struct ImageDeform *deform = &self->correlator.array;
     PyObject *argList = Py_BuildValue("iiii", deform->image_w, deform->image_h,
                                               deform->grid_w, deform->grid_h);
