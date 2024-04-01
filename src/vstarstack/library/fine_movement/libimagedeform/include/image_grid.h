@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include <string.h>
+
 /**
  * \brief Image data
  */
@@ -64,6 +66,14 @@ static inline void image_grid_set_pixel(struct ImageGrid *image,
     if (x < 0 || y < 0 || x >= image->w || y >= image->h)
         return;
     image->array[y * image->w + x] = val;
+}
+
+/**
+ * \brief Fill image grid by pixel data
+ */
+static inline void image_grid_fill_pixels(struct ImageGrid *image, const double *data)
+{
+    memcpy(image->array, data, image->h*image->w*sizeof(double));
 }
 
 /**

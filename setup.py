@@ -24,25 +24,34 @@ projection = Extension( name="vstarstack.library.projection.projections",
                             "src/vstarstack/library/projection/projections/lib/equirectangular.c",
                         ])
 
-movements = Extension(  name="vstarstack.library.movement.movements",
-                        sources=[
-                            "src/vstarstack/library/movement/movements/module.c",
-                            "src/vstarstack/library/movement/movements/lib/sphere.c",
-                            "src/vstarstack/library/movement/movements/lib/flat.c",
-                        ],
-                        include_dirs=[
-                            "src/vstarstack/library/projection/projections",
-                            np.get_include(),
-                        ])
+#movements = Extension(  name="vstarstack.library.movement.movements",
+#                        sources=[
+#                            "src/vstarstack/library/movement/movements/module.c",
+#                            "src/vstarstack/library/movement/movements/lib/sphere.c",
+#                            "src/vstarstack/library/movement/movements/lib/flat.c",
+#                        ],
+#                        include_dirs=[
+#                            "src/vstarstack/library/projection/projections",
+#                            np.get_include(),
+#                        ])
 
-image_wave = Extension(name="vstarstack.library.fine_shift.image_wave",
-       sources=["src/vstarstack/library/fine_shift/image_wave.c",
-                "src/vstarstack/library/fine_shift/image_wave_interpolation.c",
-                "src/vstarstack/library/fine_shift/image_wave_targets.c",
-                "src/vstarstack/library/fine_shift/image_wave_correlation.c",
-                "src/vstarstack/library/fine_shift/image_wave_module.c",
-                "src/vstarstack/library/fine_shift/image_wave_image.c",
-                ], include_dirs=[np.get_include()])
+libimagedeform_root = "src/vstarstack/library/fine_movement/libimagedeform"
+libimagedeform_headers = [libimagedeform_root + "/include"]
+libimagedeform_sources = [libimagedeform_root + "/src/interpolation.c",
+                          libimagedeform_root + "/src/image_grid.c",
+                          libimagedeform_root + "/src/image_deform.c",
+                          libimagedeform_root + "/src/image_deform_gc.c",
+                          libimagedeform_root + "/src/image_deform_lc.c",
+                        ]
+
+imagedeform_root = "src/vstarstack/library/fine_movement/module"
+imagedeform_sources = [imagedeform_root + "/imagegrid.c",
+                       imagedeform_root + "/imagedeform.c"
+                        ]
+
+image_wave = Extension(name="vstarstack.library.fine_shift",
+       sources=imagedeform_sources+libimagedeform_sources,
+       include_dirs=[np.get_include()]+libimagedeform_headers)
 
 root = os.path.join(os.path.abspath(os.path.dirname(__file__)), "src")
 result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(root)
@@ -62,7 +71,7 @@ setup (name = 'vstarstack',
        package_dir = {'': 'src'},
        packages=packages,
        ext_modules = [projection,
-                      movements,
+#                      movements,
                       image_wave],
        install_requires = [
               'numpy',

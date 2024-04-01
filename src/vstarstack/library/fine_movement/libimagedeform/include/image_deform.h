@@ -83,6 +83,14 @@ static inline void image_deform_set_shift(struct ImageDeform *deform,
 }
 
 /**
+ * \brief Fill image deform by shift data
+ */
+static inline void image_deform_set_shifts(struct ImageDeform *deform, const double *data)
+{
+    memcpy(deform->array, data, deform->grid_h*deform->grid_w*2*sizeof(double));
+}
+
+/**
  * @brief Get shift at pos (x,y)
  *
  * @param deform Shift array

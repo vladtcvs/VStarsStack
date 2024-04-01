@@ -9,3 +9,5 @@ struct ImageDeformObject
     PyObject_HEAD
     struct ImageDeform deform;
 };
+
+extern PyTypeObject ImageDeform;

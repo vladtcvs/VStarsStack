@@ -1,4 +1,9 @@
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <image_deform.h>
 #include "imagedeform.h"
+#include "imagegrid.h"
+#include <numpy/ndarraytypes.h>
+#include <numpy/ndarrayobject.h>
 
 /**
  * \brief Init ImageDeform
@@ -33,3 +38,108 @@ static void ImageDeform_finalize(PyObject *_self)
     /* Restore the saved exception. */
     PyErr_Restore(error_type, error_value, error_traceback);
 }
+
+static PyObject *ImageDeform_fill(PyObject *_self,
+                                  PyObject *args,
+                                  PyObject *kwds)
+{
+    struct ImageDeformObject *self = (struct ImageDeformObject *)_self;
+    static char *kwlist[] = {"image", NULL};
+    PyArrayObject *image;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &image))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    if (PyArray_TYPE(image) != NPY_DOUBLE)
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    if (PyArray_NDIM(image) != 3)
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dim == 3");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    npy_intp *dims = PyArray_SHAPE(image);
+    if (dims[0] == self->deform.grid_h || dims[1] == self->deform.grid_w || dims[2] != 2)
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - image should be 3d array of correct size");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    image_deform_set_shifts(&self->deform, PyArray_DATA(image));
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *ImageDeform_content(PyObject *_self,
+                                     PyObject *args,
+                                     PyObject *kwds)
+{
+    struct ImageDeformObject *self = (struct ImageDeformObject *)_self;
+    npy_intp dims[3] = {self->deform.grid_h, self->deform.grid_w, 2};
+    PyArrayObject *shift_array = (PyArrayObject *)PyArray_ZEROS(3, dims, NPY_DOUBLE, 0);
+    double *data = PyArray_DATA(shift_array);
+    int h = self->deform.grid_h;
+    int w = self->deform.grid_w;
+    memcpy(data, self->deform.array, h*w*2*sizeof(double));
+    return (PyObject *)shift_array;
+}
+
+static PyObject *ImageDeform_apply(PyObject *_self,
+                                   PyObject *args,
+                                   PyObject *kwds)
+{
+    struct ImageDeformObject *self = (struct ImageDeformObject *)_self;
+    static char *kwlist[] = {"image", "subpixels", NULL};
+    PyObject *image;
+    int subpixels;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Oi", kwlist, &image, &subpixels))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    if (!PyObject_IsInstance(image, (PyObject *)&ImageGrid))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageDeform");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    struct ImageGridObject *in_img = (struct ImageGridObject *)image;
+
+    PyObject *argList = Py_BuildValue("ii", in_img->grid.w, in_img->grid.h);
+    struct ImageGridObject *out_img =
+        (struct ImageGridObject *)PyObject_CallObject((PyObject *)&ImageGrid, argList);
+    Py_DECREF(argList);
+
+    image_deform_apply_image(&self->deform, &in_img->grid, &out_img->grid, subpixels);
+    return (PyObject *)image;
+}
+
+static PyMethodDef ImageDeform_methods[] = {
+    {"fill", (PyCFunction)ImageDeform_fill, METH_VARARGS | METH_KEYWORDS,
+     "Fill image deform from numpy array"},
+    {"content", (PyCFunction)ImageDeform_content, METH_VARARGS | METH_KEYWORDS,
+     "Return image deform content as numpy array"},
+    {"apply", (PyCFunction)ImageDeform_apply, METH_VARARGS | METH_KEYWORDS,
+     "Apply ImageDeform to ImageGrid"},
+    {NULL} /* Sentinel */
+};
+
+PyTypeObject ImageDeform = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "vstarstack.library.fine_movement.ImageDeform",
+    .tp_doc = PyDoc_STR("ImageGrid object"),
+    .tp_basicsize = sizeof(struct ImageDeformObject),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_new = PyType_GenericNew,
+    .tp_init = ImageDeform_init,
+    .tp_finalize = ImageDeform_finalize,
+    .tp_methods = ImageDeform_methods,
+};
