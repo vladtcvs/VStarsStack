@@ -14,7 +14,7 @@
 
 #include <math.h>
 #include <stdio.h>
-#include "sphere.h"
+#include <sphere.h>
 
 static struct quat quat_inv(const struct quat q)
 {

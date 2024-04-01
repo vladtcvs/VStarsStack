@@ -9,7 +9,12 @@ add_library(imagedeform STATIC src/interpolation.c
                                src/image_deform_gc.c
                                src/image_deform_lc.c)
 
-set(HEADERS "include/image_grid.h;include/image_deform.h;include/image_deform_gc.h;include/image_deform_lc.h")
+set(HEADERS "include/interpolation.h;"
+            "include/image_grid.h;"
+            "include/image_deform.h;"
+            "include/image_deform_gc.h;"
+            "include/image_deform_lc.h")
+
 target_include_directories(imagedeform PUBLIC include)
 set_target_properties(imagedeform PROPERTIES PUBLIC_HEADER "${HEADERS}")
 

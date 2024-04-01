@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Vladislav Tsendrovskii
+ * Copyright (c) 2022-2024 Vladislav Tsendrovskii
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,42 +23,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "image_wave.h"
+#include <image_grid.h>
+#include <image_deform.h>
+#include <image_deform_gc.h>
+#include <image_deform_lc.h>
 
-struct ImageWaveObject
-{
-    PyObject_HEAD
-    struct ImageWave wave;
-};
 
-// arguments: w, h, Nw, Nh
-static int ImageWave_init(PyObject *_self, PyObject *args, PyObject *kwds)
-{
-    int w, h;
-    double spk;
-    int Nw, Nh;
-    struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
-    static char *kwlist[] = {"w", "h", "Nw", "Nh", "spk", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiiid", kwlist,
-                                     &w, &h, &Nw, &Nh, &spk))
-        return -1;
-
-    return image_wave_init(&self->wave, w, h, Nw, Nh, spk);
-}
-
-static void ImageWave_finalize(PyObject *_self)
-{
-    PyObject *error_type, *error_value, *error_traceback;
-
-    /* Save the current exception, if any. */
-    PyErr_Fetch(&error_type, &error_value, &error_traceback);
-
-    struct ImageWaveObject *self = (struct ImageWaveObject *)_self;
-    image_wave_finalize(&self->wave);
-
-    /* Restore the saved exception. */
-    PyErr_Restore(error_type, error_value, error_traceback);
-}
 
 static PyObject *ImageWave_interpolate(PyObject *_self, PyObject *args, PyObject *kwds)
 {
@@ -334,17 +304,17 @@ static PyMethodDef ImageWave_methods[] = {
     {NULL} /* Sentinel */
 };
 
-static PyTypeObject ImageWave = {
+static PyTypeObject ImageDeform = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "vstarstack.library.fine_shift.image_wave.ImageWave",
+    .tp_name = "vstarstack.library.fine_shift.image_deform.ImageDeform",
     .tp_doc = PyDoc_STR("ImageWave object"),
     .tp_basicsize = sizeof(struct ImageWaveObject),
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
-    .tp_init = ImageWave_init,
-    .tp_finalize = ImageWave_finalize,
-    .tp_methods = ImageWave_methods,
+    .tp_init = ImageDeform_init,
+    .tp_finalize = ImageDeform_finalize,
+    .tp_methods = ImageDeform_methods,
 };
 
 static PyMethodDef methods[] = {
@@ -497,10 +467,10 @@ static PyObject *ImageWave_find_correlation_array(PyObject *_self,
 }
 
 
-static PyModuleDef image_waveModule = {
+static PyModuleDef image_deformModule = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "vstarstack.library.fine_shift.image_wave",
-    .m_doc = "Fine shift module - image_wave",
+    .m_name = "vstarstack.library.fine_shift.image_deform",
+    .m_doc = "Fine shift module - image_deform",
     .m_size = -1,
     .m_methods = methods,
 };
@@ -509,17 +479,17 @@ PyMODINIT_FUNC
 PyInit_image_wave(void)
 {
     PyObject *m;
-    if (PyType_Ready(&ImageWave) < 0)
+    if (PyType_Ready(&ImageDeform) < 0)
         return NULL;
 
-    m = PyModule_Create(&image_waveModule);
+    m = PyModule_Create(&image_deformModule);
     if (m == NULL)
         return NULL;
 
     Py_INCREF(&ImageWave);
-    if (PyModule_AddObject(m, "ImageWave", (PyObject *)&ImageWave) < 0)
+    if (PyModule_AddObject(m, "ImageDeform", (PyObject *)&ImageDeform) < 0)
     {
-        Py_DECREF(&ImageWave);
+        Py_DECREF(&ImageDeform);
         Py_DECREF(m);
         return NULL;
     }
