@@ -129,8 +129,8 @@ static double image_deform_gc_stretch_penalty(const struct ImageDeform *array)
  */
 static double image_deform_gc_penalty(struct ImageDeformGlobalCorrelator *self,
                                       struct ImageDeform *grid,
-                                      const double *expected_source,
                                       const double *points,
+                                      const double *expected_source,
                                       size_t N)
 {
     size_t i;
@@ -168,8 +168,8 @@ static void image_deform_gc_move_along_gradient(struct ImageDeform *array,
     {
         for (xi = 0; xi < array->grid_w; xi++)
         {
-            double gradient_x = image_deform_get_shift(gradient, xi, yi, 0);
-            double gradient_y = image_deform_get_shift(gradient, xi, yi, 1);
+            double gradient_x = image_deform_get_shift(gradient, xi, yi, 1);
+            double gradient_y = image_deform_get_shift(gradient, xi, yi, 0);
 
             if (fabs(gradient_x) > maxv)
                 maxv = fabs(gradient_x);
@@ -185,14 +185,14 @@ static void image_deform_gc_move_along_gradient(struct ImageDeform *array,
     {
         for (xi = 0; xi < array->grid_w; xi++)
         {
-            double gradient_x = image_deform_get_shift(gradient, xi, yi, 0);
-            double gradient_y = image_deform_get_shift(gradient, xi, yi, 1);
+            double gradient_x = image_deform_get_shift(gradient, xi, yi, 1);
+            double gradient_y = image_deform_get_shift(gradient, xi, yi, 0);
 
-            double arr_x = image_deform_get_shift(array, xi, yi, 0);
-            double arr_y = image_deform_get_shift(array, xi, yi, 1);
+            double arr_x = image_deform_get_shift(array, xi, yi, 1);
+            double arr_y = image_deform_get_shift(array, xi, yi, 0);
 
-            image_deform_set_shift(array, xi, yi, 0, arr_x - gradient_x * dh / maxv);
-            image_deform_set_shift(array, xi, yi, 1, arr_y - gradient_y * dh / maxv);
+            image_deform_set_shift(array, xi, yi, 1, arr_x - gradient_x * dh / maxv);
+            image_deform_set_shift(array, xi, yi, 0, arr_y - gradient_y * dh / maxv);
         }
     }
 }
@@ -203,14 +203,14 @@ static void image_deform_gc_move_along_gradient(struct ImageDeform *array,
  * \param xi x coordinate of movement grid point
  * \param yi y coordinate of movement grid point
  * \param axis axis of movement grid point
- * \param targets target points
- * \param expected_after_shift source point positions
+ * \param points points
+ * \param expected_after_shift expected point positions
  * \param N num of points
  * \return partial derivative
  */
 static double image_deform_gc_partial(struct ImageDeformGlobalCorrelator *self,
                                       int yi, int xi, int axis,
-                                      const double *targets,
+                                      const double *points,
                                       const double *expected_after_shift,
                                       size_t N)
 {
@@ -222,9 +222,9 @@ static double image_deform_gc_partial(struct ImageDeformGlobalCorrelator *self,
     image_deform_set_shift(&self->array_p, xi, yi, axis, val+h);
     image_deform_set_shift(&self->array_m, xi, yi, axis, val-h);
 
-    double penlaty_p = image_deform_gc_penalty(self, &self->array_p, targets, expected_after_shift, N);
-    double penlaty_m = image_deform_gc_penalty(self, &self->array_m, targets, expected_after_shift, N);
-    return (penlaty_p-penlaty_m)/(2*h);
+    double penalty_p = image_deform_gc_penalty(self, &self->array_p, points, expected_after_shift, N);
+    double penalty_m = image_deform_gc_penalty(self, &self->array_m, points, expected_after_shift, N);
+    return (penalty_p-penalty_m)/(2*h);
 }
 
 /**
@@ -237,7 +237,7 @@ static double image_deform_gc_partial(struct ImageDeformGlobalCorrelator *self,
  */
 static void image_deform_gc_descent_step(struct ImageDeformGlobalCorrelator *self,
                                          double dh,
-                                         const double *targets,
+                                         const double *points,
                                          const double *expected_after_shift,
                                          size_t N)
 {
@@ -246,8 +246,8 @@ static void image_deform_gc_descent_step(struct ImageDeformGlobalCorrelator *sel
     {
         for (xi = 0; xi < self->grid_w; xi++)
         {
-            double gradient_x = image_deform_gc_partial(self, yi, xi, 1, targets, expected_after_shift, N);
-            double gradient_y = image_deform_gc_partial(self, yi, xi, 0, targets, expected_after_shift, N);
+            double gradient_x = image_deform_gc_partial(self, yi, xi, 1, points, expected_after_shift, N);
+            double gradient_y = image_deform_gc_partial(self, yi, xi, 0, points, expected_after_shift, N);
             image_deform_set_shift(&self->array_gradient, xi, yi, 0, gradient_y);
             image_deform_set_shift(&self->array_gradient, xi, yi, 1, gradient_x);
         }
@@ -257,7 +257,7 @@ static void image_deform_gc_descent_step(struct ImageDeformGlobalCorrelator *sel
 }
 
 struct ImageDeform* image_deform_gc_find(struct ImageDeformGlobalCorrelator *self, double dh, size_t Nsteps,
-                                         const double *targets,
+                                         const double *points,
                                          const double *expected_after_shift,
                                          size_t N)
 {
@@ -268,15 +268,17 @@ struct ImageDeform* image_deform_gc_find(struct ImageDeformGlobalCorrelator *sel
     double dx = 0, dy = 0;
     for (i = 0; i < N; i++)
     {
-        dx += targets[2*i] - expected_after_shift[2*i];
-        dy += targets[2*i+1] - expected_after_shift[2*i+1];
+        dy += expected_after_shift[2*i] - points[2*i];
+        dx += expected_after_shift[2*i+1] - points[2*i+1];
     }
     dx /= N;
     dy /= N;
+    dx = dx * self->array.sx;
+    dy = dy * self->array.sy;
 
     image_deform_constant_shift(&self->array, dx, dy);    
 
     for (i = 0; i < Nsteps; i++)
-        image_deform_gc_descent_step(self, dh, targets, expected_after_shift, N);
+        image_deform_gc_descent_step(self, dh, points, expected_after_shift, N);
     return &self->array;
 }

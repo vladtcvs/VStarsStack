@@ -1,3 +1,5 @@
+#define NO_IMPORT_ARRAY
+#define PY_ARRAY_UNIQUE_SYMBOL libdeform_ARRAY_API
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <image_deform.h>
 #include "imagedeform.h"
@@ -65,7 +67,7 @@ static PyObject *ImageDeform_fill(PyObject *_self,
         return Py_None;
     }
     npy_intp *dims = PyArray_SHAPE(shift_array);
-    if (dims[0] == self->deform.grid_h || dims[1] == self->deform.grid_w || dims[2] != 2)
+    if (dims[0] != self->deform.grid_h || dims[1] != self->deform.grid_w || dims[2] != 2)
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments - image should be 3d array of correct size");
         Py_INCREF(Py_None);
@@ -83,6 +85,11 @@ static PyObject *ImageDeform_content(PyObject *_self,
     struct ImageDeformObject *self = (struct ImageDeformObject *)_self;
     npy_intp dims[3] = {self->deform.grid_h, self->deform.grid_w, 2};
     PyArrayObject *shift_array = (PyArrayObject *)PyArray_ZEROS(3, dims, NPY_DOUBLE, 0);
+    if (shift_array == NULL)
+    {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
     double *data = PyArray_DATA(shift_array);
     int h = self->deform.grid_h;
     int w = self->deform.grid_w;
@@ -106,19 +113,19 @@ static PyObject *ImageDeform_apply_image(PyObject *_self,
     }
     if (!PyObject_IsInstance(image, (PyObject *)&ImageGrid))
     {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageDeform");
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageGrid");
         Py_INCREF(Py_None);
         return Py_None;
     }
     struct ImageGridObject *in_img = (struct ImageGridObject *)image;
 
-    PyObject *argList = Py_BuildValue("ii", in_img->grid.w, in_img->grid.h);
+    PyObject *argList = Py_BuildValue("ii", in_img->grid.w*subpixels, in_img->grid.h*subpixels);
     struct ImageGridObject *out_img =
         (struct ImageGridObject *)PyObject_CallObject((PyObject *)&ImageGrid, argList);
     Py_DECREF(argList);
 
     image_deform_apply_image(&self->deform, &in_img->grid, &out_img->grid, subpixels);
-    return (PyObject *)image;
+    return (PyObject *)out_img;
 }
 
 static PyObject *ImageDeform_apply_point(PyObject *_self,

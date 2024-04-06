@@ -16,6 +16,10 @@
 
 #include <image_deform.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \brief Helper structure to find movement grid by local correlation
  */
@@ -57,3 +61,7 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
                           int radius,
                           double maximal_shift,
                           int subpixels);
+
+#ifdef __cplusplus
+}
+#endif

@@ -1,7 +1,11 @@
+#define NO_IMPORT_ARRAY
+#define PY_ARRAY_UNIQUE_SYMBOL libdeform_ARRAY_API
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include <image_deform_gc.h>
 #include "imagedeform_gc.h"
 #include "imagedeform.h"
+
 #include <numpy/ndarraytypes.h>
 #include <numpy/ndarrayobject.h>
 
@@ -76,7 +80,9 @@ static PyObject* ImageDeformGC_correlate(PyObject *_self, PyObject *args, PyObje
     npy_intp *dim_points = PyArray_SHAPE(points);
     npy_intp *dim_exp_points = PyArray_SHAPE(expected_points);
     
-    if (dim_points[0] != dim_exp_points[0] || dim_points[1] != 2 || dim_exp_points[1] != 2)
+    if (dim_points[0] != dim_exp_points[0] ||
+        dim_points[1] != 2 ||
+        dim_exp_points[1] != 2)
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments - bad dimensions");
         Py_INCREF(Py_None);

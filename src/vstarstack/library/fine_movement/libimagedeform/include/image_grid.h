@@ -16,6 +16,10 @@
 
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \brief Image data
  */
@@ -105,3 +109,7 @@ double image_grid_correlation(const struct ImageGrid *image1,
 void image_grid_get_area(const struct ImageGrid *img,
                          double x, double y,
                          struct ImageGrid *area);
+
+#ifdef __cplusplus
+}
+#endif

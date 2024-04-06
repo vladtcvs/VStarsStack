@@ -12,9 +12,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#define PY_ARRAY_UNIQUE_SYMBOL libdeform_ARRAY_API
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <structmember.h>
+#include <numpy/arrayobject.h>
 
 #include "imagegrid.h"
 #include "imagedeform.h"
@@ -31,6 +34,7 @@ static PyModuleDef image_deformModule = {
 PyMODINIT_FUNC
 PyInit_module(void)
 {
+    import_array();
     PyObject *m;
     if (PyType_Ready(&ImageGrid) < 0)
         return NULL;

@@ -14,6 +14,10 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \brief 1-Dim cubic interpolation for x in range [0..1]
  * \param fm1 function value at x=-1, can be NAN
@@ -55,3 +59,7 @@ double interpolation_1d_linear(double f0, double f1, double x);
 double interpolation_2d_linear(double f00,  double f10,
                                double f01,  double f11,
                                double x, double y);
+
+#ifdef __cplusplus
+}
+#endif

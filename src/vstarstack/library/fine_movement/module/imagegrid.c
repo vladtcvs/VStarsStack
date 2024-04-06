@@ -1,3 +1,5 @@
+#define NO_IMPORT_ARRAY
+#define PY_ARRAY_UNIQUE_SYMBOL libdeform_ARRAY_API
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <image_grid.h>
 #include "imagegrid.h"
@@ -67,7 +69,7 @@ static PyObject *ImageGrid_fill(PyObject *_self,
         return Py_None;
     }
     npy_intp *dims = PyArray_SHAPE(image);
-    if (dims[0] == self->grid.h || dims[1] == self->grid.w)
+    if (dims[0] != self->grid.h || dims[1] != self->grid.w)
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments - image should be 2d array of correct size");
         Py_INCREF(Py_None);
@@ -76,6 +78,48 @@ static PyObject *ImageGrid_fill(PyObject *_self,
     image_grid_fill_pixels(&self->grid, PyArray_DATA(image));
     Py_INCREF(Py_None);
     return Py_None;
+}
+
+static PyObject *ImageGrid_correlation(PyObject *self,
+                                       PyObject *args,
+                                       PyObject *kwds)
+{
+    PyObject *_image1;
+    PyObject *_image2;
+
+    static char *kwlist[] = {"image1", "image2", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO", kwlist, &_image1, &_image2))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    if (!PyObject_IsInstance(_image1, (PyObject *)&ImageGrid))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageGrid");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    if (!PyObject_IsInstance(_image2, (PyObject *)&ImageGrid))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageGrid");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    struct ImageGridObject *img1 = (struct ImageGridObject *)_image1;
+    struct ImageGridObject *img2 = (struct ImageGridObject *)_image2;
+    if (img1->grid.w != img2->grid.w || img1->grid.h != img2->grid.h)
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be same shape");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    double correlation = image_grid_correlation(&img1->grid, &img2->grid);
+    return PyFloat_FromDouble(correlation);
 }
 
 static PyObject *ImageGrid_content(PyObject *_self,
@@ -95,6 +139,8 @@ static PyMethodDef ImageGrid_methods[] = {
      "Fill image grid from numpy array"},
     {"content", (PyCFunction)ImageGrid_content, METH_VARARGS | METH_KEYWORDS,
      "Return image grid content as numpy array"},
+    {"correlation", (PyCFunction)ImageGrid_correlation, METH_STATIC | METH_VARARGS | METH_KEYWORDS,
+     "Return correlation of 2 images"},
     {NULL} /* Sentinel */
 };
 

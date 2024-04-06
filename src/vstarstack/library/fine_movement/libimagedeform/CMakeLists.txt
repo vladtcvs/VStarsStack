@@ -45,11 +45,13 @@ if (BUILD_TESTS)
     add_executable(
         deform_test
         tests/deform_test.cc
+        tests/deform_test_gc.cc
     )
 
     target_link_libraries(
         deform_test
         GTest::gtest_main
+        imagedeform
     )
 
     include(GoogleTest)

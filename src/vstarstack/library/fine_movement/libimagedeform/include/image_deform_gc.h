@@ -16,6 +16,10 @@
 
 #include <image_deform.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \brief Helper structure to find movement grid by global correlation
  */
@@ -59,12 +63,16 @@ void image_deform_gc_finalize(struct ImageDeformGlobalCorrelator *self);
  * \param self global correlator
  * \param dh step of descent
  * \param Nsteps amount of steps
- * \param targets target points
- * \param expected_after_shift source point positions
+ * \param points target points [(y,x), (y,x), ...]
+ * \param expected_after_shift source point positions [(y,x), (y,x), ...]
  * \param N num of points
  * \return ImageDeform structure
  */
 struct ImageDeform* image_deform_gc_find(struct ImageDeformGlobalCorrelator *self, double dh, size_t Nsteps,
-                                         const double *targets,
+                                         const double *points,
                                          const double *expected_after_shift,
                                          size_t N);
+
+#ifdef __cplusplus
+}
+#endif

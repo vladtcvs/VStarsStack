@@ -27,6 +27,7 @@ int  image_deform_lc_init(struct ImageDeformLocalCorrelator *self,
     self->pixels = pixels;
     self->grid_w = ceil((double)image_w/pixels);
     self->grid_h = ceil((double)image_h/pixels);
+    printf("image: %i:%i grid: %i:%i\n", self->image_w, self->image_h, self->grid_w, self->grid_h);
     if (image_deform_init(&self->array, self->grid_w, self->grid_h, self->image_w, self->image_h) != 0)
         return -1;
     return 0;

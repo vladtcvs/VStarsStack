@@ -12,111 +12,147 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import math
 import sys
 import os
 import numpy as np
 
 from vstarstack.library.loaders.classic import readjpeg
-import vstarstack.library.fine_shift.image_wave
-from vstarstack.library.fine_shift.image_wave import ImageWave
+from vstarstack.library.fine_movement.module import ImageGrid
+from vstarstack.library.fine_movement.module import ImageDeform
+from vstarstack.library.fine_movement.module import ImageDeformGC
+from vstarstack.library.fine_movement.module import ImageDeformLC
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-N = 200
-dh = 0.1
+N = 2000
+dh = 0.001
 
 def test_identity():
-    wave = ImageWave(10, 10, 2, 2, 0.01)
-    x, y = wave.interpolate(0, 0)
-    assert x == 0 and y == 0
-    x, y = wave.interpolate(10, 10)
-    assert x == 10 and y == 10
-
+    deform = ImageDeform(image_w=10, image_h=10,
+                         grid_w=2, grid_h=2)
+    
+    x, y = deform.apply_point(2, 0)
+    assert x == 2 and y == 0
+    x, y = deform.apply_point(9, 5)
+    assert x == 9 and y == 5
+    x, y = deform.apply_point(10, 5)
+    assert math.isnan(x)
+    assert math.isnan(y)
 
 def test_approximate_identity():
-    wave = ImageWave(10, 10, 2, 2, 0.01)
-    targets = [(5, 5)]
-    points = [(5, 5)]
-    wave.approximate_by_targets(targets, points, N, dh)
-    x, y = wave.interpolate(5, 5)
+    gc = ImageDeformGC(image_w=10, image_h=10,
+                       grid_w=2, grid_h=2,
+                       spk=0.01)
+    expected = np.array([[5.0, 5.0]])
+    points = np.array([[5.0, 5.0]])
+    deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=N)
+    x, y = deform.apply_point(5.5, 5)
 
-    assert abs(x-5) < 5e-3
+    assert abs(x-5.5) < 5e-3
     assert abs(y-5) < 5e-3
 
 
 def test_approximate_single():
-    wave = ImageWave(10, 10, 2, 2, 0.01)
-    targets = [(5.0, 5.0)]
-    points = [(5.2, 5.0)]
-    wave.approximate_by_targets(targets, points, N, dh)
-    x, y = wave.interpolate(5.2, 5.0)
+    gc = ImageDeformGC(image_w=10, image_h=10,
+                       grid_w=2, grid_h=2,
+                       spk=0.01)
+    points = np.array([(5.0, 5.2)]) # [(y,x), (y,x), ...]
+    expected = np.array([(5.0, 5.0)]) # [(y,x), (y,x), ...]
+    deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=0)
+    assert deform is not None
+    x, y = deform.apply_point(5.2, 5.0)
 
     assert abs(x-5.0) < 5e-3
     assert abs(y-5.0) < 5e-3
 
+def test_approximate_square():
+    gc = ImageDeformGC(image_w=10, image_h=10,
+                       grid_w=2, grid_h=2,
+                       spk=0.01)
+    points = np.array([(0.1, 0.1), (0.1, 8.9), (8.9, 0.1), (8.9, 8.9)]) # [(y,x), (y,x), ...]
+    expected = np.array([(0.0, 0.0), (0.0, 9.0), (9.0, 0.0), (9.0, 9.0)]) # [(y,x), (y,x), ...]
+    deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=N)
+    assert deform is not None
+
+    x, y = deform.apply_point(4.5, 4.5)
+    assert abs(x-4.5) < 5e-3
+    assert abs(y-4.5) < 5e-3
+
+    x, y = deform.apply_point(8.9, 0.1)
+    assert abs(x-9) < 5e-3
+    assert abs(y-0) < 5e-3
+
 
 def test_approximate_parabola1():
-    wave = ImageWave(10, 10, 3, 3, 0.01)
-    targets = [(5, 0), (5, 5), (5, 10)]
-    points = [(5, 0), (5.1, 5), (5, 10)]
-    wave.approximate_by_targets(targets, points, N, dh)
-    x, y = wave.interpolate(5.1, 5)
+    gc = ImageDeformGC(image_w=11, image_h=11,
+                       grid_w=3, grid_h=3,
+                       spk=0.01)
+
+    expected = np.array([(5, 0), (5, 5), (5, 10)]).astype("double") # [(y,x),...]
+    points = np.array([(5, 0), (5, 5.1), (5, 10)]).astype("double") # [(y,x),...]
+    deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=N)
+    assert deform is not None
+
+    x, y = deform.apply_point(5.1, 5)
 
     assert abs(x-5) < 5e-3
     assert abs(y-5) < 5e-3
 
 
 def test_approximate_parabola2():
-    wave = ImageWave(10, 10, 3, 3, 0.01)
-    targets = [(5, 0), (5, 5), (5, 10)]
-    measured = [(5, 0), (5.1, 5.1), (5, 10)]
-    wave.approximate_by_targets(targets, measured, N, dh)
-    x, y = wave.interpolate(5.1, 5.1)
+    gc = ImageDeformGC(image_w=11, image_h=11,
+                       grid_w=3, grid_h=3,
+                       spk=0.01)
+
+    expected = np.array([(5, 0), (5, 5), (5, 10)]).astype("double") # [(y,x),...]
+    points = np.array([(5, 0), (5.1, 5.1), (5, 10)]).astype("double") # [(y,x),...]
+    deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=N)
+    assert deform is not None
+
+    x, y = deform.apply_point(5.1, 5.1)
 
     assert abs(x-5) < 5e-3
     assert abs(y-5) < 5e-3
-
 
 def test_approximate_parabola_long():
-    wave = ImageWave(10, 10, 30, 30, 0.01)
-    targets = [(5, 0), (5, 5), (5, 10)]
-    measured = [(5, 0), (5.1, 5.1), (5, 10)]
-    wave.approximate_by_targets(targets, measured, N, dh)
-    x, y = wave.interpolate(5.1, 5.1)
+    gc = ImageDeformGC(image_w=11, image_h=11,
+                       grid_w=7, grid_h=7,
+                       spk=0.1)
+
+    expected = np.array([(5, 0), (5, 5), (5, 10)]).astype("double") # [(y,x),...]
+    points = np.array([(5, 0), (5, 5.1), (5, 10)]).astype("double") # [(y,x),...]
+    deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=N)
+    assert deform is not None
+
+    x, y = deform.apply_point(5.1, 5)
 
     assert abs(x-5) < 5e-3
     assert abs(y-5) < 5e-3
 
-
-def test_serialize():
-    wave = ImageWave(10, 10, 3, 3, 0.01)
-    data = wave.data()
-    assert type(data["w"]) == int
-    assert type(data["h"]) == int
-    assert type(data["Nw"]) == int
-    assert type(data["Nh"]) == int
-    assert data["w"] == 10
-    assert data["h"] == 10
-    assert data["Nw"] == 3
-    assert data["Nh"] == 3
-    assert len(data["data"]) == 3*3*2
-
 def test_deserialize():
-    wave = ImageWave(10, 10, 2, 2, 0.01)
-    targets = [(5.0, 5.0)]
-    measured = [(5.2, 5.0)]
-    wave.approximate_by_targets(targets, measured, N, dh)
-    x, y = wave.interpolate(5.2, 5.0)
+    gc = ImageDeformGC(image_w=11, image_h=11,
+                       grid_w=3, grid_h=3,
+                       spk=0.001)
+    expected = np.array([[5.0, 5.0]])
+    points = np.array([[5.0, 5.2]])
+    deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=N)
+    
+    x, y = deform.apply_point(5.2, 5.0)
 
     assert abs(x-5.0) < 5e-3
     assert abs(y-5.0) < 5e-3
 
-    data = wave.data()
-    wave2 = ImageWave.from_data(data)
+    data = deform.content()
+    assert data is not None
+    assert data.shape[0] == 3
+    assert data.shape[1] == 3
+    assert data.shape[2] == 2
 
-    assert wave2 is not None
+    deform2 = ImageDeform(image_w=11, image_h=11,
+                          grid_w=3, grid_h=3)
+    deform2.fill(shift_array=data)
 
-    wave2.approximate_by_targets(targets, measured, N, dh)
-    x, y = wave2.interpolate(5.2, 5.0)
+    x, y = deform2.apply_point(5.2, 5.0)
 
     assert abs(x-5.0) < 5e-3
     assert abs(y-5.0) < 5e-3
@@ -130,7 +166,9 @@ def compare_shift_array(array, reference):
 def test_correlation1():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
     image1 = df1.get_channel("L")[0].astype('double')
-    correlation = vstarstack.library.fine_movement.image_wave.image_correlation(image1, image1)
+    grid = ImageGrid(image_w=image1.shape[1], image_h=image1.shape[0])
+    grid.fill(image1)
+    correlation = ImageGrid.correlation(grid, grid)
     assert correlation == 1
 
 def test_correlation2():
@@ -146,25 +184,46 @@ def test_correlation2():
             image1_moved[y,x] = image1[y,x-1]
         image1_moved[y,0] = np.nan
 
-    correlation = vstarstack.library.fine_movement.image_wave.image_correlation(image1_moved, image2)
+    grid1 = ImageGrid(image_w=image1_moved.shape[1], image_h=image1_moved.shape[0])
+    grid1.fill(image1_moved)
+    grid2 = ImageGrid(image_w=image2.shape[1], image_h=image2.shape[0])
+    grid2.fill(image1_moved)
+
+    correlation = ImageGrid.correlation(grid1, grid2)
     assert correlation == 1
 
 def test_shift_image1():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
 
     image1 = df1.get_channel("L")[0].astype('double')
-    wave = ImageWave(image1.shape[1], image1.shape[0], 2, 2, 0.01)
-    image2 = wave.apply_shift(image1, 1)
-    correlation = vstarstack.library.fine_movement.image_wave.image_correlation(image1, image2)
+    grid1 = ImageGrid(image_w=image1.shape[1], image_h=image1.shape[0])
+    grid1.fill(image1)
+
+    deform = ImageDeform(image1.shape[1], image1.shape[0], 2, 2)
+    grid2 = deform.apply_image(grid1, 1)
+    correlation = ImageGrid.correlation(grid1, grid2)
     assert correlation == 1
 
 def test_approximate_by_correlation1():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
-    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image2.png")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
 
     image = df1.get_channel("L")[0].astype('double')
     image_ref = df2.get_channel("L")[0].astype('double')
-    wave = ImageWave.find_shift_array(image, None, image_ref, None, 5, 3, 2)
-    image_shifted = wave.apply_shift(image, 1)
-    correlation = vstarstack.library.fine_movement.image_wave.image_correlation(image_shifted, image_ref)
-    assert correlation > 1 - 1e-4
+
+    w = image.shape[1]
+    h = image.shape[0]
+
+    grid = ImageGrid(image_w=w, image_h=h)
+    grid.fill(image)
+    grid_ref = ImageGrid(image_w=w, image_h=h)
+    grid_ref.fill(image_ref)
+
+    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
+    deform = lc.find(grid, None, grid_ref, None, 5, 2, 1)
+    assert deform is not None
+
+    data = deform.content()
+    print(np.amin(data))
+    print(np.amax(data))
+    

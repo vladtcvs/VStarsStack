@@ -19,6 +19,10 @@
 
 #include <image_grid.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * \brief Image movements grid
  */
@@ -125,3 +129,7 @@ void image_deform_apply_image(const struct ImageDeform *deform,
                               const struct ImageGrid *input_image,
                               struct ImageGrid *output_image,
                               int subpixels);
+
+#ifdef __cplusplus
+}
+#endif

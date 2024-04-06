@@ -1,9 +1,15 @@
+#define NO_IMPORT_ARRAY
+#define PY_ARRAY_UNIQUE_SYMBOL libdeform_ARRAY_API
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include "imagedeform_lc.h"
 #include "imagedeform.h"
 #include "imagegrid.h"
 
 #include <image_deform_lc.h>
+
+#include <numpy/ndarraytypes.h>
+#include <numpy/ndarrayobject.h>
 
 static int ImageDeformLC_init(PyObject *_self, PyObject *args, PyObject *kwds)
 {
@@ -12,7 +18,7 @@ static int ImageDeformLC_init(PyObject *_self, PyObject *args, PyObject *kwds)
     struct ImageDeformLocalCorrelatorObject *self =
             (struct ImageDeformLocalCorrelatorObject *)_self;
     static char *kwlist[] = {"image_w", "image_h", "pixels", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iid", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iii", kwlist,
                                      &image_w, &image_h, &pixels))
         return -1;
 

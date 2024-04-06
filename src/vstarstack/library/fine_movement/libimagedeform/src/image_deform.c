@@ -25,8 +25,8 @@ int image_deform_init(struct ImageDeform *deform,
     deform->grid_h = grid_h;
     deform->image_w = image_w;
     deform->image_h = image_h;
-    deform->sx = (double)grid_w / image_w;
-    deform->sy = (double)grid_h / image_h;
+    deform->sx = (double)(grid_w-1) / (image_w - 1);
+    deform->sy = (double)(grid_h-1) / (image_h - 1);
     deform->array = calloc(deform->grid_w * deform->grid_h * 2, sizeof(double));
     if (deform->array == NULL)
         return -1;
@@ -143,8 +143,16 @@ void image_deform_apply_point(const struct ImageDeform *deform,
 {
     double shift_y = image_deform_get_shift(deform, x*deform->sx, y*deform->sy, 0);
     double shift_x = image_deform_get_shift(deform, x*deform->sx, y*deform->sy, 1);
-    *srcx = x + shift_x;
-    *srcy = y + shift_y;
+    if (isnan(shift_x) || isnan(shift_y))
+    {
+        *srcx = NAN;
+        *srcy = NAN;
+    }
+    else
+    {
+        *srcx = x + shift_x/deform->sx;
+        *srcy = y + shift_y/deform->sy;
+    }
 }
 
 void image_deform_apply_image(const struct ImageDeform *deform,
