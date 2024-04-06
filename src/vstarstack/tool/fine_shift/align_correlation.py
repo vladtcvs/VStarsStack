@@ -18,6 +18,7 @@ import json
 import multiprocessing as mp
 
 from vstarstack.library.fine_movement.aligner import CorrelationAlignedBuilder
+from vstarstack.library.fine_movement.aligner import Aligner
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 import vstarstack.tool.configuration
@@ -66,13 +67,13 @@ def align_file(project : vstarstack.tool.cfg.Project,
         pre_align = None
     else:
         with open(pre_align_f, encoding='utf8') as f:
-            pre_align = json.load(f)
+            pre_align = Aligner.deserialize(json.load(f))
 
     if pre_align_ref_f is None or not os.path.isfile(pre_align_ref_f):
         pre_align_ref = None
     else:
         with open(pre_align_ref_f, encoding='utf8') as f:
-            pre_align_ref = json.load(f)
+            pre_align_ref = Aligner.deserialize(json.load(f))
 
     # find alignment
     alignment = aligner_factory.find_alignment(light, pre_align,
@@ -80,7 +81,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
     print(f"{name} - align to {name_ref} found")
     vstarstack.tool.common.check_dir_exists(align_f)
     with open(align_f, "w", encoding='utf8') as f:
-        json.dump(alignment, f, ensure_ascii=False, indent=2)
+        json.dump(alignment.serialize(), f, ensure_ascii=False, indent=2)
 
 def _align_file_wrapper(arg):
     align_file(*arg)

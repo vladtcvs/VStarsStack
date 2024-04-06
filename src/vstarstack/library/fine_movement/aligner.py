@@ -15,7 +15,7 @@
 import numpy as np
 import scipy
 
-from vstarstack.library.fine_movement.module import ImageDeform, ImageDeformGC
+from vstarstack.library.fine_movement.module import ImageDeform, ImageDeformGC, ImageDeformLC
 from vstarstack.library.data import DataFrame
 
 def _cluster_average(cluster):
@@ -84,7 +84,7 @@ class ClusterAlignerBuilder:
                                         self.grid_w, self.grid_h,
                                         self.spk)
 
-    def find_alignment(self, name : str, clusters : list) -> dict:
+    def find_alignment(self, name : str, clusters : list) -> Aligner:
         """Find alignment of image `name` using clusters"""
         expected_points = []
         actual_points = []
@@ -110,7 +110,8 @@ class ClusterAlignerBuilder:
                                       expected_points=expected_points,
                                       dh=self.dh,
                                       Nsteps=self.num_steps)
-        return deform
+        shift_array = deform.content()
+        return Aligner(self.image_w, self.image_h, shift_array)
 
     def find_all_alignments(self, clusters : list) -> dict:
         """Build alignment descriptor using clusters"""
@@ -147,7 +148,7 @@ class CorrelationAlignedBuilder:
                        image_ref : np.ndarray,
                        pre_align : ImageDeform | None,
                        pre_align_ref : ImageDeform | None,
-                       smooth : int | None):
+                       smooth : int | None) -> Aligner:
         """Build alignment descriptor of image using correlations"""
         if image.shape != image_ref.shape:
             return None
@@ -161,4 +162,5 @@ class CorrelationAlignedBuilder:
             data = deform.content()
             data = scipy.ndimage.gaussian_filter(data, sigma=smooth, axes=(0,1))
             deform.fill(data)
-        return deform
+        shift_array = deform.content()
+        return Aligner(self.image_w, self.image_h, shift_array)

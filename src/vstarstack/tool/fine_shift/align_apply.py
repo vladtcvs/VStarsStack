@@ -43,13 +43,12 @@ def align_file(project : vstarstack.tool.cfg.Project,
         return
 
     with open(desc_f, encoding='utf8') as f:
-        descriptor = json.load(f)
+        aligner = Aligner.deserialize(json.load(f))
 
     df = vstarstack.library.data.DataFrame.load(input_image_f)
-    aligner = Aligner()
 
     # apply alignment to file
-    df = aligner.apply_alignment(df, descriptor, subpixels)
+    df = aligner.apply_alignment(df, subpixels)
     print(f"{name} - aligned")
 
     vstarstack.tool.common.check_dir_exists(output_image_f)
