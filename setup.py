@@ -74,7 +74,7 @@ setup (name = 'vstarstack',
        package_dir = {'': 'src'},
        packages=packages,
        ext_modules = [projection,
-#                      movements,
+                      movements,
                       image_deform,
                     ],
        install_requires = [
