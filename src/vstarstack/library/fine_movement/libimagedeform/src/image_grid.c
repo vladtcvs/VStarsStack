@@ -172,5 +172,8 @@ double image_grid_correlation(const struct ImageGrid *image1,
             return 1;
         return 0;
     }
-    return top / sqrt(bottom1 * bottom2);
+    double corr = top / sqrt(bottom1 * bottom2);
+    if (corr > 1-1e-6)
+        return 1;
+    return corr;
 }

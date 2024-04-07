@@ -220,10 +220,12 @@ def test_approximate_by_correlation1():
     grid_ref.fill(image_ref)
 
     lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
-    deform = lc.find(grid, None, grid_ref, None, 5, 2, 1)
+    deform = lc.find(grid, None, grid_ref, None, 5, 5, 1)
     assert deform is not None
 
     data = deform.content()
-    print(np.amin(data))
-    print(np.amax(data))
-    
+    assert data.shape[0] == h
+    assert data.shape[1] == w
+    assert data.shape[2] == 2
+    assert np.amin(data) == 0
+    assert np.amax(data) == 0
