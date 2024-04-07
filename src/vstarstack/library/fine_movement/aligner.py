@@ -15,7 +15,11 @@
 import numpy as np
 import scipy
 
-from vstarstack.library.fine_movement.module import ImageDeform, ImageDeformGC, ImageDeformLC
+from vstarstack.library.fine_movement.module import ImageGrid
+from vstarstack.library.fine_movement.module import ImageDeform
+from vstarstack.library.fine_movement.module import ImageDeformLC
+from vstarstack.library.fine_movement.module import ImageDeformGC
+
 from vstarstack.library.data import DataFrame
 
 def _cluster_average(cluster):
@@ -44,8 +48,12 @@ class Aligner:
             image, opts = dataframe.get_channel(channel)
             if opts["encoded"]:
                 continue
-            image = image.astype('double')
-            fixed = self.deform.apply_image(image=image, subpixels=subpixels)
+            w = image.shape[1]
+            h = image.shape[0]
+            grid = ImageGrid(w, h)
+            grid.fill(image.astype('double'))
+            fixed_grid = self.deform.apply_image(image=grid, subpixels=subpixels)
+            fixed = fixed_grid.content()
             fixed[np.where(np.isnan(fixed))] = 0
             dataframe.replace_channel(fixed, channel)
         return dataframe
@@ -146,14 +154,24 @@ class CorrelationAlignedBuilder:
 
     def find_alignment(self, image : np.ndarray,
                        image_ref : np.ndarray,
-                       pre_align : ImageDeform | None,
-                       pre_align_ref : ImageDeform | None,
+                       pre_align : Aligner | None,
+                       pre_align_ref : Aligner | None,
                        smooth : int | None) -> Aligner:
         """Build alignment descriptor of image using correlations"""
         if image.shape != image_ref.shape:
             return None
+        w = image.shape[1]
+        h = image.shape[0]
 
-        deform = self.correlator.find(image, pre_align, image_ref, pre_align_ref,
+        grid = ImageGrid(w, h)
+        grid.fill(image)
+        grid_ref = ImageGrid(w, h)
+        grid_ref.fill(image_ref)
+
+        deform_img = pre_align.deform if pre_align is not None else None
+        deform_ref = pre_align_ref.deform if pre_align_ref is not None else None
+        deform = self.correlator.find(grid, deform_img,
+                                      grid_ref, deform_ref,
                                       self.radius,
                                       self.max_shift,
                                       self.subpixels)

@@ -55,13 +55,13 @@ static PyObject* ImageDeformLC_correlate(PyObject *_self, PyObject *args, PyObje
 
     if (!PyObject_IsInstance(img, (PyObject *)&ImageGrid))
     {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageDeform");
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageGrid");
         Py_INCREF(Py_None);
         return Py_None;
     }
     if (!PyObject_IsInstance(ref_img, (PyObject *)&ImageGrid))
     {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageDeform");
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageGrid");
         Py_INCREF(Py_None);
         return Py_None;
     }
