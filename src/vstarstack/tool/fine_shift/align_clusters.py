@@ -17,7 +17,7 @@ import os
 import json
 import multiprocessing as mp
 
-from vstarstack.library.fine_shift.fine_shift import ClusterAlignerBuilder
+from vstarstack.library.fine_movement.aligner import ClusterAlignerBuilder
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 import vstarstack.tool.configuration
@@ -62,7 +62,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
     print(f"{name} - align found")
     vstarstack.tool.common.check_dir_exists(desc_f)
     with open(desc_f, "w", encoding='utf8') as f:
-        json.dump(alignment, f, ensure_ascii=False, indent=2)
+        json.dump(alignment.serialize(), f, ensure_ascii=False, indent=2)
 
 def _align_file_wrapper(arg):
     align_file(*arg)

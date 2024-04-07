@@ -24,6 +24,8 @@ _module_configuration = {
     "aligns" : (str, "aligns/"),
     "subpixels" : (int, 1),
     "max_shift" : (int, 15),
+    "area_radius" : (int, 15),
+    "correlation_grid" : (int, 15),
 }
 
 configuration = vstarstack.tool.configuration.Configuration(_module_configuration)

@@ -35,14 +35,26 @@ movements = Extension(  name="vstarstack.library.movement.movements",
                             np.get_include(),
                         ])
 
-image_wave = Extension(name="vstarstack.library.fine_shift.image_wave",
-       sources=["src/vstarstack/library/fine_shift/image_wave.c",
-                "src/vstarstack/library/fine_shift/image_wave_interpolation.c",
-                "src/vstarstack/library/fine_shift/image_wave_targets.c",
-                "src/vstarstack/library/fine_shift/image_wave_correlation.c",
-                "src/vstarstack/library/fine_shift/image_wave_module.c",
-                "src/vstarstack/library/fine_shift/image_wave_image.c",
-                ], include_dirs=[np.get_include()])
+libimagedeform_root = "src/vstarstack/library/fine_movement/libimagedeform"
+libimagedeform_headers = [libimagedeform_root + "/include"]
+libimagedeform_sources = [libimagedeform_root + "/src/interpolation.c",
+                          libimagedeform_root + "/src/image_grid.c",
+                          libimagedeform_root + "/src/image_deform.c",
+                          libimagedeform_root + "/src/image_deform_gc.c",
+                          libimagedeform_root + "/src/image_deform_lc.c",
+                        ]
+
+imagedeform_root = "src/vstarstack/library/fine_movement/module"
+imagedeform_sources = [imagedeform_root + "/imagegrid.c",
+                       imagedeform_root + "/imagedeform.c",
+                       imagedeform_root + "/imagedeform_gc.c",
+                       imagedeform_root + "/imagedeform_lc.c",
+                       imagedeform_root + "/imagedeform_module.c",
+                        ]
+
+image_deform = Extension(name="vstarstack.library.fine_movement.module",
+       sources=imagedeform_sources+libimagedeform_sources,
+       include_dirs=[np.get_include()]+libimagedeform_headers)
 
 root = os.path.join(os.path.abspath(os.path.dirname(__file__)), "src")
 result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(root)
@@ -63,7 +75,8 @@ setup (name = 'vstarstack',
        packages=packages,
        ext_modules = [projection,
                       movements,
-                      image_wave],
+                      image_deform,
+                    ],
        install_requires = [
               'numpy',
               'astropy',

@@ -17,7 +17,8 @@ import os
 import json
 import multiprocessing as mp
 
-from vstarstack.library.fine_shift.fine_shift import CorrelationAlignedBuilder
+from vstarstack.library.fine_movement.aligner import CorrelationAlignedBuilder
+from vstarstack.library.fine_movement.aligner import Aligner
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 import vstarstack.tool.configuration
@@ -29,56 +30,63 @@ import vstarstack.tool.common
 ncpu = vstarstack.tool.cfg.nthreads
 
 def create_aligner(project: vstarstack.tool.cfg.Project,
+                   image_w: int,
+                   image_h: int,
                    radius: int,
                    max_shift: int,
+                   pixels: int,
                    subpixels: int):
     """Create aligner for the project"""
-    aligner_factory = CorrelationAlignedBuilder(radius, max_shift, subpixels)
+    aligner_factory = CorrelationAlignedBuilder(image_w, image_h, pixels,
+                                                radius, max_shift, subpixels)
     return aligner_factory
 
 def align_file(project : vstarstack.tool.cfg.Project,
                name : str,
                name_ref : str,
                input_image_f : str,
-               input_image_ref_f : str,
+               image_ref : vstarstack.library.data.DataFrame,
                align_f : str,
                pre_align_f : str | None,
-               pre_align_ref_f : str | None):
+               pre_align_ref : Aligner | None):
     """Apply alignment to each file"""
     print(f"{name} -> {name_ref}")
     if not os.path.exists(input_image_f):
         return
-    if not os.path.exists(input_image_ref_f):
-        return
 
     df = vstarstack.library.data.DataFrame.load(input_image_f)
-    df_ref = vstarstack.library.data.DataFrame.load(input_image_ref_f)
-    shift = project.config.fine_shift.max_shift
-    print(f"Maximal shift: {shift}")
-    aligner_factory = create_aligner(project, 7, shift, 2)
+    
+    max_shift = project.config.fine_shift.max_shift
+    pixels = project.config.fine_shift.correlation_grid
+    area_radius = project.config.fine_shift.area_radius
+    print(f"Maximal shift: {max_shift}")
+    image_w = image_ref.params["w"]
+    image_h = image_ref.params["h"]
+    aligner_factory = create_aligner(project,
+                                     image_w,
+                                     image_h,
+                                     area_radius,
+                                     max_shift,
+                                     pixels,
+                                     2)
 
     light, _ = vstarstack.library.common.df_to_light(df)
-    light_ref, _ = vstarstack.library.common.df_to_light(df_ref)
+    light_ref, _ = vstarstack.library.common.df_to_light(image_ref)
 
     if pre_align_f is None or not os.path.isfile(pre_align_f):
         pre_align = None
     else:
         with open(pre_align_f, encoding='utf8') as f:
-            pre_align = json.load(f)
-
-    if pre_align_ref_f is None or not os.path.isfile(pre_align_ref_f):
-        pre_align_ref = None
-    else:
-        with open(pre_align_ref_f, encoding='utf8') as f:
-            pre_align_ref = json.load(f)
+            pre_align = Aligner.deserialize(json.load(f))
 
     # find alignment
-    alignment = aligner_factory.find_alignment(light, pre_align,
-                                               light_ref, pre_align_ref, 3)
+    alignment = aligner_factory.find_alignment(light, light_ref,
+                                               pre_align, pre_align_ref,
+                                               3)
     print(f"{name} - align to {name_ref} found")
     vstarstack.tool.common.check_dir_exists(align_f)
     with open(align_f, "w", encoding='utf8') as f:
-        json.dump(alignment, f, ensure_ascii=False, indent=2)
+        json.dump(alignment.serialize(), f, ensure_ascii=False, indent=2)
 
 def _align_file_wrapper(arg):
     align_file(*arg)
@@ -98,16 +106,25 @@ def align(project: vstarstack.tool.cfg.Project, argv: list):
 
     files = vstarstack.tool.common.listfiles(npys, ".zip")
     name0, input_image0_f = files[0]
+    input_image0 = vstarstack.library.data.DataFrame.load(input_image0_f)
+    if input_image0 is None:
+        raise Exception("No REFERENCE!")
+
+    if pre_aligns is not None:
+        fname = os.path.join(pre_aligns, name0 + ".json")
+        pre_align0 = Aligner.deserialize(json.load(fname))
+    else:
+        pre_align0 = None
 
     with mp.Pool(ncpu) as pool:
         args = [(project,
                  name,
                  name0,
                  input_image_f,
-                 input_image0_f,
+                 input_image0,
                  os.path.join(aligns, name + ".json"),
                  os.path.join(pre_aligns, name + ".json") if pre_aligns is not None else None,
-                 os.path.join(pre_aligns, name0 + ".json") if pre_aligns is not None else None)
+                 pre_align0)
                  for name, input_image_f in files]
         for _ in pool.imap_unordered(_align_file_wrapper, args):
             pass
