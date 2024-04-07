@@ -58,6 +58,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
     aligner_factory = create_aligner(project, w, h)
 
     # find alignment
+    print(f"{name} - start alignment")
     alignment = aligner_factory.find_alignment(name, clusters)
     print(f"{name} - align found")
     vstarstack.tool.common.check_dir_exists(desc_f)

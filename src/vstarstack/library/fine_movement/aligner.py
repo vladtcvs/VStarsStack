@@ -104,10 +104,13 @@ class ClusterAlignerBuilder:
             # we need reverse transformation
             x = average["x"]
             y = average["y"]
-            expected_points.append((x, y))
+            expected_points.append((y, x))
             x = cluster[name]["x"]
             y = cluster[name]["y"]
-            actual_points.append((x, y))
+            actual_points.append((y, x))
+
+        expected_points = np.array(expected_points).astype("double")
+        actual_points = np.array(actual_points).astype("double")
 
         print(f"\tusing {len(expected_points)} points")
         if len(expected_points) < self.min_points:
