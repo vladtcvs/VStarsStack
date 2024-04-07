@@ -58,13 +58,14 @@ def align_file(project : vstarstack.tool.cfg.Project,
     
     max_shift = project.config.fine_shift.max_shift
     pixels = project.config.fine_shift.correlation_grid
+    area_radius = project.config.fine_shift.area_radius
     print(f"Maximal shift: {max_shift}")
     image_w = image_ref.params["w"]
     image_h = image_ref.params["h"]
     aligner_factory = create_aligner(project,
                                      image_w,
                                      image_h,
-                                     7,
+                                     area_radius,
                                      max_shift,
                                      pixels,
                                      2)

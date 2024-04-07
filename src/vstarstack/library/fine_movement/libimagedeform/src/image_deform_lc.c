@@ -107,8 +107,8 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
                 best_y = iter_y;
             }
         }
-        image_deform_set_shift(&self->array, j, i, 0, best_y - y);
-        image_deform_set_shift(&self->array, j, i, 1, best_x - x);
+        image_deform_set_shift(&self->array, j, i, 0, (best_y - y)*self->array.sy);
+        image_deform_set_shift(&self->array, j, i, 1, (best_x - x)*self->array.sy);
     }
 
     image_grid_finalize(&area);
