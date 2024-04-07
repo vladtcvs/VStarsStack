@@ -24,16 +24,16 @@ projection = Extension( name="vstarstack.library.projection.projections",
                             "src/vstarstack/library/projection/projections/lib/equirectangular.c",
                         ])
 
-#movements = Extension(  name="vstarstack.library.movement.movements",
-#                        sources=[
-#                            "src/vstarstack/library/movement/movements/module.c",
-#                            "src/vstarstack/library/movement/movements/lib/sphere.c",
-#                            "src/vstarstack/library/movement/movements/lib/flat.c",
-#                        ],
-#                        include_dirs=[
-#                            "src/vstarstack/library/projection/projections",
-#                            np.get_include(),
-#                        ])
+movements = Extension(  name="vstarstack.library.movement.movements",
+                        sources=[
+                            "src/vstarstack/library/movement/movements/module.c",
+                            "src/vstarstack/library/movement/movements/lib/sphere.c",
+                            "src/vstarstack/library/movement/movements/lib/flat.c",
+                        ],
+                        include_dirs=[
+                            "src/vstarstack/library/projection/projections",
+                            np.get_include(),
+                        ])
 
 libimagedeform_root = "src/vstarstack/library/fine_movement/libimagedeform"
 libimagedeform_headers = [libimagedeform_root + "/include"]
