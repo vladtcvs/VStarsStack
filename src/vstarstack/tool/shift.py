@@ -52,7 +52,10 @@ def select_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
     with open(selected_shift, "w", encoding='utf8') as f:
         json.dump(serialized[basic_name], f, ensure_ascii=False, indent=4)
 
-def _make_shift(name : str, filename : str, shift : Movement, outfname : str):
+def _make_shift(name : str, filename : str, shift : Movement | None, outfname : str):
+    if shift is None:
+        print(f"Skip {name}")
+        return
     print(f"Processing {name}")
     dataframe = vstarstack.library.data.DataFrame.load(filename)
     print(f"Loaded {name}")
@@ -80,7 +83,7 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
         shifts[name] = Movement.deserialize(shift_ser)
 
     images = vstarstack.tool.common.listfiles(npy_dir, ".zip")
-    args = [(name, filename, shifts[name], os.path.join(shifted_dir, name + ".zip")) 
+    args = [(name, filename, shifts[name] if name in shifts else None, os.path.join(shifted_dir, name + ".zip")) 
             for name, filename in images]
     with mp.Pool(ncpu) as pool:
         pool.starmap(_make_shift, args)
