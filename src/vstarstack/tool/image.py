@@ -15,16 +15,8 @@
 import os
 import math
 import numpy as np
-import imageio
-from astropy.io import fits
 
-import matplotlib.pyplot as plt
-
-from vstarstack.library.image_process.border import border
-from vstarstack.library.image_process.cut import cut
-import vstarstack.library.data
 import vstarstack.tool.common
-
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 
@@ -97,6 +89,8 @@ def _make_frames(dataframe, channels):
 
 
 def _show(_project, argv):
+    import matplotlib.pyplot as plt
+    import vstarstack.library.data
     path = argv[0]
     channels = None
     if len(argv[1:]) > 0:
@@ -130,6 +124,7 @@ def _show(_project, argv):
 
 
 def _convert(_project, argv):
+    import vstarstack.library.data
     path = argv[0]
     out = argv[1]
 
@@ -149,6 +144,7 @@ def _convert(_project, argv):
     ext = ext[1:]
 
     if ext == "fits":
+        from astropy.io import fits
         vstarstack.tool.common.check_dir_exists(path)
         for channel, img in frames.items():
             if NORM:
@@ -160,6 +156,7 @@ def _convert(_project, argv):
             fname = os.path.join(path, f"{name}_{channel}.{ext}")
             hdul.writeto(fname)
     else:
+        import imageio
         for channels, img in frames.items():
             if nch > 1:
                 fname = os.path.join(path, f"{name}_{channels}.{ext}")
@@ -176,6 +173,8 @@ def _convert(_project, argv):
             imageio.imwrite(fname, img)
 
 def _cut(_project, argv):
+    import vstarstack.library.data
+    from vstarstack.library.image_process.cut import cut
     path = argv[0]
     left = int(argv[1])
     top = int(argv[2])
@@ -189,6 +188,7 @@ def _cut(_project, argv):
     result.store(out)
 
 def _rename_channel(_project, argv):
+    import vstarstack.library.data
     name = argv[0]
     channel = argv[1]
     target = argv[2]
@@ -199,6 +199,7 @@ def _rename_channel(_project, argv):
     dataframe.store(name)
 
 def _exposures(_project, argv):
+    import vstarstack.library.data
     fname = argv[0]
     dataframe = vstarstack.library.data.DataFrame.load(fname)
     channels = dataframe.get_channels()
