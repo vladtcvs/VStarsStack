@@ -38,16 +38,16 @@ def test_path_autocompletion_4():
     assert variants[0] == ("star_001.png", False)
 
 def test_path_autocompletion_5():
-    variants = autocomplete_files(os.path.join(dir_path, "stars"))
+    variants = autocomplete_files([os.path.join(dir_path, "stars")])
     assert len(variants) == 1
     assert variants[0] == os.path.join(dir_path, "stars/")
 
 def test_path_autocompletion_6():
-    variants = autocomplete_files(os.path.join(dir_path, "sta"))
+    variants = autocomplete_files([os.path.join(dir_path, "sta")])
     assert len(variants) == 1
     assert variants[0] == os.path.join(dir_path, "stars/")
 
 def test_path_autocompletion_7():
-    variants = autocomplete_files(os.path.join(dir_path, "stars/"))
+    variants = autocomplete_files([os.path.join(dir_path, "stars/")])
     assert len(variants) == 9
     assert variants[0] == os.path.join(dir_path, "stars/star_001.png")

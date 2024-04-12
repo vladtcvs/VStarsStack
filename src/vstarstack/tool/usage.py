@@ -31,8 +31,11 @@ def complete_path_in_dir(dirname : str | None, prefix : str):
             variants.append((path, False))
     return sorted(variants, key=lambda item : item[0])
 
-def autocomplete_files(prefix : str):
-    """Autocomplete path"""
+def autocomplete_filename(prefix : str):
+    if os.path.isfile(prefix):
+        """Path already completed"""
+        return []
+
     pos = prefix.rfind(os.sep)
     if pos == -1:
         variants = complete_path_in_dir(None, prefix)
@@ -55,28 +58,35 @@ def autocomplete_files(prefix : str):
             comps.append(os.path.join(dirname, path))
     return comps
 
+def autocomplete_files(argv : list):
+    """Autocomplete path"""
+    if len(argv) == 0:
+        return []
+
+    prefix = argv[-1]
+    return autocomplete_filename(prefix)
+
 
 def autocompletion(commands : dict, argv : list):
     """Autocompletion"""
+
     if len(argv) == 0:
         current_input = ""
     else:
         current_input = argv[0]
-    for cmd in commands:
-        if cmd == current_input:
-            submodule = commands[cmd][0]
-            if isinstance(submodule, dict):
-                return autocompletion(submodule, argv[1:])
-            if len(argv) > 1:
-                last = argv[-1]
-            else:
-                last = ""
-            return autocomplete_files(last)
+        for cmd in commands:
+            if cmd == current_input:
+                command = commands[cmd][0]
+                if isinstance(command, dict):
+                    """Go to subcommand completion"""
+                    return autocompletion(command, argv[1:])
+                else:
+                    return autocomplete_files(argv[1:])
 
     variants = []
     for cmd in commands:
         if cmd.startswith(current_input):
-            variants.append(cmd)
+            variants.append(cmd + " ")
     return variants
 
 def usage(base : str, commands : dict, message : str):

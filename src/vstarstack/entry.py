@@ -10,11 +10,9 @@ def main():
     program_project = vstarstack.tool.cfg.get_project()
 
     if vstarstack.tool.cfg.get_param("autocomplete", bool, False):
-        #with open("complete", "w") as f:
-        #    print(sys.argv, file=f)
         program_argv = [item for item in sys.argv[2:] if item[:2] != "--"]
-        variants = vstarstack.tool.usage.autocompletion(vstarstack.tool.process.commands,
-                                                    program_argv)
+        commands = vstarstack.tool.process.commands
+        variants = vstarstack.tool.usage.autocompletion(commands, program_argv)
         for variant in variants:
             print(variant)
     else:
