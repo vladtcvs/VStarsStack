@@ -70,13 +70,17 @@ setup (name = 'vstarstack',
        version = '0.1',
        author='Vladislav Tsendrovskii',
        description = 'Stacking astrophotos',
-       scripts = ['bin/vstarstack'],
        package_dir = {'': 'src'},
        packages=packages,
        ext_modules = [projection,
                       movements,
                       image_deform,
                     ],
+       entry_points = {
+           'console_scripts': [
+               'vstarstack = vstarstack.entry:main',
+           ],
+       },
        install_requires = [
               'numpy',
               'astropy',
