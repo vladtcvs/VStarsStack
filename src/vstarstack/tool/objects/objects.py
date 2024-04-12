@@ -15,7 +15,6 @@
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
 
-import vstarstack.tool.objects.detect
 import vstarstack.tool.objects.cut
 import vstarstack.tool.objects.config
 import vstarstack.tool.objects.features
@@ -26,7 +25,7 @@ def _enable_objects(project : vstarstack.tool.cfg.Project, _argv: list[str]):
 
 commands = {
     "config": (_enable_objects, "configure compact_objects pipeline"),
-    "detect": (vstarstack.tool.objects.detect.commands, "detect compact objects"),
+    "detect": ("vstarstack.tool.objects.detect", "detect compact objects"),
     "features": (vstarstack.tool.objects.features.run, "detect and match image features"),
     "cut": (vstarstack.tool.objects.cut.run, "cut compact objects"),
 }

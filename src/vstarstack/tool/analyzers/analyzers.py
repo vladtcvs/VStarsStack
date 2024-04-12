@@ -12,8 +12,6 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import vstarstack.tool.analyzers.measure_mag
-
 commands = {
-    "measure-mag" : (vstarstack.tool.analyzers.measure_mag.commands, "measure star magnitude"),
+    "measure-mag" : ("vstarstack.tool.analyzers.measure_mag", "measure star magnitude"),
 }

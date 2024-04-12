@@ -17,12 +17,13 @@ import vstarstack.tool.cfg
 import vstarstack.tool.usage
 import vstarstack.tool.manage_project
 
+import vstarstack.tool.debayer
 import vstarstack.tool.clean
 
 commands = {
     "readimage": ("vstarstack.tool.readimage",
                   "read source images to npz"),
-    "debayer": ("vstarstack.tool.debayer",
+    "debayer": (vstarstack.tool.debayer.run,
                 "debayer RAW images"),
     "process": ("vstarstack.tool.image_processing.fixes",
                 "process - make optical fixes and other image fixes"),

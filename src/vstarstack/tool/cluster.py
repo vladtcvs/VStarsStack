@@ -15,9 +15,6 @@
 import os
 import json
 import csv
-import numpy as np
-import cv2
-import matplotlib.pyplot as plt
 
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
@@ -28,6 +25,10 @@ from vstarstack.library.movement.sphere import Movement
 
 def display(_project: vstarstack.tool.cfg.Project, argv: list):
     """Display clusters"""
+    import cv2
+    import matplotlib.pyplot as plt
+    import numpy as np
+
     slope = vstarstack.tool.cfg.get_param("multiply", float, 1)
     with open(argv[0], encoding='utf8') as file:
         clusters = json.load(file)

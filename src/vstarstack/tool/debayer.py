@@ -60,7 +60,7 @@ def _process_path(default_format, input_path, output_path):
         for _ in pool.imap_unordered(_process_file_wrapper, args):
             pass
 
-def _process(project: vstarstack.tool.cfg.Project, argv: list):
+def run(project: vstarstack.tool.cfg.Project, argv: list):
     default_format = project.config.telescope.camera.format
     if len(argv) > 0:
         input_path = argv[0]
@@ -73,7 +73,3 @@ def _process(project: vstarstack.tool.cfg.Project, argv: list):
         _process_path(default_format,
                       project.config.paths.npy_orig,
                       project.config.paths.npy_fixed)
-
-commands = {
-    "*": (_process, "debayer image", "input/ output/"),
-}
