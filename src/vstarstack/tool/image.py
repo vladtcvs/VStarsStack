@@ -16,10 +16,7 @@ import os
 import math
 import numpy as np
 
-from vstarstack.library.image_process.border import border
-from vstarstack.library.image_process.cut import cut
 import vstarstack.tool.common
-
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 
@@ -177,6 +174,7 @@ def _convert(_project, argv):
 
 def _cut(_project, argv):
     import vstarstack.library.data
+    from vstarstack.library.image_process.cut import cut
     path = argv[0]
     left = int(argv[1])
     top = int(argv[2])
