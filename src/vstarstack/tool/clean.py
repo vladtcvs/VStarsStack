@@ -15,7 +15,6 @@
 import os
 
 import vstarstack.tool.common
-import vstarstack.library.common
 import vstarstack.tool.cfg
 
 def run(project: vstarstack.tool.cfg.Project, _argv: list):

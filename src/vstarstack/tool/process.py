@@ -17,51 +17,38 @@ import vstarstack.tool.cfg
 import vstarstack.tool.usage
 import vstarstack.tool.manage_project
 
-import vstarstack.tool.config
-import vstarstack.tool.image
 import vstarstack.tool.clean
-import vstarstack.tool.readimage
-import vstarstack.tool.merge
-import vstarstack.tool.debayer
-import vstarstack.tool.stars.stars
-import vstarstack.tool.cluster
-import vstarstack.tool.shift
-import vstarstack.tool.image_processing.fixes
-import vstarstack.tool.fine_shift.fine_shift
-import vstarstack.tool.objects.objects
-import vstarstack.tool.calibration
-import vstarstack.tool.analyzers.analyzers
 
 commands = {
-    "readimage": (vstarstack.tool.readimage.commands,
+    "readimage": ("vstarstack.tool.readimage",
                   "read source images to npz"),
-    "debayer": (vstarstack.tool.debayer.run,
+    "debayer": ("vstarstack.tool.debayer",
                 "debayer RAW images"),
-    "image-process": (vstarstack.tool.image_processing.fixes.commands,
+    "image-process": ("vstarstack.tool.image_processing.fixes",
                   "image-process - make optical fixes and other image fixes"),
-    "calibration": (vstarstack.tool.calibration.commands,
+    "calibration": ("vstarstack.tool.calibration",
                     "calibration - flats, darks"),
-    "objects": (vstarstack.tool.objects.objects.commands,
+    "objects": ("vstarstack.tool.objects.objects",
                 "commands for processing images with compact objects " +
                 "(planets, diffractions, etc)"),
-    "stars": (vstarstack.tool.stars.stars.commands,
+    "stars": ("vstarstack.tool.stars.stars",
               "commands for processing stars images"),
-    "cluster": (vstarstack.tool.cluster.commands,
+    "cluster": ("vstarstack.tool.cluster",
                 "command for cluster processing"),
-    "shift": (vstarstack.tool.shift.commands,
+    "shift": ("vstarstack.tool.shift",
               "move and rotate images to match them"),
-    "merge": (vstarstack.tool.merge.commands,
+    "merge": ("vstarstack.tool.merge",
               "merge images", "input_dir/ output.npz"),
     "project": (vstarstack.tool.manage_project.run,
                 "configurate project"),
 #    "planets": (vstarstack.targets.planets.planets.run,
 #                "commands for processing planets"),
-    "image": (vstarstack.tool.image.commands,
+    "image": ("vstarstack.tool.image",
               "image processing (show, convert, etc)"),
     "clean": (vstarstack.tool.clean.run,
               "remove temporary files"),
-    "fine-shift": (vstarstack.tool.fine_shift.fine_shift.commands,
+    "fine-shift": ("vstarstack.tool.fine_shift.fine_shift",
                    "fine shift images"),
-    "analyzers": (vstarstack.tool.analyzers.analyzers.commands,
+    "analyzers": ("vstarstack.tool.analyzers.analyzers",
                    "analyze images"),
 }
