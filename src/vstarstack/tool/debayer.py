@@ -74,5 +74,6 @@ def _process(project: vstarstack.tool.cfg.Project, argv: list):
                       project.config.paths.npy_orig,
                       project.config.paths.npy_fixed)
 
-def run(project: vstarstack.tool.cfg.Project, argv: list):
-    _process(project, argv)
+commands = {
+    "*": (_process, "debayer image", "input/ output/"),
+}

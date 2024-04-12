@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2022-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,6 +13,8 @@
 #
 
 import os
+import importlib
+
 _PRGNAME = "vstarstack"
 
 def complete_path_in_dir(dirname : str | None, prefix : str):
@@ -80,6 +82,10 @@ def autocompletion(commands : dict, argv : list):
                 if isinstance(command, dict):
                     """Go to subcommand completion"""
                     return autocompletion(command, argv[1:])
+                elif isinstance(command, str):
+                    """Go to subcommand completion"""
+                    loaded_submodule = importlib.import_module(command)
+                    return autocompletion(loaded_submodule.commands, argv[1:])
                 else:
                     return autocomplete_files(argv[1:])
 
@@ -135,5 +141,12 @@ def run(project, argv, base, commands, message=None):
         else:
             new_base = cmd
         run(project, argv[1:], new_base, submodule, message)
+    elif isinstance(submodule, str):
+        if len(base) > 0:
+            new_base = base + " " + cmd
+        else:
+            new_base = cmd
+        loaded_submodule = importlib.import_module(submodule)
+        run(project, argv[1:], new_base, loaded_submodule.commands, message)
     else:
         submodule(project, argv[1:])
