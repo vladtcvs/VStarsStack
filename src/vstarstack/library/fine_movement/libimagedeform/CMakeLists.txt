@@ -56,4 +56,9 @@ if (BUILD_TESTS)
 
     include(GoogleTest)
     gtest_discover_tests(deform_test)
+
+    if (UNIX)
+        add_custom_target(memory_leak_test sh ${CMAKE_SOURCE_DIR}/run_valgrind_tests.sh ${CMAKE_BINARY_DIR}/deform_test
+                          DEPENDS deform_test)
+    endif()
 endif()
