@@ -1,4 +1,4 @@
 #!/bin/sh
 
-valgrind -s $1
-exit 0
+valgrind --error-exitcode 1 -s $1
+exit $?
