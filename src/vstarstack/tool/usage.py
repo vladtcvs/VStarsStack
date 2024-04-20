@@ -148,6 +148,9 @@ def run(project, argv, base, commands, message=None):
             new_base = cmd
         print("Load module: %s" % submodule)
         loaded_submodule = importlib.import_module(submodule)
-        run(project, argv[1:], new_base, loaded_submodule.commands, message)
+        if "commands" in dir(loaded_submodule):
+            run(project, argv[1:], new_base, loaded_submodule.commands, message)
+        elif "run" in dir(loaded_submodule):
+            loaded_submodule.run(project, argv[1:])
     else:
         submodule(project, argv[1:])
