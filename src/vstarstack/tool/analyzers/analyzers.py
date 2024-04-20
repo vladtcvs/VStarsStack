@@ -14,4 +14,5 @@
 
 commands = {
     "measure-mag" : ("vstarstack.tool.analyzers.measure_mag", "measure star magnitude"),
+    "measure-fwhm" : ("vstarstack.tool.analyzers.measure_fwhm", "measure full width at half maximum"),
 }

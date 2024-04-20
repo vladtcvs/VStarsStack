@@ -126,8 +126,16 @@ class DataFrame:
         """Add parameter"""
         self.params[name] = value
 
-    def get_channel(self, channel) -> Tuple[dict, np.ndarray]:
-        """Get channel image"""
+    def get_channel(self, channel : str) -> Tuple[np.ndarray, dict]:
+        """
+        Get channel image.
+
+        Parameters:
+            channel (str) - channel name
+
+        Returns:
+            tuple(image, options) - ndarray with pixel data and channel options
+        """
         return self.channels[channel]["data"], self.channels[channel]["options"]
 
     def get_channels(self) -> List[str]:
