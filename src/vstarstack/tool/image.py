@@ -15,6 +15,7 @@
 import os
 import math
 import numpy as np
+import multiprocessing as mp
 
 import vstarstack.tool.common
 import vstarstack.tool.usage
@@ -172,20 +173,34 @@ def _convert(_project, argv):
             vstarstack.tool.common.check_dir_exists(fname)
             imageio.imwrite(fname, img)
 
-def _cut(_project, argv):
+def _cut_file(path, out, left, top, right, bottom):
     import vstarstack.library.data
     from vstarstack.library.image_process.cut import cut
+    print("Processing %s" % path)
+    dataframe = vstarstack.library.data.DataFrame.load(path)
+    result = cut(dataframe, left, top, right, bottom)
+    vstarstack.tool.common.check_dir_exists(out)
+    result.store(out)
+
+def _cut_dir(path, out, left, top, right, bottom):
+    files = vstarstack.tool.common.listfiles(path, ".zip")
+    with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
+        args = [(filename, os.path.join(out, name + ".zip"),
+                 left, top, right, bottom) for name, filename in files]
+        pool.starmap(_cut_file, args)
+
+def _cut(_project, argv):
     path = argv[0]
     left = int(argv[1])
     top = int(argv[2])
     right = int(argv[3])
     bottom = int(argv[4])
     out = argv[5]
-
-    dataframe = vstarstack.library.data.DataFrame.load(path)
-    result = cut(dataframe, left, top, right, bottom)
-    vstarstack.tool.common.check_dir_exists(out)
-    result.store(out)
+    if os.path.isdir(path):
+        _cut_dir(path, out, left, top, right, bottom)
+    else:
+        _cut_file(path, out, left, top, right, bottom)
+    
 
 def _rename_channel(_project, argv):
     import vstarstack.library.data
