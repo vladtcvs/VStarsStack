@@ -1,6 +1,6 @@
 numpy
 astropy
-rawpy
+rawpy <= 0.21.0
 pillow
 imageio
 exifread
@@ -11,3 +11,4 @@ imutils
 matplotlib
 pytest
 pytz
+
