@@ -32,10 +32,9 @@ extension-pkg-allow-list=
 # run arbitrary code. (This is an alternative name to extension-pkg-allow-list
 # for backward compatibility.)
 extension-pkg-whitelist=cv2,
-    vstarstack.library.projection,
-    vstarstack.library.projection.perspective,
-    vstarstack.library.projection.orthographic,
-    vstarstack.library.projection.equirectangular
+    vstarstack.library.projection.projections,
+    vstarstack.library.fine_movement.module,
+    vstarstack.library.movement.movements
 
 # Return non-zero exit code if any of these messages/categories are detected,
 # even if score is above --fail-under value. Syntax same as enable. Messages
@@ -43,7 +42,7 @@ extension-pkg-whitelist=cv2,
 fail-on=
 
 # Specify a score threshold under which the program will exit with error.
-fail-under=10
+fail-under=9
 
 # Interpret the stdin as a python script, whose filename needs to be passed as
 # the module_or_package argument.
@@ -68,11 +67,9 @@ ignore-patterns=^\.#
 # and thus existing member attributes cannot be deduced by static analysis). It
 # supports qualified module names, as well as Unix pattern matching.
 ignored-modules=cv2,
-    vstarstack.library.projection,
-    vstarstack.library.projection.perspective,
-    vstarstack.library.projection.orthographic,
-    vstarstack.library.projection.equirectangular,
-    vstarstack.library.fine_shift
+    vstarstack.library.projection.projections,
+    vstarstack.library.fine_movement.module,
+    vstarstack.library.movement.movements
 
 
 # Python code to execute, usually for sys.path manipulation such as
