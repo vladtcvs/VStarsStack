@@ -17,6 +17,7 @@ import cv2
 import numpy as np
 from skimage import measure
 import imutils
+import imutils.contours
 
 def detect(layer : np.ndarray,
            min_size : int,
