@@ -16,6 +16,8 @@ import cv2
 import numpy as np
 
 import imutils
+import imutils.contours
+
 from skimage import measure
 import matplotlib.pyplot as plt
 
@@ -33,9 +35,11 @@ def get_subimage(image, num_splits):
             subimage = image[base_y:next_y, base_x:next_x]
             yield subimage, base_x, base_y
 
-def _find_keypoints_orb(image, base_x, base_y, detector):
+def _find_keypoints_orb(image : np.ndarray, base_x : int, base_y : int, detector):
     """Find keypoints with ORB detector"""
     cpts = []
+    if image.dtype != np.uint8:
+        image = (image * 255 / np.amax(image)).astype("uint8")
     points = detector.detect(image, mask=None)
     for point in points:
         pdesc = {
@@ -46,9 +50,9 @@ def _find_keypoints_orb(image, base_x, base_y, detector):
         cpts.append(pdesc)
     return cpts
 
-def find_keypoints_orb(image, num_splits):
+def find_keypoints_orb(image, num_splits, param):
     points = []
-    orb = cv2.ORB_create()
+    orb = cv2.ORB_create(patchSize=param["patchSize"])
     for subimage, bx, by in get_subimage(image, num_splits):
         points += _find_keypoints_orb(subimage, bx, by, orb)
     return points
@@ -108,7 +112,8 @@ def find_keypoints_brightness(image, num_splits, params):
     return points
 
 def describe_keypoints(image : np.ndarray,
-                       keypoints : list) -> list:
+                       keypoints : list,
+                       param : dict) -> list:
     """
     Build keypoints and calculate their descriptors
 
@@ -120,7 +125,7 @@ def describe_keypoints(image : np.ndarray,
 
     Return: list of keypoint and list of descriptors
     """
-    orb = cv2.ORB_create()
+    orb = cv2.ORB_create(patchSize=param["patchSize"])
     kps = [cv2.KeyPoint(point["x"], point["y"], point["size"]) for point in keypoints]
     image = np.clip(image / np.amax(image), 0, 1)*255
     image = image.astype('uint8')

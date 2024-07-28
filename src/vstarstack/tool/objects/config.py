@@ -30,10 +30,10 @@ _module_configuration = {
         "max_diameter": (int, 40),
     }),
     "features" : ("module", {
-        "detector" : (str, "brightness"),
+        "path" : (str, "features/"),
         "num_splits" : (int, 4),
-        "max_feature_delta" : (int, 10),
-        "features_percent" : (int, 20),
+        "max_feature_delta" : (int, 20),
+        "features_percent" : (int, 100),
         "bright_spots": {
             "blurSize" : (int, 21),
             "k_thr" : (float, 1.15),
@@ -41,7 +41,9 @@ _module_configuration = {
             "minPixel" : (int, 5),
             "maxPixel" : (int, 20),
         },
-        "orb" : {},
+        "orb" : {
+            "patchSize" : (int, 31),
+        },
     }),
 }
 
