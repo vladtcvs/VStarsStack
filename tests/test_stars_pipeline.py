@@ -122,5 +122,7 @@ def test_1():
     merged = vstarstack.library.merge.simple_add(source)
     layer,_ = merged.get_channel("L")
 
+    import matplotlib.pyplot as plt
+    
     merged_stars = vstarstack.library.stars.detect.detect_stars(layer)
     assert len(merged_stars) == 4

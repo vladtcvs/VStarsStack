@@ -26,6 +26,7 @@ _detector_cfg = {
     "BORDER_WIDTH" : 10,
     "MIN_STAR_R" : 2,
     "MAX_STAR_R" : 20,
+    "SAFETY_THRESHOLD" : 1e-4,
 }
 
 def calculate_brightness(image : np.ndarray, x : int, y : int, r : int):
@@ -36,12 +37,13 @@ def calculate_brightness(image : np.ndarray, x : int, y : int, r : int):
     pos_mask = np.zeros(patch.shape)
     cv2.circle(pos_mask, (r, r), r, 1, -1)
     masked = patch * pos_mask
+    masked = np.clip(masked, 0, None)
     brightness = math.sqrt(np.sum(masked) / math.pi)
     return brightness
 
-def _threshold(image, radius, ratio):
+def _threshold(image, radius, ratio, safety_threshold):
     filtered = cv2.GaussianBlur(image, (2*radius+1, 2*radius+1), 0)
-    mask = (image > filtered*ratio).astype('uint8')
+    mask = (image > filtered*ratio + safety_threshold).astype('uint8')
     return mask
 
 def _find_stars(gray_image : np.ndarray):
@@ -51,7 +53,8 @@ def _find_stars(gray_image : np.ndarray):
     gray_image = cv2.GaussianBlur(gray_image, (3, 3), 0)
 
     thresh = _threshold(gray_image, _detector_cfg["THRESHOLD_BLOCK_SIZE"],
-                                    _detector_cfg["THRESHOLD_COEFF"])
+                                    _detector_cfg["THRESHOLD_COEFF"],
+                                    _detector_cfg["SAFETY_THRESHOLD"])
 
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
     blob = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
@@ -108,7 +111,8 @@ def configure_detector(*,
                        max_r = None,
                        border = None,
                        thresh_block_size = None,
-                       thresh_coeff = None):
+                       thresh_coeff = None,
+                       safety_threshold = None):
     """Configure detector parameters"""
     global _detector_cfg
     if min_r is not None:
@@ -121,3 +125,5 @@ def configure_detector(*,
         _detector_cfg["THRESHOLD_BLOCK_SIZE"] = thresh_block_size
     if thresh_coeff is not None:
         _detector_cfg["THRESHOLD_COEFF"] = thresh_coeff
+    if safety_threshold is not None:
+        _detector_cfg["SAFETY_THRESHOLD"] = safety_threshold
