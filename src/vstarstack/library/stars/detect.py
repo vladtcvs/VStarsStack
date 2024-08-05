@@ -40,10 +40,7 @@ def calculate_brightness(image : np.ndarray, x : int, y : int, r : int):
     return brightness
 
 def _threshold(image, radius, ratio):
-    kernel = np.zeros((2*radius+1, 2*radius+1))
-    cv2.circle(kernel, (radius, radius), radius, 1, -1)
-    kernel = kernel / np.sum(kernel)
-    filtered = cv2.filter2D(image, ddepth=-1, kernel=kernel)
+    filtered = cv2.GaussianBlur(image, (2*radius+1, 2*radius+1), 0)
     mask = (image > filtered*ratio).astype('uint8')
     return mask
 
@@ -52,11 +49,10 @@ def _find_stars(gray_image : np.ndarray):
     shape = gray_image.shape
 
     gray_image = cv2.GaussianBlur(gray_image, (3, 3), 0)
-    gray_image = (gray_image / np.amax(gray_image) * 255).astype('uint8')
 
     thresh = _threshold(gray_image, _detector_cfg["THRESHOLD_BLOCK_SIZE"],
                                     _detector_cfg["THRESHOLD_COEFF"])
-    
+
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
     blob = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5))
