@@ -1,6 +1,6 @@
 """Add projection description to dataframe"""
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,56 +13,85 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import vstarstack.library.data
-import vstarstack.library.projection.projections
+import typing
 
-def add_description(dataframe : vstarstack.library.data.DataFrame, projection : str, **argv):
+import vstarstack.library.data
+from vstarstack.library.projection import ProjectionType
+from vstarstack.library.projection.projections import PerspectiveProjection
+from vstarstack.library.projection.projections import EquirectangularProjection
+from vstarstack.library.projection.projections import OrthographicProjection
+
+def add_description(dataframe : vstarstack.library.data.DataFrame, projection : ProjectionType, **argv):
     """Add projection description to dataframe"""
-    if projection == "perspective":
+    if projection == ProjectionType.Perspective:
         F = argv["F"]
         kw = argv["kw"]
         kh = argv["kh"]
-        dataframe.add_parameter(F, "perspective_F")
-        dataframe.add_parameter(kw, "perspective_kw")
-        dataframe.add_parameter(kh, "perspective_kh")
-    elif projection == "equirectangular":
-        pass
-    elif projection == "orthographic":
+        dataframe.add_parameter(F, "projection_perspective_F")
+        dataframe.add_parameter(kw, "projection_perspective_kw")
+        dataframe.add_parameter(kh, "projection_perspective_kh")
+        name = "perspective"
+    elif projection == ProjectionType.Equirectangular:
+        name = "equirectangular"
+    elif projection == ProjectionType.Orthographic:
         a = argv["a"]
         b = argv["b"]
         angle = argv["angle"]
         rot = argv["rot"]
-        dataframe.add_parameter(a, "orthographic_a")
-        dataframe.add_parameter(b, "orthographic_b")
-        dataframe.add_parameter(angle, "orthographic_angle")
-        dataframe.add_parameter(rot, "orthographic_rot")
+        dataframe.add_parameter(a, "projection_orthographic_a")
+        dataframe.add_parameter(b, "projection_orthographic_b")
+        dataframe.add_parameter(angle, "projection_orthographic_angle")
+        dataframe.add_parameter(rot, "projection_orthographic_rot")
+        name = "orthographic"
 
-    dataframe.add_parameter(projection, "projection")
+    dataframe.add_parameter(name, "projection")
+
+def extract_description(dataframe : vstarstack.library.data.DataFrame) -> typing.Tuple[ProjectionType, dict]:
+    """Extract projection description from dataframe"""
+    projection = dataframe.get_parameter("projection")
+    if projection is None:
+        return None
+    elif projection == "perspective":
+        return ProjectionType.Perspective, {
+            "F" : dataframe.get_parameter("projection_perspective_F"),
+            "kw" : dataframe.get_parameter("projection_perspective_kw"),
+            "kh" : dataframe.get_parameter("projection_perspective_kh"),
+        }
+    elif projection == "equirectangular":
+        return ProjectionType.Equirectangular, {}
+    elif projection == "orthographic":
+        return ProjectionType.Orthographic, {
+            "a" : dataframe.get_parameter("projection_orthographic_a"),
+            "b" : dataframe.get_parameter("projection_orthographic_b"),
+            "angle" : dataframe.get_parameter("projection_orthographic_angle"),
+            "rot" : dataframe.get_parameter("projection_orthographic_rot"),
+        }
+    else:
+        raise Exception("Unknown projection")
+
+def build_projection(projection: ProjectionType, desc : dict, shape : tuple):
+    """Build projection by description"""
+    w = shape[1]
+    h = shape[0]
+
+    if projection == ProjectionType.Perspective:
+        F = desc["F"]
+        W = w * desc["kw"]
+        H = h * desc["kh"]
+        return PerspectiveProjection(w, h, W, H, F)
+
+    elif projection == ProjectionType.Equirectangular:
+        return EquirectangularProjection(w, h)
+
+    elif projection == ProjectionType.Orthographic:
+        a = desc["a"]
+        b = desc["b"]
+        angle = desc["angle"]
+        rot = desc["rot"]
+        return OrthographicProjection(w, h, a, b, angle, rot)
 
 def get_projection(dataframe : vstarstack.library.data.DataFrame):
     """Get projection from dataframe"""
-    if "projection" not in dataframe.params:
-        return None
-    if dataframe.params["projection"] == "perspective":
-        F = dataframe.params["perspective_F"]
-        w = dataframe.params["w"]
-        h = dataframe.params["h"]
-        W = w * dataframe.params["perspective_kw"]
-        H = h * dataframe.params["perspective_kh"]
-        return vstarstack.library.projection.projections.PerspectiveProjection(w, h, W, H, F)
-
-    if dataframe.params["projection"] == "equirectangular":
-        w = dataframe.params["w"]
-        h = dataframe.params["h"]
-        return vstarstack.library.projection.projections.EquirectangularProjection(w, h)
-    
-    if dataframe.params["projection"] == "orthographic":
-        w = dataframe.params["w"]
-        h = dataframe.params["h"]
-        a = dataframe.params["a"]
-        b = dataframe.params["b"]
-        angle = dataframe.params["angle"]
-        rot = dataframe.params["rot"]
-        return vstarstack.library.projection.projections.OrthographicProjection(w, h, a, b, angle, rot)
-
-    raise Exception("Unknown projection")
+    projection, desc = extract_description(dataframe)
+    shape = (dataframe.get_parameter("h"), dataframe.get_parameter("w"))
+    return build_projection(projection, desc, shape)

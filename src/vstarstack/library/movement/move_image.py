@@ -109,7 +109,8 @@ def move_dataframe(dataframe: DataFrame,
         output_proj = input_proj
 
     output_dataframe = DataFrame()
-    vstarstack.library.projection.tools.add_description(output_dataframe, output_proj)
+    output_dataframe.add_parameter(output_shape[0], "h")
+    output_dataframe.add_parameter(output_shape[1], "w")
 
     for channel in dataframe.get_channels():
         image, opts = dataframe.get_channel(channel)

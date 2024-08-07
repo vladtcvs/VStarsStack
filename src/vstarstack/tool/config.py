@@ -20,6 +20,9 @@ import vstarstack.tool.planets.config
 import vstarstack.tool.fine_shift.config
 
 _module_configuration = {
+    "output" : {
+        "projection" : (str, "COPY"),
+    },
     "paths": {
         "original": (str, "orig", {"directory" : True}),
         "npy_orig": (str, "npy_orig", {"directory" : True}),
