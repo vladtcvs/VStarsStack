@@ -14,6 +14,9 @@
 
 import math
 from vstarstack.library.projection.projections import PerspectiveProjection
+from vstarstack.library.projection import ProjectionType
+from vstarstack.library.projection import tools 
+from vstarstack.library.data import DataFrame
 
 thr = 1e-6
 
@@ -146,3 +149,54 @@ def test_custom_1():
     lon, lat = proj.project(x, y)
     
     assert abs(lon - 0.0053832813307391) < thr
+
+def test_tools_1():
+    desc = {
+        "F" : 420,
+        "kw" : 0.0038,
+        "kh" : 0.0038,
+    }
+    shape = (3506, 4640)
+    proj = tools.build_projection(ProjectionType.Perspective, desc, shape)
+    
+    x = 1725
+    y = 2224
+    lon, lat = proj.project(x, y)
+    
+    assert abs(lon - 0.0053832813307391) < thr
+
+def test_tools_2():
+    desc = {
+        "F" : 420,
+        "kw" : 0.0038,
+        "kh" : 0.0038,
+    }
+    shape = (3506, 4640)
+    
+    df = DataFrame(params={"w":shape[1], "h":shape[0]})
+    tools.add_description(df, ProjectionType.Perspective, **desc)
+    assert df.get_parameter("projection") == "perspective"
+    assert df.get_parameter("projection_perspective_kw") == 0.0038
+    assert df.get_parameter("projection_perspective_kh") == 0.0038
+    assert df.get_parameter("projection_perspective_F") == 420
+
+def test_tools_3():
+    desc = {
+        "F" : 420,
+        "kw" : 0.0038,
+        "kh" : 0.0038,
+    }
+    shape = (3506, 4640)
+    
+    df = DataFrame(params={"w":shape[1], "h":shape[0]})
+    tools.add_description(df, ProjectionType.Perspective, **desc)
+    assert df.get_parameter("projection") == "perspective"
+    assert df.get_parameter("projection_perspective_kw") == 0.0038
+    assert df.get_parameter("projection_perspective_kh") == 0.0038
+    assert df.get_parameter("projection_perspective_F") == 420
+
+    type, desc = tools.extract_description(df)
+    assert type == ProjectionType.Perspective
+    assert desc["F"] == 420
+    assert desc["kw"] == 0.0038
+    assert desc["kw"] == 0.0038
