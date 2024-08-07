@@ -113,7 +113,7 @@ def test_1():
     moved = []
     for id, image in enumerate(images):
         t = shifts[names[id]]
-        mvd = vstarstack.library.movement.move_image.move_dataframe(image, t, proj)
+        mvd = vstarstack.library.movement.move_image.move_dataframe(image, t, input_proj=proj)
         moved.append(mvd)
 
     assert len(moved) == 4
