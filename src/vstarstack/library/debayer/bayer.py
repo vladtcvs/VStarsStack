@@ -35,7 +35,7 @@ def generate_mask(name):
     return result_mask
 
 def debayer_image(image : np.ndarray,
-                  weight : np.ndarray,
+                  weight : float,
                   mask : dict):
     """Process debayer on image"""
     h = image.shape[0]
@@ -51,11 +51,9 @@ def debayer_image(image : np.ndarray,
 
     if h % 2 == 1:
         image = image[0:h-1,:]
-        weight = weight[0:h-1,:]
         h -= 1
     if w % 2 == 1:
         image = image[:,0:w-1]
-        weight = weight[:,0:w-1]
         w -= 1
 
     for color in mask:
@@ -67,10 +65,10 @@ def debayer_image(image : np.ndarray,
         image01 = image[0::2, 1::2]
         image10 = image[1::2, 0::2]
         image11 = image[1::2, 1::2]
-        weight00 = weight[0::2, 0::2]
-        weight01 = weight[0::2, 1::2]
-        weight10 = weight[1::2, 0::2]
-        weight11 = weight[1::2, 1::2]
+        weight00 = np.ones(image00.shape)*weight
+        weight01 = np.ones(image01.shape)*weight
+        weight10 = np.ones(image10.shape)*weight
+        weight11 = np.ones(image11.shape)*weight
 
         layers[color] = k00 * image00 + k01 * image01 + k10 * image10 + k11 * image11
         weights[color] = k00 * weight00 + k01 * weight01 + k10 * weight10 + k11 * weight11
@@ -82,7 +80,8 @@ def debayer_dataframe(dataframe : vstarstack.library.data.DataFrame,
                       raw_channel_name : str):
     """Debayer dataframe"""
     raw, _ = dataframe.get_channel(raw_channel_name)
-    weight, _ = dataframe.get_channel(dataframe.links["weight"][raw_channel_name])
+    if (weight := dataframe.get_parameter("weight")) is None:
+        weight = 1
 
     layers, weights = debayer_image(raw, weight, mask)
     for color in layers:
@@ -93,10 +92,10 @@ def debayer_dataframe(dataframe : vstarstack.library.data.DataFrame,
     dataframe.remove_channel(dataframe.links["weight"][raw_channel_name])
     dataframe.remove_channel(raw_channel_name)
 
-    dataframe.params["w"] = int(dataframe.params["w"]/2)
-    dataframe.params["h"] = int(dataframe.params["h"]/2)
-    dataframe.params["format"] = "flat"
-    if "projection" in dataframe.params and dataframe.params["projection"] == "perspective":
+    dataframe.add_parameter(int(dataframe.get_parameter("w")/2), "w")
+    dataframe.add_parameter(int(dataframe.get_parameter("h")/2), "h")
+    dataframe.add_parameter("flat", "format")
+    if dataframe.get_parameter("projection") == "perspective":
         dataframe.params["perspective_kw"] *= 2
         dataframe.params["perspective_kh"] *= 2
     return dataframe

@@ -96,6 +96,7 @@ def readser(fname: str):
             channels = ["L"]        # luminocity
             image_format = "flat"
             opts["brightness"] = True
+            opts["signal"] = True
             vpp = 1
         elif colorid == 8:
             shape = (height, width, 1)
@@ -173,6 +174,7 @@ def readser(fname: str):
             "w": width,
             "h": height,
             "format" : image_format,
+            "weight" : 1,
         }
 
         with open(fname, "rb") as trailer_f:
@@ -191,7 +193,7 @@ def readser(fname: str):
                 index = 0
                 for index, channel in enumerate(channels):
                     dataframe.add_channel(frame[:, :, index], channel, **opts)
-                    dataframe.add_channel(weight, "weight-"+channel, weight=True)
-                    dataframe.add_channel_link(channel, "weight-"+channel, "weight")
+                    if dataframe.get_channel_option(channel, "signal"):
+                        dataframe.add_channel(weight, "weight-"+channel, weight=True)
+                        dataframe.add_channel_link(channel, "weight-"+channel, "weight")
                 yield dataframe
-

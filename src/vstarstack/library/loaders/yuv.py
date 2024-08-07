@@ -45,11 +45,9 @@ def readyuv(fname: str, width: int, height: int):
 
             dataframe = vstarstack.library.data.DataFrame(params, tags)
             exptime = 1
-            weight = np.ones(frame.data.shape)*exptime
 
             dataframe.add_channel(yuv, "raw", encoded=True)
-            dataframe.add_channel(weight, "weight")
-            dataframe.add_channel_link("raw", "weight", "weight")
             dataframe.add_parameter("yuv422", "format")
+            dataframe.add_parameter(exptime, "weight")
             yield dataframe
             frame_id += 1

@@ -68,9 +68,7 @@ def readfits(filename: str):
             yield None
 
         for i, slice_name in enumerate(slice_names):
-            dataframe.add_channel(
-                original[i, :, :], slice_name, brightness=True)
-            dataframe.add_channel_link(
-                slice_name, weight_channel_name, "weight")
+            dataframe.add_channel(original[i, :, :], slice_name, brightness=True, signal=True)
+            dataframe.add_channel_link(slice_name, weight_channel_name, "weight")
 
         yield dataframe

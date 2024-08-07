@@ -128,6 +128,21 @@ class DataFrame:
         """Add parameter"""
         self.params[name] = value
 
+    def get_parameter(self, name : str):
+        """
+        Get parameter
+
+        Parameters:
+            name (str) - parameter name
+        
+        Returns:
+            None - if parameter doesn't exists
+            parameter value - if parameter exists
+        """
+        if name not in self.params:
+            return None
+        return self.params[name]
+
     def get_channel(self, channel : str) -> Tuple[np.ndarray, dict]:
         """
         Get channel image.
@@ -144,7 +159,7 @@ class DataFrame:
         """Get list of channels"""
         return list(self.channels.keys())
 
-    def get_option(self, channel : str, option : str) -> bool | None:
+    def get_channel_option(self, channel : str, option : str) -> bool | None:
         """
         Get option of channel.
 
