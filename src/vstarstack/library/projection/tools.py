@@ -76,9 +76,9 @@ def build_projection(projection: ProjectionType, desc : dict, shape : tuple):
 
     if projection == ProjectionType.Perspective:
         F = desc["F"]
-        W = w * desc["kw"]
-        H = h * desc["kh"]
-        return PerspectiveProjection(w, h, W, H, F)
+        kw = desc["kw"]
+        kh = desc["kh"]
+        return PerspectiveProjection(w, h, kw, kh, F)
 
     elif projection == ProjectionType.Equirectangular:
         return EquirectangularProjection(w, h)

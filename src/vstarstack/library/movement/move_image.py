@@ -67,7 +67,7 @@ def move_image(image: np.ndarray,
     shifted_weight_layer = np.zeros(shape)
 
     if image_weight_layer is None:
-        image_weight_layer = np.ones(shape)*image_weight
+        image_weight_layer = np.ones(image.shape)*image_weight
 
     positions = _generate_points(h, w)
     original_positions = transformation.reverse(positions.astype('double'),
@@ -84,8 +84,8 @@ def move_image(image: np.ndarray,
         transform_array[y, x, 1] = orig_x
 
     crdtf = lambda pos : tuple(transform_array[pos[0], pos[1], :])
-    shifted = scipy.ndimage.geometric_transform(image, crdtf, order=3)
-    shifted_weight_layer = scipy.ndimage.geometric_transform(image_weight_layer, crdtf, order=3)
+    shifted = scipy.ndimage.geometric_transform(image, crdtf, output_shape=shape, order=3)
+    shifted_weight_layer = scipy.ndimage.geometric_transform(image_weight_layer, crdtf, output_shape=shape, order=3)
     return shifted, shifted_weight_layer
 
 def move_dataframe(dataframe: DataFrame,
@@ -138,4 +138,4 @@ def move_dataframe(dataframe: DataFrame,
         output_dataframe.add_channel(shifted_weight, weight_channel, weight=True)
         output_dataframe.add_channel_link(channel, weight_channel, "weight")
 
-    return output_dataframe
+    return output_dataframe 

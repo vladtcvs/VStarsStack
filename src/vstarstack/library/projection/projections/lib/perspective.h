@@ -28,7 +28,7 @@ struct PerspectiveProjection
 };
 
 bool perspective_projection_init(struct PerspectiveProjection *self,
-                                 double W, double H, double F,
+                                 double kw, double kh, double F,
                                  double w, double h);
 
 bool perspective_projection_project(void *self,

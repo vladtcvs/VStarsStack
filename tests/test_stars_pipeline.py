@@ -34,12 +34,13 @@ from vstarstack.library.movement.sphere import Movement
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def test_1():
-    W = 12.7
-    H = 12.7
+    kw = 0.01
+    kh = 0.01
     F = 10000
     w = 1270
     h = 1270
-    proj = PerspectiveProjection(w, h, W, H, F)
+    source_proj = PerspectiveProjection(w, h, kw, kh, F)
+    source_shape = (h, w)
 
     names = ["1.png", "2.png", "3.png", "4.png"]
     images = []
@@ -58,7 +59,7 @@ def test_1():
     used_stars = stars
     descs = []
     for s in used_stars:
-        d = vstarstack.library.stars.describe.build_descriptors(s, True, proj)
+        d = vstarstack.library.stars.describe.build_descriptors(s, True, source_proj)
         assert len(d) == 4
         descs.append(d)
 
@@ -105,7 +106,6 @@ def test_1():
     for name in shifts:
         assert len(shifts[name]) == 4
 
-
     basic_name = vstarstack.library.movement.select_shift.select_base_image(shifts)
     assert basic_name == "1.png"
 
@@ -113,7 +113,11 @@ def test_1():
     moved = []
     for id, image in enumerate(images):
         t = shifts[names[id]]
-        mvd = vstarstack.library.movement.move_image.move_dataframe(image, t, input_proj=proj)
+        mvd = vstarstack.library.movement.move_image.move_dataframe(image,
+                                                                    t,
+                                                                    input_proj=source_proj,
+                                                                    output_proj=source_proj,
+                                                                    output_shape=source_shape)
         moved.append(mvd)
 
     assert len(moved) == 4
@@ -122,7 +126,32 @@ def test_1():
     merged = vstarstack.library.merge.simple_add(source)
     layer,_ = merged.get_channel("L")
 
-    import matplotlib.pyplot as plt
-    
+    merged_stars = vstarstack.library.stars.detect.detect_stars(layer)
+    assert len(merged_stars) == 4
+
+    output_shape = (h*2, w*2)
+    output_proj = PerspectiveProjection(w*2, h*2, kw, kh, F)
+
+    moved = []
+    for id, image in enumerate(images):
+        t = shifts[names[id]]
+        mvd = vstarstack.library.movement.move_image.move_dataframe(image,
+                                                                    t,
+                                                                    input_proj=source_proj,
+                                                                    output_proj=output_proj,
+                                                                    output_shape=output_shape)
+        moved.append(mvd)
+
+    assert len(moved) == 4
+
+    source = vstarstack.library.common.ListImageSource(moved)
+    merged = vstarstack.library.merge.simple_add(source)
+    layer,_ = merged.get_channel("L")
+
+    weight_name = merged.links["weight"]["L"]
+    weight,_ = merged.get_channel(weight_name)
+
+    assert weight.shape == layer.shape
+
     merged_stars = vstarstack.library.stars.detect.detect_stars(layer)
     assert len(merged_stars) == 4

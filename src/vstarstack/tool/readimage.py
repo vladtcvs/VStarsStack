@@ -26,6 +26,7 @@ import vstarstack.library.loaders.video
 import vstarstack.library.loaders.fits
 import vstarstack.tool.common
 
+from vstarstack.library.projection import ProjectionType
 from vstarstack.library.projection.tools import add_description
 
 def _work(reader,
@@ -41,7 +42,7 @@ def _work(reader,
     print(f"File: {input_file}")
     for frame_id, dataframe in enumerate(reader(input_file)):
         outfname = os.path.join(output_dir, f"{output_name}_{frame_id:06}.zip")
-        add_description(dataframe, "perspective", **params)
+        add_description(dataframe, ProjectionType.Perspective, **params)
         img_format = project.config.telescope.camera.format
         if img_format is not None:
             if img_format != "flat" or "format" not in dataframe.params:

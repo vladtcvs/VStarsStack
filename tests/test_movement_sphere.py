@@ -30,12 +30,14 @@ def compare_points(point1, point2):
     assert abs(point1[0] - point2[0]) < thr
     assert abs(point1[1] - point2[1]) < thr
 
-W = 15
-H = 10
+kw = 0.01
+kh = 0.01
 F = 1000
 w = 1500
 h = 1000
 
+W = kw*w
+H = kh*h
 
 def test_no_rotation_forward():
     s1lat1 = 0
@@ -58,7 +60,7 @@ def test_no_rotation_forward():
 
     positions = np.array([[w/2, h/2]], dtype='double')
 
-    proj = PerspectiveProjection(w, h, W, H, F)
+    proj = PerspectiveProjection(w, h, kw, kh, F)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.apply(positions, proj, proj)
@@ -87,7 +89,7 @@ def test_no_rotation_reverse():
 
     positions = np.array([[w/2, h/2]], dtype='double')
 
-    proj = PerspectiveProjection(w, h, W, H, F)
+    proj = PerspectiveProjection(w, h, kw, kh, F)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.reverse(positions, proj, proj)
@@ -124,7 +126,7 @@ def test_lon_rotation_forward():
     y_moved_expected = h/2
     positions = np.array([[x, y]], dtype='double')
 
-    proj = PerspectiveProjection(w, h, W, H, F)
+    proj = PerspectiveProjection(w, h, kw, kh, F)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.apply(positions, proj, proj)
@@ -161,7 +163,7 @@ def test_lon_rotation_reverse():
     y_moved_expected = h/2
     positions = np.array([[x, y]], dtype='double')
 
-    proj = PerspectiveProjection(w, h, W, H, F)
+    proj = PerspectiveProjection(w, h, kw, kh, F)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.reverse(positions, proj, proj)
@@ -198,7 +200,7 @@ def test_neglon_rotation_forward():
     y_moved_expected = h/2
     positions = np.array([[x, y]], dtype='double')
 
-    proj = PerspectiveProjection(w, h, W, H, F)
+    proj = PerspectiveProjection(w, h, kw, kh, F)
     movement = sphere.Movement.build(s1pos1, s2pos1, s1pos2, s2pos2)
 
     shifted = movement.apply(positions, proj, proj)
@@ -207,7 +209,7 @@ def test_neglon_rotation_forward():
     assert abs(shifted[0][1] - y_moved_expected) < pixthr
 
 def test_multiply_1():
-    proj = PerspectiveProjection(w, h, W, H, F)
+    proj = PerspectiveProjection(w, h, kw, kh, F)
 
     s1lat1 = 0
     s1lon1 = 0
@@ -275,7 +277,7 @@ def test_inverse():
     s2pos1 = (s2lon1, s2lat1)
     s2pos2 = (s2lon2, s2lat2)
 
-    proj = PerspectiveProjection(w, h, W, H, F)
+    proj = PerspectiveProjection(w, h, kw, kh, F)
 
     pnt1 = proj.reverse(s1lon1, s1lat1)
     pnt2 = proj.reverse(s2lon1, s2lat1)
