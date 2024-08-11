@@ -110,7 +110,7 @@ def move_dataframe(dataframe: DataFrame,
 
     if output_shape is None:
         w = dataframe.get_parameter("w")
-        h = dataframe.get_parameter("w")
+        h = dataframe.get_parameter("h")
         output_shape = (h, w)
 
     output_dataframe = DataFrame()
