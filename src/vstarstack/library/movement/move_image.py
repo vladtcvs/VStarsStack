@@ -92,7 +92,7 @@ def move_dataframe(dataframe: DataFrame,
                    transformation: basic_movement.Movement,*,
                    input_proj = None,
                    output_proj = None,
-                   output_shape : tuple = None):
+                   output_shape : tuple | None = None):
     """Apply movement to dataframe
     Parameters:
         dataframe (DataFrame) - input dataframe
@@ -107,6 +107,11 @@ def move_dataframe(dataframe: DataFrame,
         input_proj = vstarstack.library.projection.tools.get_projection(dataframe)
     if output_proj is None:
         output_proj = input_proj
+
+    if output_shape is None:
+        w = dataframe.get_parameter("w")
+        h = dataframe.get_parameter("w")
+        output_shape = (h, w)
 
     output_dataframe = DataFrame()
     output_dataframe.add_parameter(output_shape[0], "h")
