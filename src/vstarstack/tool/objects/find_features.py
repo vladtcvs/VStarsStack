@@ -43,11 +43,11 @@ def build_keypoints_structure(keypoints, ds, fname, name):
 
     return record
 
-def proj_find_keypoints_orb(files, num_splits, param):
+def _proj_find_keypoints_orb(files, num_splits, param):
     points = {}
 
-    for fname in files:
-        name = os.path.splitext(os.path.basename(fname))[0]
+    for name, fname in files:
+        print(f"Processing {name}")
         dataframe = vstarstack.library.data.DataFrame.load(fname)
         gray, _ = vstarstack.library.common.df_to_light(dataframe)
 
@@ -57,11 +57,11 @@ def proj_find_keypoints_orb(files, num_splits, param):
 
     return points
 
-def proj_find_keypoints_brightness(files, num_splits, param, orb_param):
+def _proj_find_keypoints_brightness(files, num_splits, param, orb_param):
     points = {}
 
-    for fname in files:
-        name = os.path.splitext(os.path.basename(fname))[0]
+    for name, fname in files:
+        print(f"Processing {name}")
         dataframe = vstarstack.library.data.DataFrame.load(fname)
         gray, _ = vstarstack.library.common.df_to_light(dataframe)
 
@@ -91,8 +91,7 @@ def find_points_orb(project: vstarstack.tool.cfg.Project, argv: list[str]):
     }
 
     files = vstarstack.tool.common.listfiles(inputs, ".zip")
-    files = [filename for _, filename in files]
-    points = proj_find_keypoints_orb(files, num_splits, param)
+    points = _proj_find_keypoints_orb(files, num_splits, param)
     save_features(points, features)
 
 def find_points_brightness(project: vstarstack.tool.cfg.Project, argv: list[str]):
@@ -118,8 +117,7 @@ def find_points_brightness(project: vstarstack.tool.cfg.Project, argv: list[str]
         }
 
     files = vstarstack.tool.common.listfiles(inputs, ".zip")
-    files = [filename for _, filename in files]
-    points = proj_find_keypoints_brightness(files, num_splits, param, orb_param)
+    points = _proj_find_keypoints_brightness(files, num_splits, param, orb_param)
     save_features(points, features)
 
 commands = {
