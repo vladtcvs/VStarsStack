@@ -23,6 +23,12 @@ from vstarstack.library.objects.features import find_keypoints_orb
 from vstarstack.library.objects.features import find_keypoints_brightness
 from vstarstack.library.objects.features import describe_keypoints
 
+def _save_features(points, name, features_path):
+    fname = os.path.join(features_path, f"{name}_keypoints.json")
+    vstarstack.tool.common.check_dir_exists(fname)
+    with open(fname, "w") as f:
+        json.dump(points, f, indent=4, ensure_ascii=False)
+
 def build_keypoints_structure(keypoints, ds, fname, name):
     record = {
         "fname" : fname,
@@ -43,7 +49,7 @@ def build_keypoints_structure(keypoints, ds, fname, name):
 
     return record
 
-def _proj_find_keypoints_orb(files, num_splits, param):
+def _proj_find_keypoints_orb(files, num_splits, param, features_path):
     points = {}
 
     for name, fname in files:
@@ -55,9 +61,9 @@ def _proj_find_keypoints_orb(files, num_splits, param):
         ds = describe_keypoints(gray, keypoints, param)
         points[name] = build_keypoints_structure(keypoints, ds, fname, name)
 
-    return points
+        _save_features(points, name, features_path)
 
-def _proj_find_keypoints_brightness(files, num_splits, param, orb_param):
+def _proj_find_keypoints_brightness(files, num_splits, param, orb_param, features_path):
     points = {}
 
     for name, fname in files:
@@ -69,13 +75,8 @@ def _proj_find_keypoints_brightness(files, num_splits, param, orb_param):
         ds = describe_keypoints(gray, keypoints, orb_param)
         points[name] = build_keypoints_structure(keypoints, ds, fname, name)
 
-    return points
+        _save_features(points, name, features_path)
 
-def save_features(points, features_path):
-    for name in points:
-        record = points[name]
-        with open(os.path.join(features_path, f"{name}_keypoints.json"), "w") as f:
-            json.dump(record, f, indent=4, ensure_ascii=False)
 
 def find_points_orb(project: vstarstack.tool.cfg.Project, argv: list[str]):
     if len(argv) >= 2:
@@ -91,8 +92,7 @@ def find_points_orb(project: vstarstack.tool.cfg.Project, argv: list[str]):
     }
 
     files = vstarstack.tool.common.listfiles(inputs, ".zip")
-    points = _proj_find_keypoints_orb(files, num_splits, param)
-    save_features(points, features)
+    _proj_find_keypoints_orb(files, num_splits, param, features)
 
 def find_points_brightness(project: vstarstack.tool.cfg.Project, argv: list[str]):
     if len(argv) >= 2:
@@ -117,8 +117,7 @@ def find_points_brightness(project: vstarstack.tool.cfg.Project, argv: list[str]
         }
 
     files = vstarstack.tool.common.listfiles(inputs, ".zip")
-    points = _proj_find_keypoints_brightness(files, num_splits, param, orb_param)
-    save_features(points, features)
+    _proj_find_keypoints_brightness(files, num_splits, param, orb_param, features)
 
 commands = {
     "brightness": (find_points_brightness, "find keypoints with brightness detector", "npys/ features/"),
