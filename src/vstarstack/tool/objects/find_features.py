@@ -14,6 +14,7 @@
 
 import os
 import json
+import cv2
 
 import vstarstack.tool.common
 import vstarstack.tool.cfg
@@ -115,7 +116,18 @@ def find_points_brightness(project: vstarstack.tool.cfg.Project, argv: list[str]
     files = vstarstack.tool.common.listfiles(inputs, ".zip")
     _proj_find_keypoints_brightness(files, num_splits, param, orb_param, features)
 
+def display_features(project: vstarstack.tool.cfg.Project, argv: list[str]):
+    image_fname = argv[0]
+    features_fname = argv[1]
+    print(f"{image_fname} - {features_fname}")
+    df = vstarstack.library.data.DataFrame.load(image_fname)
+    light, _ = vstarstack.library.common.df_to_light(df)
+    keypoints = []
+    
+    cv2.drawKeypoints(light, keypoints)
+
 commands = {
     "brightness": (find_points_brightness, "find keypoints with brightness detector", "npys/ features/"),
     "orb": (find_points_orb, "find keypoints with ORB detector", "npys/ features/")
 }
+
