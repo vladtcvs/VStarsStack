@@ -50,8 +50,6 @@ def build_keypoints_structure(keypoints, ds, fname, name):
     return record
 
 def _proj_find_keypoints_orb(files, num_splits, param, features_path):
-    points = {}
-
     for name, fname in files:
         print(f"Processing {name}")
         dataframe = vstarstack.library.data.DataFrame.load(fname)
@@ -59,13 +57,11 @@ def _proj_find_keypoints_orb(files, num_splits, param, features_path):
 
         keypoints = find_keypoints_orb(gray, num_splits, param)
         ds = describe_keypoints(gray, keypoints, param)
-        points[name] = build_keypoints_structure(keypoints, ds, fname, name)
+        points = build_keypoints_structure(keypoints, ds, fname, name)
 
         _save_features(points, name, features_path)
 
 def _proj_find_keypoints_brightness(files, num_splits, param, orb_param, features_path):
-    points = {}
-
     for name, fname in files:
         print(f"Processing {name}")
         dataframe = vstarstack.library.data.DataFrame.load(fname)
@@ -73,7 +69,7 @@ def _proj_find_keypoints_brightness(files, num_splits, param, orb_param, feature
 
         keypoints = find_keypoints_brightness(gray, num_splits, param)
         ds = describe_keypoints(gray, keypoints, orb_param)
-        points[name] = build_keypoints_structure(keypoints, ds, fname, name)
+        points = build_keypoints_structure(keypoints, ds, fname, name)
 
         _save_features(points, name, features_path)
 
