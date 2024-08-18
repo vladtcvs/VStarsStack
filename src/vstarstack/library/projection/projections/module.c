@@ -18,19 +18,29 @@
 
 #define BASENAME "vstarstack.library.projection.projections"
 
-// arguments: W, H, F, w, h
+
+/**
+ * Build PerspectiveProjection
+ * arguments: w, h, kw, kh, F
+ * 
+ * w - width in pixels
+ * h - height in pixels
+ * kw - pixel size in mm
+ * kh - pixel size in mm
+ * F - focal length in mm
+ */
 static int PerspectiveProjection_init(PyObject *_self, PyObject *args, PyObject *kwds)
 {
-    double W, H, F;
+    double kw, kh, F;
     int w, h;
     struct PerspectiveProjectionObject *self = (struct PerspectiveProjectionObject *)_self;
-    static char *kwlist[] = {"w", "h", "W", "H", "F", NULL};
+    static char *kwlist[] = {"w", "h", "kw", "kh", "F", NULL};
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiddd", kwlist,
                                      &w, &h,
-                                     &W, &H, &F))
+                                     &kw, &kh, &F))
         return -1;
 
-    if (!perspective_projection_init(&self->proj, W, H, F, w, h))
+    if (!perspective_projection_init(&self->proj, kw, kh, F, w, h))
         return -1;
 
     return 0;

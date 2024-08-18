@@ -37,11 +37,29 @@ def _generate_points(height, width):
 
 def move_image(image: np.ndarray,
                transformation: basic_movement.Movement,
-               input_proj, output_proj,
-               image_weight: float,
-               image_weight_layer=None):
-    """Apply movement to image"""
-    shape = image.shape
+               input_proj, output_proj,*,
+               image_weight: float = 1,
+               image_weight_layer: np.ndarray | None = None,
+               output_shape: tuple | None = None):
+    """
+    Apply movement to image
+    
+    Parameters:
+        image (np.ndarray) - input image
+        transformation (Movement) - movement which should be applied
+        input_proj (Projection) - input image projection
+        output_proj (Projection) - output image projection
+        image_weight (float) - weight of input image, if weight layer is not provided
+        image_weight_layer (np.ndarray) - weight layer of input image
+        output_shape (tuple(h,w)) - dimensions of output image
+    Returns:
+        shifted image, shifted layer
+    """
+    if output_shape is None:
+        shape = image.shape
+    else:
+        shape = output_shape
+
     h = shape[0]
     w = shape[1]
 
@@ -49,7 +67,7 @@ def move_image(image: np.ndarray,
     shifted_weight_layer = np.zeros(shape)
 
     if image_weight_layer is None:
-        image_weight_layer = np.ones(shape)*image_weight
+        image_weight_layer = np.ones(image.shape)*image_weight
 
     positions = _generate_points(h, w)
     original_positions = transformation.reverse(positions.astype('double'),
@@ -66,36 +84,63 @@ def move_image(image: np.ndarray,
         transform_array[y, x, 1] = orig_x
 
     crdtf = lambda pos : tuple(transform_array[pos[0], pos[1], :])
-    shifted = scipy.ndimage.geometric_transform(image, crdtf, order=3)
-    shifted_weight_layer = scipy.ndimage.geometric_transform(image_weight_layer, crdtf, order=3)
+    shifted = scipy.ndimage.geometric_transform(image, crdtf, output_shape=shape, order=3)
+    shifted_weight_layer = scipy.ndimage.geometric_transform(image_weight_layer, crdtf, output_shape=shape, order=3)
     return shifted, shifted_weight_layer
 
 def move_dataframe(dataframe: DataFrame,
-                   transformation: basic_movement.Movement,
-                   proj=None):
-    """Apply movement to dataframe"""
-    if proj is None:
-        proj = vstarstack.library.projection.tools.get_projection(dataframe)
+                   transformation: basic_movement.Movement,*,
+                   input_proj = None,
+                   output_proj = None,
+                   output_shape : tuple | None = None):
+    """Apply movement to dataframe
+    Parameters:
+        dataframe (DataFrame) - input dataframe
+        transformation (Movement) - movement which should be applied
+        input_proj (Projection) - input image projection
+        output_proj (Projection) - output image projection
+        output_shape (tuple(h,w)) - dimensions of output image
+    Returns:
+        shifted image, shifted layer"""
+
+    if input_proj is None:
+        input_proj = vstarstack.library.projection.tools.get_projection(dataframe)
+    if output_proj is None:
+        output_proj = input_proj
+
+    if output_shape is None:
+        w = dataframe.get_parameter("w")
+        h = dataframe.get_parameter("h")
+        output_shape = (h, w)
+
+    output_dataframe = DataFrame()
+    output_dataframe.add_parameter(output_shape[0], "h")
+    output_dataframe.add_parameter(output_shape[1], "w")
 
     for channel in dataframe.get_channels():
         image, opts = dataframe.get_channel(channel)
-        if opts["weight"]:
-            continue
-        if opts["encoded"]:
+        if not dataframe.get_channel_option(channel, "signal"):
             continue
 
         weight_channel = None
         if channel in dataframe.links["weight"]:
             weight_channel = dataframe.links["weight"][channel]
-
-        if weight_channel:
             weight, _ = dataframe.get_channel(weight_channel)
         else:
-            weight = np.ones(image.shape)*1
+            if (w := dataframe.get_parameter("weight")) is not None:
+                weight = np.ones(image.shape)*w
+            else:
+                weight = np.ones(image.shape)
 
-        shifted, shifted_weight = move_image(image, transformation, proj, proj, weight)
-        dataframe.add_channel(shifted, channel, **opts)
-        dataframe.add_channel(shifted_weight, weight_channel, weight=True)
-        dataframe.add_channel_link(channel, weight_channel, "weight")
+        shifted, shifted_weight = move_image(image,
+                                             transformation,
+                                             input_proj,
+                                             output_proj,
+                                             image_weight_layer=weight,
+                                             output_shape=output_shape)
 
-    return dataframe
+        output_dataframe.add_channel(shifted, channel, **opts)
+        output_dataframe.add_channel(shifted_weight, weight_channel, weight=True)
+        output_dataframe.add_channel_link(channel, weight_channel, "weight")
+
+    return output_dataframe 

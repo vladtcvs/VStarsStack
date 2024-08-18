@@ -14,8 +14,11 @@
 #
 
 import os
+import math
 import json
+import typing
 import multiprocessing as mp
+import numpy as np
 
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
@@ -23,9 +26,11 @@ import vstarstack.tool.usage
 from vstarstack.library.movement.sphere import Movement
 
 import vstarstack.library.data
+import vstarstack.library.projection.tools
 import vstarstack.library.common
 import vstarstack.library.movement.select_shift
 import vstarstack.library.movement.move_image
+from vstarstack.library.projection import ProjectionType
 
 import vstarstack.tool.common
 
@@ -52,7 +57,7 @@ def select_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
     with open(selected_shift, "w", encoding='utf8') as f:
         json.dump(serialized[basic_name], f, ensure_ascii=False, indent=4)
 
-def _make_shift(name : str, filename : str, shift : Movement | None, outfname : str):
+def _make_shift_same_size(name : str, filename : str, shift : Movement | None, outfname : str):
     if shift is None:
         print(f"Skip {name}")
         return
@@ -60,6 +65,30 @@ def _make_shift(name : str, filename : str, shift : Movement | None, outfname : 
     dataframe = vstarstack.library.data.DataFrame.load(filename)
     print(f"Loaded {name}")
     result = vstarstack.library.movement.move_image.move_dataframe(dataframe, shift)
+    print(f"Transformed {name}")
+    vstarstack.tool.common.check_dir_exists(outfname)
+    result.store(outfname)
+    print(f"Saved {name}")
+
+def _make_shift_extended_size(name : str, filename : str,
+                              shift : Movement | None,
+                              outfname : str,
+                              output_shape : tuple,
+                              output_proj : str,
+                              output_proj_desc : dict):
+    if shift is None:
+        print(f"Skip {name}")
+        return
+    print(f"Processing {name}")
+    dataframe = vstarstack.library.data.DataFrame.load(filename)
+    print(f"Loaded {name}")
+
+    input_proj = vstarstack.library.projection.tools.get_projection(dataframe)
+    output_proj = vstarstack.library.projection.tools.build_projection(output_proj, output_proj_desc, output_shape)
+    result = vstarstack.library.movement.move_image.move_dataframe(dataframe, shift,
+                                                                   input_proj=input_proj,
+                                                                   output_proj=output_proj,
+                                                                   output_shape=output_shape)
     print(f"Transformed {name}")
     vstarstack.tool.common.check_dir_exists(outfname)
     result.store(outfname)
@@ -83,12 +112,96 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
         shifts[name] = Movement.deserialize(shift_ser)
 
     images = vstarstack.tool.common.listfiles(npy_dir, ".zip")
+
     args = [(name, filename, shifts[name] if name in shifts else None, os.path.join(shifted_dir, name + ".zip")) 
             for name, filename in images]
     with mp.Pool(ncpu) as pool:
-        pool.starmap(_make_shift, args)
-    #for arg in args:
-    #    _make_shift(*arg)
+        pool.starmap(_make_shift_same_size, args)
+
+def _find_extended_perspective(images : list, shifts : dict):
+    margin_left = 0
+    margin_right = 0
+    margin_top = 0
+    margin_bottom = 0
+
+    out_proj_desc = {}
+
+    for name, filename in images:
+        
+        df = vstarstack.library.data.DataFrame.load(filename)
+        input_proj_type, input_proj_desc = vstarstack.library.projection.tools.extract_description(df)
+        if input_proj_type != ProjectionType.Perspective:
+            print("Invalid projection type: ", input_proj_type)
+            return None, None, None
+
+        w = df.get_parameter("w")
+        h = df.get_parameter("h")
+        input_proj = vstarstack.library.projection.tools.build_projection(ProjectionType.Perspective, input_proj_desc, (h, w))
+
+        out_proj_desc = input_proj_desc
+
+        points = np.array([(0,0),(w,0),(0,h),(w,h)])
+        print(name)
+        shift = shifts[name]
+        shifted_points = shift.apply(points.astype('double'), input_proj, input_proj)
+
+        min_x = min(shifted_points[:,0])
+        max_x = max(shifted_points[:,0])
+        min_y = min(shifted_points[:,1])
+        max_y = max(shifted_points[:,1])
+
+        if min_x < 0:
+            margin_left = max(margin_left, -min_x)
+        if min_y < 0:
+            margin_top = max(margin_top, -min_y)
+        if max_x > w:
+            margin_right = max(margin_right, max_x-w)
+        if max_y > h:
+            margin_bottom = max(margin_bottom, max_y-h)
+
+    margin_w = max(margin_left, margin_right)
+    margin_h = max(margin_top, margin_bottom)
+
+    W = w + 2*math.ceil(margin_w)
+    H = h + 2*math.ceil(margin_h)
+
+    out_shape = (H, W)
+
+    return out_shape, ProjectionType.Perspective, out_proj_desc
+
+def apply_shift_extended(project: vstarstack.tool.cfg.Project, argv: list[str]):
+    """Apply shifts to images"""
+    if len(argv) > 0:
+        npy_dir = argv[0]
+        shifts_fname = argv[1]
+        shifted_dir = argv[2]
+    else:
+        npy_dir = project.config.paths.npy_fixed
+        shifts_fname = project.config.paths.absolute_shifts
+        shifted_dir = project.config.paths.aligned
+
+    with open(shifts_fname, encoding='utf8') as file:
+        serialized = json.load(file)
+    shifts = {}
+    for name,shift_ser in serialized.items():
+        shifts[name] = Movement.deserialize(shift_ser)
+
+    images = vstarstack.tool.common.listfiles(npy_dir, ".zip")
+
+    output_shape, output_proj, output_proj_desc = _find_extended_perspective(images, shifts)
+
+    args = [(name,
+             filename,
+             shifts[name] if name in shifts else None,
+             os.path.join(shifted_dir, name + ".zip"),
+             output_shape,
+             output_proj,
+             output_proj_desc,
+            )
+            for name, filename in images]
+    with mp.Pool(ncpu) as pool:
+        pool.starmap(_make_shift_extended_size, args)
+
 
 commands = {
     "select-shift": (select_shift,
@@ -96,6 +209,9 @@ commands = {
                      "shifts.json shift.json"),
     "apply-shift": (apply_shift,
                     "Apply selected shifts",
+                    "shift.json npy/ shifted/"),
+    "apply-extended-shift": (apply_shift_extended,
+                    "Apply selected shifts and save to output with extended size (only perspective projection!)",
                     "shift.json npy/ shifted/"),
 }
 

@@ -34,15 +34,11 @@ def readnef(filename: str):
         "h": image.data.shape[0],
     }
 
-    exptime = tags["shutter"]*tags["iso"]
+    exp = tags["shutter"]*tags["iso"]
 
     dataframe = vstarstack.library.data.DataFrame(params, tags)
-
-    weight = np.ones(image.data.shape)*exptime
-
     dataframe.add_channel(image, "raw", encoded=True)
-    dataframe.add_channel(weight, "weight", weight=True)
-    dataframe.add_channel_link("raw", "weight", "weight")
-
     dataframe.add_parameter("bayerGRBG", "format")
+    dataframe.add_parameter(exp, "weight")
+
     yield dataframe

@@ -67,6 +67,8 @@ class DataFrame:
             options["encoded"] = False
         if "brightness" not in options:
             options["brightness"] = False
+        if "signal" not in options:
+            options["signal"] = False
 
         self.channels[name] = {
             "data": data,
@@ -126,6 +128,21 @@ class DataFrame:
         """Add parameter"""
         self.params[name] = value
 
+    def get_parameter(self, name : str):
+        """
+        Get parameter
+
+        Parameters:
+            name (str) - parameter name
+        
+        Returns:
+            None - if parameter doesn't exists
+            parameter value - if parameter exists
+        """
+        if name not in self.params:
+            return None
+        return self.params[name]
+
     def get_channel(self, channel : str) -> Tuple[np.ndarray, dict]:
         """
         Get channel image.
@@ -141,6 +158,25 @@ class DataFrame:
     def get_channels(self) -> List[str]:
         """Get list of channels"""
         return list(self.channels.keys())
+
+    def get_channel_option(self, channel : str, option : str) -> bool | None:
+        """
+        Get option of channel.
+
+        Parameters:
+            channel (str) - channel name
+            option (str) - option name
+
+        Returns:
+            None if channel doesn't exist
+            False if option is not exist
+            option value if option is exist
+        """
+        if channel not in self.channels:
+            return None
+        if option not in self.channels[channel]["options"]:
+            return False
+        return self.channels[channel]["options"][option]
 
     @staticmethod
     def _store_json(value, file):

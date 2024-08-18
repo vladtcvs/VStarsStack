@@ -140,3 +140,24 @@ def test_10():
 
     data,_ = dataframe.get_channel("data")
     assert data[0,0] == 0
+
+def test_11():
+    dataframe = DataFrame()
+    layer = np.zeros((100,100))
+    dataframe.add_channel(layer, "L")
+    is_signal = dataframe.get_channel_option("L", "signal")
+    assert is_signal == False
+
+def test_12():
+    dataframe = DataFrame()
+    layer = np.zeros((100,100))
+    dataframe.add_channel(layer, "L")
+    option = dataframe.get_channel_option("NotExists", "option")
+    assert option is None
+
+def test_13():
+    dataframe = DataFrame()
+    layer = np.zeros((100,100))
+    dataframe.add_channel(layer, "L")
+    option = dataframe.get_channel_option("L", "not_exists")
+    assert option is False

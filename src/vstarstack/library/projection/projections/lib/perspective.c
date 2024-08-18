@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Vladislav Tsendrovskii
+ * Copyright (c) 2023-2024 Vladislav Tsendrovskii
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,24 +18,25 @@
 #include "perspective.h"
 
 bool perspective_projection_init(struct PerspectiveProjection *self,
-                                 double W, double H, double F,
+                                 double kw, double kh, double F,
                                  double w, double h)
 {
     if (h <= 0 || w <= 0 ||
-        W <= 0 || H <= 0 ||
+        kw <= 0 || kh <= 0 ||
         F <= 0)
     {
         return false;
     }
 
-    self->W = W;
-    self->H = H;
+    self->kx = kw;
+    self->ky = kh;
+
+    self->W = w * self->kx;
+    self->H = h * self->ky;
     self->F = F;
     self->w = w;
     self->h = h;
 
-    self->kx = self->W / self->w;
-    self->ky = self->H / self->h;
     return true;
 }
 
