@@ -30,6 +30,7 @@ import vstarstack.library.projection.tools
 import vstarstack.library.common
 import vstarstack.library.movement.select_shift
 import vstarstack.library.movement.move_image
+from vstarstack.library.projection import ProjectionType
 
 import vstarstack.tool.common
 
@@ -117,40 +118,56 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
     with mp.Pool(ncpu) as pool:
         pool.starmap(_make_shift_same_size, args)
 
-def _find_extended(images : list, shifts : dict):
-    min_x = math.inf
-    max_x = -math.inf
-    min_y = math.inf
-    max_y = -math.inf
+def _find_extended_perspective(images : list, shifts : dict):
+    margin_left = 0
+    margin_right = 0
+    margin_top = 0
+    margin_bottom = 0
 
-    out_proj_type = None
     out_proj_desc = {}
 
     for name, filename in images:
         
         df = vstarstack.library.data.DataFrame.load(filename)
         input_proj_type, input_proj_desc = vstarstack.library.projection.tools.extract_description(df)
+        if input_proj_type != ProjectionType.Perspective:
+            print("Invalid projection type: ", input_proj_type)
+            return None, None, None
+
         w = df.get_parameter("w")
         h = df.get_parameter("h")
-        input_proj = vstarstack.library.projection.tools.build_projection(input_proj_type, input_proj_desc, (h, w))
+        input_proj = vstarstack.library.projection.tools.build_projection(ProjectionType.Perspective, input_proj_desc, (h, w))
 
-        out_proj_type = input_proj_type
         out_proj_desc = input_proj_desc
 
         points = np.array([(0,0),(w,0),(0,h),(w,h)])
-        
+        print(name)
         shift = shifts[name]
-        shifted_points = shift.forward(points.astype('double'), input_proj, input_proj)
-        min_x = min(min_x, min(shifted_points[:0]))
-        max_x = max(max_x, max(shifted_points[:0]))
-        min_y = min(min_y, min(shifted_points[:1]))
-        max_y = max(max_y, max(shifted_points[:1]))
+        shifted_points = shift.apply(points.astype('double'), input_proj, input_proj)
 
-    W = math.ceil(max_x-min_x)
-    H = math.ceil(max_y-min_y)
+        min_x = min(shifted_points[:,0])
+        max_x = max(shifted_points[:,0])
+        min_y = min(shifted_points[:,1])
+        max_y = max(shifted_points[:,1])
+
+        if min_x < 0:
+            margin_left = max(margin_left, -min_x)
+        if min_y < 0:
+            margin_top = max(margin_top, -min_y)
+        if max_x > w:
+            margin_right = max(margin_right, max_x-w)
+        if max_y > h:
+            margin_bottom = max(margin_bottom, max_y-h)
+
+    margin_w = max(margin_left, margin_right)
+    margin_h = max(margin_top, margin_bottom)
+
+    W = w + 2*math.ceil(margin_w)
+    H = h + 2*math.ceil(margin_h)
+
     out_shape = (H, W)
 
-    return out_shape, out_proj_type, out_proj_desc
+    return out_shape, ProjectionType.Perspective, out_proj_desc
 
 def apply_shift_extended(project: vstarstack.tool.cfg.Project, argv: list[str]):
     """Apply shifts to images"""
@@ -171,7 +188,7 @@ def apply_shift_extended(project: vstarstack.tool.cfg.Project, argv: list[str]):
 
     images = vstarstack.tool.common.listfiles(npy_dir, ".zip")
 
-    output_shape, output_proj, output_proj_desc = _find_extended(images, shifts)
+    output_shape, output_proj, output_proj_desc = _find_extended_perspective(images, shifts)
 
     args = [(name,
              filename,
@@ -193,8 +210,8 @@ commands = {
     "apply-shift": (apply_shift,
                     "Apply selected shifts",
                     "shift.json npy/ shifted/"),
-    "apply-shift-extended": (apply_shift_extended,
-                    "Apply selected shifts and save to output with extended size",
+    "apply-extended-shift": (apply_shift_extended,
+                    "Apply selected shifts and save to output with extended size (only perspective projection!)",
                     "shift.json npy/ shifted/"),
 }
 
