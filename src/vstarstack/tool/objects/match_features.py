@@ -35,13 +35,14 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
         points_path = argv[0]
         clusters_fname = argv[1]
     else:
-        points_path = project.config.paths.npy_fixed
+        points_path = project.config.objects.features.path
         clusters_fname = project.config.cluster.path
 
     max_feature_delta = project.config.objects.features.max_feature_delta
     features_percent = project.config.objects.features.features_percent / 100.0
 
     files = vstarstack.tool.common.listfiles(points_path, ".json")
+    print(f"Found {len(files)} files")
     files = [filename for _, filename in files]
     keypoints = load_keypoints(files)
     print("Found keypoints")
