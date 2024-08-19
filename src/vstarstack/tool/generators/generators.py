@@ -13,13 +13,12 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import math
 import re
 import csv
 
 import vstarstack.tool.common
 import vstarstack.tool.cfg
-
-
 
 def _group_by_video(project: vstarstack.tool.cfg.Project, argv: list[str]):
     regex = re.compile("(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_keypoints")
@@ -43,6 +42,7 @@ def _group_by_video(project: vstarstack.tool.cfg.Project, argv: list[str]):
                 groups[video_name] = []
             groups[video_name].append(frame_id)
 
+        # add records for frames inside same video
         for video_name, frames in groups.items():
             frames = sorted(frames)
             for i in range(len(frames)-1):
@@ -50,6 +50,27 @@ def _group_by_video(project: vstarstack.tool.cfg.Project, argv: list[str]):
                 reference_frame = frames[i]
                 for frame in use_frames:
                     writer.writerow([video_name + "_" + reference_frame, video_name + "_" + frame])
+
+        # select frames from each video
+        selected = {}
+        for video_name, frames in groups.items():
+            frames = sorted(frames)
+            step = math.floor(len(frames) / matches_between_videos)
+            step = max(step, 1)
+            frames = frames[::step]
+            if len(frames) > 0:
+                selected[video_name] = frames
+
+        # add records for frames from different videos
+        for name1 in selected:
+            frames1 = selected[name1]
+            for name2 in selected:
+                if name2 <= name1:
+                    continue
+                frames2 = selected[name2]
+                for frame1 in frames1:
+                    for frame2 in frames2:
+                        writer.writerow([name1 + "_" + frame1, name2 + "_" + frame2])
 
 commands = {
     "group_video_frames": (_group_by_video,
