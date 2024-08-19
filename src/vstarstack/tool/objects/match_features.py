@@ -12,7 +12,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import math
+import csv
 import json
 import numpy as np
 
@@ -38,6 +38,20 @@ def _build_default_match_table(names : list[str]):
                 continue
             matches.append((name1, name2))
     return matches
+
+def _load_match_table(fname : str):
+    match_table = []
+    with open(fname, encoding='utf8') as f:
+        reader = csv.reader(f)
+        next(reader)
+        for line in reader:
+            im1 = line[0]
+            im2 = line[1]
+            if im1 < im2:
+                match_table.append((im1, im2))
+            else:
+                match_table.append((im2, im1))
+    return match_table
 
 def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
     use_match_list = True
@@ -69,8 +83,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
         descs[name] = np.array([np.array(item["descriptor"], dtype=np.uint8) for item in points["points"]])
 
     if use_match_list:
-        with open(match_list_file, encoding='utf8') as f:
-            match_list = json.load(f)
+        match_list = _load_match_table(match_list_file)
     else:
         match_list = _build_default_match_table(keypoints.keys())
     clusters = build_clusters(points, descs,
