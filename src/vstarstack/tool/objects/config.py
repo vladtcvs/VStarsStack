@@ -18,7 +18,7 @@ _module_configuration = {
     "threshold": (float, 0.05),
     "margin": (int, 30),
     "require_size": (bool, True),
-    "use_modules" : (list, ["disc", "brightness"]),
+    "use_modules" : (list, ["disc", "brightness", "features"]),
     "disc": ("module", {
         "mindelta": (int, 40),
         "maxdelta": (int, 50),
