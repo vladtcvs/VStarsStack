@@ -40,9 +40,14 @@ def _build_default_match_table(names : list[str]):
     return matches
 
 def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
+    use_match_list = True
+    match_list_file = None
     if len(argv) >= 2:
         points_path = argv[0]
         clusters_fname = argv[1]
+        if len(argv) >= 3:
+            use_match_list = False
+            match_list_file = argv[2]
     else:
         points_path = project.config.objects.features.path
         clusters_fname = project.config.cluster.path
@@ -63,7 +68,11 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
         points[name] = [item["keypoint"] for item in points["points"]]
         descs[name] = np.array([np.array(item["descriptor"], dtype=np.uint8) for item in points["points"]])
 
-    match_list = _build_default_match_table(keypoints.keys())
+    if use_match_list:
+        with open(match_list_file, encoding='utf8') as f:
+            match_list = json.load(f)
+    else:
+        match_list = _build_default_match_table(keypoints.keys())
     clusters = build_clusters(points, descs,
                               max_feature_delta,
                               features_percent,
