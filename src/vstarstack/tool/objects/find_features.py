@@ -15,6 +15,7 @@
 import os
 import json
 import cv2
+import numpy as np
 
 import vstarstack.tool.common
 import vstarstack.tool.cfg
@@ -117,14 +118,24 @@ def find_points_brightness(project: vstarstack.tool.cfg.Project, argv: list[str]
     _proj_find_keypoints_brightness(files, num_splits, param, orb_param, features)
 
 def display_features(project: vstarstack.tool.cfg.Project, argv: list[str]):
+    import matplotlib.pyplot as plt
     image_fname = argv[0]
     features_fname = argv[1]
     print(f"{image_fname} - {features_fname}")
     df = vstarstack.library.data.DataFrame.load(image_fname)
     light, _ = vstarstack.library.common.df_to_light(df)
-    keypoints = []
-    
-    cv2.drawKeypoints(light, keypoints)
+    slope = vstarstack.tool.cfg.get_param("multiply", float, 1)
+
+    light = np.clip(light/np.amax(light)*slope, 0, 1)
+    light = (light * 255).astype(np.uint8)
+
+    with open(features_fname) as f:
+        features = json.load(f)
+    keypoints = [cv2.KeyPoint(point["keypoint"]["x"], point["keypoint"]["y"], 15) for point in features["points"]]
+    print(f"Frame has {len(keypoints)} keypoints")
+    light = cv2.drawKeypoints(light, keypoints, 0, 255)
+    plt.imshow(light, cmap="gray")
+    plt.show()
 
 commands = {
     "brightness": (find_points_brightness, "find keypoints with brightness detector", "npys/ features/"),
