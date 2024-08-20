@@ -64,7 +64,7 @@ def _proj_find_keypoints_orb(files, num_splits, param, features_path):
         gray, _ = vstarstack.library.common.df_to_light(dataframe)
 
         ptype, pdesc = vstarstack.library.projection.tools.extract_description(dataframe)
-        proj = vstarstack.library.projection.tools.build_projection(ptype, pdesc)
+        proj = vstarstack.library.projection.tools.build_projection(ptype, pdesc, gray.shape)
 
         keypoints = find_keypoints_orb(gray, num_splits, param)
         ds = describe_keypoints(gray, keypoints, param)
