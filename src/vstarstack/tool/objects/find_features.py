@@ -17,6 +17,8 @@ import json
 import cv2
 import numpy as np
 
+import vstarstack.library.projection
+import vstarstack.library.projection.tools
 import vstarstack.tool.common
 import vstarstack.tool.cfg
 import vstarstack.library.data
@@ -31,7 +33,7 @@ def _save_features(points, name, features_path):
     with open(fname, "w") as f:
         json.dump(points, f, indent=4, ensure_ascii=False)
 
-def build_keypoints_structure(keypoints, ds, fname, name):
+def build_keypoints_structure(keypoints, ds, fname, name, proj):
     record = {
         "fname" : fname,
         "name" : name,
@@ -44,6 +46,10 @@ def build_keypoints_structure(keypoints, ds, fname, name):
                 break
         else:
             continue
+
+        lon, lat = proj.project(keypoint["x"], keypoint["y"])
+        keypoint["lon"] = lon
+        keypoint["lat"] = lat
         record["points"].append({
             "keypoint" : keypoint,
             "descriptor" : [int(item) for item in list(desc)],
@@ -57,9 +63,12 @@ def _proj_find_keypoints_orb(files, num_splits, param, features_path):
         dataframe = vstarstack.library.data.DataFrame.load(fname)
         gray, _ = vstarstack.library.common.df_to_light(dataframe)
 
+        ptype, pdesc = vstarstack.library.projection.tools.extract_description(dataframe)
+        proj = vstarstack.library.projection.tools.build_projection(ptype, pdesc)
+
         keypoints = find_keypoints_orb(gray, num_splits, param)
         ds = describe_keypoints(gray, keypoints, param)
-        points = build_keypoints_structure(keypoints, ds, fname, name)
+        points = build_keypoints_structure(keypoints, ds, fname, name, proj)
 
         _save_features(points, name, features_path)
 

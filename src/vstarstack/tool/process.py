@@ -52,4 +52,6 @@ commands = {
                    "fine shift images"),
     "analyzers": ("vstarstack.tool.analyzers.analyzers",
                    "analyze images"),
+    "pipeline": ("vstarstack.tool.generators.generators",
+                 "generate pipelines for processing"),
 }

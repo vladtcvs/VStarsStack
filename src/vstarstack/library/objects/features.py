@@ -134,93 +134,126 @@ def describe_keypoints(image : np.ndarray,
 
 def match_images(points : dict, descs : dict,
                  max_feature_delta : float,
-                 features_percent : float):
+                 features_percent : float,
+                 match_list : list):
     """Match images"""
     bf_matcher = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
     matches = {}
-    for name1 in points:
-        matches[name1] = {}
+    for name1, name2 in match_list:
+        if name1 not in matches:
+            matches[name1] = {}
+
+        if name2 not in matches:
+            matches[name2] = {}
+
         points1 = points[name1]
         descs1 = descs[name1]
 
-        if descs1 is None:
-            print(f"Skipping {name1}")
+        matches[name1][name2] = []
+        matches[name2][name1] = []
+
+        points2 = points[name2]
+        descs2 = descs[name2]
+
+        if descs1 is None or descs2 is None:
+            print(f"Skipping {name1} <-> {name2}")
             continue
 
-        for name2 in points:
-            matches[name1][name2] = []
-            points2 = points[name2]
-            descs2 = descs[name2]
 
-            if descs2 is None:
-                print(f"Skipping {name2}")
+        imatches = bf_matcher.match(descs1, descs2)
+        imatches = sorted(imatches, key=lambda x: x.distance)
+
+        num_matches = int(len(imatches) * features_percent)
+        imatches = imatches[:num_matches]
+
+        if len(imatches) == 0:
+            continue
+
+        delta_xs = []
+        delta_ys = []
+
+        for match in imatches:
+            index2 = match.trainIdx
+            index1 = match.queryIdx
+
+            point1 = points1[index1]
+            point2 = points2[index2]
+
+            delta_xs.append(point1["x"] - point2["x"])
+            delta_ys.append(point1["y"] - point2["y"])
+
+        mean_delta_x = sum(delta_xs) / len(delta_xs)
+        mean_delta_y = sum(delta_ys) / len(delta_ys)
+
+        for match in imatches:
+            index2 = match.trainIdx
+            index1 = match.queryIdx
+
+            point1 = points1[index1]
+            point2 = points2[index2]
+
+            delta_x = point1["x"] - point2["x"]
+            delta_y = point1["y"] - point2["y"]
+            if abs(delta_x - mean_delta_x) > max_feature_delta:
+                continue
+            if abs(delta_y - mean_delta_y) > max_feature_delta:
                 continue
 
-            imatches = bf_matcher.match(descs1, descs2)
-            imatches = sorted(imatches, key=lambda x: x.distance)
-
-            num_matches = int(len(imatches) * features_percent)
-            imatches = imatches[:num_matches]
-
-            if len(imatches) == 0:
-                continue
-
-            delta_xs = []
-            delta_ys = []
-
-            for match in imatches:
-                index2 = match.trainIdx
-                index1 = match.queryIdx
-
-                point1 = points1[index1]
-                point2 = points2[index2]
-
-                delta_xs.append(point1["x"] - point2["x"])
-                delta_ys.append(point1["y"] - point2["y"])
-
-            mean_delta_x = sum(delta_xs) / len(delta_xs)
-            mean_delta_y = sum(delta_ys) / len(delta_ys)
-
-            for match in imatches:
-                index2 = match.trainIdx
-                index1 = match.queryIdx
-
-                point1 = points1[index1]
-                point2 = points2[index2]
-
-                delta_x = point1["x"] - point2["x"]
-                delta_y = point1["y"] - point2["y"]
-                if abs(delta_x - mean_delta_x) > max_feature_delta:
-                    continue
-                if abs(delta_y - mean_delta_y) > max_feature_delta:
-                    continue
-
-                matches[name1][name2].append((index1, index2, match.distance))
+            matches[name1][name2].append((index1, index2, match.distance))
+            matches[name2][name1].append((index2, index1, match.distance))
 
     return matches
 
 def build_index_clusters(matches : dict):
     """Build clusters of features"""
     clusters = []
+    clusters_map = {}
     for name1 in matches:
+        #print(f"Processing {name1}")
+        #cl_len1 = len(clusters)
         for name2 in matches[name1]:
             matches_list = matches[name1][name2]
-            for match in matches_list:
-                id1 = match[0]
-                id2 = match[1]
-                for cluster in clusters:
-                    if name1 in cluster and cluster[name1] == id1:
-                        cluster[name2] = id2
-                        break
-                    if name2 in cluster and cluster[name2] == id2:
-                        cluster[name1] = id1
-                        break
-                else:
+            for id1, id2, distance in matches_list:
+                discovered_cluster = False
+                if name1 in clusters_map:
+                    clusters_name1 = clusters_map[name1]
+                    for cluster in clusters_name1:
+                        if cluster[name1] == id1:
+                            if name2 not in cluster:
+                                cluster[name2] = id2
+                                if name2 not in clusters_map:
+                                    clusters_map[name2] = []
+                                clusters_map[name2].append(cluster)
+                            discovered_cluster = True
+                            break
+                if name2 in clusters_map:
+                    clusters_name2 = clusters_map[name2]
+                    for cluster in clusters_name2:
+                        if cluster[name2] == id2:
+                            if name1 not in cluster:
+                                cluster[name1] = id1
+                                if name1 not in clusters_map:
+                                    clusters_map[name1] = []
+                                clusters_map[name1].append(cluster)
+                            discovered_cluster = True
+                            break
+
+                if not discovered_cluster:
                     cluster = {
                         name1: id1,
                         name2: id2,
                     }
                     clusters.append(cluster)
+                    if name1 not in clusters_map:
+                        clusters_map[name1] = []
+                    if name2 not in clusters_map:
+                        clusters_map[name2] = []
+                    clusters_map[name1].append(cluster)
+                    clusters_map[name2].append(cluster)
+
+        #cl_len2 = len(clusters)
+        #if cl_len2 > cl_len1:
+        #    print(f"Add {cl_len2-cl_len1} clusters")
     clusters = [item for item in clusters if len(item) > 1]
     return clusters
 
@@ -238,10 +271,11 @@ def build_crd_clusters(index_clusters : dict, points : dict):
 
 def build_clusters(points : dict, descs : dict,
                    max_feature_delta : float,
-                   features_percent : float):
+                   features_percent : float,
+                   match_list : list):
     """Build clusters"""
     print("Match images")
-    matches = match_images(points, descs, max_feature_delta, features_percent)
+    matches = match_images(points, descs, max_feature_delta, features_percent, match_list)
     print("Build index clusters")
     index_clusters = build_index_clusters(matches)
     print("Build coordinate clusters")
