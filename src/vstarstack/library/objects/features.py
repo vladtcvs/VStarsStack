@@ -22,6 +22,7 @@ from skimage import measure
 import matplotlib.pyplot as plt
 
 import vstarstack.library.data
+import vstarstack.library.cluster
 import vstarstack.tool.cfg
 
 def get_subimage(image, num_splits):
@@ -149,8 +150,8 @@ def match_images(points : dict, descs : dict,
         points1 = points[name1]
         descs1 = descs[name1]
 
-        matches[name1][name2] = []
-        matches[name2][name1] = []
+        matches[name1][name2] = {}
+        matches[name2][name1] = {}
 
         points2 = points[name2]
         descs2 = descs[name2]
@@ -199,63 +200,10 @@ def match_images(points : dict, descs : dict,
             if abs(delta_y - mean_delta_y) > max_feature_delta:
                 continue
 
-            matches[name1][name2].append((index1, index2, match.distance))
-            matches[name2][name1].append((index2, index1, match.distance))
+            matches[name1][name2][index1] = index2
+            matches[name2][name1][index2] = index1
 
     return matches
-
-def build_index_clusters(matches : dict):
-    """Build clusters of features"""
-    clusters = []
-    clusters_map = {}
-    for name1 in matches:
-        #print(f"Processing {name1}")
-        #cl_len1 = len(clusters)
-        for name2 in matches[name1]:
-            matches_list = matches[name1][name2]
-            for id1, id2, distance in matches_list:
-                discovered_cluster = False
-                if name1 in clusters_map:
-                    clusters_name1 = clusters_map[name1]
-                    for cluster in clusters_name1:
-                        if cluster[name1] == id1:
-                            if name2 not in cluster:
-                                cluster[name2] = id2
-                                if name2 not in clusters_map:
-                                    clusters_map[name2] = []
-                                clusters_map[name2].append(cluster)
-                            discovered_cluster = True
-                            break
-                if name2 in clusters_map:
-                    clusters_name2 = clusters_map[name2]
-                    for cluster in clusters_name2:
-                        if cluster[name2] == id2:
-                            if name1 not in cluster:
-                                cluster[name1] = id1
-                                if name1 not in clusters_map:
-                                    clusters_map[name1] = []
-                                clusters_map[name1].append(cluster)
-                            discovered_cluster = True
-                            break
-
-                if not discovered_cluster:
-                    cluster = {
-                        name1: id1,
-                        name2: id2,
-                    }
-                    clusters.append(cluster)
-                    if name1 not in clusters_map:
-                        clusters_map[name1] = []
-                    if name2 not in clusters_map:
-                        clusters_map[name2] = []
-                    clusters_map[name1].append(cluster)
-                    clusters_map[name2].append(cluster)
-
-        #cl_len2 = len(clusters)
-        #if cl_len2 > cl_len1:
-        #    print(f"Add {cl_len2-cl_len1} clusters")
-    clusters = [item for item in clusters if len(item) > 1]
-    return clusters
 
 def build_crd_clusters(index_clusters : dict, points : dict):
     """Build coordinate clusters """
@@ -277,7 +225,7 @@ def build_clusters(points : dict, descs : dict,
     print("Match images")
     matches = match_images(points, descs, max_feature_delta, features_percent, match_list)
     print("Build index clusters")
-    index_clusters = build_index_clusters(matches)
+    index_clusters = vstarstack.library.cluster.find_clusters_in_match_table(matches)
     print("Build coordinate clusters")
     crd_clusters = build_crd_clusters(index_clusters, points)
     return crd_clusters
