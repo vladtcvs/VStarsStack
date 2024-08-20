@@ -54,13 +54,11 @@ def _load_match_table(fname : str):
     return match_table
 
 def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
-    use_match_list = True
     match_list_file = None
     if len(argv) >= 2:
         points_path = argv[0]
         clusters_fname = argv[1]
         if len(argv) >= 3:
-            use_match_list = False
             match_list_file = argv[2]
     else:
         points_path = project.config.objects.features.path
@@ -78,14 +76,17 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
     points = {}
     descs = {}
 
-    for name, points in keypoints.items():
-        points[name] = [item["keypoint"] for item in points["points"]]
-        descs[name] = np.array([np.array(item["descriptor"], dtype=np.uint8) for item in points["points"]])
+    for name, record_points in keypoints.items():
+        points[name] = [item["keypoint"] for item in record_points["points"]]
+        descs[name] = np.array([np.array(item["descriptor"], dtype=np.uint8) for item in record_points["points"]])
 
-    if use_match_list:
+    if match_list_file is not None:
         match_list = _load_match_table(match_list_file)
+        print(f"Load comparsion list from {match_list_file}: {len(match_list)} comparsions")
     else:
         match_list = _build_default_match_table(keypoints.keys())
+        print(f"Build default comparsion list: {len(match_list)} comparsions")
+
     clusters = build_clusters(points, descs,
                               max_feature_delta,
                               features_percent,

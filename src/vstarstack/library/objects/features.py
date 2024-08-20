@@ -207,25 +207,53 @@ def match_images(points : dict, descs : dict,
 def build_index_clusters(matches : dict):
     """Build clusters of features"""
     clusters = []
+    clusters_map = {}
     for name1 in matches:
+        #print(f"Processing {name1}")
+        #cl_len1 = len(clusters)
         for name2 in matches[name1]:
             matches_list = matches[name1][name2]
-            for match in matches_list:
-                id1 = match[0]
-                id2 = match[1]
-                for cluster in clusters:
-                    if name1 in cluster and cluster[name1] == id1:
-                        cluster[name2] = id2
-                        break
-                    if name2 in cluster and cluster[name2] == id2:
-                        cluster[name1] = id1
-                        break
-                else:
+            for id1, id2, distance in matches_list:
+                discovered_cluster = False
+                if name1 in clusters_map:
+                    clusters_name1 = clusters_map[name1]
+                    for cluster in clusters_name1:
+                        if cluster[name1] == id1:
+                            if name2 not in cluster:
+                                cluster[name2] = id2
+                                if name2 not in clusters_map:
+                                    clusters_map[name2] = []
+                                clusters_map[name2].append(cluster)
+                            discovered_cluster = True
+                            break
+                if name2 in clusters_map:
+                    clusters_name2 = clusters_map[name2]
+                    for cluster in clusters_name2:
+                        if cluster[name2] == id2:
+                            if name1 not in cluster:
+                                cluster[name1] = id1
+                                if name1 not in clusters_map:
+                                    clusters_map[name1] = []
+                                clusters_map[name1].append(cluster)
+                            discovered_cluster = True
+                            break
+
+                if not discovered_cluster:
                     cluster = {
                         name1: id1,
                         name2: id2,
                     }
                     clusters.append(cluster)
+                    if name1 not in clusters_map:
+                        clusters_map[name1] = []
+                    if name2 not in clusters_map:
+                        clusters_map[name2] = []
+                    clusters_map[name1].append(cluster)
+                    clusters_map[name2].append(cluster)
+
+        #cl_len2 = len(clusters)
+        #if cl_len2 > cl_len1:
+        #    print(f"Add {cl_len2-cl_len1} clusters")
     clusters = [item for item in clusters if len(item) > 1]
     return clusters
 
