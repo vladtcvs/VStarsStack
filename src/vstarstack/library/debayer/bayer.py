@@ -89,13 +89,14 @@ def debayer_dataframe(dataframe : vstarstack.library.data.DataFrame,
         dataframe.add_channel(weights[color], f"weight-{color}", weight=True)
         dataframe.add_channel_link(color, f"weight-{color}", "weight")
 
-    dataframe.remove_channel(dataframe.links["weight"][raw_channel_name])
+    if raw_channel_name in dataframe.links["weight"]:
+        dataframe.remove_channel(dataframe.links["weight"][raw_channel_name])
     dataframe.remove_channel(raw_channel_name)
 
     dataframe.add_parameter(int(dataframe.get_parameter("w")/2), "w")
     dataframe.add_parameter(int(dataframe.get_parameter("h")/2), "h")
     dataframe.add_parameter("flat", "format")
     if dataframe.get_parameter("projection") == "perspective":
-        dataframe.params["perspective_kw"] *= 2
-        dataframe.params["perspective_kh"] *= 2
+        dataframe.params["projection_perspective_kw"] *= 2
+        dataframe.params["projection_perspective_kh"] *= 2
     return dataframe
