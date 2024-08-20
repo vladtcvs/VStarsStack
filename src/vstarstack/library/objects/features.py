@@ -160,7 +160,6 @@ def match_images(points : dict, descs : dict,
             print(f"Skipping {name1} <-> {name2}")
             continue
 
-
         imatches = bf_matcher.match(descs1, descs2)
         imatches = sorted(imatches, key=lambda x: x.distance)
 
@@ -203,63 +202,4 @@ def match_images(points : dict, descs : dict,
             matches[name1][name2][index1] = index2
             matches[name2][name1][index2] = index1
 
-    return matches
-
-def build_crd_clusters(index_clusters : dict, points : dict):
-    """Build coordinate clusters """
-    crd_clusters = []
-    #print(points.keys())
-    for cluster in index_clusters:
-        crd_cluster = {}
-        for name in cluster:
-            index = cluster[name]
-            crd_cluster[name] = points[name][index]
-        crd_clusters.append(crd_cluster)
-    return crd_clusters
-
-def build_clusters(points : dict, descs : dict,
-                   max_feature_delta : float,
-                   features_percent : float,
-                   match_list : list):
-    """Build clusters"""
-    print("Match images")
-    matches = match_images(points, descs, max_feature_delta, features_percent, match_list)
-    print("Build index clusters")
-    index_clusters = vstarstack.library.cluster.find_clusters_in_match_table(matches)
-    print("Build coordinate clusters")
-    crd_clusters = build_crd_clusters(index_clusters, points)
-    return crd_clusters
-
-def draw_matches(points : dict,
-                 fnames : dict,
-                 matches : dict,
-                 channel : str,
-                 name1 : str,
-                 name2 : str):
-    """Draw matches"""
-    points1 = points[name1]
-    points2 = points[name2]
-    fname1 = fnames[name1]
-    fname2 = fnames[name2]
-
-    d1 = vstarstack.library.data.DataFrame.load(fname1)
-    img1, _ = d1.get_channel(channel)
-    d2 = vstarstack.library.data.DataFrame.load(fname2)
-    img2, _ = d2.get_channel(channel)
-
-    img1 = (img1 / np.amax(img1) * 255).astype(np.uint8)
-    img2 = (img2 / np.amax(img2) * 255).astype(np.uint8)
-
-    ms = matches[name1][name2]
-    matches_fmt = [cv2.DMatch(msitem[1], msitem[2], 0) for msitem in ms]
-
-    kps1 = [cv2.KeyPoint(point["x"], point["y"], point["size"])
-            for point in points1]
-    kps2 = [cv2.KeyPoint(point["x"], point["y"], point["size"])
-            for point in points2]
-
-    img3 = cv2.drawMatches(img1, kps1, img2, kps2,
-                           matches_fmt, None,
-                           flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    plt.imshow(img3)
-    plt.show()
+    return matches    

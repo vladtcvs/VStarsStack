@@ -19,7 +19,7 @@ import numpy as np
 import vstarstack.tool.common
 import vstarstack.tool.cfg
 import vstarstack.library.data
-from vstarstack.library.objects.features import build_clusters
+from vstarstack.library.objects.features import match_images
 
 def _load_keypoints(files):
     points = {}
@@ -54,15 +54,15 @@ def _load_match_table(fname : str):
     return match_table
 
 def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
-    match_list_file = None
+    comparsion_list_file = None
     if len(argv) >= 2:
         points_path = argv[0]
-        clusters_fname = argv[1]
+        matchtable_fname = argv[1]
         if len(argv) >= 3:
-            match_list_file = argv[2]
+            comparsion_list_file = argv[2]
     else:
         points_path = project.config.objects.features.path
-        clusters_fname = project.config.cluster.path
+        matchtable_fname = project.config.cluster.path
 
     max_feature_delta = project.config.objects.features.max_feature_delta
     features_percent = project.config.objects.features.features_percent / 100.0
@@ -80,19 +80,19 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
         points[name] = [item["keypoint"] for item in record_points["points"]]
         descs[name] = np.array([np.array(item["descriptor"], dtype=np.uint8) for item in record_points["points"]])
 
-    if match_list_file is not None:
-        match_list = _load_match_table(match_list_file)
-        print(f"Load comparsion list from {match_list_file}: {len(match_list)} comparsions")
+    if comparsion_list_file is not None:
+        match_list = _load_match_table(comparsion_list_file)
+        print(f"Load comparsion list from {comparsion_list_file}: {len(match_list)} comparsions")
     else:
         match_list = _build_default_match_table(keypoints.keys())
         print(f"Build default comparsion list: {len(match_list)} comparsions")
 
-    clusters = build_clusters(points, descs,
-                              max_feature_delta,
-                              features_percent,
-                              match_list)
+    matches = match_images(points, descs,
+                           max_feature_delta,
+                           features_percent,
+                           match_list)
 
-    print("Builded clusters")
-    vstarstack.tool.common.check_dir_exists(clusters_fname)
-    with open(clusters_fname, "w", encoding='utf8') as f:
-        json.dump(clusters, f, indent=4, ensure_ascii=False)
+    print("Builded match table")
+    vstarstack.tool.common.check_dir_exists(matchtable_fname)
+    with open(matchtable_fname, "w", encoding='utf8') as f:
+        json.dump(matches, f, indent=4, ensure_ascii=False)

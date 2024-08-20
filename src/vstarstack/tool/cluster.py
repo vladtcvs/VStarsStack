@@ -20,6 +20,7 @@ import vstarstack.tool.cfg
 import vstarstack.tool.usage
 
 import vstarstack.library.data
+import vstarstack.library.cluster
 from vstarstack.library.movement.find_shift import build_movements, complete_movements
 from vstarstack.library.movement.sphere import Movement
 
