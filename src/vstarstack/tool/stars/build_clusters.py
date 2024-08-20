@@ -62,7 +62,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
     for cluster in dclusters:
         star_cluster = {}
         for name, star_id in cluster.items():
-            star_cluster[name] = descs[name]["main"][star_id]["item"]
+            star_cluster[name] = descs[name]["points"][star_id]["keypoint"]
         star_clusters.append(star_cluster)
 
     with open(cluster_f, "w", encoding='utf8') as f:
