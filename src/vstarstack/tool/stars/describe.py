@@ -20,38 +20,22 @@ import vstarstack.library.common
 
 from vstarstack.library.stars import describe
 
-def get_brightest(stars, N, mindistance):
-    """Get first N brightest stars"""
-    sample = []
-    for star in stars:
-        for selected in sample:
-            if abs(selected["y"] - star["y"]) < mindistance and \
-               abs(selected["x"] - star["x"]) < mindistance:
-                break
-        else:
-            sample.append(star)
-            if len(sample) >= N:
-                break
-    return sample
-
 def build_descriptions(image_description: dict,
-                       num_main : int,
-                       mindist : float,
                        use_angles : bool):
     """Build descriptors for first num_main brightest stars"""
-    mindistance = min(image_description["h"], image_description["w"]) * mindist
-    stars = image_description["stars"]
+    stars = [item["keypoint"] for item in image_description["points"]]
     stars = sorted(stars, key=lambda item: item["size"], reverse=True)
-    main = get_brightest(stars, num_main, mindistance)
-    descriptors = describe.build_descriptors(main, use_angles)
+    descriptors = describe.build_descriptors(stars, use_angles)
 
-    image_description["main"] = []
-    for item, desc in zip(main, descriptors):
+    image_description["points"] = []
+
+    for point, desc in zip(stars, descriptors):
         record = {
-            "star" : item,
+            "keypoint" : point,
+            "descriptor-type" : "star",
             "descriptor" : desc.serialize(),
         }
-        image_description["main"].append(record)
+        image_description["points"].append(record)
     return image_description
 
 def run(project: vstarstack.tool.cfg.Project, argv: list):
@@ -62,20 +46,13 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
         path = project.config.paths.descs
         outpath = project.config.paths.descs
 
-    num_main = project.config.stars.describe.num_main
-    mindist = project.config.stars.describe.mindist
-
     files = vstarstack.tool.common.listfiles(path, ".json")
 
     for name, filename in files:
         print(name)
         with open(filename, encoding='utf8') as f:
             description = json.load(f)
-        description = build_descriptions(description,
-                                         num_main,
-                                         mindist,
-                                         project.config.stars.use_angles)
-
+        description = build_descriptions(description, project.config.stars.use_angles)
         jsonfname = os.path.join(outpath, name + ".json")
         vstarstack.tool.common.check_dir_exists(jsonfname)
         with open(jsonfname, "w", encoding='utf8') as f:

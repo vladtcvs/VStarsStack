@@ -55,7 +55,7 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
         if h is None or h > desc["h"]:
             h = desc["h"]
 
-        desc = [describe.Descriptor.deserialize(item["descriptor"]) for item in desc["main"]]
+        desc = [describe.Descriptor.deserialize(item["descriptor"]) for item in desc["points"]]
         descs.append((name, desc))
         name_fname[name] = fname
 
