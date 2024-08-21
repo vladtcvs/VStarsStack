@@ -90,10 +90,12 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
     if len(argv) >= 2:
         path = argv[0]
         jsonpath = argv[1]
-        if len(argv) >= 3:
+        if len(argv) >= 4:
             num_stars = int(argv[2])
+            mindist = float(argv[3])
         else:
             num_stars = -1 # all stars
+            mindist = 0.001
     else:
         path = project.config.paths.npy_fixed
         jsonpath = project.config.paths.descs

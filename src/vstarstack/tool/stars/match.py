@@ -1,3 +1,4 @@
+"""Match stars on different images"""
 #
 # Copyright (c) 2023 Vladislav Tsendrovskii
 #
@@ -39,7 +40,7 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
         matchfile = argv[1]
     else:
         starsdir = project.config.paths.descs
-        matchfile = project.config.stars.paths.matchfile
+        matchfile = project.config.cluster.matchtable
 
     max_compares = project.config.stars.max_compares
     starsfiles = vstarstack.tool.common.listfiles(starsdir, ".json")

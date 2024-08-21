@@ -51,9 +51,10 @@ _module_configuration = {
         "sigma_clip_coefficient_end" : (float, 2.0),
         "sigma_clip_steps" : (int, 2),
     },
-    "use_modules" : (list, []),
+    "use_modules" : (list, ["cluster"]),
     "cluster" : ("module", {
         "path" : (str, "clusters.json"),
+        "matchtable" : (str, "match_table.json"),
         "compose_movements" : (bool, True),
     }),
     "stars" : ("module", vstarstack.tool.stars.config.configuration),

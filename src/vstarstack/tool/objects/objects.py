@@ -29,6 +29,6 @@ commands = {
     "detect": ("vstarstack.tool.objects.detect", "detect compact objects"),
     "find-features": (vstarstack.tool.objects.find_features.commands, "detect image features"),
     "display-features" : (vstarstack.tool.objects.find_features.display_features, "display image features", "image.zip features.json"),
-    "match-features": (vstarstack.tool.objects.match_features.run, "match image features"),
+    "match-features": (vstarstack.tool.objects.match_features.run, "match image features", "features/ match_table.json [comparsion_list.csv]"),
     "cut": (vstarstack.tool.objects.cut.run, "cut compact objects"),
 }

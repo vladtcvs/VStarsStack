@@ -62,7 +62,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
             comparsion_list_file = argv[2]
     else:
         points_path = project.config.objects.features.path
-        matchtable_fname = project.config.cluster.path
+        matchtable_fname = project.config.cluster.matchtable
 
     max_feature_delta = project.config.objects.features.max_feature_delta
     features_percent = project.config.objects.features.features_percent / 100.0

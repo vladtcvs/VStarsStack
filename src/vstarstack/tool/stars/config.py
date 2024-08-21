@@ -25,9 +25,6 @@ _module_configuration = {
         "max_dangle_diff": (float, 1.5),
         "min_matched_ditems": (int, 20),
     },
-    "paths" : {
-        "matchfile" : (str, "match_table.json"),
-    },
     "use_angles": (bool, True),
     "brightness_over_neighbours": (float, 2.0),
     "max_compares": (int, 0),

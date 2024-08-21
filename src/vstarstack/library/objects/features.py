@@ -1,3 +1,4 @@
+"""Detect, describe and match keypoints on the image"""
 #
 # Copyright (c) 2023 Vladislav Tsendrovskii
 #
@@ -19,13 +20,8 @@ import imutils
 import imutils.contours
 
 from skimage import measure
-import matplotlib.pyplot as plt
 
-import vstarstack.library.data
-import vstarstack.library.cluster
-import vstarstack.tool.cfg
-
-def get_subimage(image, num_splits):
+def _get_subimage(image, num_splits):
     image_shape = image.shape
     for i in range(num_splits):
         base_y = int(image_shape[0]/num_splits*i)
@@ -52,9 +48,10 @@ def _find_keypoints_orb(image : np.ndarray, base_x : int, base_y : int, detector
     return cpts
 
 def find_keypoints_orb(image, num_splits, param):
+    """Find keypoints of the image with "orb" detector"""
     points = []
     orb = cv2.ORB_create(patchSize=param["patchSize"])
-    for subimage, bx, by in get_subimage(image, num_splits):
+    for subimage, bx, by in _get_subimage(image, num_splits):
         points += _find_keypoints_orb(subimage, bx, by, orb)
     return points
 
@@ -107,8 +104,9 @@ def _find_keypoints_brightness(image, base_x, base_y, params):
     return keypoints
 
 def find_keypoints_brightness(image, num_splits, params):
+    """Find keypoints of the image with "brightness" detector"""
     points = []
-    for subimage, bx, by in get_subimage(image, num_splits):
+    for subimage, bx, by in _get_subimage(image, num_splits):
         points += _find_keypoints_brightness(subimage, bx, by, params)
     return points
 
