@@ -96,18 +96,19 @@ class ClusterAlignerBuilder:
         """Find alignment of image `name` using clusters"""
         expected_points = []
         actual_points = []
+
         for cluster in clusters:
             if name not in cluster:
                 continue
             average = _cluster_average(cluster)
 
             # we need reverse transformation
-            x = average["x"]
-            y = average["y"]
-            expected_points.append((y, x))
-            x = cluster[name]["x"]
-            y = cluster[name]["y"]
-            actual_points.append((y, x))
+            ex = average["x"]
+            ey = average["y"]
+            expected_points.append((ey, ex))
+            ax = cluster[name]["x"]
+            ay = cluster[name]["y"]
+            actual_points.append((ay, ax))
 
         expected_points = np.array(expected_points).astype("double")
         actual_points = np.array(actual_points).astype("double")

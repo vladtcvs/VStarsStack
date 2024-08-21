@@ -43,9 +43,17 @@ def get_param(name, type_of_var, default):
 DEBUG = False
 if "DEBUG" in os.environ:
     DEBUG = os.environ["DEBUG"].lower() == "true"
-    print("Debug = {debug}")
+    print("Debug = {DEBUG}")
 
-nthreads = max(int(mp.cpu_count())-1, 1)
+SINGLETHREAD = False
+if "SINGLETHREAD" in os.environ:
+    SINGLETHREAD = os.environ["SINGLETHREAD"].lower() == "true"
+    print("Singlethread = {SINGLETHREAD}")
+
+if not SINGLETHREAD:
+    nthreads = max(int(mp.cpu_count())-1, 1)
+else:
+    nthreads = 1
 
 class Project(object):
     """Holder for configuration"""

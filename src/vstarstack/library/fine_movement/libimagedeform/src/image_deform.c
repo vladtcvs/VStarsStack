@@ -150,8 +150,8 @@ void image_deform_apply_point(const struct ImageDeform *deform,
     }
     else
     {
-        *srcx = x + shift_x/deform->sx;
-        *srcy = y + shift_y/deform->sy;
+        *srcx = x - shift_x/deform->sx;
+        *srcy = y - shift_y/deform->sy;
     }
 }
 
@@ -166,6 +166,7 @@ void image_deform_apply_image(const struct ImageDeform *deform,
         {
             double orig_y, orig_x;
             image_deform_apply_point(deform, (double)x/subpixels, (double)y/subpixels, &orig_x, &orig_y);
+
             double val = image_grid_get_pixel(input_image, orig_x, orig_y);
             image_grid_set_pixel(output_image, x, y, val);
         }
