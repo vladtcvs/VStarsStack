@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ import vstarstack.tool.cfg
 import vstarstack.tool.usage
 
 import vstarstack.library.data
+import vstarstack.library.cluster
 from vstarstack.library.movement.find_shift import build_movements, complete_movements
 from vstarstack.library.movement.sphere import Movement
 
@@ -149,14 +150,64 @@ def find_shift_to_selected(project: vstarstack.tool.cfg.Project, argv: list):
     with open(shifts_f, "w", encoding='utf8') as f:
         json.dump(serialized, f, ensure_ascii=False, indent=4)
 
+def _prepare_match_table(match_table):
+    mt = {}
+    for image_id1 in match_table:
+        mt[image_id1] = {}
+        for image_id2 in match_table[image_id1]:
+            mt[image_id1][image_id2] = {}
+            for star_id1 in match_table[image_id1][image_id2]:
+                star_id2 = match_table[image_id1][image_id2][star_id1]
+                mt[image_id1][image_id2][int(star_id1)] = star_id2
+    return mt
+
+def build_from_match_table(project: vstarstack.tool.cfg.Project, argv: list):
+    """Build clusters file from match table"""
+    if len(argv) >= 2:
+        descs_path = argv[0]
+        match_table_f = argv[1]
+        cluster_f = argv[2]
+    else:
+        descs_path = project.config.paths.descs
+        match_table_f = project.config.stars.paths.matchfile
+        cluster_f = project.config.cluster.path
+
+    with open(match_table_f, encoding='utf8') as f:
+        match_table = _prepare_match_table(json.load(f))
+
+    print("Find index cluster")
+    clusters = vstarstack.library.cluster.find_clusters_in_match_table(match_table)
+    dclusters = sorted(clusters, key=lambda x : len(x), reverse=True)
+    dclusters = [item for item in dclusters if len(item) > 1]
+    print("Done")
+
+    stars_files = vstarstack.tool.common.listfiles(descs_path, ".json")
+    descs = {}
+    for name, fname in stars_files:
+        with open(fname, encoding='utf8') as file:
+            desc = json.load(file)
+        descs[name] = desc
+
+    star_clusters = []
+    for cluster in dclusters:
+        star_cluster = {}
+        for name, star_id in cluster.items():
+            star_cluster[name] = descs[name]["points"][star_id]["keypoint"]
+        star_clusters.append(star_cluster)
+
+    with open(cluster_f, "w", encoding='utf8') as f:
+        json.dump(star_clusters, f, indent=4)
 
 commands = {
     "display": (display,
                 "Display clusters",
                 "cluster.json channel file1.zip file2.zip"),
-    "find-shift": (find_shift,
-                   "Find shifts from cluster file",
-                   "cluster.json shifts.json"),
+    "build-from-matchtable" : (build_from_match_table,
+                               "Build clusters file from match table",
+                               "descs/ match_table.json clusters.json"),
+    "find-shifts": (find_shift,
+                    "Find shifts from cluster file",
+                    "cluster.json shifts.json"),
     "find-shift-to-selected": (find_shift_to_selected,
                    "Find shifts from cluster file, but only to selected image",
                    "cluster.json shifts.json <basic_image>"),

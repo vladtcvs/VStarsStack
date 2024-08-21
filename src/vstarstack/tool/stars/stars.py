@@ -19,7 +19,6 @@ import vstarstack.tool.stars.config
 import vstarstack.tool.stars.detect
 import vstarstack.tool.stars.describe
 import vstarstack.tool.stars.match
-import vstarstack.tool.stars.build_clusters
 import vstarstack.tool.stars.show
 
 def _enable_stars(project : vstarstack.tool.cfg.Project, _argv: list[str]):
@@ -34,6 +33,4 @@ commands = {
     "show-match": (vstarstack.tool.stars.show.show_match, "display matched stars", "npy/light1.zip npy/light2.zip descs/desc1.json descs/desc2.json match_table.json"),
     "describe": (vstarstack.tool.stars.describe.run, "find descriptions for each image"),
     "match": (vstarstack.tool.stars.match.run, "match stars between images"),
-    "cluster": (vstarstack.tool.stars.build_clusters.run,
-                "find matching stars clusters between images"),
 }

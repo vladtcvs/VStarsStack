@@ -1,3 +1,4 @@
+"""Match stars on different images"""
 #
 # Copyright (c) 2023 Vladislav Tsendrovskii
 #
@@ -39,7 +40,7 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
         matchfile = argv[1]
     else:
         starsdir = project.config.paths.descs
-        matchfile = project.config.stars.paths.matchfile
+        matchfile = project.config.cluster.matchtable
 
     max_compares = project.config.stars.max_compares
     starsfiles = vstarstack.tool.common.listfiles(starsdir, ".json")
@@ -55,7 +56,7 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
         if h is None or h > desc["h"]:
             h = desc["h"]
 
-        desc = [describe.Descriptor.deserialize(item["descriptor"]) for item in desc["main"]]
+        desc = [describe.Descriptor.deserialize(item["descriptor"]) for item in desc["points"]]
         descs.append((name, desc))
         name_fname[name] = fname
 

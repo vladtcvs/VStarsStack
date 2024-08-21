@@ -21,7 +21,7 @@ import vstarstack.tool.common
 import vstarstack.tool.cfg
 
 def _group_by_video(project: vstarstack.tool.cfg.Project, argv: list[str]):
-    regex = re.compile("(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])_keypoints")
+    regex = re.compile("(.*)_([0-9][0-9][0-9][0-9][0-9][0-9])")
     features_path = argv[0]
     matches_between_videos = int(argv[1])
     sequence_length = int(argv[2])

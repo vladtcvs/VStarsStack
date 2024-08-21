@@ -28,15 +28,17 @@ from vstarstack.library.objects.features import find_keypoints_brightness
 from vstarstack.library.objects.features import describe_keypoints
 
 def _save_features(points, name, features_path):
-    fname = os.path.join(features_path, f"{name}_keypoints.json")
+    fname = os.path.join(features_path, f"{name}.json")
     vstarstack.tool.common.check_dir_exists(fname)
     with open(fname, "w") as f:
         json.dump(points, f, indent=4, ensure_ascii=False)
 
-def build_keypoints_structure(keypoints, ds, fname, name, proj):
+def build_keypoints_structure(keypoints, ds, fname, name, proj, w, h):
     record = {
         "fname" : fname,
         "name" : name,
+        "h" : h,
+        "w" : w,
         "points" : [],
     }
 
@@ -52,6 +54,7 @@ def build_keypoints_structure(keypoints, ds, fname, name, proj):
         keypoint["lat"] = lat
         record["points"].append({
             "keypoint" : keypoint,
+            "descriptor-type" : "orb",
             "descriptor" : [int(item) for item in list(desc)],
         })
 
@@ -68,7 +71,7 @@ def _proj_find_keypoints_orb(files, num_splits, param, features_path):
 
         keypoints = find_keypoints_orb(gray, num_splits, param)
         ds = describe_keypoints(gray, keypoints, param)
-        points = build_keypoints_structure(keypoints, ds, fname, name, proj)
+        points = build_keypoints_structure(keypoints, ds, fname, name, proj, dataframe.get_parameter("w"), dataframe.get_parameter("h"))
 
         _save_features(points, name, features_path)
 

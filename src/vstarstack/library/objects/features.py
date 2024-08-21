@@ -1,3 +1,4 @@
+"""Detect, describe and match keypoints on the image"""
 #
 # Copyright (c) 2023 Vladislav Tsendrovskii
 #
@@ -19,12 +20,8 @@ import imutils
 import imutils.contours
 
 from skimage import measure
-import matplotlib.pyplot as plt
 
-import vstarstack.library.data
-import vstarstack.tool.cfg
-
-def get_subimage(image, num_splits):
+def _get_subimage(image, num_splits):
     image_shape = image.shape
     for i in range(num_splits):
         base_y = int(image_shape[0]/num_splits*i)
@@ -51,9 +48,10 @@ def _find_keypoints_orb(image : np.ndarray, base_x : int, base_y : int, detector
     return cpts
 
 def find_keypoints_orb(image, num_splits, param):
+    """Find keypoints of the image with "orb" detector"""
     points = []
     orb = cv2.ORB_create(patchSize=param["patchSize"])
-    for subimage, bx, by in get_subimage(image, num_splits):
+    for subimage, bx, by in _get_subimage(image, num_splits):
         points += _find_keypoints_orb(subimage, bx, by, orb)
     return points
 
@@ -106,8 +104,9 @@ def _find_keypoints_brightness(image, base_x, base_y, params):
     return keypoints
 
 def find_keypoints_brightness(image, num_splits, params):
+    """Find keypoints of the image with "brightness" detector"""
     points = []
-    for subimage, bx, by in get_subimage(image, num_splits):
+    for subimage, bx, by in _get_subimage(image, num_splits):
         points += _find_keypoints_brightness(subimage, bx, by, params)
     return points
 
@@ -149,8 +148,8 @@ def match_images(points : dict, descs : dict,
         points1 = points[name1]
         descs1 = descs[name1]
 
-        matches[name1][name2] = []
-        matches[name2][name1] = []
+        matches[name1][name2] = {}
+        matches[name2][name1] = {}
 
         points2 = points[name2]
         descs2 = descs[name2]
@@ -158,7 +157,6 @@ def match_images(points : dict, descs : dict,
         if descs1 is None or descs2 is None:
             print(f"Skipping {name1} <-> {name2}")
             continue
-
 
         imatches = bf_matcher.match(descs1, descs2)
         imatches = sorted(imatches, key=lambda x: x.distance)
@@ -199,119 +197,7 @@ def match_images(points : dict, descs : dict,
             if abs(delta_y - mean_delta_y) > max_feature_delta:
                 continue
 
-            matches[name1][name2].append((index1, index2, match.distance))
-            matches[name2][name1].append((index2, index1, match.distance))
+            matches[name1][name2][index1] = index2
+            matches[name2][name1][index2] = index1
 
-    return matches
-
-def build_index_clusters(matches : dict):
-    """Build clusters of features"""
-    clusters = []
-    clusters_map = {}
-    for name1 in matches:
-        #print(f"Processing {name1}")
-        #cl_len1 = len(clusters)
-        for name2 in matches[name1]:
-            matches_list = matches[name1][name2]
-            for id1, id2, distance in matches_list:
-                discovered_cluster = False
-                if name1 in clusters_map:
-                    clusters_name1 = clusters_map[name1]
-                    for cluster in clusters_name1:
-                        if cluster[name1] == id1:
-                            if name2 not in cluster:
-                                cluster[name2] = id2
-                                if name2 not in clusters_map:
-                                    clusters_map[name2] = []
-                                clusters_map[name2].append(cluster)
-                            discovered_cluster = True
-                            break
-                if name2 in clusters_map:
-                    clusters_name2 = clusters_map[name2]
-                    for cluster in clusters_name2:
-                        if cluster[name2] == id2:
-                            if name1 not in cluster:
-                                cluster[name1] = id1
-                                if name1 not in clusters_map:
-                                    clusters_map[name1] = []
-                                clusters_map[name1].append(cluster)
-                            discovered_cluster = True
-                            break
-
-                if not discovered_cluster:
-                    cluster = {
-                        name1: id1,
-                        name2: id2,
-                    }
-                    clusters.append(cluster)
-                    if name1 not in clusters_map:
-                        clusters_map[name1] = []
-                    if name2 not in clusters_map:
-                        clusters_map[name2] = []
-                    clusters_map[name1].append(cluster)
-                    clusters_map[name2].append(cluster)
-
-        #cl_len2 = len(clusters)
-        #if cl_len2 > cl_len1:
-        #    print(f"Add {cl_len2-cl_len1} clusters")
-    clusters = [item for item in clusters if len(item) > 1]
-    return clusters
-
-def build_crd_clusters(index_clusters : dict, points : dict):
-    """Build coordinate clusters """
-    crd_clusters = []
-    #print(points.keys())
-    for cluster in index_clusters:
-        crd_cluster = {}
-        for name in cluster:
-            index = cluster[name]
-            crd_cluster[name] = points[name][index]
-        crd_clusters.append(crd_cluster)
-    return crd_clusters
-
-def build_clusters(points : dict, descs : dict,
-                   max_feature_delta : float,
-                   features_percent : float,
-                   match_list : list):
-    """Build clusters"""
-    print("Match images")
-    matches = match_images(points, descs, max_feature_delta, features_percent, match_list)
-    print("Build index clusters")
-    index_clusters = build_index_clusters(matches)
-    print("Build coordinate clusters")
-    crd_clusters = build_crd_clusters(index_clusters, points)
-    return crd_clusters
-
-def draw_matches(points : dict,
-                 fnames : dict,
-                 matches : dict,
-                 channel : str,
-                 name1 : str,
-                 name2 : str):
-    """Draw matches"""
-    points1 = points[name1]
-    points2 = points[name2]
-    fname1 = fnames[name1]
-    fname2 = fnames[name2]
-
-    d1 = vstarstack.library.data.DataFrame.load(fname1)
-    img1, _ = d1.get_channel(channel)
-    d2 = vstarstack.library.data.DataFrame.load(fname2)
-    img2, _ = d2.get_channel(channel)
-
-    img1 = (img1 / np.amax(img1) * 255).astype(np.uint8)
-    img2 = (img2 / np.amax(img2) * 255).astype(np.uint8)
-
-    ms = matches[name1][name2]
-    matches_fmt = [cv2.DMatch(msitem[1], msitem[2], 0) for msitem in ms]
-
-    kps1 = [cv2.KeyPoint(point["x"], point["y"], point["size"])
-            for point in points1]
-    kps2 = [cv2.KeyPoint(point["x"], point["y"], point["size"])
-            for point in points2]
-
-    img3 = cv2.drawMatches(img1, kps1, img2, kps2,
-                           matches_fmt, None,
-                           flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    plt.imshow(img3)
-    plt.show()
+    return matches    
