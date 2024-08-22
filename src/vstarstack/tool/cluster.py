@@ -169,7 +169,7 @@ def build_from_match_table(project: vstarstack.tool.cfg.Project, argv: list):
         cluster_f = argv[2]
     else:
         descs_path = project.config.paths.descs
-        match_table_f = project.config.stars.paths.matchfile
+        match_table_f = project.config.cluster.matchtable
         cluster_f = project.config.cluster.path
 
     with open(match_table_f, encoding='utf8') as f:
