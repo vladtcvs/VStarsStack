@@ -16,6 +16,15 @@ import os
 import numpy as np
 from setuptools import setup, Extension
 
+clusterization = Extension(name="vstarstack.library.clusters.clusterization",
+                           sources=[
+                               "src/vstarstack/library/clusters/clusterization/module.cc",
+                               "src/vstarstack/library/clusters/clusterization/lib/src/clusters.cc"
+                           ],
+                           include_dirs=[
+                               "src/vstarstack/library/clusters/clusterization/lib/include"
+                           ])
+
 projection = Extension( name="vstarstack.library.projection.projections",
                         sources=[
                             "src/vstarstack/library/projection/projections/module.c",
@@ -75,6 +84,7 @@ setup (name = 'vstarstack',
        ext_modules = [projection,
                       movements,
                       image_deform,
+                      clusterization,
                     ],
        entry_points = {
            'console_scripts': [
