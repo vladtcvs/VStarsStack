@@ -150,8 +150,8 @@ void image_deform_apply_point(const struct ImageDeform *deform,
     }
     else
     {
-        *srcx = x - shift_x/deform->sx;
-        *srcy = y - shift_y/deform->sy;
+        *srcx = x + shift_x/deform->sx;
+        *srcy = y + shift_y/deform->sy;
     }
 }
 
