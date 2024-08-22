@@ -94,8 +94,8 @@ class ClusterAlignerBuilder:
 
     def find_alignment(self, name : str, clusters : list) -> Aligner:
         """Find alignment of image `name` using clusters"""
-        expected_points = []
-        actual_points = []
+        image_points_coordinates = []
+        mean_points_coordinates = []
 
         for cluster in clusters:
             if name not in cluster:
@@ -103,23 +103,23 @@ class ClusterAlignerBuilder:
             average = _cluster_average(cluster)
 
             # we need reverse transformation
-            ex = average["x"]
-            ey = average["y"]
-            expected_points.append((ey, ex))
-            ax = cluster[name]["x"]
-            ay = cluster[name]["y"]
-            actual_points.append((ay, ax))
+            x = average["x"]
+            y = average["y"]
+            mean_points_coordinates.append((y, x))
+            x = cluster[name]["x"]
+            y = cluster[name]["y"]
+            image_points_coordinates.append((y, x))
 
-        expected_points = np.array(expected_points).astype("double")
-        actual_points = np.array(actual_points).astype("double")
+        mean_points_coordinates = np.array(mean_points_coordinates).astype("double")
+        image_points_coordinates = np.array(image_points_coordinates).astype("double")
 
-        print(f"\tusing {len(expected_points)} points")
-        if len(expected_points) < self.min_points:
+        print(f"\tusing {len(mean_points_coordinates)} points")
+        if len(mean_points_coordinates) < self.min_points:
             print("\tskip - too low points")
             return None
 
-        deform = self.correlator.find(points=actual_points,
-                                      expected_points=expected_points,
+        deform = self.correlator.find(points=mean_points_coordinates,
+                                      expected_points=image_points_coordinates,
                                       dh=self.dh,
                                       Nsteps=self.num_steps)
         shift_array = deform.content()
