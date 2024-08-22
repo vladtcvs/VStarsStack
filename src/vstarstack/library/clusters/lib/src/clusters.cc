@@ -32,6 +32,8 @@ public:
 
             this->matches[match.item1].insert(match.item2);
             this->matches[match.item2].insert(match.item1);
+            this->items.insert(match.item1);
+            this->items.insert(match.item2);
         }
     }
 
@@ -129,7 +131,7 @@ std::vector<cluster_s> build_clusters(const std::vector<match_s> &matches)
         cluster_id++;
     }
     std::vector<cluster_s> clusters;
-    clusters.resize(cluster_id+1);
+    clusters.resize(cluster_id);
     for (auto pair : item_cluster_assignment)
     {
         item_s item = pair.first;
