@@ -20,7 +20,7 @@ import vstarstack.tool.cfg
 import vstarstack.tool.usage
 
 import vstarstack.library.data
-import vstarstack.library.cluster
+import vstarstack.library.clusters.clusters
 from vstarstack.library.movement.find_shift import build_movements, complete_movements
 from vstarstack.library.movement.sphere import Movement
 
@@ -169,14 +169,14 @@ def build_from_match_table(project: vstarstack.tool.cfg.Project, argv: list):
         cluster_f = argv[2]
     else:
         descs_path = project.config.paths.descs
-        match_table_f = project.config.stars.paths.matchfile
+        match_table_f = project.config.cluster.matchtable
         cluster_f = project.config.cluster.path
 
     with open(match_table_f, encoding='utf8') as f:
         match_table = _prepare_match_table(json.load(f))
 
     print("Find index cluster")
-    clusters = vstarstack.library.cluster.find_clusters_in_match_table(match_table)
+    clusters = vstarstack.library.clusters.clusters.find_clusters_in_match_table(match_table)
     dclusters = sorted(clusters, key=lambda x : len(x), reverse=True)
     dclusters = [item for item in dclusters if len(item) > 1]
     print("Done")

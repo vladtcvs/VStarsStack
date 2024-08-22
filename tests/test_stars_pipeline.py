@@ -21,7 +21,7 @@ import vstarstack.library.loaders.classic
 import vstarstack.library.stars.detect
 import vstarstack.library.stars.describe
 import vstarstack.library.stars.match
-import vstarstack.library.cluster
+import vstarstack.library.clusters.clusters
 import vstarstack.library.movement.find_shift
 import vstarstack.library.movement.select_shift
 import vstarstack.library.movement.move_image
@@ -65,7 +65,7 @@ def test_1():
 
     matcher = vstarstack.library.stars.match.DescriptorMatcher(3, 1e-3, 1e-3, 3e-1)
     match_table = vstarstack.library.stars.match.build_stars_match_table(matcher, descs, 0)
-    id_clusters = vstarstack.library.cluster.find_clusters_in_match_table(match_table)
+    id_clusters = vstarstack.library.clusters.clusters.find_clusters_in_match_table(match_table)
     star_clusters = []
     for cluster in id_clusters:
         star_cluster = {}
