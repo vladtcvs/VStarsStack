@@ -139,5 +139,9 @@ std::vector<cluster_s> build_clusters(const std::vector<match_s> &matches)
         clusters[id].items.push_back(item);
     }
 
-    return clusters;
+    std::vector<cluster_s> clusters_big;
+    for (auto cluster : clusters)
+        if (cluster.items.size() > 1)
+            clusters_big.push_back(cluster);
+    return clusters_big;
 }

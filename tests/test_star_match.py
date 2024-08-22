@@ -15,7 +15,7 @@
 
 from vstarstack.library.stars import describe
 from vstarstack.library.stars import match
-from vstarstack.library.clusters import clusters
+from vstarstack.library.clusters.clusters import find_clusters_in_match_table
 
 thr = 1e-6
 
@@ -334,7 +334,7 @@ def test_cluster_1():
 
     matcher = match.DescriptorMatcher(1, 1e-3, 1e-3, 1e-2)
     match_table = match.build_stars_match_table(matcher, lists, 0)
-    clusters = clusters.find_clusters_in_match_table(match_table)
+    clusters = find_clusters_in_match_table(match_table)
     assert len(clusters) == 3
     assert_has_cluster(clusters, {0: 0, 1: 0})
     assert_has_cluster(clusters, {0: 1, 1: 2})
@@ -420,7 +420,7 @@ def test_cluster_2():
     match_table[2].pop(0)
     match_table[2].pop(1)
 
-    clusters = clusters.find_clusters_in_match_table(match_table)
+    clusters = find_clusters_in_match_table(match_table)
     assert len(clusters) == 3
 
     assert_has_cluster(clusters, {0: 0, 1: 0, 2: 0})
@@ -506,7 +506,7 @@ def test_cluster_3():
     match_table[0].pop(2)
     match_table[0].pop(1)
 
-    clusters = clusters.find_clusters_in_match_table(match_table)
+    clusters = find_clusters_in_match_table(match_table)
     assert len(clusters) == 3
 
     assert_has_cluster(clusters, {0: 0, 1: 0, 2: 0})
