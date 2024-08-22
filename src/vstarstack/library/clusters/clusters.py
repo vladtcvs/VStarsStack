@@ -22,10 +22,27 @@ def find_clusters_in_match_table(match_table : dict):
     # clusters = [{image_id_1:star_id_1, image_id_2:star_id_2, ...}, {...}, ...]
     match_list = []
     clusters = []
-    for image_id_1 in match_table:
-        for image_id_2 in match_table[image_id_1]:
-            for star_id_1, star_id_2 in match_table[image_id_1][image_id_2].items():
+
+    image_index = 0
+    image_name_index = {}
+    rev_image_name_index = {}
+
+    for image_name_1 in match_table:
+        if image_name_1 not in image_name_index:
+            image_name_index[image_name_1] = image_index
+            rev_image_name_index[image_index] = image_name_1
+            image_index += 1
+        image_id_1 = image_name_index[image_name_1]
+        for image_name_2 in match_table[image_name_1]:
+            if image_name_2 not in image_name_index:
+                image_name_index[image_name_2] = image_index
+                rev_image_name_index[image_index] = image_name_2
+                image_index += 1
+            image_id_2 = image_name_index[image_name_2]
+
+            for star_id_1, star_id_2 in match_table[image_name_1][image_name_2].items():
                 match_list.append((image_id_1, star_id_1, image_id_2, star_id_2))
+
     cluster_list = vstarstack.library.clusters.clusterization.build_clusters(match_list)
     for cluster in cluster_list:
         if len(cluster) < 2:
@@ -35,7 +52,8 @@ def find_clusters_in_match_table(match_table : dict):
             if image_id in vcluster:
                 # bad cluster            
                 break
-            vcluster[image_id] = star_id
+            image_name = rev_image_name_index[image_id]
+            vcluster[image_name] = star_id
         else:
             clusters.append(vcluster)
     return clusters
