@@ -46,15 +46,21 @@ def compress(img, slope):
 def convert_to_uint16(img, slope, maxshift):
     compressed = None
     img = img / np.amax(img)
-    for shifti in range(1024):
-        shift = shifti / 1024 * maxshift
+    nstep = 10
+    idx1 = 0
+    idx2 = 2**nstep
+    for _ in range(nstep):
+        idx = (idx1 + idx2)/2
+        shift = idx / (2**nstep) * maxshift
         compressed = compress(img + shift, slope)
         intimg = (compressed*65535).astype('int')
         count_0 = intimg[np.where(intimg == 0)].size
         count_1 = intimg[np.where(intimg == 1)].size
-        print(shift, count_0, count_1)
+        print("%i : %0.5f: %i - %i" % (idx, shift, count_0, count_1))
         if count_0 <= count_1:
-            return compressed
+            idx2 = idx
+        else:
+            idx1 = idx
     return compressed
 
 def _make_frames(dataframe, channels):
