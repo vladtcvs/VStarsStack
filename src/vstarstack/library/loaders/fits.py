@@ -43,14 +43,21 @@ def readfits(filename: str):
         if "DATE-OBS" in tags:
             params["UTC"] = tags["DATE-OBS"]
 
-        dataframe = vstarstack.library.data.DataFrame(params, tags)
+        if "EXPTIME" in plane.header:
+            exptime = plane.header["EXPTIME"]
+        else:
+            exptime = 1
 
-        exptime = plane.header["EXPTIME"]
+        if "GAIN" in plane.header:
+            gain = plane.header["GAIN"]
+        else:
+            gain = 1
 
         slice_names = []
 
+        dataframe = vstarstack.library.data.DataFrame(params, tags)
         weight_channel_name = "weight"
-        weight = np.ones((shape[1], shape[2]))*exptime
+        weight = np.ones((shape[1], shape[2]))*exptime*gain
         dataframe.add_channel(weight, weight_channel_name, weight=True)
 
         if shape[0] == 1:
