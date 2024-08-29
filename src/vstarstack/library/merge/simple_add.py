@@ -27,12 +27,15 @@ def simple_add(images : vstarstack.library.common.IImageSource) -> DataFrame:
     if images.empty():
         return None
 
+    channel_opts = {}
     for img in images.items():
         params = img.params
         for channel_name in img.get_channels():
             channel, opts = img.get_channel(channel_name)
             if not opts["brightness"]:
                 continue
+            if channel_name not in channel_opts:
+                channel_opts[channel_name] = opts
 
             if channel_name in img.links["weight"]:
                 weight_channel = img.links["weight"][channel_name]
@@ -54,7 +57,7 @@ def simple_add(images : vstarstack.library.common.IImageSource) -> DataFrame:
     result = vstarstack.library.data.DataFrame(params=params)
     for channel_name, channel in summary.items():
         print(channel_name)
-        result.add_channel(channel, channel_name, brightness=True)
+        result.add_channel(channel, channel_name, **channel_opts[channel_name])
         result.add_channel(summary_weight[channel_name],
                            "weight-"+channel_name, weight=True)
         result.add_channel_link(channel_name, "weight-"+channel_name, "weight")
