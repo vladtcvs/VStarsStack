@@ -22,6 +22,7 @@ import vstarstack.library.merge
 import vstarstack.library.stars.detect
 import vstarstack.library.stars.cut
 import vstarstack.library.image_process.blur
+import vstarstack.library.merge.kappa_sigma
 
 from vstarstack.library.image_process.blur import BlurredSource
 from vstarstack.library.image_process.normalize import normalize
@@ -78,9 +79,8 @@ def prepare_flat_sky(images : vstarstack.library.common.IImageSource,
                      smooth_size : int
                      ) -> vstarstack.library.data.DataFrame:
     """Generate flat image"""
-    sum_layer = {}
-    sum_weight = {}
     params = {}
+    no_star_images = []
     for dataframe in images.items():
         descs = []
         params = dataframe.params
@@ -90,27 +90,12 @@ def prepare_flat_sky(images : vstarstack.library.common.IImageSource,
                 continue
             channel_descs = vstarstack.library.stars.detect.detect_stars(layer)
             descs += channel_descs
+
         dataframe = vstarstack.library.image_process.blur.blur(dataframe, 5)
         dataframe = normalize(dataframe)
-        nostars_dataframe = vstarstack.library.stars.cut.cut_stars(dataframe, descs)
-        for name in nostars_dataframe.get_channels():
-            layer, opts = nostars_dataframe.get_channel(name)
-            if not opts["brightness"]:
-                continue
-            weight_name = nostars_dataframe.links["weight"][name]
-            weight, _ = nostars_dataframe.get_channel(weight_name)
-            if name not in sum_layer:
-                sum_layer[name] = layer
-                sum_weight[name] = weight
-            else:
-                sum_layer[name] += layer
-                sum_weight[name] += weight
-
-    flat = vstarstack.library.data.DataFrame(params=params)
-    for name, layer in sum_layer.items():
-        weight = sum_weight[name]
-        layer[np.where(weight == 0)] = 0
-        flat.add_channel(layer, name, brightness=True)
-        flat.add_channel(weight, "weight-"+name, weight=True)
-        flat.add_channel_link(name, "weight-"+name, "weight")
+        no_stars_dataframe = vstarstack.library.stars.cut.cut_stars(dataframe, descs)
+        no_star_images.append(no_stars_dataframe)
+    
+    no_star_source = vstarstack.library.common.ListImageSource(no_star_images)
+    flat = vstarstack.library.merge.kappa_sigma.kappa_sigma(no_star_source, 1, 1, 2)
     return flat

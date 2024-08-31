@@ -16,7 +16,8 @@ import numpy as np
 import os
 
 from vstarstack.library.loaders.classic import readjpeg
-import vstarstack.library.merge
+import vstarstack.library.merge.kappa_sigma
+import vstarstack.library.merge.simple_add
 from vstarstack.library.common import ListImageSource
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -32,7 +33,7 @@ def test_simple_add():
     copy2 = original_image.copy()
     source = ListImageSource([copy1, copy2])
 
-    summ = vstarstack.library.merge.simple_add(source)
+    summ = vstarstack.library.merge.simple_add.simple_add(source)
     summ_light, opts = summ.get_channel("L")
     wn = summ.links["weight"]["L"]
     summ_weight = summ.get_channel(wn)[0]
@@ -95,7 +96,7 @@ def test_kappa_sigma_1():
     copy2 = original_image.copy()
     source = ListImageSource([copy1, copy2])
 
-    summ = vstarstack.library.merge.kappa_sigma(source, 1, 1, 0)
+    summ = vstarstack.library.merge.kappa_sigma.kappa_sigma(source, 1, 1, 0)
     summ_light, opts = summ.get_channel("L")
     wn = summ.links["weight"]["L"]
     summ_weight = summ.get_channel(wn)[0]
@@ -112,7 +113,7 @@ def test_kappa_sigma_2():
     copy2 = original_image.copy()
     source = ListImageSource([copy1, copy2])
 
-    summ = vstarstack.library.merge.kappa_sigma(source, 1, 1, 1)
+    summ = vstarstack.library.merge.kappa_sigma.kappa_sigma(source, 1, 1, 1)
     summ_light, opts = summ.get_channel("L")
     wn = summ.links["weight"]["L"]
     summ_weight = summ.get_channel(wn)[0]
@@ -127,7 +128,7 @@ def test_kappa_sigma_3():
     copy2 = original_image.copy()
     source = ListImageSource([copy1, copy2])
 
-    summ = vstarstack.library.merge.kappa_sigma(source, 1, 1, 2)
+    summ = vstarstack.library.merge.kappa_sigma.kappa_sigma(source, 1, 1, 2)
     summ_light, opts = summ.get_channel("L")
     wn = summ.links["weight"]["L"]
     summ_weight = summ.get_channel(wn)[0]
@@ -155,7 +156,7 @@ def test_kappa_sigma_4():
         noised.append(copy)
     source = ListImageSource(noised)
 
-    summ = vstarstack.library.merge.kappa_sigma(source, 3, 3, 5)
+    summ = vstarstack.library.merge.kappa_sigma.kappa_sigma(source, 3, 3, 5)
     summ_light, opts = summ.get_channel("L")
     wn = summ.links["weight"]["L"]
     summ_weight = summ.get_channel(wn)[0]

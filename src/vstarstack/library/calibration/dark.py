@@ -14,7 +14,7 @@
 
 import vstarstack.library.common
 import vstarstack.library.data
-import vstarstack.library.merge
+import vstarstack.library.merge.simple_mean
 
 def remove_dark(dataframe : vstarstack.library.data.DataFrame,
                 dark : vstarstack.library.data.DataFrame):
@@ -33,4 +33,4 @@ def remove_dark(dataframe : vstarstack.library.data.DataFrame,
 def prepare_darks(images : vstarstack.library.common.IImageSource
                   ) -> vstarstack.library.data.DataFrame:
     """Build dark frame"""
-    return vstarstack.library.merge.simple_mean(images)
+    return vstarstack.library.merge.simple_mean.mean(images)
