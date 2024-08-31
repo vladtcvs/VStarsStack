@@ -84,7 +84,7 @@ def _calculate_sigma(images, means, sigmas, kappa):
 
     for img in images.items():
         for channel in img.get_channels():
-            image, _ = _read_and_prepare(img, channel)
+            image, _, _ = _read_and_prepare(img, channel)
             if image is None:
                 continue
 
