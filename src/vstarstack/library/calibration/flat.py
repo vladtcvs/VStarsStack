@@ -14,7 +14,6 @@
 
 import cv2
 import numpy as np
-import skimage.filters
 
 import vstarstack.library.common
 import vstarstack.library.data
@@ -23,6 +22,7 @@ import vstarstack.library.stars.detect
 import vstarstack.library.stars.cut
 import vstarstack.library.image_process.blur
 import vstarstack.library.merge.kappa_sigma
+import vstarstack.library.image_process.normalize
 
 from vstarstack.library.image_process.blur import BlurredSource
 from vstarstack.library.image_process.nanmean_filter import nanmean_filter
@@ -101,5 +101,8 @@ def prepare_flat_sky(images : vstarstack.library.common.IImageSource,
             continue
         layer = cv2.GaussianBlur(layer, (15, 15), 0)
         flat.add_channel(layer, channel, **opts)
-
+    for channel in list(flat.get_channels()):
+        if not flat.get_channel_option(channel, "weight"):
+            continue
+        flat.remove_channel(channel)
     return flat
