@@ -20,5 +20,5 @@ from vstarstack.library.data import DataFrame
 
 def mean(images : vstarstack.library.common.IImageSource) -> DataFrame:
     """Just mean of images"""
-    image = vstarstack.library.merge.simple_add(images)
+    image = vstarstack.library.merge.simple_add.simple_add(images)
     return vstarstack.library.image_process.normalize.normalize(image, deepcopy=False)
