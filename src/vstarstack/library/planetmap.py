@@ -17,8 +17,8 @@ import numpy as np
 
 import vstarstack.library.common
 import vstarstack.library.data
-from vstarstack.library.projection.orthographic import Projection as PlanetProjection
-from vstarstack.library.projection.equirectangular import Projection as MapProjection
+from vstarstack.library.projection.projections import OrthographicProjection as PlanetProjection
+from vstarstack.library.projection.projections import EquirectangularProjection as MapProjection
 
 def build_surface_map(image : vstarstack.library.data.DataFrame,
                       horizontal_size : float,

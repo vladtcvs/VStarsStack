@@ -217,4 +217,4 @@ commands = {
 
 def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
     """Run image shifting"""
-    vstarstack.tool.usage.run(project, argv, "shift", commands, autohelp=True)
+    vstarstack.tool.usage.run(project, argv, "shift", commands)

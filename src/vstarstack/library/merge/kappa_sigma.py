@@ -12,7 +12,6 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import math
 import numpy as np
 
 import vstarstack.library.data

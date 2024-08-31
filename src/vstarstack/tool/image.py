@@ -50,7 +50,7 @@ def convert_to_uint16(img, slope, maxshift):
     idx1 = 0
     idx2 = 2**nstep
     for _ in range(nstep):
-        idx = (idx1 + idx2)/2
+        idx = int((idx1 + idx2)/2)
         shift = idx / (2**nstep) * maxshift
         compressed = compress(img + shift, slope)
         intimg = (compressed*65535).astype('int')

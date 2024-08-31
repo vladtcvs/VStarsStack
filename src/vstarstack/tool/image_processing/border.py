@@ -45,6 +45,8 @@ def process_file(argv):
         brd_top = int(bbw[0])
         brd_right = int(bbw[0])
         brd_bottom = int(bbw[0])
+    else:
+        return
 
     name = os.path.splitext(os.path.basename(infile))[0]
 
@@ -65,6 +67,8 @@ def process_dir(argv):
         brd_top = int(bbw[0])
         brd_right = int(bbw[0])
         brd_bottom = int(bbw[0])
+    else:
+        return
 
     files = vstarstack.tool.common.listfiles(inpath, ".zip")
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
@@ -79,5 +83,4 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
         else:
             process_file(argv)
     else:
-        process_dir([project.config.paths.npy_fixed,
-                     project.config.paths.npy_fixed])
+        print("No border specified")
