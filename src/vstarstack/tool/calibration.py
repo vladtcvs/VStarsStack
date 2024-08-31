@@ -23,10 +23,10 @@ import vstarstack.library.calibration.dark
 import vstarstack.library.calibration.flat
 
 def _process_file_flatten(input_fname : str,
-                          flat_fname : str,
+                          flat : vstarstack.library.data.DataFrame,
                           output_fname : str):
+    print(f"Processing {input_fname}")
     dataframe = vstarstack.library.data.DataFrame.load(input_fname)
-    flat = vstarstack.library.data.DataFrame.load(flat_fname)
     result = vstarstack.library.calibration.flat.flatten(dataframe, flat)
     vstarstack.tool.common.check_dir_exists(output_fname)
     result.store(output_fname)
@@ -41,13 +41,13 @@ def _process_file_remove_dark(input_fname : str,
     result.store(output_fname)
 
 def _process_dir_flatten(input_path : str,
-                         flat_fname : str,
+                         flat : vstarstack.library.data.DataFrame,
                          output_path : str):
     files = vstarstack.tool.common.listfiles(input_path, ".zip")
-    for name, filename in files:
-        print(f"Processing {name}")
-        output_fname = os.path.join(output_path, name + ".zip")
-        _process_file_flatten(filename, flat_fname, output_fname)
+    files = vstarstack.tool.common.listfiles(input_path, ".zip")
+    with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
+        args = [(filename, flat, os.path.join(output_path, name + ".zip")) for name, filename in files]
+        pool.starmap(_process_file_flatten, args)
 
 def _process_dir_remove_dark(input_path : str,
                       dark : vstarstack.library.data.DataFrame,
@@ -62,10 +62,11 @@ def _process_flatten(_project : vstarstack.tool.cfg.Project,
     input_path = argv[0]
     flat_fname = argv[1]
     output_path = argv[2]
+    flat = vstarstack.library.data.DataFrame.load(flat_fname)
     if os.path.isdir(input_path):
-        _process_dir_flatten(input_path, flat_fname, output_path)
+        _process_dir_flatten(input_path, flat, output_path)
     else:
-        _process_file_flatten(input_path, flat_fname, output_path)
+        _process_file_flatten(input_path, flat, output_path)
 
 def _process_remove_dark(_project : vstarstack.tool.cfg.Project,
                          argv : list[str]):
