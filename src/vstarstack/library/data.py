@@ -178,6 +178,26 @@ class DataFrame:
             return False
         return self.channels[channel]["options"][option]
 
+    def get_linked_channel(self, channel : str, link_type : str):
+        """
+        Get linked channel
+
+        Parameters:
+            channel (str) - channel name
+            link_type (str) - type of link
+        
+        Returns:
+            None, None, None if no such link or no linked channel
+            layer, opts, name if such linked channel exists
+        """
+        if link_type not in self.links:
+            return None, None, None
+        if channel not in self.links[link_type]:
+            return None, None, None
+        name = self.links[link_type][channel]
+        layer, opts = self.get_channel(name)
+        return layer, opts, name
+
     @staticmethod
     def _store_json(value, file):
         file.write(bytes(json.dumps(value, indent=4, ensure_ascii=False), 'utf8'))

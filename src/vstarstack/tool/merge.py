@@ -16,6 +16,8 @@ import vstarstack.library.common
 import vstarstack.library.data
 import vstarstack.library.merge
 
+import vstarstack.library.merge.simple_add
+import vstarstack.library.merge.kappa_sigma
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
 import vstarstack.tool.common
@@ -33,7 +35,7 @@ def simple_add(project: vstarstack.tool.cfg.Project, argv: list):
 
     imgs = vstarstack.tool.common.listfiles(path_images, ".zip")
     filenames = [img[1] for img in imgs]
-    dataframe = vstarstack.library.merge.simple_add(FilesImageSource(filenames))
+    dataframe = vstarstack.library.merge.simple_add.simple_add(FilesImageSource(filenames))
     if dataframe is not None:
         vstarstack.tool.common.check_dir_exists(out)
         dataframe.store(out)
@@ -55,7 +57,7 @@ def sigma_clip(project: vstarstack.tool.cfg.Project, argv: list):
 
     imgs = vstarstack.tool.common.listfiles(path_images, ".zip")
     filenames = [img[1] for img in imgs]
-    dataframe = vstarstack.library.merge.kappa_sigma(FilesImageSource(filenames),
+    dataframe = vstarstack.library.merge.kappa_sigma.kappa_sigma(FilesImageSource(filenames),
                                                       kappa1,
                                                       kappa2,
                                                       sigma_steps)

@@ -14,18 +14,20 @@
 
 import cv2
 import numpy as np
-import skimage.filters
 
 import vstarstack.library.common
 import vstarstack.library.data
 import vstarstack.library.merge
+import vstarstack.library.merge.simple_add
 import vstarstack.library.stars.detect
 import vstarstack.library.stars.cut
 import vstarstack.library.image_process.blur
+import vstarstack.library.merge.kappa_sigma
+import vstarstack.library.image_process.normalize
 
 from vstarstack.library.image_process.blur import BlurredSource
-from vstarstack.library.image_process.normalize import normalize
 from vstarstack.library.image_process.nanmean_filter import nanmean_filter
+from vstarstack.library.calibration.removehot import remove_hot_pixels
 
 def flatten(dataframe : vstarstack.library.data.DataFrame,
             flat : vstarstack.library.data.DataFrame):
@@ -49,7 +51,7 @@ def prepare_flat_simple(images : vstarstack.library.common.IImageSource,
         smooth_size += 1
 
     source = BlurredSource(images, smooth_size)
-    dataframe = vstarstack.library.merge.simple_add(source)
+    dataframe = vstarstack.library.merge.simple_add.simple_add(source)
     return dataframe
 
 def calculate_median(image, weight, smooth_size):
@@ -78,39 +80,30 @@ def prepare_flat_sky(images : vstarstack.library.common.IImageSource,
                      smooth_size : int
                      ) -> vstarstack.library.data.DataFrame:
     """Generate flat image"""
-    sum_layer = {}
-    sum_weight = {}
-    params = {}
+    no_star_images = []
     for dataframe in images.items():
         descs = []
-        params = dataframe.params
         for name in dataframe.get_channels():
             layer, opts = dataframe.get_channel(name)
             if not opts["brightness"]:
                 continue
             channel_descs = vstarstack.library.stars.detect.detect_stars(layer)
             descs += channel_descs
-        dataframe = vstarstack.library.image_process.blur.blur(dataframe, 5)
-        dataframe = normalize(dataframe)
-        nostars_dataframe = vstarstack.library.stars.cut.cut_stars(dataframe, descs)
-        for name in nostars_dataframe.get_channels():
-            layer, opts = nostars_dataframe.get_channel(name)
-            if not opts["brightness"]:
-                continue
-            weight_name = nostars_dataframe.links["weight"][name]
-            weight, _ = nostars_dataframe.get_channel(weight_name)
-            if name not in sum_layer:
-                sum_layer[name] = layer
-                sum_weight[name] = weight
-            else:
-                sum_layer[name] += layer
-                sum_weight[name] += weight
 
-    flat = vstarstack.library.data.DataFrame(params=params)
-    for name, layer in sum_layer.items():
-        weight = sum_weight[name]
-        layer[np.where(weight == 0)] = 0
-        flat.add_channel(layer, name, brightness=True)
-        flat.add_channel(weight, "weight-"+name, weight=True)
-        flat.add_channel_link(name, "weight-"+name, "weight")
+        no_stars_dataframe = vstarstack.library.stars.cut.cut_stars(dataframe, descs)
+        no_stars_dataframe = remove_hot_pixels(no_stars_dataframe)
+        no_star_images.append(no_stars_dataframe)
+    
+    no_star_source = vstarstack.library.common.ListImageSource(no_star_images)
+    flat = vstarstack.library.merge.kappa_sigma.kappa_sigma(no_star_source, 1, 1, 2)
+    for channel in flat.get_channels():
+        layer, opts = flat.get_channel(channel)
+        if not flat.get_channel_option(channel, "signal"):
+            continue
+        layer = cv2.GaussianBlur(layer, (15, 15), 0)
+        flat.add_channel(layer, channel, **opts)
+    for channel in list(flat.get_channels()):
+        if not flat.get_channel_option(channel, "weight"):
+            continue
+        flat.remove_channel(channel)
     return flat

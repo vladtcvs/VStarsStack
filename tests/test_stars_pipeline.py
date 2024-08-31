@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 
 import vstarstack.library.common
 import vstarstack.library.loaders.classic
+import vstarstack.library.merge.simple_add
 import vstarstack.library.stars.detect
 import vstarstack.library.stars.describe
 import vstarstack.library.stars.match
@@ -123,7 +124,7 @@ def test_1():
     assert len(moved) == 4
 
     source = vstarstack.library.common.ListImageSource(moved)
-    merged = vstarstack.library.merge.simple_add(source)
+    merged = vstarstack.library.merge.simple_add.simple_add(source)
     layer,_ = merged.get_channel("L")
 
     merged_stars = vstarstack.library.stars.detect.detect_stars(layer)
@@ -145,7 +146,7 @@ def test_1():
     assert len(moved) == 4
 
     source = vstarstack.library.common.ListImageSource(moved)
-    merged = vstarstack.library.merge.simple_add(source)
+    merged = vstarstack.library.merge.simple_add.simple_add(source)
     layer,_ = merged.get_channel("L")
 
     weight_name = merged.links["weight"]["L"]

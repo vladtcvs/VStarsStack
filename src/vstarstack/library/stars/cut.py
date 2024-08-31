@@ -34,7 +34,7 @@ def cut_stars(image : vstarstack.library.data.DataFrame,
         mask = 1-mask
 
         layer = layer * mask
-        new_image.add_channel(layer, name, brightness=True)
+        new_image.add_channel(layer, name, **opts)
         if name in image.links["weight"]:
             weight,_ = image.get_channel(image.links["weight"][name])
             weight = weight * mask
