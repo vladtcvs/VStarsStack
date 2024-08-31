@@ -19,6 +19,7 @@ from vstarstack.library.loaders.classic import readjpeg
 import vstarstack.library.merge.kappa_sigma
 import vstarstack.library.merge.simple_add
 from vstarstack.library.common import ListImageSource
+import vstarstack.library.merge.simple_mean
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -50,7 +51,7 @@ def test_simple_mean_1():
     copy2 = original_image.copy()
     source = ListImageSource([copy1, copy2])
 
-    summ = vstarstack.library.merge.simple_mean(source)
+    summ = vstarstack.library.merge.simple_mean.mean(source)
     summ_light, opts = summ.get_channel("L")
     wn = summ.links["weight"]["L"]
     summ_weight = summ.get_channel(wn)[0]
@@ -80,7 +81,7 @@ def test_simple_mean_2():
         noised.append(copy)
     source = ListImageSource(noised)
 
-    summ = vstarstack.library.merge.simple_mean(source)
+    summ = vstarstack.library.merge.simple_mean.mean(source)
     summ_light, opts = summ.get_channel("L")
     wn = summ.links["weight"]["L"]
     summ_weight = summ.get_channel(wn)[0]
