@@ -18,6 +18,7 @@ import numpy as np
 import vstarstack.library.common
 import vstarstack.library.data
 import vstarstack.library.merge
+import vstarstack.library.merge.simple_add
 import vstarstack.library.stars.detect
 import vstarstack.library.stars.cut
 import vstarstack.library.image_process.blur
@@ -50,7 +51,7 @@ def prepare_flat_simple(images : vstarstack.library.common.IImageSource,
         smooth_size += 1
 
     source = BlurredSource(images, smooth_size)
-    dataframe = vstarstack.library.merge.simple_add(source)
+    dataframe = vstarstack.library.merge.simple_add.simple_add(source)
     return dataframe
 
 def calculate_median(image, weight, smooth_size):
