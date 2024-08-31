@@ -31,10 +31,8 @@ def calculate_clip(image, mean, sigma, kappa):
 def _read_and_prepare(dataframe, channel):
     """Remove invalid points from image"""
     image, opts = dataframe.get_channel(channel)
-    if opts["encoded"]:
-        return None, None
-    if opts["weight"]:
-        return None, None
+    if not opts["signal"]:
+        return None, None, None
 
     if channel in dataframe.links["weight"]:
         weight_channel = dataframe.links["weight"][channel]
@@ -43,19 +41,22 @@ def _read_and_prepare(dataframe, channel):
         weight = np.ones(image.shape, dtype=np.float64)
 
     image[np.where(weight == 0)] = 0
-    return image, weight
+    return image, weight, opts
 
 
 def _calculate_mean(images, means: dict, sigmas: dict, kappa: float):
     """Calculate mean value of images"""
     mean_image = {}
     total_weight = {}
+    channel_opts = {}
 
     for img in images.items():
         for channel in img.get_channels():
-            image, weight = _read_and_prepare(img, channel)
+            image, weight, opts = _read_and_prepare(img, channel)
             if image is None:
                 continue
+            if channel not in channel_opts:
+                channel_opts[channel] = opts
 
             if channel in means:
                 clip = calculate_clip(image, means[channel], sigmas[channel], kappa)
@@ -73,7 +74,7 @@ def _calculate_mean(images, means: dict, sigmas: dict, kappa: float):
         mean_image[channel] = mean_image[channel] / total_weight[channel]
         mean_image[channel][np.where(total_weight[channel] == 0)] = 0
 
-    return mean_image, total_weight
+    return mean_image, total_weight, channel_opts
 
 
 def _calculate_sigma(images, means, sigmas, kappa):
@@ -83,7 +84,7 @@ def _calculate_sigma(images, means, sigmas, kappa):
 
     for img in images.items():
         for channel in img.get_channels():
-            image, _ = _read_and_prepare(img, channel)
+            image, _, _ = _read_and_prepare(img, channel)
             if image is None:
                 continue
 
@@ -130,18 +131,18 @@ def kappa_sigma(images: vstarstack.library.common.IImageSource,
             kappa = (kappa1 * (steps-1-step) + kappa2 * step) / (steps-1)
         else:
             kappa = (kappa1 + kappa2) / 2
-        means, _ = _calculate_mean(images, means, sigmas, kappa)
+        means, _, _ = _calculate_mean(images, means, sigmas, kappa)
         sigmas = _calculate_sigma(images, means, sigmas, kappa)
 
-    lights, weights = _calculate_mean(images,
-                                      means,
-                                      sigmas,
-                                      kappa2)
+    lights, weights, channel_opts = _calculate_mean(images,
+                                                    means,
+                                                    sigmas,
+                                                    kappa2)
 
     result = DataFrame(params=params)
     for channel_name, light in lights.items():
         weight = weights[channel_name]
-        result.add_channel(light, channel_name, brightness=True)
+        result.add_channel(light, channel_name, **channel_opts[channel_name])
         result.add_channel(weight,  "weight-"+channel_name, weight=True)
         result.add_channel_link(channel_name, "weight-"+channel_name, "weight")
 
