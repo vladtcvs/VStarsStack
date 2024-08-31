@@ -81,9 +81,12 @@ def _proj_find_keypoints_brightness(files, num_splits, param, orb_param, feature
         dataframe = vstarstack.library.data.DataFrame.load(fname)
         gray, _ = vstarstack.library.common.df_to_light(dataframe)
 
+        ptype, pdesc = vstarstack.library.projection.tools.extract_description(dataframe)
+        proj = vstarstack.library.projection.tools.build_projection(ptype, pdesc, gray.shape)
+
         keypoints = find_keypoints_brightness(gray, num_splits, param)
         ds = describe_keypoints(gray, keypoints, orb_param)
-        points = build_keypoints_structure(keypoints, ds, fname, name)
+        points = build_keypoints_structure(keypoints, ds, fname, name, proj, dataframe.get_parameter("w"), dataframe.get_parameter("h"))
 
         _save_features(points, name, features_path)
 

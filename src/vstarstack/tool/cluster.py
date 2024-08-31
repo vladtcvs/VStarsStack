@@ -210,5 +210,5 @@ commands = {
                     "cluster.json shifts.json"),
     "find-shift-to-selected": (find_shift_to_selected,
                    "Find shifts from cluster file, but only to selected image",
-                   "cluster.json shifts.json <basic_image>"),
+                   "clusters.json shift.json <basic_image>"),
 }

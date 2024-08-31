@@ -15,7 +15,7 @@
 import os
 import numpy as np
 import multiprocessing as mp
-from skimage.restoration import richardson_lucy
+import skimage.restoration
 
 import vstarstack.tool.common
 import vstarstack.tool.cfg
@@ -43,7 +43,7 @@ def deconvolution(df : vstarstack.library.data.DataFrame, strength : int):
         if not opts["brightness"]:
             continue
         norm = np.amax(image)
-        deconvolved_RL = richardson_lucy(image/norm, psf, num_iter=100)*norm
+        deconvolved_RL = skimage.restoration.richardson_lucy(image/norm, psf, num_iter=100)*norm
         deconvolved_RL[np.where(np.isnan(deconvolved_RL))] = 0
         df.replace_channel(deconvolved_RL, channel)
     return df

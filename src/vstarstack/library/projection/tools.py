@@ -43,7 +43,8 @@ def add_description(dataframe : vstarstack.library.data.DataFrame, projection : 
         dataframe.add_parameter(angle, "projection_orthographic_angle")
         dataframe.add_parameter(rot, "projection_orthographic_rot")
         name = "orthographic"
-
+    else:
+        return
     dataframe.add_parameter(name, "projection")
 
 def extract_description(dataframe : vstarstack.library.data.DataFrame) -> typing.Tuple[ProjectionType, dict]:

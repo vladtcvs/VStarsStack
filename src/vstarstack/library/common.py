@@ -13,10 +13,9 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import os
 import math
 
-from skimage.color import rgb2gray
+import skimage.color
 from skimage import exposure
 
 import cv2
@@ -115,7 +114,7 @@ def norm(vec):
 
 def prepare_image_for_model(image):
     image = image[:, :, 0:3]
-    image = rgb2gray(image)
+    image = skimage.color.rgb2gray(image)
     image = cv2.GaussianBlur(image, (3, 3), 0)
     am = np.amax(image)
     if am >= 1:
