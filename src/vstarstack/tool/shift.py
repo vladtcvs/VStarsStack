@@ -118,6 +118,31 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
     with mp.Pool(ncpu) as pool:
         pool.starmap(_make_shift_same_size, args)
 
+def _find_shifted_corners(arg):
+    filename, name, shifts = arg
+    print(f"Estimating size of {name}")
+    df = vstarstack.library.data.DataFrame.load(filename)
+    input_proj_type, input_proj_desc = vstarstack.library.projection.tools.extract_description(df)
+    if input_proj_type != ProjectionType.Perspective:
+        print("Invalid projection type: ", input_proj_type)
+        return (None, None, None, None, None, None, None)
+
+    w = df.get_parameter("w")
+    h = df.get_parameter("h")
+    input_proj = vstarstack.library.projection.tools.build_projection(ProjectionType.Perspective, input_proj_desc, (h, w))
+
+    out_proj_desc = input_proj_desc
+
+    points = np.array([(0,0),(w,0),(0,h),(w,h)])
+    shift = shifts[name]
+    shifted_points = shift.apply(points.astype('double'), input_proj, input_proj)
+
+    min_x = min(shifted_points[:,0])
+    max_x = max(shifted_points[:,0])
+    min_y = min(shifted_points[:,1])
+    max_y = max(shifted_points[:,1])
+    return (min_x, min_y, max_x, max_y, w, h, out_proj_desc)
+
 def _find_extended_perspective(images : list, shifts : dict):
     margin_left = 0
     margin_right = 0
@@ -126,44 +151,33 @@ def _find_extended_perspective(images : list, shifts : dict):
 
     out_proj_desc = {}
 
-    for name, filename in images:
-        
-        df = vstarstack.library.data.DataFrame.load(filename)
-        input_proj_type, input_proj_desc = vstarstack.library.projection.tools.extract_description(df)
-        if input_proj_type != ProjectionType.Perspective:
-            print("Invalid projection type: ", input_proj_type)
-            return None, None, None
+    max_w = 0
+    max_h = 0
 
-        w = df.get_parameter("w")
-        h = df.get_parameter("h")
-        input_proj = vstarstack.library.projection.tools.build_projection(ProjectionType.Perspective, input_proj_desc, (h, w))
-
-        out_proj_desc = input_proj_desc
-
-        points = np.array([(0,0),(w,0),(0,h),(w,h)])
-        print(name)
-        shift = shifts[name]
-        shifted_points = shift.apply(points.astype('double'), input_proj, input_proj)
-
-        min_x = min(shifted_points[:,0])
-        max_x = max(shifted_points[:,0])
-        min_y = min(shifted_points[:,1])
-        max_y = max(shifted_points[:,1])
-
-        if min_x < 0:
-            margin_left = max(margin_left, -min_x)
-        if min_y < 0:
-            margin_top = max(margin_top, -min_y)
-        if max_x > w:
-            margin_right = max(margin_right, max_x-w)
-        if max_y > h:
-            margin_bottom = max(margin_bottom, max_y-h)
+    args = [(filename, name, shifts) for name, filename in images]
+    with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
+        corners = pool.map(_find_shifted_corners, args)
+        for min_x, min_y, max_x, max_y, w, h, out_proj_desc in corners:
+            if min_x is None:
+                continue
+            if min_x < 0:
+                margin_left = max(margin_left, -min_x)
+            if min_y < 0:
+                margin_top = max(margin_top, -min_y)
+            if max_x > w:
+                margin_right = max(margin_right, max_x-w)
+            if max_y > h:
+                margin_bottom = max(margin_bottom, max_y-h)
+            if w > max_w:
+                max_w = w
+            if h > max_h:
+                max_h = h
 
     margin_w = max(margin_left, margin_right)
     margin_h = max(margin_top, margin_bottom)
 
-    W = w + 2*math.ceil(margin_w)
-    H = h + 2*math.ceil(margin_h)
+    W = max_w + 2*math.ceil(margin_w)
+    H = max_h + 2*math.ceil(margin_h)
 
     out_shape = (H, W)
 
@@ -189,6 +203,8 @@ def apply_shift_extended(project: vstarstack.tool.cfg.Project, argv: list[str]):
     images = vstarstack.tool.common.listfiles(npy_dir, ".zip")
 
     output_shape, output_proj, output_proj_desc = _find_extended_perspective(images, shifts)
+
+    print(f"Resulting size: {output_shape[1]}x{output_shape[0]} ")
 
     args = [(name,
              filename,
