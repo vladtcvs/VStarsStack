@@ -134,6 +134,9 @@ def _find_shifted_corners(arg):
     out_proj_desc = input_proj_desc
 
     points = np.array([(0,0),(w,0),(0,h),(w,h)])
+    if name not in shifts:
+        print(f"Skip {name}")
+        return (None, None, None, None, None, None, None)
     shift = shifts[name]
     shifted_points = shift.apply(points.astype('double'), input_proj, input_proj)
 
