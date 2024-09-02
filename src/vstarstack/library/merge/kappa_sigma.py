@@ -14,7 +14,7 @@
 
 import numpy as np
 
-from vstarstack.library.image_process.normalize import normalize
+from vstarstack.library.image_process.normalize import normalize, denormalize
 from vstarstack.library.data import DataFrame
 from vstarstack.library.common import IImageSource
 
@@ -43,8 +43,6 @@ def _calculate_mean(images : IImageSource, means: dict, sigmas: dict, kappa: flo
     """Calculate mean value of images"""
     signal_sum = {}
     weight_sum = {}
-    new_means = {}
-    channel_opts = {}
 
     for img in images.items():
         img = normalize(img, deepcopy=False)
@@ -52,9 +50,7 @@ def _calculate_mean(images : IImageSource, means: dict, sigmas: dict, kappa: flo
             if not img.get_channel_option(channel, "signal"):
                 continue
 
-            signal, weight, opts = _read_and_prepare(img, channel)
-            if channel not in channel_opts:
-                channel_opts[channel] = opts
+            signal, weight, _ = _read_and_prepare(img, channel)
 
             if channel in means and channel in sigmas:
                 clip = _calculate_clip(signal, means[channel], sigmas[channel], kappa)
@@ -62,17 +58,18 @@ def _calculate_mean(images : IImageSource, means: dict, sigmas: dict, kappa: flo
                 clip = np.ones(signal.shape, dtype=np.int32)
 
             if channel not in signal_sum:
-                signal_sum[channel] = signal * clip
+                signal_sum[channel] = signal * weight * clip
                 weight_sum[channel] = weight * clip
             else:
-                signal_sum[channel] += signal * clip
+                signal_sum[channel] += signal * weight * clip
                 weight_sum[channel] += weight * clip
 
+    new_means = {}
     for channel in signal_sum:
         new_means[channel] = signal_sum[channel] / weight_sum[channel]
         new_means[channel][np.where(weight_sum[channel] < 1e-12)] = 0
 
-    return new_means, weight_sum, channel_opts
+    return new_means
 
 def _calculate_sigma(images : IImageSource, means : dict, sigmas : dict, kappa : float):
     """Calculate sigma in each pixel"""
@@ -105,6 +102,41 @@ def _calculate_sigma(images : IImageSource, means : dict, sigmas : dict, kappa :
 
     return sigma
 
+def _calculate_sum(images : IImageSource, means: dict, sigmas: dict, kappa: float):
+    """Calculate mean value of images"""
+    signal_sum = {}
+    weight_sum = {}
+    channel_opts = {}
+
+    for img in images.items():
+        img = normalize(img, deepcopy=False)
+        for channel in img.get_channels():
+            if not img.get_channel_option(channel, "signal"):
+                continue
+
+            signal, weight, opts = _read_and_prepare(img, channel)
+            if channel not in channel_opts:
+                channel_opts[channel] = opts
+
+            if channel in means and channel in sigmas:
+                clip = _calculate_clip(signal, means[channel], sigmas[channel], kappa)
+            else:
+                clip = np.ones(signal.shape, dtype=np.int32)
+
+            if channel not in signal_sum:
+                signal_sum[channel] = signal * weight * clip
+                weight_sum[channel] = weight * clip
+            else:
+                signal_sum[channel] += signal * weight * clip
+                weight_sum[channel] += weight * clip
+
+    for channel in signal_sum:
+        signal_sum[channel][np.where(weight_sum[channel] < 1e-12)] = 0
+        weight_sum[channel][np.where(weight_sum[channel] < 1e-12)] = 0
+
+    channel_opts["normed"] = False
+    return signal_sum, weight_sum, channel_opts
+
 def kappa_sigma(images: IImageSource,
                 kappa1: float,
                 kappa2: float,
@@ -123,10 +155,10 @@ def kappa_sigma(images: IImageSource,
             kappa = (kappa1 * (steps-1-step) + kappa2 * step) / (steps-1)
         else:
             kappa = (kappa1 + kappa2) / 2
-        means, _, _ = _calculate_mean(images, means, sigmas, kappa)
+        means = _calculate_mean(images, means, sigmas, kappa)
         sigmas = _calculate_sigma(images, means, sigmas, kappa)
 
-    signals, weights, channel_opts = _calculate_mean(images, means, sigmas, kappa2)
+    signals, weights, channel_opts = _calculate_sum(images, means, sigmas, kappa2)
 
     result = DataFrame(params=params)
     for channel_name, light in signals.items():

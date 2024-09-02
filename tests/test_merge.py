@@ -24,7 +24,9 @@ import vstarstack.library.merge.simple_mean
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def images_equal(img1, img2, thr = 0.0):
-    return np.amax(abs(img1 - img2)) <= thr
+    difference = np.amax(abs(img1 - img2))
+    print(difference)
+    return difference <= thr
 
 def test_simple_add():
     original_image = next(readjpeg(os.path.join(dir_path, "test_image.png")))
@@ -101,7 +103,7 @@ def test_kappa_sigma_1():
     summ_light, opts = summ.get_channel("L")
     wn = summ.links["weight"]["L"]
     summ_weight = summ.get_channel(wn)[0]
-    assert images_equal(summ_light, light)
+    assert images_equal(summ_light, light*2)
     assert images_equal(summ_weight, weight*2)
     assert summ.params["w"] == copy1.params["w"]
     assert summ.params["h"] == copy1.params["h"]
@@ -118,7 +120,7 @@ def test_kappa_sigma_2():
     summ_light, opts = summ.get_channel("L")
     wn = summ.links["weight"]["L"]
     summ_weight = summ.get_channel(wn)[0]
-    assert images_equal(summ_light, light)
+    assert images_equal(summ_light, light*2)
     assert images_equal(summ_weight, weight*2)
 
 def test_kappa_sigma_3():
@@ -133,7 +135,7 @@ def test_kappa_sigma_3():
     summ_light, opts = summ.get_channel("L")
     wn = summ.links["weight"]["L"]
     summ_weight = summ.get_channel(wn)[0]
-    assert images_equal(summ_light, light)
+    assert images_equal(summ_light, light*2)
     assert images_equal(summ_weight, weight*2)
 
 def test_kappa_sigma_4():
@@ -161,5 +163,5 @@ def test_kappa_sigma_4():
     summ_light, opts = summ.get_channel("L")
     wn = summ.links["weight"]["L"]
     summ_weight = summ.get_channel(wn)[0]
-    assert images_equal(summ_light, light, 0.1)
+    assert images_equal(summ_light, light*N, 0.1*N)
     assert images_equal(summ_weight, weight*N, 2)
