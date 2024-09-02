@@ -29,7 +29,7 @@ def test_1():
 
     dataframe2 = normalize(dataframe)
     layer_normed, opts = dataframe2.get_channel("light")
-    assert opts["normalized"] == True
+    assert opts["normed"] == True
     assert layer_normed[0,0] == 1
 
     layer[0,0] = 2
@@ -46,7 +46,7 @@ def test_2():
 
     dataframe2 = normalize(dataframe)
     layer_normed, opts = dataframe2.get_channel("light")
-    assert opts["normalized"] == True
+    assert opts["normed"] == True
     assert layer_normed[0,0] == 1
 
     weight_normed, opts = dataframe2.get_channel("weight")
