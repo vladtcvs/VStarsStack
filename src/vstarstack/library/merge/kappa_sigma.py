@@ -163,7 +163,6 @@ def kappa_sigma(images: IImageSource,
     result = DataFrame(params=params)
     for channel_name, light in signals.items():
         weight = weights[channel_name]
-        channel_opts[channel_name]["normed"] = True
         result.add_channel(light, channel_name, **channel_opts[channel_name])
         result.add_channel(weight,  "weight-"+channel_name, weight=True)
         result.add_channel_link(channel_name, "weight-"+channel_name, "weight")
