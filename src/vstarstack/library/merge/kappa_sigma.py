@@ -133,8 +133,7 @@ def _calculate_sum(images : IImageSource, means: dict, sigmas: dict, kappa: floa
     for channel in signal_sum:
         signal_sum[channel][np.where(weight_sum[channel] < 1e-12)] = 0
         weight_sum[channel][np.where(weight_sum[channel] < 1e-12)] = 0
-
-    channel_opts["normed"] = False
+        channel_opts[channel]["normed"] = False
     return signal_sum, weight_sum, channel_opts
 
 def kappa_sigma(images: IImageSource,
