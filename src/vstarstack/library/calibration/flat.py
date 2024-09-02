@@ -62,20 +62,6 @@ def calculate_median(image, weight, smooth_size):
     image = nanmean_filter(image, radius)
     return image
 
-class NoStarSource(vstarstack.library.common.IImageSource):
-    """Images without stars"""
-    def __init__(self,
-                 src : vstarstack.library.common.IImageSource,
-                 stars : list):
-        self.src = src
-        self.stars = stars
-
-    def items(self) -> vstarstack.library.data.DataFrame:
-        """Iterate images"""
-        for index, image in enumerate(self.src.items()):
-            image = vstarstack.library.stars.cut.cut_stars(image, self.stars[index])
-            yield image
-
 def prepare_flat_sky(images : vstarstack.library.common.IImageSource,
                      smooth_size : int
                      ) -> vstarstack.library.data.DataFrame:
@@ -96,6 +82,7 @@ def prepare_flat_sky(images : vstarstack.library.common.IImageSource,
     
     no_star_source = vstarstack.library.common.ListImageSource(no_star_images)
     flat = vstarstack.library.merge.kappa_sigma.kappa_sigma(no_star_source, 1, 1, 2)
+    flat = vstarstack.library.image_process.normalize.normalize(flat, False)
     for channel in flat.get_channels():
         layer, opts = flat.get_channel(channel)
         if not flat.get_channel_option(channel, "signal"):
