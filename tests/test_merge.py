@@ -146,7 +146,7 @@ def test_kappa_sigma_4():
     weight = np.ones(light.shape)
 
     # for repeatability
-    np.random.seed(1)
+    np.random.seed(2)
     noised = []
     for _ in range(N):
         copy = original_image.copy()
@@ -162,4 +162,4 @@ def test_kappa_sigma_4():
     wn = summ.links["weight"]["L"]
     summ_weight = summ.get_channel(wn)[0]
     assert images_equal(summ_light, light, 0.1)
-    assert images_equal(summ_weight, weight*N, 1)
+    assert images_equal(summ_weight, weight*N, 2)

@@ -85,7 +85,7 @@ def _calculate_sigma(images : IImageSource, means : dict, sigmas : dict, kappa :
             if not img.get_channel_option(channel, "signal"):
                 continue
 
-            signal, _ = _read_and_prepare(img, channel)
+            signal, _, _ = _read_and_prepare(img, channel)
             if channel in means and channel in sigmas:
                 clip = _calculate_clip(signal, means[channel], sigmas[channel], kappa)
             else:
@@ -123,7 +123,7 @@ def kappa_sigma(images: IImageSource,
             kappa = (kappa1 * (steps-1-step) + kappa2 * step) / (steps-1)
         else:
             kappa = (kappa1 + kappa2) / 2
-        means, _ = _calculate_mean(images, means, sigmas, kappa)
+        means, _, _ = _calculate_mean(images, means, sigmas, kappa)
         sigmas = _calculate_sigma(images, means, sigmas, kappa)
 
     signals, weights, channel_opts = _calculate_mean(images, means, sigmas, kappa2)
