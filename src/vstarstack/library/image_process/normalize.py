@@ -24,17 +24,38 @@ def normalize(dataframe : vstarstack.library.data.DataFrame, deepcopy=True):
     else:
         new_dataframe = dataframe
     for channel in new_dataframe.get_channels():
-        image, opts = new_dataframe.get_channel(channel)
-        if "normalized" in opts and opts["normalized"]:
+        image, _ = new_dataframe.get_channel(channel)
+        if new_dataframe.get_channel_option(channel, "normed"):
             continue
-        if not opts["brightness"]:
+        if not new_dataframe.get_channel_option(channel, "brightness"):
             continue
-        if channel not in new_dataframe.links["weight"]:
+        weight, _, _ = new_dataframe.get_linked_channel(channel, "weight")
+        if weight is None:
             continue
-        weight, _ = new_dataframe.get_channel(new_dataframe.links["weight"][channel])
+
         image = image / weight
-        image[np.where(weight == 0)] = 0
-        opts["normalized"] = True
-        new_dataframe.replace_channel(image, channel)
+        image[np.where(weight < 1e-12)] = 0
+        new_dataframe.replace_channel(image, channel, normed=True)
+
+    return new_dataframe
+
+def denormalize(dataframe : vstarstack.library.data.DataFrame, deepcopy=True):
+    """De-normalize image layers"""
+    if deepcopy:
+        new_dataframe = dataframe.copy()
+    else:
+        new_dataframe = dataframe
+    for channel in new_dataframe.get_channels():
+        image, _ = new_dataframe.get_channel(channel)
+        if not new_dataframe.get_channel_option(channel, "normed"):
+            continue
+        if not new_dataframe.get_channel_option(channel, "brightness"):
+            continue
+        weight, _, _ = new_dataframe.get_linked_channel(channel, "weight")
+        if weight is None:
+            continue
+
+        image = image * weight
+        new_dataframe.replace_channel(image, channel, normed=False)
 
     return new_dataframe

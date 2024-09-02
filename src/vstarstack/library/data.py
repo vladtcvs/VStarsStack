@@ -69,17 +69,21 @@ class DataFrame:
             options["brightness"] = False
         if "signal" not in options:
             options["signal"] = False
+        if "normed" not in options:
+            options["normed"] = False
 
         self.channels[name] = {
             "data": data,
             "options": options,
         }
 
-    def replace_channel(self, data : np.ndarray, name : str):
+    def replace_channel(self, data : np.ndarray, name : str, **options):
         """Replace channel image"""
         if name not in self.channels:
             return False
         self.channels[name]["data"] = data
+        for key in options:
+            self.channels[name]["options"][key] = options[key]
         return True
 
     def add_channel_link(self, name : str, linked : str, link_type : str):

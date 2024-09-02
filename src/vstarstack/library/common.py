@@ -14,6 +14,7 @@
 #
 
 import math
+import typing
 
 import skimage.color
 from skimage import exposure
@@ -126,7 +127,7 @@ class IImageSource(abc.ABC):
     """Abstract image source"""
 
     @abc.abstractmethod
-    def items(self) -> vstarstack.library.data.DataFrame:
+    def items(self) -> typing.Generator[vstarstack.library.data.DataFrame]:
         """Take elements from source"""
 
     @abc.abstractmethod
@@ -139,7 +140,7 @@ class ListImageSource(IImageSource):
         self.images = images
         self.index = 0
 
-    def items(self) -> vstarstack.library.data.DataFrame:
+    def items(self) -> typing.Generator[vstarstack.library.data.DataFrame]:
         """Take next element from source"""
         for item in self.images:
             yield item
@@ -153,7 +154,7 @@ class FilesImageSource(IImageSource):
     def __init__(self, filenames : list[str]):
         self.filenames = filenames
 
-    def items(self):
+    def items(self) -> typing.Generator[vstarstack.library.data.DataFrame]:
         """Take next element from source"""
         for fname in self.filenames:
             yield vstarstack.library.data.DataFrame.load(fname)
