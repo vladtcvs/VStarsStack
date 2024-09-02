@@ -12,8 +12,8 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import numpy as np
 import vstarstack.library.data
+import vstarstack.library.common
 import vstarstack.library.image_process.normalize
 import vstarstack.library.merge.simple_add
 from vstarstack.library.data import DataFrame
