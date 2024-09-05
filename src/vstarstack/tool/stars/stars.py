@@ -26,6 +26,32 @@ def _enable_stars(project : vstarstack.tool.cfg.Project, _argv: list[str]):
     project.config.enable_module("cluster")
     vstarstack.tool.cfg.store_project()
 
+def _generate_script(project : vstarstack.tool.cfg.Project, argv: list[str]):
+    if len(argv) > 0:
+        script = argv[0]
+    else:
+        script = "run.sh"
+    commands = [
+        "#!/bin/sh",
+        "",
+        "vstarstack readimage fits",
+        "vstarstack calibration remove-dark npy_orig dark.zip npy",
+        "vstarstack stars detect",
+        "vstarstack stars describe",
+        "vstarstack stars match",
+        "vstarstack cluster build-from-matchtable",
+        "vstarstack cluster find-shifts",
+        "vstarstack shift select-shift",
+        "vstarstack shift apply-extended-shift",
+        "vstarstack merge sigma-clip",
+        "vstarstack process normalize sum.zip result.zip",
+        "rm npy_orig/*",
+        "rm npy/*",
+        "rm aligned/*",
+    ]
+    with open(script, "w", encoding="utf-8") as f:
+        f.write("\n".join(commands))
+
 commands = {
     "config": (_enable_stars, "configure stars pipeline"),
     "detect": (vstarstack.tool.stars.detect.run, "detect stars"),
@@ -33,4 +59,5 @@ commands = {
     "show-match": (vstarstack.tool.stars.show.show_match, "display matched stars", "npy/light1.zip npy/light2.zip descs/desc1.json descs/desc2.json match_table.json"),
     "describe": (vstarstack.tool.stars.describe.run, "find descriptions for each image"),
     "match": (vstarstack.tool.stars.match.run, "match stars between images"),
+    "generate-script" : (_generate_script, "generate pipeline script", "[run.sh]"),
 }
