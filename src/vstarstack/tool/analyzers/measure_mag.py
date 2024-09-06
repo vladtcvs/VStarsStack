@@ -28,7 +28,7 @@ def summ_pixels(image : np.ndarray, x : int, y : int, radius : int) -> float:
     mask = np.zeros((2*radius+1, 2*radius+1))
     cv2.circle(mask, (radius, radius), radius, 1, -1)
     area = area * mask
-    return np.sum(area)
+    return np.sum(area), int(np.sum(mask))
 
 def summ_pixels_df(image : DataFrame, x : int, y : int, radius : int) -> dict:
     """Find sum of pixels in circle at x,y"""
@@ -86,19 +86,21 @@ def _measure_pixels(project : Project, argv : list[str], method : str):
     channels = list(channels)
     with open(output, "w", encoding='utf8') as f:
         writer = csv.writer(f)
-        writer.writerow(['image', 'timestamp'] + channels)
+        writer.writerow(['image', 'timestamp', 'x', 'y', 'npixels'] + channels)
         for name, sums in results.items():
             values = []
             timestamp = timestamps[name]
+            npixels = None
             for cn in channels:
                 if cn not in sums:
                     values.append('-')
                 else:
-                    values.append(sums[cn])
-            writer.writerow([name, timestamp] + values)
+                    values.append(sums[cn][0])
+                    npixels = sums[cn][1]
+            writer.writerow([name, timestamp, x, y, npixels] + values)
 
 commands = {
     "summ": (lambda project, argv: _measure_pixels(project, argv, "summ"),
              "calculate sum of pixels of star",
-             "path/ output.csv x y radius"),
+             "(path/ | image.zip) output.csv x y radius"),
 }
