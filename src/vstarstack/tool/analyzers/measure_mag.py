@@ -67,7 +67,11 @@ def _measure_pixels(project : Project, argv : list[str], method : str):
     results = {}
     channels = set()
     timestamps = {}
-    for name, fname in vstarstack.tool.common.listfiles(path, ".zip"):
+    if os.path.isdir(path):
+        files = vstarstack.tool.common.listfiles(path, ".zip")
+    else:
+        files = [(os.path.splitext(os.path.basename(path))[0], path)]
+    for name, fname in files:
         df = DataFrame.load(fname)
         if 'UTC' in df.params:
             ts = df.params['UTC']
