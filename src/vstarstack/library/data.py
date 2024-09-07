@@ -210,12 +210,12 @@ class DataFrame:
         """Convert weight channel to (ndarray(uint16), float)"""
         if data.dtype == np.uint16:
             return data, np.amax(data)*weight_max
-        data = np.clip(data, a_min=0)
+        data = np.clip(data, a_min=0, a_max=None)
         maxv = np.amax(data)
         data = (data*65535/maxv).astype(np.uint16)
         return data, maxv*weight_max
 
-    def store(self, fname : str, compress : bool = None):
+    def store(self, fname : str, compress : bool|None = None):
         """Save dataframe to file"""
         if compress is None:
             compress = True
@@ -269,12 +269,12 @@ class DataFrame:
                     with zip_file.open(channel+".json", "r") as file:
                         options = json.load(file)
                     with zip_file.open(channel+".npy", "r") as file:
-                        channel = np.load(file)
+                        content = np.load(file)
                     if "weight" in options and "weight_max" in options:
-                        channel = channel.astype(np.float32)
-                        channel = channel * options.pop("weight_max") / 65535
+                        content = content.astype(np.float32)
+                        content = content * options.pop("weight_max") / 65535
     
-                    data.add_channel(data, channel, **options)
+                    data.add_channel(content, channel, **options)
 
                 for link_type in links:
                     for name in links[link_type]:
