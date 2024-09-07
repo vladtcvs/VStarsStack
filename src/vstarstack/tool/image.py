@@ -17,6 +17,8 @@ import math
 import numpy as np
 import multiprocessing as mp
 
+import vstarstack.library
+import vstarstack.library.data
 import vstarstack.tool
 import vstarstack.tool.common
 import vstarstack.tool.usage
@@ -256,6 +258,7 @@ def _print_info(filename, indent):
 
 def _exposures(_project, argv):
     import vstarstack.library.data
+    import vstarstack.tool.common
     fname = argv[0]
     if os.path.isdir(fname):
         files = vstarstack.tool.common.listfiles(fname, ".zip")
@@ -266,10 +269,36 @@ def _exposures(_project, argv):
     else:
         _print_info(fname, False)
 
+def _select_bpp_file(inpath : str, format : str, outpath : str):
+    import vstarstack.library.data
+    df = vstarstack.library.data.DataFrame.load(inpath)
+    for channel in df.get_channels():
+        if df.get_channel_option(channel, "encoded"):
+            continue
+        layer, opts = df.get_channel(channel)
+        df.replace_channel(layer.astype(format), channel, **opts)
+    df.store(outpath)
+
+def _select_bpp(_project, argv):
+    import vstarstack.tool.common
+    inpath = argv[0]
+    outpath = argv[2]
+    format = argv[1]
+    if os.path.isdir(inpath):
+        files = vstarstack.tool.common.listfiles(inpath, ".zip")
+        for name, fname in files:
+            print(f"Processing {name}")
+            outname = os.path.join(outpath, name+".zip")
+            _select_bpp_file(fname, format, outname)
+    else:
+        _select_bpp_file(inpath, format, outpath)
+
+
 commands = {
     "show": (_show, "show image"),
     "convert": (_convert, "convert image"),
     "cut": (_cut, "cut part of image"),
     "rename-channel": (_rename_channel, "filename.zip original_name target_name - rename channel"),
     "info": (_exposures, "display image info", "(file.zip | path/)"),
+    "bpp" : (_select_bpp, "select format", "(input.zip | input/) (float16 | float32 | float64) (output.zip | output/)")
 } 
