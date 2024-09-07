@@ -275,6 +275,8 @@ def _select_bpp_file(inpath : str, format : str, outpath : str):
     for channel in df.get_channels():
         if df.get_channel_option(channel, "encoded"):
             continue
+        if df.get_channel_option(channel, "weight"):
+            continue
         layer, opts = df.get_channel(channel)
         df.replace_channel(layer.astype(format), channel, **opts)
     df.store(outpath)

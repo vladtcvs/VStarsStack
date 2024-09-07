@@ -206,7 +206,16 @@ class DataFrame:
     def _store_json(value, file):
         file.write(bytes(json.dumps(value, indent=4, ensure_ascii=False), 'utf8'))
 
-    def store(self, fname : str, compress : bool = None):
+    def _normalize_weight(self, data : np.ndarray, weight_max : float) -> Tuple[np.ndarray, float]:
+        """Convert weight channel to (ndarray(uint16), float)"""
+        if data.dtype == np.uint16:
+            return data, np.amax(data)*weight_max
+        data = np.clip(data, a_min=0, a_max=None)
+        maxv = np.amax(data)
+        data = (data*65535/maxv).astype(np.uint16)
+        return data, maxv*weight_max
+
+    def store(self, fname : str, compress : bool|None = None):
         """Save dataframe to file"""
         if compress is None:
             compress = True
@@ -227,10 +236,18 @@ class DataFrame:
                 self._store_json(self.links, f)
 
             for channel_name, channel in self.channels.items():
+                data = channel["data"]
+                opts = channel["options"]
+                if opts["weight"] == True:
+                    weight_max = 1
+                    if "weight_max" in opts:
+                        weight_max = opts["weight_max"]
+                    data, weight_max = self._normalize_weight(data, weight_max)
+                    opts["weight_max"] = weight_max
                 with zf.open(channel_name+".npy", "w") as f:
-                    np.save(f, channel["data"])
+                    np.save(f, data)
                 with zf.open(channel_name+".json", "w") as f:
-                    self._store_json(channel["options"], f)
+                    self._store_json(opts, f)
 
     @staticmethod
     def load(fname : str):
@@ -252,7 +269,12 @@ class DataFrame:
                     with zip_file.open(channel+".json", "r") as file:
                         options = json.load(file)
                     with zip_file.open(channel+".npy", "r") as file:
-                        data.add_channel(np.load(file), channel, **options)
+                        content = np.load(file)
+                    if "weight" in options and "weight_max" in options:
+                        content = content.astype(np.float32)
+                        content = content * options.pop("weight_max") / 65535
+    
+                    data.add_channel(content, channel, **options)
 
                 for link_type in links:
                     for name in links[link_type]:
