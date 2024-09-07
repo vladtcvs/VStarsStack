@@ -17,6 +17,7 @@ import math
 import numpy as np
 import multiprocessing as mp
 
+import vstarstack.tool
 import vstarstack.tool.common
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
@@ -219,27 +220,55 @@ def _rename_channel(_project, argv):
     vstarstack.tool.common.check_dir_exists(name)
     dataframe.store(name)
 
+def _print_info(filename, indent):
+    import vstarstack.library.data
+    import vstarstack.library.projection.tools
+    dataframe = vstarstack.library.data.DataFrame.load(filename)
+    channels = dataframe.get_channels()
+    if indent:
+        indent="\t"
+    else:
+        indent=""
+
+    w = dataframe.get_parameter("w")
+    h = dataframe.get_parameter("h")
+    print(f"{indent}Resolution {w}x{h}")
+    ptype, pdesc = vstarstack.library.projection.tools.extract_description(dataframe)
+    if ptype == vstarstack.library.projection.ProjectionType.Perspective:
+        print(f"{indent}Projection: perspective")
+    elif ptype == vstarstack.library.projection.ProjectionType.Orthographic:
+        print(f"{indent}Projection: orthographic")
+    elif ptype == vstarstack.library.projection.ProjectionType.Equirectangular:
+        print(f"{indent}Projection: equirectangular")
+
+    print(f"{indent}Channels:")
+    for channel in channels:
+        if not dataframe.get_channel_option(channel, "signal"):
+            continue
+        normed = dataframe.get_channel_option(channel, "normed")
+        layer, _ = dataframe.get_channel(channel)
+        weight, _, weight_name = dataframe.get_linked_channel(channel, "weight")
+        if weight_name is not None:
+            amaxw = np.amax(weight)
+            print(f"{indent}\t{channel} : type = {layer.dtype}, normed = {normed}, size = {layer.shape[1]} x {layer.shape[0]}, weight = {amaxw:.1f}")
+        else:
+            print(f"{indent}\t{channel} : type = {layer.dtype}, normed = {normed}, size = {layer.shape[1]} x {layer.shape[0]}")
+
 def _exposures(_project, argv):
     import vstarstack.library.data
     fname = argv[0]
-    dataframe = vstarstack.library.data.DataFrame.load(fname)
-    channels = dataframe.get_channels()
-
-    for channel in channels:
-        _, opts = dataframe.get_channel(channel)
-        if not opts["brightness"]:
-            continue
-
-        weight_channel = dataframe.links["weight"][channel]
-        weight, _ = dataframe.get_channel(weight_channel)
-        amaxw = np.amax(weight)
-        print(f"{channel} : {amaxw}")
-
+    if os.path.isdir(fname):
+        files = vstarstack.tool.common.listfiles(fname, ".zip")
+        for name, fname in files:
+            print(f"Info about {name}:")
+            _print_info(fname, True)
+    else:
+        _print_info(fname, False)
 
 commands = {
     "show": (_show, "show image"),
     "convert": (_convert, "convert image"),
     "cut": (_cut, "cut part of image"),
     "rename-channel": (_rename_channel, "filename.zip original_name target_name - rename channel"),
-    "exposure": (_exposures, "display image exposures per channel", "file.zip"),
-}
+    "info": (_exposures, "display image info", "(file.zip | path/)"),
+} 
