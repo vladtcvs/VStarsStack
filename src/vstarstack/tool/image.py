@@ -262,6 +262,7 @@ def _exposures(_project, argv):
         for name, fname in files:
             print(f"Info about {name}:")
             _print_info(fname, True)
+            print("")
     else:
         _print_info(fname, False)
 
