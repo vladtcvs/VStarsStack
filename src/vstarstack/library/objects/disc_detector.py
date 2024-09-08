@@ -132,7 +132,9 @@ def detect(layer : np.ndarray,
     """Detect part of disc on image"""
     blurred = cv2.GaussianBlur(layer, (5, 5), 0)
     blurred = (blurred / np.amax(blurred) * 255).astype(np.uint8)
-    thresh = int(thresh*255)
+
+    thresh = np.average(blurred) * (1 - thresh) + np.amax(blurred) * thresh
+    thresh = int(thresh/np.amax(blurred)*255)
 
     _, thresh_img = cv2.threshold(blurred, thresh, 255, cv2.THRESH_BINARY)
 

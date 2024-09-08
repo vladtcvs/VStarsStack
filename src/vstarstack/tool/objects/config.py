@@ -17,7 +17,6 @@ from vstarstack.tool.configuration import Configuration
 _module_configuration = {
     "threshold": (float, 0.05),
     "margin": (int, 30),
-    "require_size": (bool, True),
     "use_modules" : (list, ["disc", "brightness", "features"]),
     "disc": ("module", {
         "mindelta": (int, 40),
