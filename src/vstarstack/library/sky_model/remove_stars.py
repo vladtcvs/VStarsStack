@@ -28,7 +28,7 @@ def remove_stars(image : np.ndarray):
         x = int(star["x"]+0.5)
         y = int(star["y"]+0.5)
         r = int(star["radius"]+0.5)
-        cv2.circle(mask, (y,x), r, 1, -1)
+        cv2.circle(mask, (x,y), r, 1, -1)
 
     idx = (mask == 0)
     sidx = (mask != 0)

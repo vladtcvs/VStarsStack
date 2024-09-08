@@ -12,10 +12,11 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import math
 import cv2
 import numpy as np
 import math
+
+from typing import Tuple
 
 def len_of_vec(vec):
     """Vector length"""
@@ -124,6 +125,14 @@ def mean_center(centers):
     center = np.array([center0, center1])
     return center
 
+def measure_ring(layer : np.ndarray, x : int, y : int, radius1 : int, radius2 : int) -> float:
+    """Measure average value of ring"""
+    mask = np.zeros(layer.shape)
+    cv2.circle(mask, (x, y), radius2, 1, -1)
+    cv2.circle(mask, (x, y), radius1, 0, -1)
+    pixels = layer * mask
+    return np.average(pixels)
+
 def detect(layer : np.ndarray,
            thresh : float,
            mindelta : float,
@@ -150,67 +159,70 @@ def detect(layer : np.ndarray,
 
     # select 3 maximal contours
     contours = sorted(contours, key=lambda item: len(item), reverse=True)[:3]
+    contours = [item for item in contours if len(item) >= len(contours[0])/2]
 
     # select contour with most stable curvature
-    centers = None
-    curvatures = None
-    std = math.inf
-    for _ in range(len(contours)):
-        centers_, curvatures_ = contour_curvature(contour,
+    for contour in contours:
+        centers, curvatures = contour_curvature(contour,
                                                 mindelta=mindelta,
                                                 maxdelta=maxdelta)
-        std_ = np.std(curvatures)
-        if std_ < std:
-            std = std_
-            centers = centers_
-            curvatures_ = curvatures_
+        
 
-    # select only points of contour, where curvature is near to the most frequet
-    values, bins = np.histogram(curvatures, bins=num_bins_curvature)
-    ind = np.argmax(values)
-    ks1 = bins[ind]
-    ks2 = bins[ind+1]
+        # select only points of contour, where curvature is near to the most frequet
+        values, bins = np.histogram(curvatures, bins=num_bins_curvature)
+        ind = np.argmax(values)
+        ks1 = bins[ind]
+        ks2 = bins[ind+1]
 
-    contour = contour[np.where(curvatures <= ks2)]
-    centers = centers[np.where(curvatures <= ks2)]
-    curvatures = curvatures[np.where(curvatures <= ks2)]
-    contour = contour[np.where(curvatures >= ks1)]
-    centers = centers[np.where(curvatures >= ks1)]
-    curvatures = curvatures[np.where(curvatures >= ks1)]
+        contour = contour[np.where(curvatures <= ks2)]
+        centers = centers[np.where(curvatures <= ks2)]
+        curvatures = curvatures[np.where(curvatures <= ks2)]
+        contour = contour[np.where(curvatures >= ks1)]
+        centers = centers[np.where(curvatures >= ks1)]
+        curvatures = curvatures[np.where(curvatures >= ks1)]
 
-    # select only points of contour, which distance
-    # to centers is near to the most frequent
-    center = mean_center(centers)
+        # select only points of contour, which distance
+        # to centers is near to the most frequent
 
-    radiuses = np.zeros(centers.shape[0])
-    for i in range(centers.shape[0]):
-        point = contour[i, 0, :]
-        radius = ((point[0]-center[0])**2 + (point[1]-center[1])**2)**0.5
-        radiuses[i] = radius
+        center = mean_center(centers)
 
-    values, bins = np.histogram(radiuses, bins=num_bins_distance)
-    ind = np.argmax(values)
-    rs1 = bins[ind]
-    rs2 = bins[ind+1]
+        radiuses = np.zeros(centers.shape[0])
+        for i in range(centers.shape[0]):
+            point = contour[i, 0, :]
+            radius = math.sqrt((point[0]-center[0])**2 + (point[1]-center[1])**2)
+            radiuses[i] = radius
 
-    idx = np.where(radiuses <= rs2)
-    contour = contour[idx]
-    centers = centers[idx]
-    curvatures = curvatures[idx]
-    radiuses = radiuses[idx]
+        values, bins = np.histogram(radiuses, bins=num_bins_distance)
+        ind = np.argmax(values)
+        rs1 = bins[ind]
+        rs2 = bins[ind+1]
 
-    idx = np.where(radiuses >= rs1)
-    contour = contour[idx]
-    centers = centers[idx]
-    curvatures = curvatures[idx]
-    radiuses = radiuses[idx]
+        idx = np.where(radiuses <= rs2)
+        contour = contour[idx]
+        centers = centers[idx]
+        curvatures = curvatures[idx]
+        radiuses = radiuses[idx]
 
-    center = mean_center(centers)
-    radius = radius_to_contour(contour, center)
+        idx = np.where(radiuses >= rs1)
+        contour = contour[idx]
+        centers = centers[idx]
+        curvatures = curvatures[idx]
+        radiuses = radiuses[idx]
+
+        center = mean_center(centers)
+        radius = int(radius_to_contour(contour, center))
+
+        # check that inside is brighter than outside
+        x = int(center[0] + 0.5)
+        y = int(center[1] + 0.5)
+        light_inside  = measure_ring(layer, x, y, radius-10, radius)
+        light_outside = measure_ring(layer, x, y, radius, radius+10)
+        if light_inside > light_outside:
+            break
 
     planet = {
-        "x": int(center[0] + 0.5),
-        "y": int(center[1] + 0.5),
+        "x": x,
+        "y": y,
         "r": int(radius + 0.5)
     }
     return [planet]

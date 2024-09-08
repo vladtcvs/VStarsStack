@@ -19,6 +19,7 @@ import vstarstack.tool.objects.cut
 import vstarstack.tool.objects.config
 import vstarstack.tool.objects.find_features
 import vstarstack.tool.objects.match_features
+import vstarstack.tool.objects.show
 
 def _enable_objects(project : vstarstack.tool.cfg.Project, _argv: list[str]):
     project.config.enable_module("objects")
@@ -27,6 +28,7 @@ def _enable_objects(project : vstarstack.tool.cfg.Project, _argv: list[str]):
 commands = {
     "config": (_enable_objects, "configure compact_objects pipeline"),
     "detect": ("vstarstack.tool.objects.detect", "detect compact objects"),
+    "show" : (vstarstack.tool.objects.show.run, "display detected compact objects", "image.zip desc.json"),
     "find-features": (vstarstack.tool.objects.find_features.commands, "detect image features"),
     "display-features" : (vstarstack.tool.objects.find_features.display_features, "display image features", "image.zip features.json"),
     "match-features": (vstarstack.tool.objects.match_features.run, "match image features", "features/ match_table.json [comparsion_list.csv]"),
