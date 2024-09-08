@@ -158,11 +158,13 @@ def _find_extended_perspective(images : list, shifts : dict):
     max_h = 0
 
     args = [(filename, name, shifts) for name, filename in images]
+
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
         corners = pool.map(_find_shifted_corners, args)
-        for min_x, min_y, max_x, max_y, w, h, out_proj_desc in corners:
+        for min_x, min_y, max_x, max_y, w, h, proj_desc in corners:
             if min_x is None:
                 continue
+            out_proj_desc = proj_desc
             if min_x < 0:
                 margin_left = max(margin_left, -min_x)
             if min_y < 0:
