@@ -85,7 +85,7 @@ def debayer_dataframe(dataframe : vstarstack.library.data.DataFrame,
 
     layers, weights = debayer_image(raw, weight, mask)
     for color in layers:
-        dataframe.add_channel(layers[color], color, brightness=True)
+        dataframe.add_channel(layers[color], color, brightness=True, signal=True)
         dataframe.add_channel(weights[color], f"weight-{color}", weight=True)
         dataframe.add_channel_link(color, f"weight-{color}", "weight")
 
