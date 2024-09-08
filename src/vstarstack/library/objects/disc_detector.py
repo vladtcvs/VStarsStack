@@ -15,6 +15,7 @@
 import math
 import cv2
 import numpy as np
+import math
 
 def len_of_vec(vec):
     """Vector length"""
@@ -147,12 +148,22 @@ def detect(layer : np.ndarray,
     if len(contours) == 0:
         return []
 
-    # select maximal contour
-    contour = sorted(contours, key=lambda item: len(item), reverse=True)[0]
+    # select 3 maximal contours
+    contours = sorted(contours, key=lambda item: len(item), reverse=True)[:3]
 
-    centers, curvatures = contour_curvature(contour,
-                                            mindelta=mindelta,
-                                            maxdelta=maxdelta)
+    # select contour with most stable curvature
+    centers = None
+    curvatures = None
+    std = math.inf
+    for _ in range(len(contours)):
+        centers_, curvatures_ = contour_curvature(contour,
+                                                mindelta=mindelta,
+                                                maxdelta=maxdelta)
+        std_ = np.std(curvatures)
+        if std_ < std:
+            std = std_
+            centers = centers_
+            curvatures_ = curvatures_
 
     # select only points of contour, where curvature is near to the most frequet
     values, bins = np.histogram(curvatures, bins=num_bins_curvature)
