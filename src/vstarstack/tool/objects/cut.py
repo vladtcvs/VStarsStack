@@ -13,6 +13,7 @@
 #
 import json
 import os
+import numpy as np
 
 import vstarstack.tool.cfg
 import vstarstack.library.common
@@ -34,23 +35,18 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
     else:
         margin = project.config.objects.margin
 
-    require_size = project.config.objects.require_size
-
     files = vstarstack.tool.common.listfiles(jsonpath, ".json")
-    for name, filename in files:
-        print(f"Loading info: {name}")
-        with open(filename, encoding='utf8') as f:
-            detection = json.load(f)
-
     maxr = 0
     for name, filename in files:
         with open(filename, encoding='utf8') as f:
             detection = json.load(f)
-
         r = int(detection["object"]["r"])
+        print(f"Loading info: {name}, r = {r}")
         if r > maxr:
             maxr = r
     maxr = int(maxr+0.5)+margin
+    size = 2*maxr+1
+    print("maxr = ", maxr, " size = ", size)
 
     for name, filename in files:
         print(name)
@@ -59,17 +55,10 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
 
         x = int(detection["object"]["x"])
         y = int(detection["object"]["y"])
-        r = int(detection["object"]["r"])
         left = int(x - maxr)
-        right = int(x + maxr)
+        right = left + size
         top = int(y - maxr)
-        bottom = int(y + maxr)
-
-        width = right - left
-        height = bottom - top
-
-        left = max(left, 0)
-        top = max(top, 0)
+        bottom = top + size
 
         imagename = os.path.join(npypath, name + ".zip")
         try:
@@ -81,22 +70,44 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
         weight_links = dict(image.links["weight"])
 
         for channel in image.get_channels():
-            img, opts = image.get_channel(channel)
+            layer, opts = image.get_channel(channel)
             if opts["encoded"]:
                 image.remove_channel(channel)
                 continue
 
-            img = img[top:bottom+1, left:right+1]
+            w = layer.shape[1]
+            h = layer.shape[0]
 
-            if require_size:
-                if img.shape[0] != 2*maxr + 1:
-                    print("\tSkip %s" % channel)
-                    image.remove_channel(channel)
-                    continue
-                if img.shape[1] != 2*maxr + 1:
-                    print("\tSkip %s" % channel)
-                    image.remove_channel(channel)
-                    continue
+            source_top = top
+            source_left = left
+            target_top = 0
+            target_left = 0
+
+            copy_w = size
+            copy_h = size
+
+            if source_top < 0:
+                space = 0 - source_top
+                source_top += space
+                target_top += space
+                copy_h -= space
+
+            if source_left < 0:
+                space = 0 - source_left
+                source_left += space
+                target_left += space
+                copy_w -= space
+
+            if source_top + copy_h > h:
+                space = source_top + copy_h - h
+                copy_h -= space
+
+            if source_left + copy_w > w:
+                space = source_left + copy_w - w
+                copy_w -= space
+
+            img = np.zeros((size, size))
+            img[target_top:target_top+copy_h, target_left:target_left+copy_w] = layer[source_top:source_top+copy_h, source_left:source_left+copy_w]
 
             detection["roi"] = {
                 "x1": left,
@@ -104,7 +115,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
                 "x2": right,
                 "y2": bottom
             }
-            image.replace_channel(img, channel)
+            image.replace_channel(img, channel, **opts)
             vstarstack.tool.common.check_dir_exists(filename)
             with open(filename, "w", encoding='utf8') as f:
                 json.dump(detection, f, indent=4, ensure_ascii=False)
@@ -112,8 +123,8 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
         for ch, value in weight_links.items():
             image.add_channel_link(ch, value, "weight")
 
-        image.params["w"] = width
-        image.params["h"] = height
+        image.params["w"] = size
+        image.params["h"] = size
 
         outname = os.path.join(cutpath, name + ".zip")
         if len(image.get_channels()) != 0:
