@@ -28,9 +28,9 @@ def run(project : vstarstack.tool.cfg.Project, argv: list[str]):
     df = vstarstack.library.data.DataFrame.load(fname)    
     with open(desc, encoding='utf8') as f:
         detection = json.load(f)
-        x = detection["object"]["x"]
-        y = detection["object"]["y"]
-        r = detection["object"]["r"]
+        x = int(detection["object"]["x"]+0.5)
+        y = int(detection["object"]["y"]+0.5)
+        r = int(detection["object"]["r"]+0.5)
 
     gray, _ = vstarstack.library.common.df_to_light(df)
     gray = gray / np.amax(gray)

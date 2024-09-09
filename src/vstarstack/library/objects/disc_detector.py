@@ -100,7 +100,7 @@ def radius_to_contour(contour, center):
     distances = []
     for i in range(len(contour)):
         point = contour[i, 0]
-        distance = ((point[0]-center[0])**2 + (point[1]-center[1])**2)**0.5
+        distance = math.sqrt((point[0]-center[0])**2 + (point[1]-center[1])**2)
         distances.append(distance)
     return np.median(distances)
 
@@ -131,7 +131,35 @@ def measure_ring(layer : np.ndarray, x : int, y : int, radius1 : int, radius2 : 
     cv2.circle(mask, (x, y), radius2, 1, -1)
     cv2.circle(mask, (x, y), radius1, 0, -1)
     pixels = layer * mask
-    return np.average(pixels)
+    return np.average(pixels), np.std(pixels)
+
+def display_contour(thresh_img : np.ndarray, contour : np.ndarray, centers : np.ndarray | None) -> None:
+    import matplotlib.pyplot as plt
+    rgb = np.zeros((thresh_img.shape[0], thresh_img.shape[1], 3))
+    thresh_img = thresh_img.astype('uint8')*255/4
+    rgb[:,:,0] = thresh_img
+    rgb[:,:,1] = thresh_img
+    rgb[:,:,2] = thresh_img
+
+    for i in range(contour.shape[0]):
+        cx = contour[i, 0, 0]
+        cy = contour[i, 0, 1]
+        rgb[cy, cx, 0] = 255
+        rgb[cy, cx, 1] = 0
+        rgb[cy, cx, 2] = 0
+    
+    if centers is not None:
+        for i in range(centers.shape[0]):
+            x = int(centers[i,0])
+            y = int(centers[i,1])
+            if x < 0 or y < 0 or x >= rgb.shape[1] or y >= rgb.shape[0]:
+                continue
+            rgb[y, x, 0] = 0
+            rgb[y, x, 1] = 255
+            rgb[y, x, 2] = 0
+
+    plt.imshow(rgb)
+    plt.show()
 
 def detect(layer : np.ndarray,
            thresh : float,
@@ -151,14 +179,14 @@ def detect(layer : np.ndarray,
     contours, _ = cv2.findContours(
         image=thresh_img,
         mode=cv2.RETR_TREE,
-        method=cv2.CHAIN_APPROX_SIMPLE)
+        method=cv2.CHAIN_APPROX_NONE)
 
     # contour contains data in (x,y) format
     if len(contours) == 0:
         return []
 
     # select 3 maximal contours
-    contours = sorted(contours, key=lambda item: len(item), reverse=True)[:3]
+    contours = sorted(contours, key=lambda item: len(item), reverse=True)
     contours = [item for item in contours if len(item) >= len(contours[0])/2]
 
     # select contour with most stable curvature
@@ -181,8 +209,35 @@ def detect(layer : np.ndarray,
         centers = centers[np.where(curvatures >= ks1)]
         curvatures = curvatures[np.where(curvatures >= ks1)]
 
-        # select only points of contour, which distance
-        # to centers is near to the most frequent
+#        display_contour(thresh_img, contour, centers)
+
+        # select only points of contour, where center is near to the most frequent
+
+        centers_x = centers[:,0]
+
+        values, bins = np.histogram(centers_x, bins=num_bins_distance)
+        ind = np.argmax(values)
+        ks1 = bins[ind]
+        ks2 = bins[ind+1]
+
+        idx = np.where((centers_x <= ks2) & (centers_x >= ks1))
+        contour = contour[idx]
+        centers = centers[idx]
+        curvatures = curvatures[idx]
+
+        centers_y = centers[:,1]
+
+        values, bins = np.histogram(centers_y, bins=num_bins_distance)
+        ind = np.argmax(values)
+        ks1 = bins[ind]
+        ks2 = bins[ind+1]
+        
+        idx = np.where((centers_y <= ks2) & (centers_y >= ks1))
+        contour = contour[idx]
+        centers = centers[idx]
+        curvatures = curvatures[idx]
+
+#        display_contour(thresh_img, contour, centers)
 
         center = mean_center(centers)
 
@@ -192,31 +247,15 @@ def detect(layer : np.ndarray,
             radius = math.sqrt((point[0]-center[0])**2 + (point[1]-center[1])**2)
             radiuses[i] = radius
 
-        values, bins = np.histogram(radiuses, bins=num_bins_distance)
-        ind = np.argmax(values)
-        rs1 = bins[ind]
-        rs2 = bins[ind+1]
-
-        idx = np.where(radiuses <= rs2)
-        contour = contour[idx]
-        centers = centers[idx]
-        curvatures = curvatures[idx]
-        radiuses = radiuses[idx]
-
-        idx = np.where(radiuses >= rs1)
-        contour = contour[idx]
-        centers = centers[idx]
-        curvatures = curvatures[idx]
-        radiuses = radiuses[idx]
-
-        center = mean_center(centers)
         radius = int(radius_to_contour(contour, center))
 
         # check that inside is brighter than outside
         x = int(center[0] + 0.5)
         y = int(center[1] + 0.5)
-        light_inside  = measure_ring(layer, x, y, radius-10, radius)
-        light_outside = measure_ring(layer, x, y, radius, radius+10)
+        light_inside, std_inside  = measure_ring(layer, x, y, radius-20, radius)
+        light_outside, std_outside = measure_ring(layer, x, y, radius, radius+20)
+        #print("inside: ", light_inside, " ", std_inside)
+        #print("outside: ", light_outside, " ", std_outside)
         if light_inside > light_outside:
             break
 
