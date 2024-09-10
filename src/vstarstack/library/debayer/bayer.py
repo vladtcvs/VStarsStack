@@ -170,10 +170,13 @@ def debayer_image_interpolate(image : np.ndarray,
                         for dx in range(-1, 2):
                             _, nv = getpixel_none(layer, y+dy, x+dx)
                             _, nw = getpixel_none(weight, y+dy, x+dx)
+                            if nw == 0:
+                                continue
                             nbs_val.append(nv*nw)
                             nbs_weight.append(nw)
-                        newlayer[y,x] = sum(nbs_val)
-                        newweight[y,x] = sum(nbs_weight)
+        
+                    newlayer[y,x] = sum(nbs_val) / sum(nbs_weight)
+                    newweight[y,x] = np.average(nbs_weight)
 
         layers[color] = newlayer
         weights[color] = newweight
