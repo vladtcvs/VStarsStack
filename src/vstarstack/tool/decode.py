@@ -24,6 +24,8 @@ import vstarstack.tool.cfg
 import vstarstack.tool.usage
 import vstarstack.library.common
 
+from vstarstack.library.debayer.bayer import DebayerMethod
+
 nthreads = vstarstack.tool.cfg.nthreads
 
 def _process_file(name, default_format, fname, output):
@@ -38,7 +40,15 @@ def _process_file(name, default_format, fname, output):
     if mode[:5] == "bayer":
         mask_desc = mode[5:9]
         mask = vstarstack.library.debayer.bayer.generate_mask(mask_desc)
-        dataframe = vstarstack.library.debayer.bayer.debayer_dataframe(dataframe, mask, "raw")
+        method = vstarstack.tool.cfg.get_param("method", str, "SUBSAMPLE")
+        if method == "SUBSAMPLE":
+            method = DebayerMethod.SUBSAMPLE
+        elif method == "MASK":
+            method = DebayerMethod.MASK
+        elif method == "INTERPOLATE":
+            method = DebayerMethod.INTERPOLATE
+
+        dataframe = vstarstack.library.debayer.bayer.debayer_dataframe(dataframe, mask, "raw", method)
     elif mode == "yuv422":
         dataframe = vstarstack.library.debayer.yuv422.yuv_422_dataframe(dataframe, "raw")
     else:

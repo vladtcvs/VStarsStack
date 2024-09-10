@@ -64,16 +64,18 @@ def debayer_image_subsample(image : np.ndarray,
 
     if h % 2 == 1:
         image = image[0:h-1,:]
+        weight = weight[0:h-1,:]
         h -= 1
     if w % 2 == 1:
         image = image[:,0:w-1]
+        weight = weight[:,0:w-1]
         w -= 1
 
     for color in mask:
-        k00 = mask[color][0,0]/np.sum(mask[color])
-        k01 = mask[color][0,1]/np.sum(mask[color])
-        k10 = mask[color][1,0]/np.sum(mask[color])
-        k11 = mask[color][1,1]/np.sum(mask[color])
+        k00 = mask[color][0,0]
+        k01 = mask[color][0,1]
+        k10 = mask[color][1,0]
+        k11 = mask[color][1,1]
 
         image00 = image[0::2, 0::2]
         image01 = image[0::2, 1::2]
@@ -96,7 +98,7 @@ def debayer_image_mask(image : np.ndarray,
     """Process debayer on image"""
 
     image00 = np.copy(image)
-    weight00 = np.copy(image)
+    weight00 = np.copy(weight)
     image00[0::2, 1::2] = 0
     weight00[0::2, 1::2] = 0
     image00[1::2, 0::2] = 0
@@ -105,7 +107,7 @@ def debayer_image_mask(image : np.ndarray,
     weight00[1::2, 1::2] = 0
 
     image01 = np.copy(image)
-    weight01 = np.copy(image)
+    weight01 = np.copy(weight)
     image01[0::2, 0::2] = 0
     weight01[0::2, 0::2] = 0
     image01[1::2, 0::2] = 0
@@ -114,7 +116,7 @@ def debayer_image_mask(image : np.ndarray,
     weight01[1::2, 1::2] = 0
 
     image10 = np.copy(image)
-    weight10 = np.copy(image)
+    weight10 = np.copy(weight)
     image10[0::2, 0::2] = 0
     weight10[0::2, 0::2] = 0
     image10[0::2, 1::2] = 0
@@ -123,7 +125,7 @@ def debayer_image_mask(image : np.ndarray,
     weight10[1::2, 1::2] = 0
 
     image11 = np.copy(image)
-    weight11 = np.copy(image)
+    weight11 = np.copy(weight)
     image11[0::2, 0::2] = 0
     weight11[0::2, 0::2] = 0
     image11[0::2, 1::2] = 0
@@ -139,7 +141,7 @@ def debayer_image_mask(image : np.ndarray,
         k01 = mask[color][0,1]
         k10 = mask[color][1,0]
         k11 = mask[color][1,1]
-        
+
         layers[color] = k00 * image00 + k01 * image01 + k10 * image10 + k11 * image11
         weights[color] = k00 * weight00 + k01 * weight01 + k10 * weight10 + k11 * weight11
 
@@ -152,10 +154,14 @@ def debayer_dataframe(dataframe : vstarstack.library.data.DataFrame,
     """Debayer dataframe"""
     raw, _ = dataframe.get_channel(raw_channel_name)
     weight, _, _ = dataframe.get_linked_channel(raw_channel_name, "weight")
+    normed = dataframe.get_channel_option(raw_channel_name, "normed")
     if weight is None:
         if (weight_val := dataframe.get_parameter("weight")) is None:
             weight_val = 1
         weight = np.ones(raw.shape)*weight_val
+
+    if normed:
+        raw = raw * weight
 
     if method == DebayerMethod.SUBSAMPLE:
         layers, weights = debayer_image_subsample(raw, weight, mask)
@@ -165,7 +171,7 @@ def debayer_dataframe(dataframe : vstarstack.library.data.DataFrame,
         raise NotImplemented()
 
     for color in layers:
-        dataframe.add_channel(layers[color], color, brightness=True, signal=True)
+        dataframe.add_channel(layers[color], color, brightness=True, signal=True, normed=False)
         dataframe.add_channel(weights[color], f"weight-{color}", weight=True)
         dataframe.add_channel_link(color, f"weight-{color}", "weight")
 
