@@ -158,25 +158,34 @@ def debayer_image_interpolate(image : np.ndarray,
         layer = layers[color]
         weight = weights[color]
         
-        # TODO: implement better
         newlayer = np.copy(layer)
         newweight = np.copy(weight)
-        for y in range(h):
-            for x in range(w):
-                if weight[y,x] < 1e-12:
-                    nbs_val = []
-                    nbs_weight = []
-                    for dy in range(-1, 2):
-                        for dx in range(-1, 2):
-                            _, nv = getpixel_none(layer, y+dy, x+dx)
-                            _, nw = getpixel_none(weight, y+dy, x+dx)
-                            if nw == 0:
-                                continue
-                            nbs_val.append(nv*nw)
-                            nbs_weight.append(nw)
-        
-                    newlayer[y,x] = sum(nbs_val) / sum(nbs_weight)
-                    newweight[y,x] = np.average(nbs_weight)
+
+        idx = np.where(weight < 1e-12)
+        newlayer[idx] = 0
+        newweight[idx] = 0
+        count_used = np.zeros(layer.shape)
+
+        shifts = [(-1,-1), (-1,0), (-1,1),
+                  (0,-1), (0,1),
+                  (1,-1),(1,0),(1,1)]
+
+        shifted = []
+        for dy,dx in shifts:
+            sh_layer = np.roll(layer, (dy, dx), (0, 1))
+            sh_weight = np.roll(weight, (dy, dx), (0,1))
+            shifted.append((sh_layer, sh_weight))
+
+        for sh_layer, sh_weight in shifted:
+            use_pixels = (sh_weight > 1e-12).astype('uint8')
+            newlayer[idx] = newlayer[idx] + sh_layer[idx] * sh_weight[idx] * use_pixels[idx]
+            newweight[idx] = newweight[idx] + sh_weight[idx] * use_pixels[idx]
+            count_used[idx] += use_pixels[idx]
+
+        newlayer[idx] = newlayer[idx] / newweight[idx]
+        newweight[idx] = newweight[idx] / count_used[idx]
+        newweight = np.nan_to_num(newweight, nan=0, posinf=0, neginf=0)
+        newlayer[np.where(newweight == 0)] = 0
 
         layers[color] = newlayer
         weights[color] = newweight
