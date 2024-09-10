@@ -168,7 +168,10 @@ def debayer_dataframe(dataframe : vstarstack.library.data.DataFrame,
     elif method == DebayerMethod.MASK:
         layers, weights = debayer_image_mask(raw, weight, mask)
     elif method == DebayerMethod.INTERPOLATE:
-        raise NotImplemented()
+        raise NotImplementedError()
+        return None
+    else:
+        return None
 
     for color in layers:
         dataframe.add_channel(layers[color], color, brightness=True, signal=True, normed=False)
