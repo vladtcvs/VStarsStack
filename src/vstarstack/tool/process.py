@@ -17,14 +17,15 @@ import vstarstack.tool.cfg
 import vstarstack.tool.usage
 import vstarstack.tool.manage_project
 
-import vstarstack.tool.debayer
 import vstarstack.tool.clean
+import vstarstack.tool.decode
 
 commands = {
     "readimage": ("vstarstack.tool.readimage",
                   "read source images to npz"),
-    "debayer": (vstarstack.tool.debayer.run,
-                "debayer RAW images"),
+    "decode": (vstarstack.tool.decode.run,
+               "decode RAW images from bayer/yuv to RGB",
+               "input/ output/ [--method=(SUBSAMPLE | MASK | INTERPOLATE)]"),
     "process": ("vstarstack.tool.image_processing.fixes",
                 "process - make optical fixes and other image fixes"),
     "calibration": ("vstarstack.tool.calibration",
