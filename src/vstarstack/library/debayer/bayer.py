@@ -16,6 +16,7 @@ import numpy as np
 from enum import Enum
 
 import vstarstack.library.data
+from vstarstack.library.common import getpixel_none
 
 class DebayerMethod(Enum):
     """
@@ -147,6 +148,37 @@ def debayer_image_mask(image : np.ndarray,
 
     return layers, weights
 
+def debayer_image_interpolate(image : np.ndarray,
+                              weight : np.ndarray,
+                              mask : dict):
+    h = image.shape[0]
+    w = image.shape[1]
+    layers, weights = debayer_image_mask(image, weight, mask)
+    for color in layers:
+        layer = layers[color]
+        weight = weights[color]
+        
+        # TODO: implement better
+        newlayer = np.copy(layer)
+        newweight = np.copy(weight)
+        for y in range(h):
+            for x in range(w):
+                if weight[y,x] < 1e-12:
+                    nbs_val = []
+                    nbs_weight = []
+                    for dy in range(-1, 2):
+                        for dx in range(-1, 2):
+                            _, nv = getpixel_none(layer, y+dy, x+dx)
+                            _, nw = getpixel_none(weight, y+dy, x+dx)
+                            nbs_val.append(nv*nw)
+                            nbs_weight.append(nw)
+                        newlayer[y,x] = sum(nbs_val)
+                        newweight[y,x] = sum(nbs_weight)
+
+        layers[color] = newlayer
+        weights[color] = newweight
+    return layers, weights
+
 def debayer_dataframe(dataframe : vstarstack.library.data.DataFrame,
                       mask : dict,
                       raw_channel_name : str,
@@ -168,8 +200,7 @@ def debayer_dataframe(dataframe : vstarstack.library.data.DataFrame,
     elif method == DebayerMethod.MASK:
         layers, weights = debayer_image_mask(raw, weight, mask)
     elif method == DebayerMethod.INTERPOLATE:
-        raise NotImplementedError()
-        return None
+        layers, weights = debayer_image_interpolate(raw, weight, mask)
     else:
         return None
 
