@@ -31,7 +31,7 @@ jobs:
           pylint --rcfile=pylintrc --fail-under=9 src/
       - name: Build & Install
         run: |
-          python -m build . --wheel
+          python -m build . --wheel -n
           find ./dist/*.whl | xargs python -m pip install
       - name: Test that tools launches
         run: |
