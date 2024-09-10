@@ -35,6 +35,7 @@ extension-pkg-whitelist=cv2,
     vstarstack.library.projection.projections,
     vstarstack.library.fine_movement.module,
     vstarstack.library.movement.movements
+    vstarstack.library.clusters.clusterization
 
 # Return non-zero exit code if any of these messages/categories are detected,
 # even if score is above --fail-under value. Syntax same as enable. Messages
