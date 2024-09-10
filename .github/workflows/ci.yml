@@ -28,7 +28,7 @@ jobs:
           python -m pip install -r requirements.txt
       - name: Lint with pylint
         run: |
-          pylint --rcfile=pylintrc --fail-under=9 src/
+          pylint --rcfile=pylintrc src/vstarstack
       - name: Build & Install
         run: |
           python -m build . --wheel -n

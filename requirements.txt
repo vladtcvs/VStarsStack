@@ -11,4 +11,3 @@ imutils
 matplotlib
 pytest
 pytz
-
