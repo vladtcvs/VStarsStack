@@ -76,10 +76,10 @@ print("Packages: ", result)
 packages = result
 
 setup (name = 'vstarstack',
-       version = '0.2',
+       version = '0.2.1',
        author='Vladislav Tsendrovskii',
        description = 'Stacking astrophotos',
-       package_dir = {'': 'src'},
+       package_dir = {'vstarstack': 'src/vstarstack'},
        packages=packages,
        ext_modules = [projection,
                       movements,
@@ -104,5 +104,6 @@ setup (name = 'vstarstack',
               'imutils',
               'matplotlib',
               'pytz',
-       ]
+       ],
+       requires=["setuptools", "cython", "numpy"]
 )
