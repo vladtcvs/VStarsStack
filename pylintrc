@@ -70,7 +70,7 @@ ignore-patterns=^\.#
 ignored-modules=cv2,
     vstarstack.library.projection.projections,
     vstarstack.library.fine_movement.module,
-    vstarstack.library.movement.movements
+    vstarstack.library.movement.movements,
     vstarstack.library.clusters.clusterization
 
 # Python code to execute, usually for sys.path manipulation such as
