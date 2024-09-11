@@ -213,7 +213,7 @@ class DataFrame:
         data = np.clip(data, a_min=0, a_max=None)
         maxv = np.amax(data)
         data = (data*65535/maxv).astype(np.uint16)
-        return data, maxv*weight_max
+        return data, float(maxv*weight_max)
 
     def store(self, fname : str, compress : bool|None = None):
         """Save dataframe to file"""
