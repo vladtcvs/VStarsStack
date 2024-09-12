@@ -18,6 +18,8 @@ This mode should be used when perspective distorsions are valueable.
 ### Projections
 
 * perspective projection - use perspective projection with specified focal length and pixel size
+* equirectangular projection - used for planet surface map
+* orhtographic projection - used for process planet surface images
 
 ## Flat mode
 
@@ -27,8 +29,9 @@ In this mode we don't know anything about celestial sphere and consider images a
 # Modes of image aligning
 
 * stars mode - images contains stars and should be aligned by stars
-* compact_objects - images contains some small object, much less than image size, and this object
+* objects mode - images contains some small object, much less than image size, and this object
 should be cutted out and images should be aligned to center object
+* disc mode - used for Moon, and other big disc objects
 
 ## Stars mode
 
@@ -37,12 +40,6 @@ Command for work with stars beginning with `vstarstack stars`.
 ### detect
 
 `vstarstack stars detect` - detect stars on image
-
-### lonlat
-
-`vstarstack stars lonlat`
-
-If we use `sphere` mode, we transform `(y,x)` coordinates of detected stars into `(lat,lon)` coordinates, with `(0,0)` at center of image.
 
 ### describe
 
@@ -54,23 +51,29 @@ We build descriptors for N most brightest stars. Each descriptor is invariant to
 
 `vstarstack stars match`
 
-We match the same stars on different images using descriptors
+We match the same stars on different images using descriptors abd build match table
 
-### net
+## Objects
 
-`vstarstack stars net`
+This commands work with non-star objects - planets, diffraction images, Moon, etc
 
-Build `net.json` - file with info about star matching. This is intermidiate format.
+`vstarstack objects config`
+`vstarstack objects detect`
+`vstarstack objects cut`
+`vstarstack objects clusters`
 
-### cluster
+## Planets
 
-`vstarstack stars cluster`
+`vstarstack planets configure`
+`vstarstack planets buildmap`
 
-Build `clusters.json` - file with clusters of stars. It contains info about stars coordinates on each frame.
+## Clusters
 
-### process
+`vstarstack cluster`
 
-`vstarstack stars process` - do all steps above in a single run
+# CI
+
+Jenkins used for CI
 
 # License
 
