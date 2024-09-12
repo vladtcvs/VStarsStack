@@ -19,6 +19,14 @@ import vstarstack.library.merge.simple_mean
 def remove_dark(dataframe : vstarstack.library.data.DataFrame,
                 dark : vstarstack.library.data.DataFrame):
     """Remove dark from image"""
+    dark_channel_name = None
+    for channel in dark.get_channels():
+        if dark.get_channel_option(channel, "brightness"):
+            dark_channel_name = channel
+            break
+    if dark_channel_name is None:
+        return None
+
     for channel in dataframe.get_channels():
         image, opts = dataframe.get_channel(channel)
         if not opts["brightness"]:
@@ -26,6 +34,8 @@ def remove_dark(dataframe : vstarstack.library.data.DataFrame,
 
         if channel in dark.get_channels():
             image = image - dark.get_channel(channel)[0]
+        else:
+            image = image - dark.get_channel(dark_channel_name)[0]
 
         dataframe.replace_channel(image, channel)
     return dataframe

@@ -37,6 +37,8 @@ def _process_file_remove_dark(input_fname : str,
     print(f"Processing {input_fname}")
     dataframe = vstarstack.library.data.DataFrame.load(input_fname)
     result = vstarstack.library.calibration.dark.remove_dark(dataframe, dark)
+    if result is None:
+        print(f"Can not remove dark from {input_fname}")
     vstarstack.tool.common.check_dir_exists(output_fname)
     result.store(output_fname)
 
