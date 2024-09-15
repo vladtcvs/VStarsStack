@@ -20,5 +20,14 @@ from vstarstack.library.data import DataFrame
 
 def mean(images : vstarstack.library.common.IImageSource) -> DataFrame:
     """Just mean of images"""
+    cnt = 0
+    for _ in images.items():
+        cnt += 1
     image = vstarstack.library.merge.simple_add.simple_add(images)
-    return vstarstack.library.image_process.normalize.normalize(image, deepcopy=False)
+    for channel in image.channels:
+        layer, opts = image.get_channel(channel)
+        if not image.get_channel_option(channel, "brightness"):
+            continue
+        layer /= cnt
+        image.replace_channel(layer, channel, **opts)
+    return image

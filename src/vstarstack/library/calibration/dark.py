@@ -25,19 +25,22 @@ def remove_dark(dataframe : vstarstack.library.data.DataFrame,
             dark_channel_name = channel
             break
     if dark_channel_name is None:
+        print("Can not find brightness channel, skip")
         return None
 
     for channel in dataframe.get_channels():
         image, opts = dataframe.get_channel(channel)
         if not opts["brightness"]:
+            print(f"Skipping {channel}")
             continue
 
         if channel in dark.get_channels():
-            image = image - dark.get_channel(channel)[0]
+            dark_layer, _ = dark.get_channel(channel)
         else:
-            image = image - dark.get_channel(dark_channel_name)[0]
+            dark_layer, _ = dark.get_channel(dark_channel_name)
 
-        dataframe.replace_channel(image, channel)
+        image = image - dark_layer
+        dataframe.replace_channel(image, channel, **opts)
     return dataframe
 
 def prepare_darks(images : vstarstack.library.common.IImageSource

@@ -38,7 +38,7 @@ def readnef(filename: str):
 
     dataframe = vstarstack.library.data.DataFrame(params, tags)
     dataframe.add_channel(image, "raw", encoded=True, brightness=True, signal=True)
-    dataframe.add_parameter("bayerGRBG", "format")
+    dataframe.add_parameter("bayerGBRG", "format")
     dataframe.add_parameter(exp, "weight")
 
     yield dataframe
