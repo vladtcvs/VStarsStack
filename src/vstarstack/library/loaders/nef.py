@@ -14,12 +14,11 @@
 #
 
 import rawpy
-import numpy as np
+import exifread
+from exifread.classes import IfdTag
 
 import vstarstack.library.common
 import vstarstack.library.data
-
-import vstarstack.library.loaders.tags
 
 
 def readnef(filename: str):
@@ -27,16 +26,32 @@ def readnef(filename: str):
     img = rawpy.imread(filename)
     image = img.raw_image_visible
 
-    tags = vstarstack.library.loaders.tags.read_tags(filename)
+    with open(filename, 'rb') as file:
+        tags = exifread.process_file(file)
+
+    print(tags)
 
     params = {
         "w": image.data.shape[1],
         "h": image.data.shape[0],
     }
 
-    exp = tags["shutter"]*tags["iso"]
+    
+    if "EXIF ExposureTime" in tags:
+        tag = tags["EXIF ExposureTime"]
+        exposure = float(tag.values[0])
+    else:
+        exposure = 1
 
-    dataframe = vstarstack.library.data.DataFrame(params, tags)
+    iso = 1
+
+    exp = exposure * iso
+
+    printable_tags = {}
+    for tag_name in tags:
+        printable_tags[tag_name] = tags[tag_name].printable
+
+    dataframe = vstarstack.library.data.DataFrame(params, printable_tags)
     dataframe.add_channel(image, "raw", encoded=True, brightness=True, signal=True)
     dataframe.add_parameter("bayerGBRG", "format")
     dataframe.add_parameter(exp, "weight")

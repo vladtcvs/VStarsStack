@@ -53,7 +53,6 @@ def _work(reader,
         img_format = project.config.telescope.camera.format
         if img_format != "COPY":
             dataframe.add_parameter(img_format, "format")
-
         vstarstack.tool.common.check_dir_exists(outfname)
         dataframe.store(outfname)
 
