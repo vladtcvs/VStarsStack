@@ -103,60 +103,78 @@ def readser(fname: str):
             channels = ["raw"]
             image_format = "bayerRGGB"
             opts["encoded"] = True
+            opts["brightness"] = True
+            opts["signal"] = True
             vpp = 1
         elif colorid == 9:
             shape = (height, width, 1)
             channels = ["raw"]
             image_format = "bayerGRBG"
             opts["encoded"] = True
+            opts["brightness"] = True
+            opts["signal"] = True
             vpp = 1
         elif colorid == 10:
             shape = (height, width, 1)
             channels = ["raw"]
             image_format = "bayerGBRG"
             opts["encoded"] = True
+            opts["brightness"] = True
+            opts["signal"] = True
             vpp = 1
         elif colorid == 11:
             shape = (height, width, 1)
             channels = ["raw"]
             image_format = "bayerBGGR"
             opts["encoded"] = True
+            opts["brightness"] = True
+            opts["signal"] = True
             vpp = 1
         elif colorid == 16:
             shape = (height, width, 1)
             channels = ["raw"]
             image_format = "bayerCYYM"
             opts["encoded"] = True
+            opts["brightness"] = True
+            opts["signal"] = True
             vpp = 1
         elif colorid == 17:
             shape = (height, width, 1)
             channels = ["raw"]
             image_format = "bayerYCMY"
             opts["encoded"] = True
+            opts["brightness"] = True
+            opts["signal"] = True
             vpp = 1
         elif colorid == 18:
             shape = (height, width, 1)
             channels = ["raw"]
             image_format = "bayerYMCY"
             opts["encoded"] = True
+            opts["brightness"] = True
+            opts["signal"] = True
             vpp = 1
         elif colorid == 19:
             shape = (height, width, 1)
             channels = ["raw"]
             image_format = "bayerMYYC"
             opts["encoded"] = True
+            opts["brightness"] = True
+            opts["signal"] = True
             vpp = 1
         elif colorid == 100:
             shape = (height, width, 3)
             channels = ["R", "G", "B"]
             image_format = "flat"
             opts["brightness"] = True
+            opts["signal"] = True
             vpp = 3
         elif colorid == 101:
             shape = (height, width, 3)
             channels = ["B", "G", "R"]
             image_format = "flat"
             opts["brightness"] = True
+            opts["signal"] = True
             vpp = 3
         else:
             print(f"Unsupported colorid = {colorid}")

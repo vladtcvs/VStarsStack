@@ -44,9 +44,8 @@ def _work(reader,
         outfname = os.path.join(output_dir, f"{output_name}_{frame_id:06}.zip")
         add_description(dataframe, ProjectionType.Perspective, **params)
         img_format = project.config.telescope.camera.format
-        if img_format is not None:
-            if img_format != "flat" or "format" not in dataframe.params:
-                dataframe.add_parameter(img_format, "format")
+        if img_format != "COPY":
+            dataframe.add_parameter(img_format, "format")
         vstarstack.tool.common.check_dir_exists(outfname)
         dataframe.store(outfname)
 

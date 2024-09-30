@@ -43,9 +43,17 @@ def display(_project: vstarstack.tool.cfg.Project, argv: list):
     img1, _ = df1.get_channel(channel)
     img2, _ = df2.get_channel(channel)
 
+    img1 = img1 / np.amax(img1)
+    img2 = img2 / np.amax(img2)
 
-    img1 = np.clip(img1/np.amax(img1)*slope, 0, 1)
-    img2 = np.clip(img2/np.amax(img2)*slope, 0, 1)
+    median1 = np.median(img1)
+    median2 = np.median(img2)
+
+    slope1 = 0.5 / median1
+    slope2 = 0.5 / median2
+
+    img1 = np.clip(img1*slope1, 0, 1)
+    img2 = np.clip(img2*slope2, 0, 1)
 
     img1 = (img1 * 255).astype(np.uint8)
     img2 = (img2 * 255).astype(np.uint8)
