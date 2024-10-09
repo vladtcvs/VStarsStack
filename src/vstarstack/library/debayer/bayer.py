@@ -27,7 +27,7 @@ class DebayerMethod(Enum):
         INTERPOLATE - interpolate missing colors of each pixel from neighbours
     """
     SUBSAMPLE = 0,
-    MASK = 1,
+    CFA = 1,
     INTERPOLATE = 2,
 
 def generate_mask(name):
@@ -209,7 +209,7 @@ def debayer_dataframe(dataframe : vstarstack.library.data.DataFrame,
 
     if method == DebayerMethod.SUBSAMPLE:
         layers, weights = debayer_image_subsample(raw, weight, mask)
-    elif method == DebayerMethod.MASK:
+    elif method == DebayerMethod.CFA:
         layers, weights = debayer_image_mask(raw, weight, mask)
     elif method == DebayerMethod.INTERPOLATE:
         layers, weights = debayer_image_interpolate(raw, weight, mask)
@@ -217,7 +217,7 @@ def debayer_dataframe(dataframe : vstarstack.library.data.DataFrame,
         return None
 
     for color in layers:
-        dataframe.add_channel(layers[color], color, brightness=True, signal=True, normed=False)
+        dataframe.add_channel(layers[color], color, brightness=True, signal=True, normed=False, cfa=True)
         dataframe.add_channel(weights[color], f"weight-{color}", weight=True)
         dataframe.add_channel_link(color, f"weight-{color}", "weight")
 

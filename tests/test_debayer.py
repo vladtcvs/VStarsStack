@@ -67,7 +67,7 @@ def test_2():
     mask = vstarstack.library.debayer.bayer.generate_mask("RGGB")
     df = DataFrame(params = {"weight":1, "w" : 16, "h" : 16})
     df.add_channel(layer, "raw", brightness=True, signal=True, normed=False)
-    result = vstarstack.library.debayer.bayer.debayer_dataframe(df, mask, "raw", DebayerMethod.MASK)
+    result = vstarstack.library.debayer.bayer.debayer_dataframe(df, mask, "raw", DebayerMethod.CFA)
 
     assert "R" in result.get_channels()
     assert "G" in result.get_channels()

@@ -17,6 +17,8 @@ import os
 import numpy as np
 
 import vstarstack.library.data
+import vstarstack.library.image_process
+import vstarstack.library.image_process.togray
 import vstarstack.tool.cfg
 import vstarstack.library.common
 import vstarstack.tool.usage
@@ -35,22 +37,13 @@ def _process_file(project, filename, descfilename, detector):
         desc = {}
     desc["object"] = {}
 
-    gray = None
-
-    for channel in image.get_channels():
-        layer, opts = image.get_channel(channel)
-        if not opts["brightness"]:
-            continue
-
-        if gray is None:
-            gray = layer
-        else:
-            gray += layer
-
-    if gray is None:
-        return
-
+    print("detector = ", detector)
+    gray,_ = vstarstack.library.image_process.togray.df_to_gray(image)
     gray = gray / np.amax(gray)
+    if vstarstack.tool.cfg.DEBUG:
+        import matplotlib.pyplot as plt
+        plt.imshow(gray)
+        plt.show()
 
     thresh = project.config.objects.threshold
     if detector == "disc":

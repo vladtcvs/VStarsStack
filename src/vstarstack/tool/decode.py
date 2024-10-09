@@ -43,8 +43,8 @@ def _process_file(name, default_format, fname, output):
         method = vstarstack.tool.cfg.get_param("method", str, "SUBSAMPLE")
         if method == "SUBSAMPLE":
             method = DebayerMethod.SUBSAMPLE
-        elif method == "MASK":
-            method = DebayerMethod.MASK
+        elif method == "CFA":
+            method = DebayerMethod.CFA
         elif method == "INTERPOLATE":
             method = DebayerMethod.INTERPOLATE
 

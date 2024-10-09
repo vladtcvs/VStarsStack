@@ -13,19 +13,32 @@
 #
 
 import numpy as np
+import scipy
+import scipy.ndimage
+
+import vstarstack.library.data
 
 def nanmean_filter(image : np.ndarray,
                    radius : int):
     """nanmean filter"""
-    result = np.zeros(image.shape)
-    for y in range(image.shape[0]):
-        for x in range(image.shape[1]):
-            left = max(0, x-radius)
-            top  = max(0, y-radius)
-            right = min(image.shape[1], x+radius)
-            bottom = min(image.shape[0], y+radius)
-            subimage = image[top:bottom,left:right]
-            value = np.nanmean(subimage)
-            result[y,x] = value
+    fpsize=2*int(radius)+1
+    filtered = scipy.ndimage.generic_filter(image, np.nanmean, [fpsize, fpsize], mode='constant', cval=np.nan)
+    idx = np.where(np.isfinite(image))
+    filtered[idx] = image[idx]
+    return filtered
 
-    return result
+def filter_df(df : vstarstack.library.data.DataFrame, radius : int, in_place : bool = False):
+    """nanmean filter to DF"""
+    if in_place:
+        fixed = df
+    else:
+        fixed = vstarstack.library.data.DataFrame(df.params)
+    for channel in df.get_channels():
+        layer, opts = df.get_channel(channel)
+        if df.get_channel_option(channel, "encoded"):
+            continue
+        if df.get_channel_option(channel, "weight"):
+            continue
+        layer = nanmean_filter(layer, radius)
+        fixed.add_channel(layer, channel, **opts)
+    return fixed

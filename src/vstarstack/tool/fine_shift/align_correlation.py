@@ -13,12 +13,16 @@
 #
 
 
+
 import os
 import json
+import numpy as np
 import multiprocessing as mp
 
 from vstarstack.library.fine_movement.aligner import CorrelationAlignedBuilder
 from vstarstack.library.fine_movement.aligner import Aligner
+import vstarstack.library.image_process
+import vstarstack.library.image_process.togray
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
 import vstarstack.tool.configuration
@@ -45,7 +49,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
                name : str,
                name_ref : str,
                input_image_f : str,
-               image_ref : vstarstack.library.data.DataFrame,
+               light_ref : np.ndarray,
                align_f : str,
                pre_align_f : str | None,
                pre_align_ref : Aligner | None):
@@ -60,8 +64,8 @@ def align_file(project : vstarstack.tool.cfg.Project,
     pixels = project.config.fine_shift.correlation_grid
     area_radius = project.config.fine_shift.area_radius
     print(f"Maximal shift: {max_shift}")
-    image_w = image_ref.params["w"]
-    image_h = image_ref.params["h"]
+    image_w = light_ref.shape[1]
+    image_h = light_ref.shape[0]
     aligner_factory = create_aligner(project,
                                      image_w,
                                      image_h,
@@ -70,8 +74,8 @@ def align_file(project : vstarstack.tool.cfg.Project,
                                      pixels,
                                      2)
 
-    light, _ = vstarstack.library.common.df_to_light(df)
-    light_ref, _ = vstarstack.library.common.df_to_light(image_ref)
+    light,_ = vstarstack.library.image_process.togray.df_to_gray(df)
+    light = light.astype(np.float64)
 
     if pre_align_f is None or not os.path.isfile(pre_align_f):
         pre_align = None
@@ -106,9 +110,16 @@ def align(project: vstarstack.tool.cfg.Project, argv: list):
 
     files = vstarstack.tool.common.listfiles(npys, ".zip")
     name0, input_image0_f = files[0]
+    print("Loading image 0")
     input_image0 = vstarstack.library.data.DataFrame.load(input_image0_f)
     if input_image0 is None:
         raise Exception("No REFERENCE!")
+    light0,_ = vstarstack.library.image_process.togray.df_to_gray(input_image0)
+    light0 = light0.astype(np.float64)
+    if vstarstack.tool.cfg.DEBUG:
+        import matplotlib.pyplot as plt
+        plt.imshow(light0)
+        plt.show()
 
     if pre_aligns is not None:
         fname = os.path.join(pre_aligns, name0 + ".json")
@@ -121,7 +132,7 @@ def align(project: vstarstack.tool.cfg.Project, argv: list):
                  name,
                  name0,
                  input_image_f,
-                 input_image0,
+                 light0,
                  os.path.join(aligns, name + ".json"),
                  os.path.join(pre_aligns, name + ".json") if pre_aligns is not None else None,
                  pre_align0)

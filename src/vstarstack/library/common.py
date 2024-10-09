@@ -57,31 +57,47 @@ def getpixel_linear(img, y, x):
 
     return True, imm * ymc*xmc + imp * ymc*xpc + ipm * ypc*xmc + ipp * ypc*xpc
 
-def df_to_light(df : vstarstack.library.data.DataFrame):
-    light = None
-    weight = None
+def df_weight_0_to_nan(df : vstarstack.library.data.DataFrame, in_place : bool = False):
+    """Repalce pixels with weight = 0 to nan"""
+    if in_place:
+        fixed = df
+    else:
+        fixed = vstarstack.library.data.DataFrame(df.params)
     for channel in df.get_channels():
         layer, opts = df.get_channel(channel)
-        layer_w = None
-        if not opts["brightness"]:
+        if df.get_channel_option(channel, "encoded"):
             continue
-        if channel in df.links["weight"]:
-            layer_w,_ = df.get_channel(df.links["weight"][channel])
+        if df.get_channel_option(channel, "weight"):
+            continue
 
-        if light is None:
-            light = layer
-            if layer_w is not None:
-                weight = layer_w
-        else:
-            light = light + layer
-            if layer_w is not None:
-                weight = weight + layer_w
+        weight, _, _ = df.get_linked_channel(channel, "weight")
+        copy = np.copy(layer)
+        copy = copy.astype('float32')
+        copy[np.where(weight == 0)] = np.nan
+        fixed.add_channel(copy, channel, **opts)
+    return fixed
 
-    if weight is not None:
-        light = light / weight
-        light[np.where(weight == 0)] = 0
-        weight[np.where(weight != 0)] = 1
-    return light, weight
+def df_weight_0_to_0(df : vstarstack.library.data.DataFrame, in_place : bool = False):
+    """Repalce pixels with weight = 0 to nan"""
+    if in_place:
+        fixed = df
+    else:
+        fixed = vstarstack.library.data.DataFrame(df.params)
+    for channel in df.get_channels():
+        layer, opts = df.get_channel(channel)
+        if df.get_channel_option(channel, "encoded"):
+            continue
+        if df.get_channel_option(channel, "weight"):
+            fixed.add_channel(layer, channel, **opts)
+            continue
+
+        weight, _, _ = df.get_linked_channel(channel, "weight")
+        copy = np.copy(layer)
+        copy = copy.astype('float32')
+        copy[np.where(weight == 0)] = 0
+        fixed.add_channel(copy, channel, **opts)
+    fixed.links = df.links
+    return fixed
 
 def getpixel_none(img, y, x):
     x = round(x)
