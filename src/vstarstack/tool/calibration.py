@@ -116,6 +116,14 @@ def _process_build_flat_sky(_project : vstarstack.tool.cfg.Project,
     vstarstack.tool.common.check_dir_exists(flat_fname)
     flat.store(flat_fname)
 
+def _process_approximate_flat(_project : vstarstack.tool.cfg.Project,
+                              argv : list[str]):
+    input_fname = argv[0]
+    output_fname = argv[1]
+    df = vstarstack.library.data.DataFrame.load(input_fname)
+    df = vstarstack.library.calibration.flat.approximate_flat_image(df)
+    df.store(output_fname)
+
 commands = {
     "flatten": (_process_flatten,
                 "Flatten image",
@@ -131,5 +139,8 @@ commands = {
                            "flats/ flat.zip"),
     "build-flat-sky" : (_process_build_flat_sky,
                            "Create flat image - use sky images",
-                           "flats/ flat.zip")
+                           "flats/ flat.zip"),
+    "approximate-flat" : (_process_approximate_flat,
+                          "Approximate flat with polynomic function",
+                          "original_flat.zip result_flat.zip")
 }
