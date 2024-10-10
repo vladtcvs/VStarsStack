@@ -38,4 +38,4 @@ jobs:
           vstarstack
       - name: Test library with pytest
         run: |
-          pytest --cov-fail-under=40 --cov=vstarstack.library tests/
+          pytest --cov-fail-under=48 --cov=vstarstack.library tests/
