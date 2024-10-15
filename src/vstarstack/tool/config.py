@@ -46,6 +46,9 @@ _module_configuration = {
             "D": (float, 100.0),
         },
     },
+    "shift" : {
+        "interpolate" : (bool, None),
+    },
     "merge" : {
         "sigma_clip_coefficient_begin" : (float, 4.0),
         "sigma_clip_coefficient_end" : (float, 2.0),
