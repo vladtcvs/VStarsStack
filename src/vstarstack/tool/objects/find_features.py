@@ -17,6 +17,8 @@ import json
 import cv2
 import numpy as np
 
+import vstarstack.library.image_process
+import vstarstack.library.image_process.togray
 import vstarstack.library.projection
 import vstarstack.library.projection.tools
 import vstarstack.tool.common
@@ -64,7 +66,7 @@ def _proj_find_keypoints_orb(files, num_splits, param, features_path):
     for name, fname in files:
         print(f"Processing {name}")
         dataframe = vstarstack.library.data.DataFrame.load(fname)
-        gray, _ = vstarstack.library.common.df_to_light(dataframe)
+        gray,_ = vstarstack.library.image_process.togray.df_to_gray(dataframe)
 
         ptype, pdesc = vstarstack.library.projection.tools.extract_description(dataframe)
         proj = vstarstack.library.projection.tools.build_projection(ptype, pdesc, gray.shape)
@@ -79,7 +81,7 @@ def _proj_find_keypoints_brightness(files, num_splits, param, orb_param, feature
     for name, fname in files:
         print(f"Processing {name}")
         dataframe = vstarstack.library.data.DataFrame.load(fname)
-        gray, _ = vstarstack.library.common.df_to_light(dataframe)
+        gray,_ = vstarstack.library.image_process.togray.df_to_gray(dataframe)
 
         ptype, pdesc = vstarstack.library.projection.tools.extract_description(dataframe)
         proj = vstarstack.library.projection.tools.build_projection(ptype, pdesc, gray.shape)
@@ -138,7 +140,7 @@ def display_features(project: vstarstack.tool.cfg.Project, argv: list[str]):
     features_fname = argv[1]
     print(f"{image_fname} - {features_fname}")
     df = vstarstack.library.data.DataFrame.load(image_fname)
-    light, _ = vstarstack.library.common.df_to_light(df)
+    light,_ = vstarstack.library.image_process.togray.df_to_gray(df)
     slope = vstarstack.tool.cfg.get_param("multiply", float, 1)
 
     light = np.clip(light/np.amax(light)*slope, 0, 1)

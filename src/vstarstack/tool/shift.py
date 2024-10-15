@@ -57,14 +57,17 @@ def select_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
     with open(selected_shift, "w", encoding='utf8') as f:
         json.dump(serialized[basic_name], f, ensure_ascii=False, indent=4)
 
-def _make_shift_same_size(name : str, filename : str, shift : Movement | None, outfname : str):
+def _make_shift_same_size(name : str, filename : str,
+                          shift : Movement | None,
+                          outfname : str,
+                          interpolate : bool | None):
     if shift is None:
         print(f"Skip {name}")
         return
     print(f"Processing {name}")
     dataframe = vstarstack.library.data.DataFrame.load(filename)
     print(f"Loaded {name}")
-    result = vstarstack.library.movement.move_image.move_dataframe(dataframe, shift)
+    result = vstarstack.library.movement.move_image.move_dataframe(dataframe, shift, interpolate=interpolate)
     print(f"Transformed {name}")
     vstarstack.tool.common.check_dir_exists(outfname)
     result.store(outfname)
@@ -75,7 +78,8 @@ def _make_shift_extended_size(name : str, filename : str,
                               outfname : str,
                               output_shape : tuple,
                               output_proj : str,
-                              output_proj_desc : dict):
+                              output_proj_desc : dict,
+                              interpolate : bool | None):
     if shift is None:
         print(f"Skip {name}")
         return
@@ -88,7 +92,8 @@ def _make_shift_extended_size(name : str, filename : str,
     result = vstarstack.library.movement.move_image.move_dataframe(dataframe, shift,
                                                                    input_proj=input_proj,
                                                                    output_proj=output_proj,
-                                                                   output_shape=output_shape)
+                                                                   output_shape=output_shape,
+                                                                   interpolate=interpolate)
     print(f"Transformed {name}")
     vstarstack.tool.common.check_dir_exists(outfname)
     result.store(outfname)
@@ -100,10 +105,12 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
         npy_dir = argv[0]
         shifts_fname = argv[1]
         shifted_dir = argv[2]
+        interpolate = project.config.shift.interpolate
     else:
         npy_dir = project.config.paths.npy_fixed
         shifts_fname = project.config.paths.absolute_shifts
         shifted_dir = project.config.paths.aligned
+        interpolate = project.config.shift.interpolate
 
     with open(shifts_fname, encoding='utf8') as file:
         serialized = json.load(file)
@@ -113,7 +120,7 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
 
     images = vstarstack.tool.common.listfiles(npy_dir, ".zip")
 
-    args = [(name, filename, shifts[name] if name in shifts else None, os.path.join(shifted_dir, name + ".zip")) 
+    args = [(name, filename, shifts[name], interpolate if name in shifts else None, os.path.join(shifted_dir, name + ".zip")) 
             for name, filename in images]
     with mp.Pool(ncpu) as pool:
         pool.starmap(_make_shift_same_size, args)
@@ -194,10 +201,12 @@ def apply_shift_extended(project: vstarstack.tool.cfg.Project, argv: list[str]):
         npy_dir = argv[0]
         shifts_fname = argv[1]
         shifted_dir = argv[2]
+        interpolate = project.config.shift.interpolate
     else:
         npy_dir = project.config.paths.npy_fixed
         shifts_fname = project.config.paths.absolute_shifts
         shifted_dir = project.config.paths.aligned
+        interpolate = project.config.shift.interpolate
 
     with open(shifts_fname, encoding='utf8') as file:
         serialized = json.load(file)
@@ -218,6 +227,7 @@ def apply_shift_extended(project: vstarstack.tool.cfg.Project, argv: list[str]):
              output_shape,
              output_proj,
              output_proj_desc,
+             interpolate,
             )
             for name, filename in images]
     with mp.Pool(ncpu) as pool:

@@ -22,6 +22,7 @@ import vstarstack.library.data
 import vstarstack.library.common
 import vstarstack.library.projection.tools
 from vstarstack.library.stars import detect
+import vstarstack.library.image_process.togray
 
 def detect_stars(projection,
                  gray : np.ndarray):
@@ -49,18 +50,7 @@ def get_brightest(stars, N, mindistance):
 def _process_file(name, fname, jsonfile, num_stars, mindist):
     """Process single file"""
     image = vstarstack.library.data.DataFrame.load(fname)
-
-    sources = []
-    for channel in image.get_channels():
-        layer, options = image.get_channel(channel)
-        if not options["brightness"]:
-            continue
-        layer = layer / np.amax(layer)
-        sources.append(layer)
-    if len(sources) == 0:
-        return
-    gray = sum(sources)
-
+    gray,_ = vstarstack.library.image_process.togray.df_to_gray(image)
     projection = vstarstack.library.projection.tools.get_projection(image)
     stars = detect_stars(projection, gray)
     print("Detected ", len(stars))

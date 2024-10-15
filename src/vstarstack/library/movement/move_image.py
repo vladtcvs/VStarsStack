@@ -23,8 +23,6 @@ from vstarstack.library.data import DataFrame
 import vstarstack.library.projection.tools
 import vstarstack.library.movement.basic_movement as basic_movement
 
-from vstarstack.library.common import getpixel
-
 def _generate_points(height, width):
     """Generate grid of pixel coordinates"""
     points = np.zeros((height*width, 2), dtype='int')
@@ -40,7 +38,8 @@ def move_image(image: np.ndarray,
                input_proj, output_proj,*,
                image_weight: float = 1,
                image_weight_layer: np.ndarray | None = None,
-               output_shape: tuple | None = None):
+               output_shape: tuple | None = None,
+               interpolate : bool = True):
     """
     Apply movement to image
     
@@ -52,6 +51,7 @@ def move_image(image: np.ndarray,
         image_weight (float) - weight of input image, if weight layer is not provided
         image_weight_layer (np.ndarray) - weight layer of input image
         output_shape (tuple(h,w)) - dimensions of output image
+        interpolate (bool) - whether interpolation should be applied during movement
     Returns:
         shifted image, shifted layer
     """
@@ -84,7 +84,10 @@ def move_image(image: np.ndarray,
         transform_array[y, x, 1] = orig_x
 
     crdtf = lambda pos : tuple(transform_array[pos[0], pos[1], :])
-    shifted = scipy.ndimage.geometric_transform(image, crdtf, output_shape=shape, order=3)
+    if interpolate:
+        shifted = scipy.ndimage.geometric_transform(image, crdtf, output_shape=shape, order=3)
+    else:
+        shifted = scipy.ndimage.geometric_transform(image, crdtf, output_shape=shape, order=0)
     shifted_weight_layer = scipy.ndimage.geometric_transform(image_weight_layer, crdtf, output_shape=shape, order=3)
     return shifted, shifted_weight_layer
 
@@ -92,7 +95,8 @@ def move_dataframe(dataframe: DataFrame,
                    transformation: basic_movement.Movement,*,
                    input_proj = None,
                    output_proj = None,
-                   output_shape : tuple | None = None):
+                   output_shape : tuple | None = None,
+                   interpolate: bool | None = None):
     """Apply movement to dataframe
     Parameters:
         dataframe (DataFrame) - input dataframe
@@ -100,6 +104,7 @@ def move_dataframe(dataframe: DataFrame,
         input_proj (Projection) - input image projection
         output_proj (Projection) - output image projection
         output_shape (tuple(h,w)) - dimensions of output image
+        interpolate (bool|None) - apply spline interpolation. If None, then interpolation False when CFA layer
     Returns:
         shifted image, shifted layer"""
 
@@ -132,12 +137,18 @@ def move_dataframe(dataframe: DataFrame,
             else:
                 weight = np.ones(image.shape)
 
+        if interpolate is not None:
+            apply_interpolate = interpolate
+        else:
+            apply_interpolate = not dataframe.get_channel_option(channel, "cfa")
+
         shifted, shifted_weight = move_image(image,
                                              transformation,
                                              input_proj,
                                              output_proj,
                                              image_weight_layer=weight,
-                                             output_shape=output_shape)
+                                             output_shape=output_shape,
+                                             interpolate=apply_interpolate)
 
         output_dataframe.add_channel(shifted, channel, **opts)
         output_dataframe.add_channel(shifted_weight, weight_channel, weight=True)
