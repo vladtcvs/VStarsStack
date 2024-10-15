@@ -18,6 +18,7 @@ import json
 import matplotlib.pyplot as plt
 import cv2
 
+import vstarstack.library.image_process.togray
 import vstarstack.library.data
 import vstarstack.tool.cfg
 import vstarstack.tool.cfg
@@ -25,12 +26,11 @@ import vstarstack.tool.cfg
 def show(project: vstarstack.tool.cfg.Project, argv: list):
     """Display detected stars"""
     image = vstarstack.library.data.DataFrame.load(argv[0])
-    channel = argv[1]
-    with open(argv[2], encoding='utf8') as f:
+    with open(argv[1], encoding='utf8') as f:
         descs = json.load(f)
 
     slope = vstarstack.tool.cfg.get_param("multiply", float, 1)
-    layer, _ = image.get_channel(channel)
+    layer, _ = vstarstack.library.image_process.togray.df_to_gray(image)
     layer = np.clip(layer/np.amax(layer)*slope, 0, 1)
     layer = (layer * 255).astype(np.uint8)
 
@@ -44,18 +44,6 @@ def show(project: vstarstack.tool.cfg.Project, argv: list):
 
     plt.imshow(showed)
     plt.show()
-
-def get_brightness(df):
-    light = None
-    for channel in df.get_channels():
-        layer, opts = df.get_channel(channel)
-        if not opts["brightness"]:
-            continue
-        if light is None:
-            light = layer
-        else:
-            light = light + layer
-    return light
 
 def show_match(project: vstarstack.tool.cfg.Project, argv: list):
     """Display detected stars"""
@@ -73,8 +61,8 @@ def show_match(project: vstarstack.tool.cfg.Project, argv: list):
         match_table = json.load(f)
 
     slope = vstarstack.tool.cfg.get_param("multiply", float, 1)
-    layer1 = get_brightness(image1)
-    layer2 = get_brightness(image2)
+    layer1 = vstarstack.library.image_process.togray.df_to_gray(image1)
+    layer2 = vstarstack.library.image_process.togray.df_to_gray(image2)
     layer1 = np.clip(layer1/np.amax(layer1)*slope, 0, 1)
     layer1 = (layer1 * 255).astype(np.uint8)
     layer2 = np.clip(layer2/np.amax(layer2)*slope, 0, 1)

@@ -299,7 +299,7 @@ def _select_bpp(_project, argv):
 commands = {
     "show": (_show, "show image"),
     "convert": (_convert, "convert image"),
-    "cut": (_cut, "cut part of image"),
+    "cut": (_cut, "cut part of image", "path/ <left> <top> <right> <bottom> out/"),
     "rename-channel": (_rename_channel, "filename.zip original_name target_name - rename channel"),
     "info": (_exposures, "display image info", "(file.zip | path/)"),
     "bpp" : (_select_bpp, "select format", "(input.zip | input/) (float16 | float32 | float64) (output.zip | output/)")

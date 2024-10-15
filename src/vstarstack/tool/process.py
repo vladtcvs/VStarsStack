@@ -25,7 +25,7 @@ commands = {
                   "read source images to npz"),
     "decode": (vstarstack.tool.decode.run,
                "decode RAW images from bayer/yuv to RGB",
-               "input/ output/ [--method=(SUBSAMPLE | MASK | INTERPOLATE)]"),
+               "input/ output/ [--method=(SUBSAMPLE | CFA | INTERPOLATE)]"),
     "process": ("vstarstack.tool.image_processing.fixes",
                 "process - make optical fixes and other image fixes"),
     "calibration": ("vstarstack.tool.calibration",
