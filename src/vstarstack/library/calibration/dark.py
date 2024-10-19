@@ -20,10 +20,14 @@ def remove_dark(dataframe : vstarstack.library.data.DataFrame,
                 dark : vstarstack.library.data.DataFrame):
     """Remove dark from image"""
     dark_channel_name = None
-    for channel in dark.get_channels():
-        if dark.get_channel_option(channel, "brightness"):
-            dark_channel_name = channel
-            break
+    if "L" in dark.get_channels():
+        dark_channel_name = "L"
+    else:
+        for channel in dark.get_channels():
+            if dark.get_channel_option(channel, "brightness"):
+                dark_channel_name = channel
+                break
+
     if dark_channel_name is None:
         print("Can not find brightness channel, skip")
         return None

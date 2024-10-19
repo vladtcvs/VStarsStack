@@ -64,7 +64,7 @@ def readfits(filename: str):
             if "FILTER" in plane.header:
                 channel_name = plane.header["FILTER"].strip()
             else:
-                channel_name = "Y"
+                channel_name = "L"
             slice_names.append(channel_name)
         elif shape[0] == 3:
             slice_names.append('R')
