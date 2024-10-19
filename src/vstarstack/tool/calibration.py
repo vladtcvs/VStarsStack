@@ -133,13 +133,18 @@ def _process_build_flat_sky(project : vstarstack.tool.cfg.Project,
     vstarstack.tool.common.check_dir_exists(flat_fname)
     flat.store(flat_fname)
 
-def _process_approximate_flat(_project : vstarstack.tool.cfg.Project,
+def _process_approximate_flat(project : vstarstack.tool.cfg.Project,
                               argv : list[str]):
-    input_fname = argv[0]
-    output_fname = argv[1]
+    if len(argv) >= 2:
+        input_fname = argv[0]
+        flat_fname = argv[1]
+    else:
+        input_fname = project.config.paths.flat.result
+        flat_fname = project.config.paths.flat.result
+
     df = vstarstack.library.data.DataFrame.load(input_fname)
     df = vstarstack.library.calibration.flat.approximate_flat_image(df)
-    df.store(output_fname)
+    df.store(flat_fname)
 
 commands = {
     "flatten": (_process_flatten,
