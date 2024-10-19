@@ -23,7 +23,9 @@ from vstarstack.library.projection.projections import OrthographicProjection
 
 def add_description(dataframe : vstarstack.library.data.DataFrame, projection : ProjectionType, **argv):
     """Add projection description to dataframe"""
-    if projection == ProjectionType.Perspective:
+    if projection == ProjectionType.NoneProjection:
+        name = "none"
+    elif projection == ProjectionType.Perspective:
         F = argv["F"]
         kw = argv["kw"]
         kh = argv["kh"]
@@ -51,7 +53,9 @@ def extract_description(dataframe : vstarstack.library.data.DataFrame) -> typing
     """Extract projection description from dataframe"""
     projection = dataframe.get_parameter("projection")
     if projection is None:
-        return None
+        return None, {}
+    elif projection == "none":
+        return ProjectionType.NoneProjection, {}
     elif projection == "perspective":
         return ProjectionType.Perspective, {
             "F" : dataframe.get_parameter("projection_perspective_F"),
@@ -75,7 +79,10 @@ def build_projection(projection: ProjectionType, desc : dict, shape : tuple):
     w = shape[1]
     h = shape[0]
 
-    if projection == ProjectionType.Perspective:
+    if projection == ProjectionType.NoneProjection:
+        raise Exception("Trying to build \"NoneProjection\"")
+
+    elif projection == ProjectionType.Perspective:
         F = desc["F"]
         kw = desc["kw"]
         kh = desc["kh"]
@@ -90,6 +97,9 @@ def build_projection(projection: ProjectionType, desc : dict, shape : tuple):
         angle = desc["angle"]
         rot = desc["rot"]
         return OrthographicProjection(w, h, a, b, angle, rot)
+
+    else:
+        raise Exception("Trying to build some unknown projection")
 
 def get_projection(dataframe : vstarstack.library.data.DataFrame):
     """Get projection from dataframe"""

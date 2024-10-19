@@ -87,7 +87,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
             num_stars = -1 # all stars
             mindist = 0.001
     else:
-        path = project.config.paths.npy_fixed
+        path = project.config.paths.light.npy
         jsonpath = project.config.paths.descs
         num_stars = project.config.stars.describe.num_main
         mindist = project.config.stars.describe.mindist

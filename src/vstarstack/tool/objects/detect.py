@@ -82,7 +82,7 @@ def _process(project, detector, argv):
             _process_file(project, input_path, output_path, detector)
     else:
         _process_path(project,
-                      project.config.paths.npy_fixed,
+                      project.config.paths.light.npy,
                       project.config.paths.descs,
                       detector)
 

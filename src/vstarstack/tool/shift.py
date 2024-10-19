@@ -107,7 +107,7 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
         shifted_dir = argv[2]
         interpolate = project.config.shift.interpolate
     else:
-        npy_dir = project.config.paths.npy_fixed
+        npy_dir = project.config.paths.light.npy
         shifts_fname = project.config.paths.absolute_shifts
         shifted_dir = project.config.paths.aligned
         interpolate = project.config.shift.interpolate
@@ -203,7 +203,7 @@ def apply_shift_extended(project: vstarstack.tool.cfg.Project, argv: list[str]):
         shifted_dir = argv[2]
         interpolate = project.config.shift.interpolate
     else:
-        npy_dir = project.config.paths.npy_fixed
+        npy_dir = project.config.paths.light.npy
         shifts_fname = project.config.paths.absolute_shifts
         shifted_dir = project.config.paths.aligned
         interpolate = project.config.shift.interpolate

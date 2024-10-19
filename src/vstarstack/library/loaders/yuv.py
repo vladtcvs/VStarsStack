@@ -46,7 +46,7 @@ def readyuv(fname: str, width: int, height: int):
             dataframe = vstarstack.library.data.DataFrame(params, tags)
             exptime = 1
 
-            dataframe.add_channel(yuv, "raw", encoded=True)
+            dataframe.add_channel(yuv, "raw", encoded=True, signal=True)
             dataframe.add_parameter("yuv422", "format")
             dataframe.add_parameter(exptime, "weight")
             yield dataframe

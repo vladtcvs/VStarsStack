@@ -67,8 +67,8 @@ def run(project : vstarstack.tool.cfg.Project, argv : list[str]):
         strength = int(argv[1])
         outputs = argv[2]
     else:
-        inputs = project.config.paths.npy_fixed
-        outputs = project.config.paths.npy_fixed
+        inputs = project.config.paths.light.npy
+        outputs = project.config.paths.light.npy
         strength = int(argv[0])
 
     if os.path.isdir(inputs):

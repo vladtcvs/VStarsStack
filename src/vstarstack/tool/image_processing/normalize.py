@@ -58,8 +58,8 @@ def _process(project: vstarstack.tool.cfg.Project, argv: list):
         else:
             _process_file(argv)
     else:
-        _process_dir([project.config.paths.npy_fixed,
-                      project.config.paths.npy_fixed])
+        _process_dir([project.config.paths.light.npy,
+                      project.config.paths.light.npy])
 
 def run(project: vstarstack.tool.cfg.Project, argv: list):
     _process(project, argv)

@@ -98,7 +98,7 @@ def find_points_orb(project: vstarstack.tool.cfg.Project, argv: list[str]):
         inputs = argv[0]
         features = argv[1]
     else:
-        inputs = project.config.paths.npy_fixed
+        inputs = project.config.paths.light.npy
         features = project.config.objects.features.path
 
     num_splits = project.config.objects.features.num_splits
@@ -114,7 +114,7 @@ def find_points_brightness(project: vstarstack.tool.cfg.Project, argv: list[str]
         inputs = argv[0]
         features = argv[1]
     else:
-        inputs = project.config.paths.npy_fixed
+        inputs = project.config.paths.light.npy
         features = project.config.objects.features.path
 
     num_splits = project.config.objects.features.num_splits

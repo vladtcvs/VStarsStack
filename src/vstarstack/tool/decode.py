@@ -81,5 +81,5 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
             _process_file(input_path, default_format, input_path, output_path)
     else:
         _process_path(default_format,
-                      project.config.paths.npy_orig,
-                      project.config.paths.npy_fixed)
+                      project.config.paths.light.npy,
+                      project.config.paths.light.npy)

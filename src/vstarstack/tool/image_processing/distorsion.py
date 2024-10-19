@@ -62,5 +62,5 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
         else:
             _process_file(distorsion, argv)
     else:
-        _process_dir(distorsion, [project.config.paths.npy_fixed,
-                                  project.config.paths.npy_fixed])
+        _process_dir(distorsion, [project.config.paths.light.npy,
+                                  project.config.paths.light.npy])

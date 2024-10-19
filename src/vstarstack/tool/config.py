@@ -24,11 +24,22 @@ _module_configuration = {
         "projection" : (str, "COPY"),
     },
     "paths": {
-        "original": (str, "orig", {"directory" : True}),
-        "npy_orig": (str, "npy_orig", {"directory" : True}),
-        "npy_fixed": (str, "npy", {"directory" : True}),
+        "light" : {
+            "original": (str, "orig/light", {"directory" : True}),
+            "npy": (str, "npy/light", {"directory" : True}),
+            "result" : (str, "light.zip"),
+        },
+        "flat" : {
+            "original": (str, "orig/flat", {"directory" : True}),
+            "npy": (str, "npy/flat", {"directory" : True}),
+            "result" : (str, "flat.zip"),
+        },
+        "dark" : {
+            "original": (str, "orig/dark", {"directory" : True}),
+            "npy": (str, "npy/dark", {"directory" : True}),
+            "result" : (str, "dark.zip"),
+        },
         "aligned": (str, "aligned", {"directory" : True}),
-        "output": (str, "sum.zip"),
         "descs" : (str, "descs", {"directory" : True}),
         "relative_shifts": (str, "shifts.json"),
         "absolute_shifts": (str, "shift.json"),

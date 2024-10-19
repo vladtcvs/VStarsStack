@@ -33,30 +33,37 @@ def _work(reader,
           project: vstarstack.tool.cfg.Project,
           input_file: str,
           output_dir: str,
-          output_name: str):
-    params = {
-        "F": project.config.telescope.scope.F,
-        "kh": project.config.telescope.camera.pixel_H / 1000,
-        "kw": project.config.telescope.camera.pixel_W / 1000,
-    }
+          output_name: str,
+          mode: str):
+    if mode == "dark" or mode == "flat":
+        projection = ProjectionType.NoneProjection
+        params = {}
+    else:
+        projection = ProjectionType.Perspective
+        params = {
+            "F": project.config.telescope.scope.F,
+            "kh": project.config.telescope.camera.pixel_H / 1000,
+            "kw": project.config.telescope.camera.pixel_W / 1000,
+        }
+
     print(f"File: {input_file}")
     for frame_id, dataframe in enumerate(reader(input_file)):
         outfname = os.path.join(output_dir, f"{output_name}_{frame_id:06}.zip")
-        add_description(dataframe, ProjectionType.Perspective, **params)
+        add_description(dataframe, projection, **params)
         img_format = project.config.telescope.camera.format
-        if img_format is not None:
-            if img_format != "flat" or "format" not in dataframe.params:
-                dataframe.add_parameter(img_format, "format")
+        if img_format != "COPY":
+            dataframe.add_parameter(img_format, "format")
+
         vstarstack.tool.common.check_dir_exists(outfname)
         dataframe.store(outfname)
 
-def _process_file(reader, project: vstarstack.tool.cfg.Project, argv : list):
+def _process_file(reader, project: vstarstack.tool.cfg.Project, argv : list, mode : str):
     input_file = argv[0]
     output_dir = argv[1]
     output_name = argv[2]
-    _work(reader, project, input_file, output_dir, output_name)
+    _work(reader, project, input_file, output_dir, output_name, mode)
 
-def _process_path(reader, exts, project: vstarstack.tool.cfg.Project, argv : list):
+def _process_path(reader, exts, project: vstarstack.tool.cfg.Project, argv : list, mode : str):
     """Process all files in directory"""
     input_dir = argv[0]
     output_dir = argv[1]
@@ -65,21 +72,33 @@ def _process_path(reader, exts, project: vstarstack.tool.cfg.Project, argv : lis
         files += vstarstack.tool.common.listfiles(input_dir, ext, recursive=True)
 
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
-        args = [(reader, project, filename, output_dir, name) for name, filename in files]
+        args = [(reader, project, filename, output_dir, name, mode) for name, filename in files]
         pool.starmap(_work, args)
 
 def _process_read(reader, exts, project: vstarstack.tool.cfg.Project, argv : list):
+    mode = vstarstack.tool.cfg.get_param("mode", str, "light")
     if len(argv) > 0:
         source_path = argv[0]
         if os.path.isdir(source_path):
-            _process_path(reader, exts, project, argv)
+            _process_path(reader, exts, project, argv, mode)
         else:
-            _process_file(reader, project, argv)
+            _process_file(reader, project, argv, mode)
     else:
-        _process_path(reader, exts, project, [
-                        project.config.paths.original,
-                        project.config.paths.npy_orig,
-                    ])
+        if mode == "light":
+            _process_path(reader, exts, project, [
+                        project.config.paths.light.original,
+                        project.config.paths.light.npy,
+                    ], mode)
+        elif mode == "flat":
+            _process_path(reader, exts, project, [
+                        project.config.paths.flat.original,
+                        project.config.paths.flat.npy,
+                    ], mode)
+        elif mode == "dark":
+            _process_path(reader, exts, project, [
+                        project.config.paths.dark.original,
+                        project.config.paths.dark.npy,
+                    ], mode)
 
 def _read_nef(project: vstarstack.tool.cfg.Project, argv: list):
     reader = vstarstack.library.loaders.nef.readnef
