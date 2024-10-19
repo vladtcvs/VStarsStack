@@ -50,7 +50,7 @@ _module_configuration = {
         "camera": {
             "pixel_W": (float, 3.0),
             "pixel_H": (float, 3.0),
-            "format": (str, "flat"),
+            "format": (str, "COPY"),
         },
         "scope": {
             "F": (float, 1000.0),
