@@ -42,12 +42,11 @@ vstarstack="vstarstack.entry:main"
 [project.urls]
 "Homepage" = "https://github.com/vladtcvs/VStarsStack"
 
-[tool.setuptools]
+#[tool.setuptools]
 #py-modules = ["src.c_modules.compile_c_modules"]
-#packages = ["vstarstack", "vstarstack.tool", "vstarstack.library"]
 
 [tool.setuptools.package-dir]
 "vstarstack" = "src/vstarstack"
 
-#[tool.setuptools.cmdclass]
-#build_py = "src.c_modules.compile_c_modules.build_py"
+[tool.setuptools.cmdclass]
+build_py = "src.c_modules.compile_c_modules.build_py"
