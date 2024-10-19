@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name        = "vstarstack"
 description = "Stacking astrophotos"
 version     = "0.2.1"
-readme      = "readme.md"
+readme      = "README.md"
 license     = {file = "LICENSE.txt"}
 requires-python = ">=3.10"
 dependencies = ["numpy",
@@ -44,7 +44,7 @@ vstarstack="vstarstack.entry:main"
 
 [tool.setuptools]
 #py-modules = ["src.c_modules.compile_c_modules"]
-packages = ["vstarstack", "vstarstack.tool", "vstarstack.library"]
+#packages = ["vstarstack", "vstarstack.tool", "vstarstack.library"]
 
 [tool.setuptools.package-dir]
 "vstarstack" = "src/vstarstack"
