@@ -31,7 +31,7 @@ jobs:
           pylint --rcfile=pylintrc src/vstarstack
       - name: Build & Install
         run: |
-          python -m build . --wheel -n
+          python -m build
           find ./dist/*.whl | xargs python -m pip install
       - name: Test that tools launches
         run: |
