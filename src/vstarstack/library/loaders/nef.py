@@ -34,8 +34,6 @@ def readnef(filename: str):
     with open(filename, 'rb') as file:
         tags = exifread.process_file(file)
 
-    print(tags)
-
     params = {
         "w": image.data.shape[1],
         "h": image.data.shape[0],
