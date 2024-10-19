@@ -101,7 +101,7 @@ def readser(fname: str):
         elif colorid == 8:
             shape = (height, width, 1)
             channels = ["raw"]
-            image_format = "bayerRGGB"
+            image_format = "bayer_2_2_RGGB"
             opts["encoded"] = True
             opts["brightness"] = True
             opts["signal"] = True
@@ -109,7 +109,7 @@ def readser(fname: str):
         elif colorid == 9:
             shape = (height, width, 1)
             channels = ["raw"]
-            image_format = "bayerGRBG"
+            image_format = "bayer_2_2_GRBG"
             opts["encoded"] = True
             opts["brightness"] = True
             opts["signal"] = True
@@ -117,7 +117,7 @@ def readser(fname: str):
         elif colorid == 10:
             shape = (height, width, 1)
             channels = ["raw"]
-            image_format = "bayerGBRG"
+            image_format = "bayer_2_2_GBRG"
             opts["encoded"] = True
             opts["brightness"] = True
             opts["signal"] = True
@@ -125,7 +125,7 @@ def readser(fname: str):
         elif colorid == 11:
             shape = (height, width, 1)
             channels = ["raw"]
-            image_format = "bayerBGGR"
+            image_format = "bayer_2_2_BGGR"
             opts["encoded"] = True
             opts["brightness"] = True
             opts["signal"] = True
@@ -133,7 +133,7 @@ def readser(fname: str):
         elif colorid == 16:
             shape = (height, width, 1)
             channels = ["raw"]
-            image_format = "bayerCYYM"
+            image_format = "bayer_2_2_CYYM"
             opts["encoded"] = True
             opts["brightness"] = True
             opts["signal"] = True
@@ -141,7 +141,7 @@ def readser(fname: str):
         elif colorid == 17:
             shape = (height, width, 1)
             channels = ["raw"]
-            image_format = "bayerYCMY"
+            image_format = "bayer_2_2_YCMY"
             opts["encoded"] = True
             opts["brightness"] = True
             opts["signal"] = True
@@ -149,7 +149,7 @@ def readser(fname: str):
         elif colorid == 18:
             shape = (height, width, 1)
             channels = ["raw"]
-            image_format = "bayerYMCY"
+            image_format = "bayer_2_2_YMCY"
             opts["encoded"] = True
             opts["brightness"] = True
             opts["signal"] = True
@@ -157,7 +157,7 @@ def readser(fname: str):
         elif colorid == 19:
             shape = (height, width, 1)
             channels = ["raw"]
-            image_format = "bayerMYYC"
+            image_format = "bayer_2_2_MYYC"
             opts["encoded"] = True
             opts["brightness"] = True
             opts["signal"] = True

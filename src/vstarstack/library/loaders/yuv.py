@@ -47,7 +47,7 @@ def readyuv(fname: str, width: int, height: int):
             exptime = 1
 
             dataframe.add_channel(yuv, "raw", encoded=True, signal=True)
-            dataframe.add_parameter("yuv422", "format")
+            dataframe.add_parameter("yuv_422", "format")
             dataframe.add_parameter(exptime, "weight")
             yield dataframe
             frame_id += 1
