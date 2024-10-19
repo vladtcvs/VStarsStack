@@ -18,11 +18,10 @@ import vstarstack.tool.common
 import vstarstack.tool.cfg
 
 def run(project: vstarstack.tool.cfg.Project, _argv: list):
-    orig = project.config.paths.npy_orig
-    fixed = project.config.paths.npy_fixed
+    orig = project.config.paths.light.npy
     shifted = project.config.paths.aligned
 
-    for path in [orig, fixed, shifted]:
+    for path in [orig, shifted]:
         files = vstarstack.tool.common.listfiles(path, ".zip")
         for _, filename in files:
             print(filename)

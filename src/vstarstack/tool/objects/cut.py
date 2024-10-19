@@ -22,9 +22,9 @@ import vstarstack.tool.common
 
 def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
     if len(argv) < 3:
-        npypath = project.config.paths.npy_fixed
+        npypath = project.config.paths.light.npy
         jsonpath = project.config.paths.descs
-        cutpath = project.config.paths.npy_fixed
+        cutpath = project.config.paths.light.npy
     else:
         npypath = argv[0]
         jsonpath = argv[1]

@@ -74,7 +74,7 @@ def align(project: vstarstack.tool.cfg.Project, argv: list):
         cluster_f = argv[1]
         aligns = argv[2]
     else:
-        npys = project.config.paths.npy_fixed
+        npys = project.config.paths.light.npy
         cluster_f = project.config.cluster.path
         aligns = project.config.fine_shift.aligns
 

@@ -59,8 +59,8 @@ def process(project: vstarstack.tool.cfg.Project, argv: list, model_name : str):
         else:
             process_file(argv, model_name)
     else:
-        process_dir([project.config.paths.npy_fixed,
-                     project.config.paths.npy_fixed], model_name)
+        process_dir([project.config.paths.light.npy,
+                     project.config.paths.light.npy], model_name)
 
 commands = {
     "isoline": (lambda project, argv: process(project, argv, "isoline"),

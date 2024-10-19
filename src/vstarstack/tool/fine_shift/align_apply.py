@@ -67,7 +67,7 @@ def apply(project: vstarstack.tool.cfg.Project, argv: list):
         else:
             subpixels = 1
     else:
-        npys = project.config.paths.npy_fixed
+        npys = project.config.paths.light.npy
         aligns = project.config.fine_shift.aligns
         subpixels = project.config.fine_shift.subpixels
         outputs = project.config.paths.aligned

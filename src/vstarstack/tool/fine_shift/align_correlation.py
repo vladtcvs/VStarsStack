@@ -104,7 +104,7 @@ def align(project: vstarstack.tool.cfg.Project, argv: list):
         else:
             pre_aligns = None
     else:
-        npys = project.config.paths.npy_fixed
+        npys = project.config.paths.light.npy
         aligns = project.config.fine_shift.aligns
         pre_aligns = project.config.fine_shift.aligns
 
