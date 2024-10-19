@@ -37,8 +37,8 @@ def _process_file(name, default_format, fname, output):
         mode = default_format
 
     print(f"Mode = {mode}")
-    if mode[:5] == "bayer":
-        mask_desc = mode[5:9]
+    if mode[:6] == "bayer_":
+        mask_desc = mode[6:]
         mask = vstarstack.library.debayer.bayer.generate_mask(mask_desc)
         method = vstarstack.tool.cfg.get_param("method", str, "SUBSAMPLE")
         if method == "SUBSAMPLE":
@@ -49,7 +49,7 @@ def _process_file(name, default_format, fname, output):
             method = DebayerMethod.INTERPOLATE
 
         dataframe = vstarstack.library.debayer.bayer.debayer_dataframe(dataframe, mask, "raw", method)
-    elif mode == "yuv422":
+    elif mode == "yuv_422":
         dataframe = vstarstack.library.debayer.yuv422.yuv_422_dataframe(dataframe, "raw")
     else:
         return

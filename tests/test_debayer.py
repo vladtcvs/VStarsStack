@@ -26,7 +26,7 @@ def test_1():
     layer[0::2,1::2] = 0.1 # G
     layer[1::2,0::2] = 0.3 # G
     layer[1::2,1::2] = 1.0 # B
-    mask = vstarstack.library.debayer.bayer.generate_mask("RGGB")
+    mask = vstarstack.library.debayer.bayer.generate_mask("2_2_RGGB")
     df = DataFrame(params = {"weight":1, "w" : 16, "h" : 16})
     df.add_channel(layer, "raw", brightness=True, signal=True, normed=False)
     result = vstarstack.library.debayer.bayer.debayer_dataframe(df, mask, "raw", DebayerMethod.SUBSAMPLE)
@@ -64,7 +64,7 @@ def test_2():
     layer[0::2,1::2] = 0.1 # G
     layer[1::2,0::2] = 0.3 # G
     layer[1::2,1::2] = 1.0 # B
-    mask = vstarstack.library.debayer.bayer.generate_mask("RGGB")
+    mask = vstarstack.library.debayer.bayer.generate_mask("2_2_RGGB")
     df = DataFrame(params = {"weight":1, "w" : 16, "h" : 16})
     df.add_channel(layer, "raw", brightness=True, signal=True, normed=False)
     result = vstarstack.library.debayer.bayer.debayer_dataframe(df, mask, "raw", DebayerMethod.CFA)
@@ -125,7 +125,7 @@ def test_3():
     layer[0::2,1::2] = 0.1 # G
     layer[1::2,0::2] = 0.3 # G
     layer[1::2,1::2] = 1.0 # B
-    mask = vstarstack.library.debayer.bayer.generate_mask("RGGB")
+    mask = vstarstack.library.debayer.bayer.generate_mask("2_2_RGGB")
     df = DataFrame(params = {"weight":1, "w" : 16, "h" : 16})
     df.add_channel(layer, "raw", brightness=True, signal=True, normed=False)
     result = vstarstack.library.debayer.bayer.debayer_dataframe(df, mask, "raw", DebayerMethod.INTERPOLATE)

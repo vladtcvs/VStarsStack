@@ -30,17 +30,28 @@ class DebayerMethod(Enum):
     CFA = 1,
     INTERPOLATE = 2,
 
-def generate_mask(name):
+def generate_mask(name : str):
     """Generate mask by name"""
-    used_colors = set(name)
+    items = name.split("_")
+    w = int(items[0])
+    h = int(items[1])
+
+    if w != 2 or h != 2:
+        raise NotImplementedError("Now only 2x2 bayer filters are supported")
+
+    colors = items[2]
+    used_colors = set(colors)
     mask = {}
     for color in used_colors:
-        mask[color] = [[0, 0], [0, 0]]
+        mask[color] = np.zeros((h,w))
 
-    pixels = ((0,0),(0,1),(1,0),(1,1))
+    pixels = []
+    for y in range(h):
+        for x in range(w):
+            pixels.append((y,x))
 
     for i, crd in enumerate(pixels):
-        mask[name[i]][crd[0]][crd[1]] = 1
+        mask[colors[i]][crd[0]][crd[1]] = 1
 
     result_mask = {}
     for color in used_colors:

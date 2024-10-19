@@ -31,5 +31,6 @@ def read_tags(filename):
             if name in tags:
                 res[tag_name] = float(tags[name].values[variant_id])
                 break
+    
 
     return res
