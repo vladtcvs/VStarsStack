@@ -51,7 +51,7 @@ def generate_mask(name : str):
             pixels.append((y,x))
 
     for i, crd in enumerate(pixels):
-        mask[name[i]][crd[0]][crd[1]] = 1
+        mask[colors[i]][crd[0]][crd[1]] = 1
 
     result_mask = {}
     for color in used_colors:
