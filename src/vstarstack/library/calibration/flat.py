@@ -179,7 +179,7 @@ def generate_flat(w : int, h : int, x0 : int, y0 : int, val0 : float, k_x : floa
 
 def detect_spots(image : np.ndarray, approximated : np.ndarray) -> np.ndarray:
     """Detect spots on original flat and append them to approximated flat"""
-    return image
+    return approximated
 
 def approximate_flat_image(flat : vstarstack.library.data.DataFrame) -> vstarstack.library.data.DataFrame:
     """Approximate flat"""
