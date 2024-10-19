@@ -44,7 +44,7 @@ vstarstack="vstarstack.entry:main"
 
 [tool.setuptools]
 #py-modules = ["src.c_modules.compile_c_modules"]
-packages = ["vstarstack"]
+packages = ["vstarstack", "vstarstack.tool", "vstarstack.library"]
 
 [tool.setuptools.package-dir]
 "vstarstack" = "src/vstarstack"
