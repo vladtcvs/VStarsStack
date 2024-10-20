@@ -1,6 +1,0 @@
-graft src/c_modules/clusterization/lib/include
-graft src/c_modules/fine_movement/libimagedeform/include
-graft src/c_modules/fine_movement/module
-graft src/c_modules/movements/lib
-graft src/c_modules/projections/lib
-graft src/c_modules/projections

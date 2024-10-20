@@ -1,7 +1,7 @@
 # Installation
 
 ```
-python3 -m build
+python3 setup.py install [--user]
 ```
 
 # Modes of image presentation
@@ -37,6 +37,12 @@ Command for work with stars beginning with `vstarstack stars`.
 ### detect
 
 `vstarstack stars detect` - detect stars on image
+
+### lonlat
+
+`vstarstack stars lonlat`
+
+If we use `sphere` mode, we transform `(y,x)` coordinates of detected stars into `(lat,lon)` coordinates, with `(0,0)` at center of image.
 
 ### describe
 
