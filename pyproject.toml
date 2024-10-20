@@ -43,7 +43,7 @@ vstarstack="vstarstack.entry:main"
 "Homepage" = "https://github.com/vladtcvs/VStarsStack"
 
 [tool.setuptools]
-#py-modules = ["src.c_modules.compile_c_modules"]
+py-modules = ["compile_c_modules"]
 
 #[tool.setuptools.packages]
 #find = {namespaces = false}
@@ -52,4 +52,4 @@ vstarstack="vstarstack.entry:main"
 "vstarstack" = "src/vstarstack"
 
 [tool.setuptools.cmdclass]
-build_py = "src.c_modules.compile_c_modules.build_py"
+build_py = "compile_c_modules.build_py"
