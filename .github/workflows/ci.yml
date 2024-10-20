@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11"]
+        python-version: ["3.10", "3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v3
@@ -28,10 +28,10 @@ jobs:
           python -m pip install -r requirements.txt
       - name: Lint with pylint
         run: |
-          pylint --rcfile=pylintrc --fail-under=9 src/
+          pylint --rcfile=pylintrc src/vstarstack
       - name: Build & Install
         run: |
-          python -m build . --wheel -n
+          python -m build
           find ./dist/*.whl | xargs python -m pip install
       - name: Test that tools launches
         run: |
