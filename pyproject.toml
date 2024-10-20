@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=61.0", "cython", "numpy"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name        = "vstarstack"
+description = "Stacking astrophotos"
+version     = "0.2.1"
+readme      = "README.md"
+license     = {file = "LICENSE.txt"}
+requires-python = ">=3.10"
+dependencies = ["numpy",
+                "astropy",
+                "rawpy <= 0.21.0",
+                "pillow",
+                "imageio",
+                "exifread",
+                "opencv-python",
+                "scikit-image",
+                "scipy",
+                "imutils",
+                "matplotlib",
+                "pytz"
+]
+
+authors = [
+  { name="Vladislav Tsendrovskii", email="vtcendrovskii@gmail.com" },
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
+
+keywords = ["astrophotography"]
+
+[project.scripts]
+vstarstack="vstarstack.entry:main"
+
+[project.urls]
+"Homepage" = "https://github.com/vladtcvs/VStarsStack"
+
+[tool.setuptools]
+py-modules = ["compile_c_modules"]
+packages = ['vstarstack', 'vstarstack.tool', 'vstarstack.library', 'vstarstack.tool.analyzers', 'vstarstack.tool.objects', 'vstarstack.tool.image_processing', 'vstarstack.tool.stars', 'vstarstack.tool.generators', 'vstarstack.tool.planets', 'vstarstack.tool.fine_shift', 'vstarstack.library.clusters', 'vstarstack.library.merge', 'vstarstack.library.loaders', 'vstarstack.library.sky_model', 'vstarstack.library.calibration', 'vstarstack.library.objects', 'vstarstack.library.debayer', 'vstarstack.library.movement', 'vstarstack.library.image_process', 'vstarstack.library.stars', 'vstarstack.library.projection', 'vstarstack.library.fine_movement']
+
+[tool.setuptools.package-dir]
+"vstarstack" = "src/vstarstack"
+
+[tool.setuptools.cmdclass]
+build_py = "compile_c_modules.build_py"
