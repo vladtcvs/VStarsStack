@@ -43,10 +43,11 @@ vstarstack="vstarstack.entry:main"
 "Homepage" = "https://github.com/vladtcvs/VStarsStack"
 
 [tool.setuptools]
+py-modules = ["_compile_c_modules"]
 packages = ['vstarstack', 'vstarstack.tool', 'vstarstack.library', 'vstarstack.tool.analyzers', 'vstarstack.tool.objects', 'vstarstack.tool.image_processing', 'vstarstack.tool.stars', 'vstarstack.tool.generators', 'vstarstack.tool.planets', 'vstarstack.tool.fine_shift', 'vstarstack.library.clusters', 'vstarstack.library.merge', 'vstarstack.library.loaders', 'vstarstack.library.sky_model', 'vstarstack.library.calibration', 'vstarstack.library.objects', 'vstarstack.library.debayer', 'vstarstack.library.movement', 'vstarstack.library.image_process', 'vstarstack.library.stars', 'vstarstack.library.projection', 'vstarstack.library.fine_movement']
 
 [tool.setuptools.package-dir]
 "vstarstack" = "src/vstarstack"
 
 [tool.setuptools.cmdclass]
-build_py = "compile_c_modules.build_py"
+build_py = "_compile_c_modules.build_py"
