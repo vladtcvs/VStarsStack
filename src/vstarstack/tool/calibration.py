@@ -86,20 +86,68 @@ def _process_remove_dark(_project : vstarstack.tool.cfg.Project,
     else:
         _process_file_remove_dark(input_path, dark, output_path)
 
+
+# automatic detect corresponding dark
+def _process_file_remove_dark_auto(input_fname : str,
+                                   lib : DarksLibrary,
+                                   dark_dfs : dict,
+                                   output_fname : str):
+    print(f"Processing {input_fname}")
+    dataframe = vstarstack.library.data.DataFrame.load(input_fname)
+    params = dataframe.params
+    exposure = params["exposure"]
+    gain = params["gain"]
+    if "temperature" in params:
+        temperature = params["temperature"]
+    else:
+        temperature = None
+
+    darks = lib.find_darks(exposure, gain, temperature)
+    if len(darks) == 0:
+        print(f"Can not find corresponsing dark for {input_fname}, skipping")
+        return
+    dark_fname = darks[0]["name"]
+    result = vstarstack.library.calibration.dark.remove_dark(dataframe, dark_dfs[dark_fname])
+    if result is None:
+        print(f"Can not remove dark from {input_fname}")
+    vstarstack.tool.common.check_dir_exists(output_fname)
+    result.store(output_fname)
+
+def _process_dir_remove_dark_auto(input_path : str,
+                                  lib : DarksLibrary,
+                                  dark_dfs : dict,
+                                  output_path : str):
+    files = vstarstack.tool.common.listfiles(input_path, ".zip")
+    with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
+        args = [(filename, lib, dark_dfs, os.path.join(output_path, name + ".zip")) for name, filename in files]
+        pool.starmap(_process_file_remove_dark_auto, args)
+
 def _process_remove_dark_auto(project : vstarstack.tool.cfg.Project,
                               argv : list[str]):
     input_path = argv[0]
     darks_path = argv[1]
     output_path = argv[2]
 
-    with open(os.path.join(darks_path, "darks.json")) as f:
-        library = json.load(f)
+    lib = DarksLibrary(delta_temperature=2)
+    darks = vstarstack.tool.common.listfiles(darks_path, ".zip")
+    dark_dfs = {}
+    for name, fname in darks:
+        print(f"Loading {name}")
+        df = vstarstack.library.data.DataFrame.load(fname)
+        params = df.params
+        exposure = params["exposure"]
+        gain = params["gain"]
+        if "temperature" in params:
+            temperature = params["temperature"]
+        else:
+            temperature = None
+        lib.append_dark(fname, exposure, gain, temperature)
+        dark_dfs[fname] = df
 
-    dark = vstarstack.library.data.DataFrame.load(dark_fname)
     if os.path.isdir(input_path):
-        _process_dir_remove_dark(input_path, dark, output_path)
+        _process_dir_remove_dark_auto(input_path, lib, dark_dfs, output_path)
     else:
-        _process_file_remove_dark(input_path, dark, output_path)
+        _process_file_remove_dark_auto(input_path, lib, dark_dfs, output_path)
 
 
 # building darks

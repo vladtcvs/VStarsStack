@@ -34,8 +34,13 @@ def remove_dark(dataframe : vstarstack.library.data.DataFrame,
 
     for channel in dataframe.get_channels():
         image, opts = dataframe.get_channel(channel)
-        if not opts["brightness"]:
-            print(f"Skipping {channel}")
+        if dataframe.get_channel_option(channel, "weight"):
+            continue
+        if not dataframe.get_channel_option(channel, "brightness"):
+            print(f"Skipping {channel}, not brightness")
+            continue
+        if dataframe.get_channel_option(channel, "dark-removed"):
+            print(f"Skipping {channel}, already dark removed")
             continue
 
         if channel in dark.get_channels():
@@ -44,6 +49,7 @@ def remove_dark(dataframe : vstarstack.library.data.DataFrame,
             dark_layer, _ = dark.get_channel(dark_channel_name)
 
         image = image - dark_layer
+        opts["dark-removed"] = True
         dataframe.replace_channel(image, channel, **opts)
     return dataframe
 

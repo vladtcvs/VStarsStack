@@ -14,8 +14,9 @@
 #
 
 import os
+from typing import Tuple
 
-def listfiles(path, ext=None, recursive=False):
+def listfiles(path, ext=None, recursive=False) -> list[Tuple[str,str]]:
     images = []
     for f in os.listdir(path):
         filename = os.path.abspath(os.path.join(path, f))

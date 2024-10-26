@@ -13,6 +13,7 @@
 #
 
 import json
+import math
 
 class DarksLibrary:
     """Library for managing darks"""
@@ -34,6 +35,14 @@ class DarksLibrary:
         with open(fname, encoding="utf8") as f:
             self.darks = json.load(f)
 
+    @staticmethod
+    def _delta_temperature(dark_temp : float, target_temp : float) -> float:
+        if target_temp is None:
+            return 0
+        if dark_temp is None:
+            return math.inf
+        return abs(dark_temp - target_temp)
+
     def find_darks(self, exposure : float | None, gain : float | None, temperature : float | None) -> list:
         """Find list of darks, which match parameters"""
         results = []
@@ -46,4 +55,5 @@ class DarksLibrary:
                 if abs(temperature - item["temperature"]) > self.delta_temp:
                     continue
             results.append(item)
+        results = sorted(results, key=lambda item : self._delta_temperature(item["temperature"], temperature))
         return results
