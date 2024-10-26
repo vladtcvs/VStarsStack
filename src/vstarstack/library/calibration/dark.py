@@ -40,7 +40,7 @@ def remove_dark(dataframe : vstarstack.library.data.DataFrame,
             print(f"Skipping {channel}, not brightness")
             continue
         if dataframe.get_channel_option(channel, "dark-removed"):
-            print(f"Skipping {channel}, already dark removed")
+            print(f"Skipping {channel}, dark already removed")
             continue
 
         if channel in dark.get_channels():
