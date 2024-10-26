@@ -39,6 +39,7 @@ _module_configuration = {
             "npy": (str, "npy/dark", {"directory" : True}),
             "result" : (str, "dark.zip"),
         },
+        "darks_library" : (str, "darks", {"directory" : True}), 
         "aligned": (str, "aligned", {"directory" : True}),
         "descs" : (str, "descs", {"directory" : True}),
         "relative_shifts": (str, "shifts.json"),

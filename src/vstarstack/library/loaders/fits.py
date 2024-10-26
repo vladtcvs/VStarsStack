@@ -52,10 +52,13 @@ def readfits(filename: str):
         else:
             params["gain"] = 1
 
+        if "CCD-TEMP" in plane.header:
+            params["temperature"] = float(plane.header["CCD-TEMP"])
+
         slice_names = []
 
-        dataframe = vstarstack.library.data.DataFrame(params, tags)
         params["weight"] = params["exposure"]*params["gain"]
+        dataframe = vstarstack.library.data.DataFrame(params, tags)
 
         if shape[0] == 1:
             if "FILTER" in plane.header:

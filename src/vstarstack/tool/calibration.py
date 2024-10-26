@@ -13,6 +13,7 @@
 #
 import os
 import multiprocessing as mp
+import json
 
 import vstarstack.tool.common
 import vstarstack.tool.cfg
@@ -82,6 +83,22 @@ def _process_remove_dark(_project : vstarstack.tool.cfg.Project,
         _process_dir_remove_dark(input_path, dark, output_path)
     else:
         _process_file_remove_dark(input_path, dark, output_path)
+
+def _process_remove_dark_auto(project : vstarstack.tool.cfg.Project,
+                              argv : list[str]):
+    input_path = argv[0]
+    darks_path = argv[1]
+    output_path = argv[2]
+
+    with open(os.path.join(darks_path, "darks.json")) as f:
+        library = json.load(f)
+
+    dark = vstarstack.library.data.DataFrame.load(dark_fname)
+    if os.path.isdir(input_path):
+        _process_dir_remove_dark(input_path, dark, output_path)
+    else:
+        _process_file_remove_dark(input_path, dark, output_path)
+
 
 # building darks
 def _process_build_dark(project : vstarstack.tool.cfg.Project,
@@ -153,6 +170,9 @@ commands = {
     "remove-dark": (_process_remove_dark,
                    "Substract dark from image",
                    "inputs/ dark.zip outputs/"),
+    "remove-dark-auto": (_process_remove_dark_auto,
+                   "Substract dark from image with using darks library",
+                   "inputs/ darks/ outputs/"),
     "build-dark" : (_process_build_dark,
                     "Create dark image",
                     "darks/ dark.zip"),
