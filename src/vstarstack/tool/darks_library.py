@@ -12,9 +12,11 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import json
+
 class DarksLibrary:
     """Library for managing darks"""
-    def __init__(self, delta_temperature : float | None):
+    def __init__(self, delta_temperature : float):
         self.delta_temp = delta_temperature
         self.darks = []
 
@@ -22,7 +24,18 @@ class DarksLibrary:
         """Append dark to library"""
         self.darks.append({"exposure":exposure, "gain":gain, "temperature":temperature, "name":name})
 
+    def store(self, fname):
+        """Save library to file"""
+        with open(fname, "w", encoding="utf8") as f:
+            json.dump(self.darks, f)
+
+    def load(self, fname):
+        """Load library from file"""
+        with open(fname, encoding="utf8") as f:
+            self.darks = json.load(f)
+
     def find_darks(self, exposure : float | None, gain : float | None, temperature : float | None) -> list:
+        """Find list of darks, which match parameters"""
         results = []
         for item in self.darks:
             if exposure != item["exposure"]:

@@ -23,6 +23,8 @@ import vstarstack.library.data
 import vstarstack.library.calibration.dark
 import vstarstack.library.calibration.flat
 
+from vstarstack.tool.darks_library import DarksLibrary
+
 # applying flats
 def _process_file_flatten(input_fname : str,
                           flat : vstarstack.library.data.DataFrame,
