@@ -1,6 +1,6 @@
 """Read YUV video to npy frames"""
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2022-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,13 +24,15 @@ def readyuv(fname: str, width: int, height: int):
     shape = (int(height*2), width)
 
     with open(fname, "rb") as files:
-        tags = {
-            "depth": 8,
-        }
+        tags = {}
 
         params = {
             "w": width,
             "h": height,
+            "format" : "yuv_422",
+            "exposure" : 1,
+            "gain" : 1,
+            "weight" : 1,
         }
 
         frame_id = 0
@@ -44,10 +46,6 @@ def readyuv(fname: str, width: int, height: int):
             print(f"\tprocessing frame {frame_id}")
 
             dataframe = vstarstack.library.data.DataFrame(params, tags)
-            exptime = 1
-
             dataframe.add_channel(yuv, "raw", encoded=True, signal=True)
-            dataframe.add_parameter("yuv_422", "format")
-            dataframe.add_parameter(exptime, "weight")
             yield dataframe
             frame_id += 1

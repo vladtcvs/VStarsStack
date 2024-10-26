@@ -1,6 +1,6 @@
 """Read SER images"""
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -192,6 +192,8 @@ def readser(fname: str):
             "w": width,
             "h": height,
             "format" : image_format,
+            "exposure" : 1,
+            "gain" : 1,
             "weight" : 1,
         }
 
@@ -206,12 +208,7 @@ def readser(fname: str):
                 frame = _read_to_npy(file, bpp, le16bit, shape)
                 params["UTC"] = utc
                 dataframe = vstarstack.library.data.DataFrame(params, tags)
-                exptime = 1
-                weight = np.ones(frame.data.shape[0:2])*exptime
                 index = 0
                 for index, channel in enumerate(channels):
                     dataframe.add_channel(frame[:, :, index], channel, **opts)
-                    if dataframe.get_channel_option(channel, "signal"):
-                        dataframe.add_channel(weight, "weight-"+channel, weight=True)
-                        dataframe.add_channel_link(channel, "weight-"+channel, "weight")
                 yield dataframe

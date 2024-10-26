@@ -1,6 +1,6 @@
 """Reading common image files: jpg/png/tiff"""
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
 
 import numpy as np
 from PIL import Image
+import exifread
 
 import vstarstack.library.common
 import vstarstack.library.data
@@ -26,32 +27,36 @@ def readjpeg(fname: str):
     shape = rgb.shape
     shape = (shape[0], shape[1])
 
-    tags = vstarstack.library.loaders.tags.read_tags(fname)
+    with open(fname, 'rb') as file:
+        tags = exifread.process_file(file)
+
     params = {
         "w": shape[1],
         "h": shape[0],
     }
 
-    try:
-        exposure = tags["shutter"]*tags["iso"]
-    except KeyError as _:
-        exposure = 1
+    if "EXIF ExposureTime" in tags:
+        tag = tags["EXIF ExposureTime"]
+        params["exposure"] = float(tag.values[0])
+    else:
+        params["exposure"] = 1
 
-    weight = np.ones((shape[0], shape[1]))*exposure
+    if "EXIF ISOSpeedRatings" in tags:
+        tag = tags["EXIF ISOSpeedRatings"]
+        params["gain"] = float(tag.values[0])
+    else:
+        params["gain"] = 1
+
+    params["weight"] = params["exposure"] * params["gain"]
 
     dataframe = vstarstack.library.data.DataFrame(params, tags)
-    dataframe.add_channel(weight, "weight", weight=True)
 
     if len(rgb.shape) == 3:
         dataframe.add_channel(rgb[:, :, 0], "R", brightness=True, signal=True)
         dataframe.add_channel(rgb[:, :, 1], "G", brightness=True, signal=True)
         dataframe.add_channel(rgb[:, :, 2], "B", brightness=True, signal=True)
-        dataframe.add_channel_link("R", "weight", "weight")
-        dataframe.add_channel_link("G", "weight", "weight")
-        dataframe.add_channel_link("B", "weight", "weight")
     elif len(rgb.shape) == 2:
         dataframe.add_channel(rgb[:, :], "L", brightness=True, signal=True)
-        dataframe.add_channel_link("L", "weight", "weight")
     else:
         # unknown shape!
         pass

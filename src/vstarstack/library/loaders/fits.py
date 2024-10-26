@@ -1,6 +1,6 @@
 """Reading FITS files"""
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2022-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,7 +13,6 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import numpy as np
 from astropy.io import fits
 
 import vstarstack.library.data
@@ -44,21 +43,19 @@ def readfits(filename: str):
             params["UTC"] = tags["DATE-OBS"]
 
         if "EXPTIME" in plane.header:
-            exptime = plane.header["EXPTIME"]
+            params["exposure"] = float(plane.header["EXPTIME"])
         else:
-            exptime = 1
+            params["exposure"] = 1
 
         if "GAIN" in plane.header:
-            gain = plane.header["GAIN"]
+            params["gain"] = float(plane.header["GAIN"])
         else:
-            gain = 1
+            params["gain"] = 1
 
         slice_names = []
 
         dataframe = vstarstack.library.data.DataFrame(params, tags)
-        weight_channel_name = "weight"
-        weight = np.ones((shape[1], shape[2]))*exptime*gain
-        dataframe.add_channel(weight, weight_channel_name, weight=True)
+        params["weight"] = params["exposure"]*params["gain"]
 
         if shape[0] == 1:
             if "FILTER" in plane.header:
@@ -76,6 +73,5 @@ def readfits(filename: str):
 
         for i, slice_name in enumerate(slice_names):
             dataframe.add_channel(original[i, :, :], slice_name, brightness=True, signal=True)
-            dataframe.add_channel_link(slice_name, weight_channel_name, "weight")
 
         yield dataframe

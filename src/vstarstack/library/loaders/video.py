@@ -1,6 +1,6 @@
 """Read video source file"""
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2022-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,7 +13,6 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import numpy as np
 import cv2
 
 import vstarstack.library.data
@@ -29,25 +28,19 @@ def read_video(fname: str):
         if not success:
             break
 
-        tags = {
-            "depth": 8,
-        }
+        tags = {}
 
         params = {
             "w": frame.shape[1],
             "h": frame.shape[0],
+            "exposure" : 1,
+            "gain" : 1,
+            "weight" : 1,
         }
-
-        exptime = 1
-        weight = np.ones((frame.shape[0], frame.shape[1]))*exptime
 
         dataframe = vstarstack.library.data.DataFrame(params, tags)
         dataframe.add_channel(frame[:, :, 0], "R", brightness=True, signal=True)
         dataframe.add_channel(frame[:, :, 1], "G", brightness=True, signal=True)
         dataframe.add_channel(frame[:, :, 2], "B", brightness=True, signal=True)
-        dataframe.add_channel(weight, "weight", weight=True)
-        dataframe.add_channel_link("R", "weight", "weight")
-        dataframe.add_channel_link("G", "weight", "weight")
-        dataframe.add_channel_link("B", "weight", "weight")
         yield dataframe
         frame_id += 1
