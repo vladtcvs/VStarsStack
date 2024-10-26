@@ -127,11 +127,11 @@ def move_dataframe(dataframe: DataFrame,
         if not dataframe.get_channel_option(channel, "signal"):
             continue
 
-        weight_channel = None
         if channel in dataframe.links["weight"]:
             weight_channel = dataframe.links["weight"][channel]
             weight, _ = dataframe.get_channel(weight_channel)
         else:
+            weight_channel = f"weight-{channel}"
             if (w := dataframe.get_parameter("weight")) is not None:
                 weight = np.ones(image.shape)*w
             else:
