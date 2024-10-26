@@ -43,12 +43,12 @@ def get_param(name, type_of_var, default):
 DEBUG = False
 if "DEBUG" in os.environ:
     DEBUG = os.environ["DEBUG"].lower() == "true"
-    print("Debug = {DEBUG}")
+    print(f"Debug = {DEBUG}")
 
 SINGLETHREAD = False
 if "SINGLETHREAD" in os.environ:
     SINGLETHREAD = os.environ["SINGLETHREAD"].lower() == "true"
-    print("Singlethread = {SINGLETHREAD}")
+    print(f"Singlethread = {SINGLETHREAD}")
 
 if not SINGLETHREAD:
     nthreads = max(int(mp.cpu_count())-1, 1)

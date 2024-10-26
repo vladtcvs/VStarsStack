@@ -1,6 +1,6 @@
 """Reading NEF image files"""
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
 
 import rawpy
 import exifread
-from exifread.classes import IfdTag
 
 import vstarstack.library.common
 import vstarstack.library.data
@@ -41,13 +40,17 @@ def readnef(filename: str):
 
     if "EXIF ExposureTime" in tags:
         tag = tags["EXIF ExposureTime"]
-        exposure = float(tag.values[0])
+        params["exposure"] = float(tag.values[0])
     else:
-        exposure = 1
+        params["exposure"] = 1
 
-    iso = 1
+    if "EXIF ISOSpeedRatings" in tags:
+        tag = tags["EXIF ISOSpeedRatings"]
+        params["gain"] = float(tag.values[0])
+    else:
+        params["gain"] = 1
 
-    exp = exposure * iso
+    params["weight"] = params["exposure"] * params["gain"]
 
     printable_tags = {}
     for tag_name in tags:
@@ -56,8 +59,4 @@ def readnef(filename: str):
     dataframe = vstarstack.library.data.DataFrame(params, printable_tags)
     dataframe.add_channel(image, "raw", encoded=True, brightness=True, signal=True)
     dataframe.add_parameter(bayer, "format")
-    dataframe.add_parameter(exp, "weight")
-    dataframe.add_parameter(exposure, "exposure")
-    dataframe.add_parameter(iso, "gain")
-
     yield dataframe

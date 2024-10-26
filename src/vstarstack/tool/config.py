@@ -60,6 +60,10 @@ _module_configuration = {
     "shift" : {
         "interpolate" : (bool, None),
     },
+    "darks" : {
+        "basic_temperature" : (float, -10),
+        "delta_temperature" : (float, 2),
+    },
     "merge" : {
         "sigma_clip_coefficient_begin" : (float, 4.0),
         "sigma_clip_coefficient_end" : (float, 2.0),
