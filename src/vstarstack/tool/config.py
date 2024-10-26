@@ -39,7 +39,6 @@ _module_configuration = {
             "npy": (str, "npy/dark", {"directory" : True}),
             "result" : (str, "dark.zip"),
         },
-        "darks_library" : (str, "darks", {"directory" : True}), 
         "aligned": (str, "aligned", {"directory" : True}),
         "descs" : (str, "descs", {"directory" : True}),
         "relative_shifts": (str, "shifts.json"),
@@ -60,6 +59,10 @@ _module_configuration = {
     },
     "shift" : {
         "interpolate" : (bool, None),
+    },
+    "darks" : {
+        "basic_temperature" : (float, -10),
+        "delta_temperature" : (float, 2),
     },
     "merge" : {
         "sigma_clip_coefficient_begin" : (float, 4.0),

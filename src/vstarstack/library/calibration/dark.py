@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2022-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,6 +12,8 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import math
+from typing import Generator
 import vstarstack.library.common
 import vstarstack.library.data
 import vstarstack.library.merge.simple_mean
@@ -53,7 +55,69 @@ def remove_dark(dataframe : vstarstack.library.data.DataFrame,
         dataframe.replace_channel(image, channel, **opts)
     return dataframe
 
-def prepare_darks(images : vstarstack.library.common.IImageSource
-                  ) -> vstarstack.library.data.DataFrame:
+class TemperatureIndex:
+    def __init__(self, delta_temperature : float, basic_temperature : float):
+        self.dt = delta_temperature
+        self.bt = basic_temperature
+
+    def temperature_to_index(self, temperature : float) -> int | None:
+        if temperature is None or self.bt is None or self.dt is None:
+            return None
+        return math.floor((temperature - self.bt) / self.dt + 0.5)
+
+    def index_to_temperature(self, index : int) -> float:
+        if index is None or self.bt is None or self.dt is None:
+            return None
+        return index * self.dt + self.bt
+
+class FilterSource(vstarstack.library.common.IImageSource):
+    """Filter sources with exposure/gain/temperature"""
+    def __init__(self, source : vstarstack.library.common.IImageSource,
+                       exposure : float,
+                       gain : float,
+                       temperature : float | None,
+                       temperature_indexer : TemperatureIndex):
+        self.temperature_indexer = temperature_indexer
+        self.source = source
+        self.exposure = exposure
+        self.gain = gain
+        self.temperature = temperature
+        self.temperature_idx = self.temperature_indexer.temperature_to_index(self.temperature)
+
+    def items(self) -> Generator[vstarstack.library.data.DataFrame, None, None]:
+        for df in self.source.items():
+            exposure = df.get_parameter("exposure")
+            gain = df.get_parameter("gain")
+            temperature = df.get_parameter("temperature")
+            temperature_idx = self.temperature_indexer.temperature_to_index(temperature)
+            if exposure == self.exposure and gain == self.gain and temperature_idx == self.temperature_idx:
+                yield df
+
+    def empty(self) -> bool:
+        # TODO: better detect if there are matched df in source list
+        return self.source.empty()
+
+def prepare_darks(images : vstarstack.library.common.IImageSource,
+                  basic_temperature : float | None,
+                  delta_temperature : float | None) -> list:
     """Build dark frame"""
-    return vstarstack.library.merge.simple_mean.mean(images)
+    parameters = set()
+    indexer = TemperatureIndex(delta_temperature, basic_temperature)
+    for df in images.items():
+        exposure = df.get_parameter("exposure")
+        gain = df.get_parameter("gain")
+        temperature = df.get_parameter("temperature")
+        index = indexer.temperature_to_index(temperature)
+        parameters.add((exposure, gain, index))
+
+    darks = []
+    for exposure, gain, index in parameters:
+        image_source  = FilterSource(images, exposure, gain, temperature, indexer)
+        dark = vstarstack.library.merge.simple_mean.mean(image_source)
+        dark.add_parameter(exposure, "exposure")
+        dark.add_parameter(gain, "gain")
+        temperature = indexer.index_to_temperature(index)
+        if temperature is not None:
+            dark.add_parameter(temperature, "temperature")
+        darks.append((exposure, gain, temperature, dark))
+    return darks

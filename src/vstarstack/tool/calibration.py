@@ -162,14 +162,25 @@ def _process_build_dark(project : vstarstack.tool.cfg.Project,
     if len(argv) >= 2:
         input_path = argv[0]
         dark_fname = argv[1]
+        basic_temp = float(argv[2])
+        delta_temp = float(argv[3])
     else:
         input_path = project.config.paths.dark.npy
         dark_fname = project.config.paths.dark.result
+        basic_temp = project.config.darks.basic_temperature
+        delta_temp = project.config.darks.delta_temperature
     files = vstarstack.tool.common.listfiles(input_path, ".zip")
     darks = [item[1] for item in files]
     src = vstarstack.library.common.FilesImageSource(darks)
-    dark = vstarstack.library.calibration.dark.prepare_darks(src)
-    dark.store(dark_fname)
+    darks = vstarstack.library.calibration.dark.prepare_darks(src, basic_temp, delta_temp)
+    for exposure, gain, temperature, dark in darks:
+        dirname = os.path.dirname(dark_fname)
+        name, ext = os.path.splitext(os.path.basename(dark_fname))
+        if temperature < 0:
+            fname = os.path.join(dirname, f"{name}-{exposure}-{gain}-{abs(temperature)}{ext}")
+        else:
+            fname = os.path.join(dirname, f"{name}-{exposure}-{gain}+{temperature}{ext}")
+        dark.store(fname)
 
 # building flats
 def _process_build_flat_simple(project : vstarstack.tool.cfg.Project,
