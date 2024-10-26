@@ -102,14 +102,20 @@ def _process_file_remove_dark_auto(input_fname : str,
     else:
         temperature = None
 
+    if temperature is not None:
+        print(f"\tParameters: exposure = {exposure}, gain = {gain}, temperature = {temperature}")
+    else:
+        print(f"\tParameters: exposure = {exposure}, gain = {gain}")
+
     darks = lib.find_darks(exposure, gain, temperature)
     if len(darks) == 0:
-        print(f"Can not find corresponsing dark for {input_fname}, skipping")
+        print(f"\tCan not find corresponsing dark for {input_fname}, skipping")
         return
     dark_fname = darks[0]["name"]
+    print(f"\tUsing dark {dark_fname}")
     result = vstarstack.library.calibration.dark.remove_dark(dataframe, dark_dfs[dark_fname])
     if result is None:
-        print(f"Can not remove dark from {input_fname}")
+        print(f"\tCan not remove dark from {input_fname}")
     vstarstack.tool.common.check_dir_exists(output_fname)
     result.store(output_fname)
 
