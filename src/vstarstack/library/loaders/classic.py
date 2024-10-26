@@ -19,7 +19,6 @@ import exifread
 
 import vstarstack.library.common
 import vstarstack.library.data
-import vstarstack.library.loaders.tags
 
 def readjpeg(fname: str):
     """Read single image (jpg, png, tiff) file"""
