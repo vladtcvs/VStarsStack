@@ -18,33 +18,33 @@ from setuptools import setup, Extension
 
 clusterization = Extension(name="vstarstack.library.clusters.clusterization",
                            sources=[
-                               "src/vstarstack/library/clusters/clusterization/module.cc",
-                               "src/vstarstack/library/clusters/clusterization/lib/src/clusters.cc"
+                               "src/c_modules/clusterization/module.cc",
+                               "src/c_modules/clusterization/lib/src/clusters.cc"
                            ],
                            include_dirs=[
-                               "src/vstarstack/library/clusters/clusterization/lib/include"
+                               "src/c_modules/clusterization/lib/include"
                            ])
 
 projection = Extension( name="vstarstack.library.projection.projections",
                         sources=[
-                            "src/vstarstack/library/projection/projections/module.c",
-                            "src/vstarstack/library/projection/projections/lib/perspective.c",
-                            "src/vstarstack/library/projection/projections/lib/orthographic.c",
-                            "src/vstarstack/library/projection/projections/lib/equirectangular.c",
+                            "src/c_modules/projections/module.c",
+                            "src/c_modules/projections/lib/perspective.c",
+                            "src/c_modules/projections/lib/orthographic.c",
+                            "src/c_modules/projections/lib/equirectangular.c",
                         ])
 
 movements = Extension(  name="vstarstack.library.movement.movements",
                         sources=[
-                            "src/vstarstack/library/movement/movements/module.c",
-                            "src/vstarstack/library/movement/movements/lib/sphere.c",
-                            "src/vstarstack/library/movement/movements/lib/flat.c",
+                            "src/c_modules/movements/module.c",
+                            "src/c_modules/movements/lib/sphere.c",
+                            "src/c_modules/movements/lib/flat.c",
                         ],
                         include_dirs=[
-                            "src/vstarstack/library/projection/projections",
+                            "src/c_modules/projections",
                             np.get_include(),
                         ])
 
-libimagedeform_root = "src/vstarstack/library/fine_movement/libimagedeform"
+libimagedeform_root = "src/c_modules/fine_movement/libimagedeform"
 libimagedeform_headers = [libimagedeform_root + "/include"]
 libimagedeform_sources = [libimagedeform_root + "/src/interpolation.c",
                           libimagedeform_root + "/src/image_grid.c",
@@ -53,7 +53,7 @@ libimagedeform_sources = [libimagedeform_root + "/src/interpolation.c",
                           libimagedeform_root + "/src/image_deform_lc.c",
                         ]
 
-imagedeform_root = "src/vstarstack/library/fine_movement/module"
+imagedeform_root = "src/c_modules/fine_movement/module"
 imagedeform_sources = [imagedeform_root + "/imagegrid.c",
                        imagedeform_root + "/imagedeform.c",
                        imagedeform_root + "/imagedeform_gc.c",
