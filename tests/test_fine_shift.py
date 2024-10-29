@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@ import math
 import sys
 import os
 import numpy as np
+import gc
+import psutil
 
 from vstarstack.library.loaders.classic import readjpeg
 from vstarstack.library.fine_movement.module import ImageGrid
@@ -229,3 +231,35 @@ def test_approximate_by_correlation1():
     assert data.shape[2] == 2
     assert np.amin(data) == 0
     assert np.amax(data) == 0
+
+def test_memory_leak():
+    N = 5
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
+
+    image = df1.get_channel("L")[0].astype('double')
+    image_ref = df2.get_channel("L")[0].astype('double')
+
+    w = image.shape[1]
+    h = image.shape[0]
+
+    memory1 = psutil.Process().memory_info().rss
+    prevd = 0
+    for _ in range(N):
+        grid = ImageGrid(image_w=w, image_h=h)
+        grid.fill(image)
+        grid_ref = ImageGrid(image_w=w, image_h=h)
+        grid_ref.fill(image_ref)
+
+        lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
+        deform = lc.find(grid, None, grid_ref, None, 5, 5, 1)
+    
+        del grid
+        del lc
+        del deform
+
+        gc.collect()
+        memory2 = psutil.Process().memory_info().rss
+        print(memory1, memory2, memory2 - memory1, memory2 - memory1 - prevd)
+        prevd = memory2 - memory1
+    assert memory1 == memory2

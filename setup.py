@@ -104,6 +104,7 @@ setup (name = 'vstarstack',
               'imutils',
               'matplotlib',
               'pytz',
+              'psutil',
        ],
        requires=["setuptools", "cython", "numpy"]
 )

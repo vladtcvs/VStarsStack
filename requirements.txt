@@ -11,4 +11,4 @@ imutils
 matplotlib
 pytest
 pytz
-
+psutil
