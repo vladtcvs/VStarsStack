@@ -106,7 +106,7 @@ def align(project: vstarstack.tool.cfg.Project, argv: list):
     else:
         npys = project.config.paths.light.npy
         aligns = project.config.fine_shift.aligns
-        pre_aligns = project.config.fine_shift.aligns
+        pre_aligns = None
 
     files = vstarstack.tool.common.listfiles(npys, ".zip")
     name0, input_image0_f = files[0]
@@ -123,7 +123,8 @@ def align(project: vstarstack.tool.cfg.Project, argv: list):
 
     if pre_aligns is not None:
         fname = os.path.join(pre_aligns, name0 + ".json")
-        pre_align0 = Aligner.deserialize(json.load(fname))
+        with open(fname) as f:
+            pre_align0 = Aligner.deserialize(json.load(f))
     else:
         pre_align0 = None
 
