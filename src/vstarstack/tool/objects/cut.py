@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2022-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
 import json
 import os
 import numpy as np
+import cv2
 
 import vstarstack.tool.cfg
 import vstarstack.library.common
@@ -46,7 +47,11 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
             maxr = r
     maxr = int(maxr+0.5)+margin
     size = 2*maxr+1
+    disk_radius=int(maxr+0.5)
     print("maxr = ", maxr, " size = ", size)
+
+    mask = np.zeros((size,size))
+    cv2.cirlce(mask, (maxr,maxr), disk_radius, 1, -1)
 
     for name, filename in files:
         print(name)
@@ -67,12 +72,13 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
             print("Can not load ", name)
             continue
 
-        weight_links = dict(image.links["weight"])
-
+        image.add_channel(mask, "mask", mask=True)
         for channel in image.get_channels():
             layer, opts = image.get_channel(channel)
-            if opts["encoded"]:
+            if image.get_channel_option("encoded"):
                 image.remove_channel(channel)
+                continue
+            if image.get_channel_option("mask"):
                 continue
 
             w = layer.shape[1]
@@ -108,6 +114,8 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
 
             img = np.zeros((size, size))
             img[target_top:target_top+copy_h, target_left:target_left+copy_w] = layer[source_top:source_top+copy_h, source_left:source_left+copy_w]
+            image.replace_channel(img, channel, **opts)
+            image.add_channel_link(channel, "mask", "mask")
 
             detection["roi"] = {
                 "x1": left,
@@ -115,13 +123,9 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
                 "x2": right,
                 "y2": bottom
             }
-            image.replace_channel(img, channel, **opts)
             vstarstack.tool.common.check_dir_exists(filename)
             with open(filename, "w", encoding='utf8') as f:
                 json.dump(detection, f, indent=4, ensure_ascii=False)
-
-        for ch, value in weight_links.items():
-            image.add_channel_link(ch, value, "weight")
 
         image.params["w"] = size
         image.params["h"] = size
