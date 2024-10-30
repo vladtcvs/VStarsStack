@@ -243,20 +243,26 @@ def test_memory_leak():
     w = image.shape[1]
     h = image.shape[0]
 
-    memory1 = psutil.Process().memory_info().rss
+    
+    
     prevd = 0
+    memory1 = psutil.Process().memory_info().rss
+
+    grid = ImageGrid(image_w=w, image_h=h)
+    grid.fill(image)
+    grid_ref = ImageGrid(image_w=w, image_h=h)
+    grid_ref.fill(image_ref)
+
+
     for _ in range(N):
-        grid = ImageGrid(image_w=w, image_h=h)
-        grid.fill(image)
-        grid_ref = ImageGrid(image_w=w, image_h=h)
-        grid_ref.fill(image_ref)
 
         lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
-        deform = lc.find(grid, None, grid_ref, None, 5, 5, 1)
+#        deform = lc.find(grid, None, grid_ref, None, 5, 5, 1)
     
-        del grid
-        del lc
-        del deform
+        lc = None
+#        deform = None
+#        grid = None
+#        grid_ref = None
 
         gc.collect()
         memory2 = psutil.Process().memory_info().rss

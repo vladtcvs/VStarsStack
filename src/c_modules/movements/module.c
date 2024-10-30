@@ -93,7 +93,7 @@ static int SphereMovements_init(PyObject *_self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-static void SphereMovements_finalize(PyObject *_self)
+static void SphereMovements_dealloc(PyObject *_self)
 {
     PyObject *error_type, *error_value, *error_traceback;
 
@@ -218,7 +218,7 @@ static PyTypeObject _SphereMovement = {
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
     .tp_init = SphereMovements_init,
-    .tp_finalize = SphereMovements_finalize,
+    .tp_dealloc = SphereMovements_dealloc,
     .tp_methods = _SphereMovements_methods,
 };
 

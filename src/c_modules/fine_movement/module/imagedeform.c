@@ -41,7 +41,7 @@ static int ImageDeform_init(PyObject *_self, PyObject *args, PyObject *kwds)
     return image_deform_init(&self->deform, grid_w, grid_h, image_w, image_h);
 }
 
-static void ImageDeform_finalize(PyObject *_self)
+static void ImageDeform_dealloc(PyObject *_self)
 {
     PyObject *error_type, *error_value, *error_traceback;
 
@@ -182,6 +182,6 @@ PyTypeObject ImageDeform = {
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
     .tp_init = ImageDeform_init,
-    .tp_finalize = ImageDeform_finalize,
+    .tp_dealloc = ImageDeform_dealloc,
     .tp_methods = ImageDeform_methods,
 };
