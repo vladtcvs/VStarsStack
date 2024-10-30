@@ -40,7 +40,7 @@ static int ImageDeformLC_init(PyObject *_self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-static void ImageDeformLC_finalize(PyObject *_self)
+static void ImageDeformLC_dealloc(PyObject *_self)
 {
     struct ImageDeformLocalCorrelatorObject *self =
             (struct ImageDeformLocalCorrelatorObject *)_self;
@@ -132,6 +132,6 @@ PyTypeObject ImageDeformLC = {
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
     .tp_init = ImageDeformLC_init,
-    .tp_finalize = ImageDeformLC_finalize,
+    .tp_dealloc = ImageDeformLC_dealloc,
     .tp_methods = ImageDeformLC_methods,
 };

@@ -39,7 +39,7 @@ static int ImageDeformGC_init(PyObject *_self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-static void ImageDeformGC_finalize(PyObject *_self)
+static void ImageDeformGC_dealloc(PyObject *_self)
 {
     struct ImageDeformGlobalCorrelatorObject *self =
             (struct ImageDeformGlobalCorrelatorObject *)_self;
@@ -136,6 +136,6 @@ PyTypeObject ImageDeformGC = {
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
     .tp_init = ImageDeformGC_init,
-    .tp_finalize = ImageDeformGC_finalize,
+    .tp_dealloc = ImageDeformGC_dealloc,
     .tp_methods = ImageDeformGC_methods,
 };

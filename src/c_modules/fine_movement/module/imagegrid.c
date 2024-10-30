@@ -43,7 +43,7 @@ static int ImageGrid_init(PyObject *_self, PyObject *args, PyObject *kwds)
  * \brief Destroy ImageGrid
  * \param _self ImageGridObject object
  */
-static void ImageGrid_finalize(PyObject *_self)
+static void ImageGrid_dealloc(PyObject *_self)
 {
     PyObject *error_type, *error_value, *error_traceback;
 
@@ -167,6 +167,6 @@ PyTypeObject ImageGrid = {
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
     .tp_init = ImageGrid_init,
-    .tp_finalize = ImageGrid_finalize,
+    .tp_dealloc = ImageGrid_dealloc,
     .tp_methods = ImageGrid_methods,
 };
