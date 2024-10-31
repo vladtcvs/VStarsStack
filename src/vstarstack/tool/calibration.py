@@ -176,7 +176,9 @@ def _process_build_dark(project : vstarstack.tool.cfg.Project,
     for exposure, gain, temperature, dark in darks:
         dirname = os.path.dirname(dark_fname)
         name, ext = os.path.splitext(os.path.basename(dark_fname))
-        if temperature < 0:
+        if temperature is None:
+            fname = os.path.join(dirname, f"{name}-{exposure}-{gain}{ext}")
+        elif temperature < 0:
             fname = os.path.join(dirname, f"{name}-{exposure}-{gain}-{abs(temperature)}{ext}")
         else:
             fname = os.path.join(dirname, f"{name}-{exposure}-{gain}+{temperature}{ext}")
