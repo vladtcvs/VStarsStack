@@ -26,35 +26,47 @@ class EstimationMethod(Enum):
     SOBEL = 0
     LAPLACE = 1
 
-def measure_sharpness(img : np.ndarray, method : EstimationMethod) -> float:
-    if method == EstimationMethod.SOBEL:
-        sx = scipy.ndimage.sobel(img, axis=0, mode='constant')
-        sy = scipy.ndimage.sobel(img, axis=1, mode='constant')
-        sobel = np.sqrt(sx**2 + sy**2)
-        metric = np.sum(sobel)
-        summ = np.sum(img)
-        return metric / summ
-    elif method == EstimationMethod.LAPLACE:
-        sx = scipy.ndimage.laplace(img, mode='constant')
-        sy = scipy.ndimage.laplace(img, mode='constant')
-        sobel = np.sqrt(sx**2 + sy**2)
-        metric = np.sum(sobel)
-        summ = np.sum(img)
-        return metric / summ
-    else:
-        raise Exception(f"Unknown method {method}")
+def measure_sharpness_sobel(img : np.ndarray, mask : np.ndarray | None) -> float:
+    if mask is not None:
+        img = img * mask
+    sx = scipy.ndimage.sobel(img, axis=0, mode='constant')
+    sy = scipy.ndimage.sobel(img, axis=1, mode='constant')
+    sobel = np.sqrt(sx**2 + sy**2)
+    if mask is not None:
+        sobel = sobel * mask
+    metric = np.sum(sobel)
+    summ = np.sum(img)
+    return metric / summ
+
+def measure_sharpness_laplace(img : np.ndarray, mask : np.ndarray | None) -> float:
+    if mask is not None:
+        img = img * mask
+    sx = scipy.ndimage.laplace(img, mode='constant')
+    sy = scipy.ndimage.laplace(img, mode='constant')
+    laplace = np.sqrt(sx**2 + sy**2)
+    if mask is not None:
+        laplace = laplace * mask
+    metric = np.sum(laplace)
+    summ = np.sum(img)
+    return metric / summ
 
 def measure_sharpness_df(df : vstarstack.library.data.DataFrame, method : EstimationMethod) -> float:
     metric = 0
     nch = 0
+    if method not in [EstimationMethod.LAPLACE, EstimationMethod.SOBEL]:
+        raise Exception(f"Invalid method {method}")
     for channel in df.get_channels():
         img, opts = df.get_channel(channel)
-        if not opts["brightness"]:
+        if not df.get_channel_option("brightness"):
             continue
         amax = np.amax(img)
         amin = np.amin(img)
         img = (img - amin)/(amax - amin)
-        metric += measure_sharpness(img, method)
+        mask, _, _ = df.get_linked_channel(channel, "mask")
+        if method == EstimationMethod.SOBEL:
+            metric += measure_sharpness_sobel(img, mask)
+        elif method == EstimationMethod.LAPLACE:
+            metric += measure_sharpness_laplace(img, mask)
         nch += 1
     if nch == 0:
         return 0
