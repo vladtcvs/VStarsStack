@@ -28,6 +28,7 @@ SLOPE = vstarstack.tool.cfg.get_param("multiply", float, 1)
 FLOOR = vstarstack.tool.cfg.get_param("clip_floor", bool, False)
 HDR = vstarstack.tool.cfg.get_param("hdr", bool, False)
 NORM = vstarstack.tool.cfg.get_param("normalize", bool, True)
+ADJUST_BLACK = vstarstack.tool.cfg.get_param("adjust_black", bool, False)
 
 def compress_clip(img, slope):
     img = img / np.amax(img)
@@ -46,12 +47,15 @@ def compress(img, slope):
         return compress_atan(img, slope)
     return compress_clip(img, slope)
 
-def convert_to_uint16(img, slope, maxshift):
+def convert_to_uint16(img, slope, maxshift, adjust_black):
     compressed = None
     img = img / np.amax(img)
     nstep = 10
     idx1 = 0
     idx2 = 2**nstep
+    if not adjust_black:
+        compressed = compress(img, slope)
+        return compressed
     for _ in range(nstep):
         idx = int((idx1 + idx2)/2)
         shift = idx / (2**nstep) * maxshift
@@ -174,7 +178,7 @@ def _convert(_project, argv):
                 fname = out
 
             if NORM:
-                img =  convert_to_uint16(img, SLOPE, 0.005)
+                img =  convert_to_uint16(img, SLOPE, 0.005, ADJUST_BLACK)
                 if ext not in ["tiff", "png"]:
                     img = (img / 256).astype('uint8')
             else:
