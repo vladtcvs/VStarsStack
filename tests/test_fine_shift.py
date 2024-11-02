@@ -233,8 +233,8 @@ def test_approximate_by_correlation1():
     assert np.amax(data) == 0
 
 def test_approximate_by_correlation2():
-    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.png")))
-    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.png")))
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.tiff")))
 
     image = df1.get_channel("L")[0].astype('double')
     image_ref = df2.get_channel("L")[0].astype('double')
@@ -295,8 +295,8 @@ def test_memory_leak():
     assert deltas[-1] == 0
 
 def test_divergence_1():
-    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.png")))
-    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.png")))
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
 
     image = df1.get_channel("L")[0].astype('double')
     image_ref = df2.get_channel("L")[0].astype('double')
@@ -323,8 +323,8 @@ def test_divergence_1():
     assert np.amax(divergence) == 0
 
 def test_divergence_2():
-    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.png")))
-    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.png")))
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.tiff")))
 
     image = df1.get_channel("L")[0].astype('double')
     image_ref = df2.get_channel("L")[0].astype('double')
