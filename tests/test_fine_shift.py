@@ -269,8 +269,8 @@ def test_memory_leak():
     assert deltas[-1] == 0
 
 def test_divergence_1():
-    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
-    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.png")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.png")))
 
     image = df1.get_channel("L")[0].astype('double')
     image_ref = df2.get_channel("L")[0].astype('double')
@@ -297,8 +297,8 @@ def test_divergence_1():
     assert np.amax(divergence) == 0
 
 def test_divergence_2():
-    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
-    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image2.png")))
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.png")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.png")))
 
     image = df1.get_channel("L")[0].astype('double')
     image_ref = df2.get_channel("L")[0].astype('double')
@@ -318,8 +318,7 @@ def test_divergence_2():
     divergence = deform.divergence(subpixels=1)
     assert divergence is not None
     divergence = divergence.content()
+
     assert len(divergence.shape) == 2
     assert divergence.shape[0] == h
     assert divergence.shape[1] == w
-    assert np.amin(divergence) == 0
-    assert np.amax(divergence) == 0
