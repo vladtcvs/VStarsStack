@@ -267,3 +267,59 @@ def test_memory_leak():
         deltas.append(memory2 - memory1 - prevd)
         prevd = memory2 - memory1
     assert deltas[-1] == 0
+
+def test_divergence_1():
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
+
+    image = df1.get_channel("L")[0].astype('double')
+    image_ref = df2.get_channel("L")[0].astype('double')
+
+    w = image.shape[1]
+    h = image.shape[0]
+
+    grid = ImageGrid(image_w=w, image_h=h)
+    grid.fill(image)
+    grid_ref = ImageGrid(image_w=w, image_h=h)
+    grid_ref.fill(image_ref)
+
+    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
+    deform = lc.find(grid, None, grid_ref, None, 5, 5, 1)
+    assert deform is not None
+
+    divergence = deform.divergence(subpixels=1)
+    assert divergence is not None
+    divergence = divergence.content()
+    assert len(divergence.shape) == 2
+    assert divergence.shape[0] == h
+    assert divergence.shape[1] == w
+    assert np.amin(divergence) == 0
+    assert np.amax(divergence) == 0
+
+def test_divergence_2():
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image2.png")))
+
+    image = df1.get_channel("L")[0].astype('double')
+    image_ref = df2.get_channel("L")[0].astype('double')
+
+    w = image.shape[1]
+    h = image.shape[0]
+
+    grid = ImageGrid(image_w=w, image_h=h)
+    grid.fill(image)
+    grid_ref = ImageGrid(image_w=w, image_h=h)
+    grid_ref.fill(image_ref)
+
+    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
+    deform = lc.find(grid, None, grid_ref, None, 5, 5, 1)
+    assert deform is not None
+
+    divergence = deform.divergence(subpixels=1)
+    assert divergence is not None
+    divergence = divergence.content()
+    assert len(divergence.shape) == 2
+    assert divergence.shape[0] == h
+    assert divergence.shape[1] == w
+    assert np.amin(divergence) == 0
+    assert np.amax(divergence) == 0
