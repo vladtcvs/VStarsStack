@@ -138,9 +138,33 @@ static PyObject *ImageDeform_apply_image(PyObject *_self,
         (struct ImageGridObject *)PyObject_CallObject((PyObject *)&ImageGrid, argList);
     Py_DECREF(argList);
 
-    image_deform_apply_image(&self->deform, &in_img->grid, &out_img->grid, subpixels);
+    image_deform_apply_image(&self->deform, &in_img->grid, &out_img->grid);
     return (PyObject *)out_img;
 }
+
+static PyObject *ImageDeform_divergence(PyObject *_self,
+                                         PyObject *args,
+                                         PyObject *kwds)
+{
+    struct ImageDeformObject *self = (struct ImageDeformObject *)_self;
+    static char *kwlist[] = {"subpixels", NULL};
+    int subpixels;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i", kwlist, &subpixels))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    PyObject *argList = Py_BuildValue("ii", self->deform.image_w*subpixels, self->deform.image_w*subpixels);
+    struct ImageGridObject *out_img =
+        (struct ImageGridObject *)PyObject_CallObject((PyObject *)&ImageGrid, argList);
+    Py_DECREF(argList);
+
+    image_deform_calculate_divergence(&self->deform, &out_img->grid);
+    return (PyObject *)out_img;
+}
+
 
 static PyObject *ImageDeform_apply_point(PyObject *_self,
                                          PyObject *args,
@@ -168,7 +192,9 @@ static PyMethodDef ImageDeform_methods[] = {
      "Return image deform content as numpy array"},
     {"apply_image", (PyCFunction)ImageDeform_apply_image, METH_VARARGS | METH_KEYWORDS,
      "Apply ImageDeform to ImageGrid"},
-     {"apply_point", (PyCFunction)ImageDeform_apply_point, METH_VARARGS | METH_KEYWORDS,
+    {"divergence", (PyCFunction)ImageDeform_divergence, METH_VARARGS | METH_KEYWORDS,
+     "Divergence of ImageDeform"},
+    {"apply_point", (PyCFunction)ImageDeform_apply_point, METH_VARARGS | METH_KEYWORDS,
      "Apply ImageDeform to point"},
     {NULL} /* Sentinel */
 };
