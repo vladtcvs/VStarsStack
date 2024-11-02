@@ -123,12 +123,18 @@ void image_deform_apply_point(const struct ImageDeform *deform,
  * \param deform deformation structure
  * \param input_image original image
  * \param output_image resulting image
- * \param subpixels upscaling coefficient of image during deform
  */
 void image_deform_apply_image(const struct ImageDeform *deform,
                               const struct ImageGrid *input_image,
-                              struct ImageGrid *output_image,
-                              int subpixels);
+                              struct ImageGrid *output_image);
+
+/**
+ * \brief Generate image deform density
+ * \param deform deformation sructure
+ * \param divergence output image for divergence
+ */
+void image_deform_calculate_divergence(const struct ImageDeform *deform,
+                                       struct ImageGrid *divergence);
 
 #ifdef __cplusplus
 }

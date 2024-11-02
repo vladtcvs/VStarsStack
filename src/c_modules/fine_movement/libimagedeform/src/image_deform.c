@@ -157,17 +157,78 @@ void image_deform_apply_point(const struct ImageDeform *deform,
 
 void image_deform_apply_image(const struct ImageDeform *deform,
                               const struct ImageGrid *input_image,
-                              struct ImageGrid *output_image,
-                              int subpixels)
+                              struct ImageGrid *output_image)
 {
     int y, x;
+    double kx = (double)input_image->w / output_image->w;
+    double ky = (double)input_image->h / output_image->h;
     for (y = 0; y < output_image->h; y++)
         for (x = 0; x < output_image->w; x++)
         {
             double orig_y, orig_x;
-            image_deform_apply_point(deform, (double)x/subpixels, (double)y/subpixels, &orig_x, &orig_y);
+            image_deform_apply_point(deform, x*kx, y*ky, &orig_x, &orig_y);
 
             double val = image_grid_get_pixel(input_image, orig_x, orig_y);
             image_grid_set_pixel(output_image, x, y, val);
         }
+}
+
+void image_deform_calculate_divergence(const struct ImageDeform *deform,
+                                       struct ImageGrid *divergence)
+{
+    int y, x;
+    double kx = (double)deform->image_w / divergence->w;
+    double ky = (double)deform->image_h / divergence->h;
+    // Calculate density from original coordinates
+    for (y = 0; y < divergence->h; y++)
+    {
+        double dy1, dy2;
+        if (y == 0)
+        {
+            dy1 = 0;
+            dy2 = 1;
+        }
+        else if (y == divergence->h-1)
+        {
+            dy1 = -1;
+            dy2 = 0;
+        }
+        else
+        {
+            dy1 = -1;
+            dy2 = 1;
+        }
+
+        for (x = 0; x < divergence->w; x++)
+        {
+            double dx1, dx2;
+            if (x == 0)
+            {
+                dx1 = 0;
+                dx2 = 1;
+            }
+            else if (x == divergence->w-1)
+            {
+                dx1 = -1;
+                dx2 = 0;
+            }
+            else
+            {
+                dx1 = -1;
+                dx2 = 1;
+            }
+
+            double vx1 = image_deform_get_shift(deform, (x+dx1)*kx, y*ky, 0);
+            double vx2 = image_deform_get_shift(deform, (x+dx2)*kx, y*ky, 0);
+            double ddx = (vx2 - vx1) / (dx2-dx1);
+
+            double vy1 = image_deform_get_shift(deform, x*kx, (y+dy1)*ky, 0);
+            double vy2 = image_deform_get_shift(deform, x*kx, (y+dy2)*ky, 0);
+            double ddy = (vy2 - vy1) / (dy2-dy1);
+
+            double div = ddx + ddy;
+
+            image_grid_set_pixel(divergence, x, y, div);
+        }
+    }
 }
