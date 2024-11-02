@@ -161,7 +161,7 @@ static PyObject *ImageDeform_divergence(PyObject *_self,
         (struct ImageGridObject *)PyObject_CallObject((PyObject *)&ImageGrid, argList);
     Py_DECREF(argList);
 
-    image_deform_divergence(&self->deform, &out_img->grid);
+    image_deform_calculate_divergence(&self->deform, &out_img->grid);
     return (PyObject *)out_img;
 }
 
