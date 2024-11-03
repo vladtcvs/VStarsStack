@@ -57,22 +57,19 @@ static void image_deform_lc_get_area(const struct ImageGrid *img,
     image_grid_get_area(img, pre_aligned_x, pre_aligned_y, area);
 }
 
-void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
-                          const struct ImageGrid *img,
-                          const struct ImageDeform *pre_align,
-                          const struct ImageGrid *ref_img,
-                          const struct ImageDeform *ref_pre_align,
-                          int radius,
-                          double maximal_shift,
-                          int subpixels)
+void image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
+                                   const struct ImageGrid *img,
+                                   const struct ImageDeform *pre_align,
+                                   const struct ImageGrid *ref_img,
+                                   const struct ImageDeform *ref_pre_align,
+                                   double maximal_shift,
+                                   int subpixels)
 {
     int i, j;
     double iter_x, iter_y;
     double best_x, best_y;
     double best_corr;
 
-    // Find mean shift
-    double mean_shift_x, mean_shift_y;
     struct ImageGrid global_area;
     image_grid_init(&global_area, img->w, img->h);
     best_x = best_y = 0;
@@ -90,9 +87,28 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
             best_y = iter_y;
         }
     }
-    mean_shift_x = best_x;
-    mean_shift_y = best_y;
+    for (i = 0; i < self->grid_h; i++)
+    for (j = 0; j < self->grid_w; j++)
+    {
+        image_deform_set_shift(&self->array, j, i, 0, best_y*self->array.sy);
+        image_deform_set_shift(&self->array, j, i, 1, best_x*self->array.sx);
+    }
     image_grid_finalize(&global_area);
+}
+
+void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
+                          const struct ImageGrid *img,
+                          const struct ImageDeform *pre_align,
+                          const struct ImageGrid *ref_img,
+                          const struct ImageDeform *ref_pre_align,
+                          int radius,
+                          double maximal_shift,
+                          int subpixels)
+{
+    int i, j;
+    double iter_x, iter_y;
+    double best_x, best_y;
+    double best_corr;
 
     // Find deviations from mean shift
     int w = radius*2+1;
@@ -112,7 +128,7 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
         // Init with no shift
         best_x = x;
         best_y = y;
-        image_deform_lc_get_area(img, pre_align, &area, x + mean_shift_x, y + mean_shift_y);
+        image_deform_lc_get_area(img, pre_align, &area, x, y);
         image_deform_lc_get_area(ref_img, ref_pre_align, &ref_area, x, y);
         best_corr = image_grid_correlation(&area, &ref_area);
 
@@ -125,7 +141,7 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
                 // We have already calculated it
                 continue;
             }
-            image_deform_lc_get_area(img, pre_align, &area, iter_x + mean_shift_x, iter_y + mean_shift_y);
+            image_deform_lc_get_area(img, pre_align, &area, iter_x, iter_y);
             double corr = image_grid_correlation(&area, &ref_area);
             if (corr > best_corr)
             {
@@ -134,8 +150,8 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
                 best_y = iter_y;
             }
         }
-        image_deform_set_shift(&self->array, j, i, 0, (best_y + mean_shift_y - y)*self->array.sy);
-        image_deform_set_shift(&self->array, j, i, 1, (best_x + mean_shift_y - x)*self->array.sy);
+        image_deform_set_shift(&self->array, j, i, 0, (best_y - y)*self->array.sy);
+        image_deform_set_shift(&self->array, j, i, 1, (best_x - x)*self->array.sx);
     }
 
     image_grid_finalize(&area);
