@@ -95,6 +95,17 @@ static inline void image_deform_set_shifts(struct ImageDeform *deform, const dou
 }
 
 /**
+ * \brief Get shift at pos (x,y) for axis 1 or 2
+ * \param grid Shift array
+ * \param x x
+ * \param y y
+ * \param axis axis (0 for 'y' axis, 1 for 'x' axis)
+ * \return value
+ */
+double image_deform_get_array(const struct ImageDeform *grid,
+                              int x, int y, int axis);
+
+/**
  * @brief Get shift at pos (x,y)
  *
  * @param deform Shift array

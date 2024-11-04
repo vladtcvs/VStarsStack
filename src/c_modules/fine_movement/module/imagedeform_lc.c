@@ -117,8 +117,80 @@ static PyObject* ImageDeformLC_correlate(PyObject *_self, PyObject *args, PyObje
     return (PyObject *)deform_obj;
 }
 
+static PyObject* ImageDeformLC_correlate_constant(PyObject *_self, PyObject *args, PyObject *kwds)
+{
+    struct ImageDeformLocalCorrelatorObject *self =
+            (struct ImageDeformLocalCorrelatorObject *)_self;
+
+    int subpixels;
+    double maximal_shift;
+    PyObject *img, *ref_img;
+    PyObject *pre_align, *ref_pre_align;
+    static char *kwlist[] = {"img", "pre_align", "ref_img", "ref_pre_align",
+                             "maximal_shift", "subpixels", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOdi", kwlist,
+                                     &img, &pre_align, &ref_img, &ref_pre_align,
+                                     &maximal_shift, &subpixels))
+    {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    if (!PyObject_IsInstance(img, (PyObject *)&ImageGrid))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageGrid");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    if (!PyObject_IsInstance(ref_img, (PyObject *)&ImageGrid))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageGrid");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    if ((!Py_IsNone(pre_align)) && !PyObject_IsInstance(pre_align, (PyObject *)&ImageDeform))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageDeform");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    if ((!Py_IsNone(ref_pre_align)) && !PyObject_IsInstance(ref_pre_align, (PyObject *)&ImageDeform))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - need ImageDeform");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    struct ImageGridObject* _img = (struct ImageGridObject*)img;
+    struct ImageGridObject* _ref_img = (struct ImageGridObject*)ref_img;
+
+    struct ImageDeform *pre_align_img = NULL;
+    struct ImageDeform *pre_align_ref_img = NULL;
+    if (!Py_IsNone(pre_align))
+        pre_align_img = &((struct ImageDeformObject *)pre_align)->deform;
+    if (!Py_IsNone(ref_pre_align))
+        pre_align_ref_img = &((struct ImageDeformObject *)ref_pre_align)->deform;
+
+    image_deform_lc_find_constant(&self->correlator, &_img->grid, pre_align_img,
+                                  &_ref_img->grid, pre_align_ref_img,
+                                  maximal_shift, subpixels);
+
+    const struct ImageDeform *deform = &self->correlator.array;
+    PyObject *argList = Py_BuildValue("iiii", deform->image_w, deform->image_h,
+                                              deform->grid_w, deform->grid_h);
+    struct ImageDeformObject *deform_obj =
+        (struct ImageDeformObject *)PyObject_CallObject((PyObject *)&ImageDeform, argList);
+    Py_DECREF(argList);
+
+    image_deform_set_shifts(&deform_obj->deform, deform->array);
+    return (PyObject *)deform_obj;
+}
+
+
 static PyMethodDef ImageDeformLC_methods[] = {
     {"find", (PyCFunction)ImageDeformLC_correlate, METH_VARARGS | METH_KEYWORDS,
+     "Find image deformation to best local correlation"},
+    {"find_constant", (PyCFunction)ImageDeformLC_correlate_constant, METH_VARARGS | METH_KEYWORDS,
      "Find image deformation to best local correlation"},
     {NULL} /* Sentinel */
 };

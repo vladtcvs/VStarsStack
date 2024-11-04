@@ -51,7 +51,18 @@ int  image_deform_lc_init(struct ImageDeformLocalCorrelator *self,
 void image_deform_lc_finalize(struct ImageDeformLocalCorrelator *self);
 
 /**
- * \brief Find global correlator
+ * \brief Find constant correlator
+ */
+void image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
+                                   const struct ImageGrid *img,
+                                   const struct ImageDeform *pre_align,
+                                   const struct ImageGrid *ref_img,
+                                   const struct ImageDeform *ref_pre_align,
+                                   double maximal_shift,
+                                   int subpixels);
+
+/**
+ * \brief Find correlator
  */
 void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
                           const struct ImageGrid *img,

@@ -206,6 +206,60 @@ def test_shift_image1():
     correlation = ImageGrid.correlation(grid1, grid2)
     assert correlation == 1
 
+def test_approximate_by_correlation_constant1():
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
+
+    image = df1.get_channel("L")[0].astype('double')
+    image_ref = df2.get_channel("L")[0].astype('double')
+
+    w = image.shape[1]
+    h = image.shape[0]
+
+    grid = ImageGrid(image_w=w, image_h=h)
+    grid.fill(image)
+    grid_ref = ImageGrid(image_w=w, image_h=h)
+    grid_ref.fill(image_ref)
+
+    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
+    deform = lc.find_constant(grid, None, grid_ref, None, 2, 1)
+    assert deform is not None
+
+    data = deform.content()
+    assert data.shape[0] == h
+    assert data.shape[1] == w
+    assert data.shape[2] == 2
+    assert np.amin(data) == 0
+    assert np.amax(data) == 0
+
+def test_approximate_by_correlation_constant2():
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.tiff")))
+
+    image = df1.get_channel("L")[0].astype('double')
+    image_ref = df2.get_channel("L")[0].astype('double')
+
+    w = image.shape[1]
+    h = image.shape[0]
+
+    grid = ImageGrid(image_w=w, image_h=h)
+    grid.fill(image)
+    grid_ref = ImageGrid(image_w=w, image_h=h)
+    grid_ref.fill(image_ref)
+
+    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
+    deform = lc.find_constant(grid, None, grid_ref, None, 2, 1)
+    assert deform is not None
+
+    data = deform.content()
+    assert data.shape[0] == h
+    assert data.shape[1] == w
+    assert data.shape[2] == 2
+    assert np.amin(data[:,:,0]) == 0
+    assert np.amax(data[:,:,0]) == 0
+    assert np.amin(data[:,:,1]) == 1
+    assert np.amax(data[:,:,1]) == 1
+
 def test_approximate_by_correlation1():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
     df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
@@ -231,6 +285,34 @@ def test_approximate_by_correlation1():
     assert data.shape[2] == 2
     assert np.amin(data) == 0
     assert np.amax(data) == 0
+
+def test_approximate_by_correlation2():
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.tiff")))
+
+    image = df1.get_channel("L")[0].astype('double')
+    image_ref = df2.get_channel("L")[0].astype('double')
+
+    w = image.shape[1]
+    h = image.shape[0]
+
+    grid = ImageGrid(image_w=w, image_h=h)
+    grid.fill(image)
+    grid_ref = ImageGrid(image_w=w, image_h=h)
+    grid_ref.fill(image_ref)
+
+    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
+    deform = lc.find(grid, None, grid_ref, None, 5, 3, 1)
+    assert deform is not None
+
+    data = deform.content()
+    assert data.shape[0] == h
+    assert data.shape[1] == w
+    assert data.shape[2] == 2
+    assert np.amin(data[:,:,0]) == 0
+    assert np.amax(data[:,:,0]) == 0
+    assert np.amin(data[:,:,1]) == 0
+    assert np.amax(data[:,:,1]) == 1
 
 def test_memory_leak():
     N = 5
@@ -269,8 +351,8 @@ def test_memory_leak():
     assert deltas[-1] == 0
 
 def test_divergence_1():
-    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.png")))
-    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.png")))
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
 
     image = df1.get_channel("L")[0].astype('double')
     image_ref = df2.get_channel("L")[0].astype('double')
@@ -297,8 +379,8 @@ def test_divergence_1():
     assert np.amax(divergence) == 0
 
 def test_divergence_2():
-    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.png")))
-    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.png")))
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.tiff")))
 
     image = df1.get_channel("L")[0].astype('double')
     image_ref = df2.get_channel("L")[0].astype('double')

@@ -12,6 +12,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
@@ -114,8 +115,8 @@ void image_grid_get_area(const struct ImageGrid *img,
     for (i = 0; i < h; i++)
     for (j = 0; j < w; j++)
     {
-        double px = x + j - (w-1)/2.0;
-        double py = y + i - (h-1)/2.0;
+        double px = x - w/2.0 + j;
+        double py = y - h/2.0 + i;
         double val = image_grid_get_pixel(img, px, py);
         image_grid_set_pixel(area, j, i, val);
     }
@@ -126,7 +127,6 @@ double image_grid_correlation(const struct ImageGrid *image1,
 {
     double top = 0;
     double bottom1 = 0, bottom2 = 0;
-
     if (image1->w != image2->w || image1->h != image2->h)
         return NAN;
 
