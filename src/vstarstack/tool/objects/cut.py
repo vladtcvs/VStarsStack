@@ -45,7 +45,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
         print(f"Loading info: {name}, r = {r}")
         if r > maxr:
             maxr = r
-    disk_radius=int(maxr*1.1+0.5)
+    disk_radius=int(maxr+0.5)
     maxr = int(maxr+0.5)+margin
     size = 2*maxr+1
     print("maxr = ", maxr, " size = ", size)
