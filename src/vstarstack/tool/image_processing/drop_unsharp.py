@@ -35,8 +35,8 @@ def measure_sharpness(img : np.ndarray, method : EstimationMethod) -> float:
         summ = np.sum(img)
         return metric / summ
     elif method == EstimationMethod.LAPLACE:
-        sx = scipy.ndimage.laplace(img, axis=0, mode='constant')
-        sy = scipy.ndimage.laplace(img, axis=1, mode='constant')
+        sx = scipy.ndimage.laplace(img, mode='constant')
+        sy = scipy.ndimage.laplace(img, mode='constant')
         sobel = np.sqrt(sx**2 + sy**2)
         metric = np.sum(sobel)
         summ = np.sum(img)
