@@ -51,5 +51,5 @@ commands = {
     "normalize": (vstarstack.tool.image_processing.normalize.run,  "normalize to weight"),
     "blur": (vstarstack.tool.image_processing.blur.run,  "gaussian blur"),
     "deconvolution": (vstarstack.tool.image_processing.deconvolution.run,  "RL deconvolution"),
-    "select-sharp" : (vstarstack.tool.image_processing.drop_unsharp.run, "select sharp images", "path/ percent"),
+    "select-sharp" : (vstarstack.tool.image_processing.drop_unsharp.commands, "select sharp images"),
 }
