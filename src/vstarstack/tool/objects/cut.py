@@ -73,12 +73,12 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
             continue
 
         image.add_channel(mask, "mask", mask=True)
-        for channel in image.get_channels():
+        for channel in list(image.get_channels()):
             layer, opts = image.get_channel(channel)
-            if image.get_channel_option("encoded"):
+            if image.get_channel_option(channel, "encoded"):
                 image.remove_channel(channel)
                 continue
-            if image.get_channel_option("mask"):
+            if image.get_channel_option(channel, "mask"):
                 continue
 
             w = layer.shape[1]
