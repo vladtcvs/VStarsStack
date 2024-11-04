@@ -45,13 +45,13 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
         print(f"Loading info: {name}, r = {r}")
         if r > maxr:
             maxr = r
+    disk_radius=int(maxr*1.1+0.5)
     maxr = int(maxr+0.5)+margin
     size = 2*maxr+1
-    disk_radius=int(maxr+0.5)
     print("maxr = ", maxr, " size = ", size)
 
     mask = np.zeros((size,size))
-    cv2.cirlce(mask, (maxr,maxr), disk_radius, 1, -1)
+    cv2.circle(mask, (maxr,maxr), disk_radius, 1, -1)
 
     for name, filename in files:
         print(name)
