@@ -198,7 +198,7 @@ class DataFrame:
             return None, None, None
         if channel not in self.links[link_type]:
             return None, None, None
-        name = self.links[link_type][channel]
+        name = str(self.links[link_type][channel])
         layer, opts = self.get_channel(name)
         return layer, opts, name
 
