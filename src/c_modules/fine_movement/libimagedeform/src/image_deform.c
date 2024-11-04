@@ -63,8 +63,8 @@ void image_deform_constant_shift(struct ImageDeform *deform, double dx, double d
  * \param axis axis (0 for 'y' axis, 1 for 'x' axis)
  * \return value
  */
-static double image_deform_get_array(const struct ImageDeform *grid,
-                                     int x, int y, int axis)
+double image_deform_get_array(const struct ImageDeform *grid,
+                              int x, int y, int axis)
 {
     if (x >= grid->grid_w)
         return NAN;
