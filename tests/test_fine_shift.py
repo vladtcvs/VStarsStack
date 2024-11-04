@@ -302,10 +302,14 @@ def test_approximate_by_correlation2():
     grid_ref.fill(image_ref)
 
     lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
-    deform = lc.find(grid, None, grid_ref, None, 5, 5, 1)
+    deform = lc.find(grid, None, grid_ref, None, 5, 3, 1)
     assert deform is not None
 
     data = deform.content()
+
+    import matplotlib.pyplot as plt
+    plt.imshow(data[:,:,0])
+    plt.show()
     assert data.shape[0] == h
     assert data.shape[1] == w
     assert data.shape[2] == 2

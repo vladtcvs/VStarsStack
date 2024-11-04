@@ -124,34 +124,55 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
         // Find how we should modify img to fit to ref_img
         int x = j * self->pixels;
         int y = i * self->pixels;
+        int debug = 0;
+
+        if (x == 23 && y == 27)
+            debug = 1;
 
         // Init with no shift
-        best_x = x;
-        best_y = y;
+        best_x = 0;
+        best_y = 0;
         image_deform_lc_get_area(img, pre_align, &area, x, y);
         image_deform_lc_get_area(ref_img, ref_pre_align, &ref_area, x, y);
         best_corr = image_grid_correlation(&area, &ref_area);
+        if (debug) {
+            printf("no shift correlation = %lf\n", best_corr);
+            int pi, pj;
+            for (pi = 0; pi < area.h; pi++)
+            for (pj = 0; pj < area.h; pj++)
+                printf("%lf %lf\n", image_grid_get_pixel(&area, pj, pi), image_grid_get_pixel(&ref_area, pj, pi));
+        }
 
         // Find shift where best correlation between area in img and ref_img
-        for (iter_y = y - maximal_shift; iter_y <= y + maximal_shift; iter_y += 1.0 / subpixels)
-        for (iter_x = x - maximal_shift; iter_x <= x + maximal_shift; iter_x += 1.0 / subpixels)
+        for (iter_y = -maximal_shift; iter_y <= maximal_shift; iter_y += 1.0 / subpixels)
+        for (iter_x = -maximal_shift; iter_x <= maximal_shift; iter_x += 1.0 / subpixels)
         {
-            if (iter_x == x && iter_y == y)
+            if (iter_x == 0 && iter_y == 0)
             {
                 // We have already calculated it
                 continue;
             }
-            image_deform_lc_get_area(img, pre_align, &area, iter_x, iter_y);
+            image_deform_lc_get_area(img, pre_align, &area, x+iter_x, y+iter_y);
             double corr = image_grid_correlation(&area, &ref_area);
+            if (debug)
+                printf("correlation %lf %lf = %lf\n", iter_y, iter_x, best_corr);
             if (corr > best_corr)
             {
                 best_corr = corr;
                 best_x = iter_x;
                 best_y = iter_y;
             }
+            else if (corr == best_corr)
+            {
+                if (fabs(iter_x) + fabs(iter_y) < fabs(best_x) + fabs(best_y))
+                {
+                    best_x = iter_x;
+                    best_y = iter_y;
+                }
+            }
         }
-        image_deform_set_shift(&self->array, j, i, 0, (best_y - y)*self->array.sy);
-        image_deform_set_shift(&self->array, j, i, 1, (best_x - x)*self->array.sx);
+        image_deform_set_shift(&self->array, j, i, 0, best_y*self->array.sy);
+        image_deform_set_shift(&self->array, j, i, 1, best_x*self->array.sx);
     }
 
     image_grid_finalize(&area);
