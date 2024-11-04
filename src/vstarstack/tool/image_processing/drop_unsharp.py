@@ -15,20 +15,36 @@
 import os
 import numpy as np
 import scipy.ndimage
+from enum import Enum
 
 import vstarstack.library.data
 import vstarstack.tool.cfg
 import vstarstack.tool.common
 
-def measure_sharpness(img : np.ndarray) -> float:
-    sx = scipy.ndimage.sobel(img, axis=0, mode='constant')
-    sy = scipy.ndimage.sobel(img, axis=1, mode='constant')
-    sobel = np.sqrt(sx**2 + sy**2)
-    metric = np.sum(sobel)
-    summ = np.sum(img)
-    return metric / summ
+class EstimationMethod(Enum):
+    """Sharpness estimation method"""
+    SOBEL = 0
+    LAPLACE = 1
 
-def measure_sharpness_df(df : vstarstack.library.data.DataFrame) -> float:
+def measure_sharpness(img : np.ndarray, method : EstimationMethod) -> float:
+    if method == EstimationMethod.SOBEL:
+        sx = scipy.ndimage.sobel(img, axis=0, mode='constant')
+        sy = scipy.ndimage.sobel(img, axis=1, mode='constant')
+        sobel = np.sqrt(sx**2 + sy**2)
+        metric = np.sum(sobel)
+        summ = np.sum(img)
+        return metric / summ
+    elif method == EstimationMethod.LAPLACE:
+        sx = scipy.ndimage.laplace(img, axis=0, mode='constant')
+        sy = scipy.ndimage.laplace(img, axis=1, mode='constant')
+        sobel = np.sqrt(sx**2 + sy**2)
+        metric = np.sum(sobel)
+        summ = np.sum(img)
+        return metric / summ
+    else:
+        raise Exception(f"Unknown method {method}")
+
+def measure_sharpness_df(df : vstarstack.library.data.DataFrame, method : EstimationMethod) -> float:
     metric = 0
     nch = 0
     for channel in df.get_channels():
@@ -38,29 +54,29 @@ def measure_sharpness_df(df : vstarstack.library.data.DataFrame) -> float:
         amax = np.amax(img)
         amin = np.amin(img)
         img = (img - amin)/(amax - amin)
-        metric += measure_sharpness(img)
+        metric += measure_sharpness(img, method)
         nch += 1
     if nch == 0:
         return 0
     return metric / nch
 
-def select_sharpests(fnames : list[str], percent : int):
+def select_sharpests(fnames : list[str], percent : int, method : EstimationMethod):
     metrics = []
     for fname in fnames:
         df = vstarstack.library.data.DataFrame.load(fname)
-        metric = measure_sharpness_df(df)
+        metric = measure_sharpness_df(df, method)
         print(f"{fname} : {metric}")
         metrics.append((fname, metric))
     metrics = sorted(metrics, key=lambda item: item[1], reverse=True)
     metrics = metrics[:int(len(metrics)*percent/100)]
     return [item[0] for item in metrics]
 
-def run(project : vstarstack.tool.cfg.Project, argv : list[str]):
+def _process(project : vstarstack.tool.cfg.Project, argv : list[str], method : EstimationMethod):
     path = argv[0]
     percent = int(argv[1])
     files = vstarstack.tool.common.listfiles(path, ".zip")
     fnames = [item[1] for item in files]
-    sharpests = select_sharpests(fnames, percent)
+    sharpests = select_sharpests(fnames, percent, method)
     for i,fname in enumerate(sharpests):
         basename = os.path.basename(fname)
         dirname = os.path.dirname(fname)
@@ -71,3 +87,8 @@ def run(project : vstarstack.tool.cfg.Project, argv : list[str]):
     for fname in fnames:
         print(f"Removing {fname}")
         os.remove(fname)
+
+commands = {
+    "sobel" : (lambda project, argv : _process(project, argv, EstimationMethod.SOBEL), "Use Sobel filter for estimating sharpness", "path/ percent"),
+    "laplace" : (lambda project, argv : _process(project, argv, EstimationMethod.LAPLACE), "Use Laplace filter for estimating sharpness", "path/ percent"),
+}
