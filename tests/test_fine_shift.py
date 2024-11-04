@@ -313,8 +313,10 @@ def test_approximate_by_correlation2():
     assert data.shape[0] == h
     assert data.shape[1] == w
     assert data.shape[2] == 2
-    assert np.amin(data) >= 0
-    assert np.amax(data) == 1
+    assert np.amin(data[:,:,0]) == 0
+    assert np.amax(data[:,:,0]) == 0
+    assert np.amin(data[:,:,1]) == 0
+    assert np.amax(data[:,:,1]) == 1
 
 def test_memory_leak():
     N = 5

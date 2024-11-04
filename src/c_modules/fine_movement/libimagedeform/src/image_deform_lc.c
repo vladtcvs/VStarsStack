@@ -126,7 +126,7 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
         int y = i * self->pixels;
         int debug = 0;
 
-        if (x == 23 && y == 27)
+        if (x == 68 && y == 22)
             debug = 1;
 
         // Init with no shift
@@ -150,12 +150,19 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
             if (iter_x == 0 && iter_y == 0)
             {
                 // We have already calculated it
-                continue;
+            //    continue;
             }
             image_deform_lc_get_area(img, pre_align, &area, x+iter_x, y+iter_y);
-            double corr = image_grid_correlation(&area, &ref_area);
+            image_deform_lc_get_area(ref_img, pre_align, &ref_area, x, y);
+            double corr1 = image_grid_correlation(&area, &ref_area);
+            image_deform_lc_get_area(img, pre_align, &area, x, y);
+            image_deform_lc_get_area(ref_img, pre_align, &ref_area, x-iter_x, y-iter_y);
+            double corr2 = image_grid_correlation(&area, &ref_area);
+            double corr = (corr1 + corr2)/2;
             if (debug)
-                printf("correlation %lf %lf = %lf\n", iter_y, iter_x, best_corr);
+            {
+                printf("correlation %lf %lf = %lf %lf %lf\n", iter_y, iter_x, corr1, corr2, corr);
+            }
             if (corr > best_corr)
             {
                 best_corr = corr;
