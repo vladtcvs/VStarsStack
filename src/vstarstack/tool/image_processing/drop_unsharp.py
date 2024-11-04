@@ -57,7 +57,7 @@ def measure_sharpness_df(df : vstarstack.library.data.DataFrame, method : Estima
         raise Exception(f"Invalid method {method}")
     for channel in df.get_channels():
         img, opts = df.get_channel(channel)
-        if not df.get_channel_option("brightness"):
+        if not df.get_channel_option(channel, "brightness"):
             continue
         amax = np.amax(img)
         amin = np.amin(img)
