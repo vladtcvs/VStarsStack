@@ -222,7 +222,7 @@ def test_approximate_by_correlation_constant1():
     grid_ref.fill(image_ref)
 
     lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
-    deform = lc.find_constant(grid, None, grid_ref, None, 5, 1)
+    deform = lc.find_constant(grid, None, grid_ref, None, 2, 1)
     assert deform is not None
 
     data = deform.content()
@@ -248,15 +248,17 @@ def test_approximate_by_correlation_constant2():
     grid_ref.fill(image_ref)
 
     lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
-    deform = lc.find_constant(grid, None, grid_ref, None, 5, 1)
+    deform = lc.find_constant(grid, None, grid_ref, None, 2, 1)
     assert deform is not None
 
     data = deform.content()
     assert data.shape[0] == h
     assert data.shape[1] == w
     assert data.shape[2] == 2
-    assert np.amin(data) == 1
-    assert np.amax(data) == 1
+    assert np.amin(data[:,:,0]) == 0
+    assert np.amax(data[:,:,0]) == 0
+    assert np.amin(data[:,:,1]) == 1
+    assert np.amax(data[:,:,1]) == 1
 
 def test_approximate_by_correlation1():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))

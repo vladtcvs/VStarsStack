@@ -73,12 +73,12 @@ void image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
     struct ImageGrid global_area;
     image_grid_init(&global_area, img->w, img->h);
     best_x = best_y = 0;
-    image_deform_lc_get_area(img, pre_align, &global_area, 0, 0);
+    image_deform_lc_get_area(img, pre_align, &global_area, img->w/2.0, img->h/2.0);
     best_corr = image_grid_correlation(&global_area, ref_img);
     for (iter_y = -maximal_shift; iter_y <= maximal_shift; iter_y += 1.0 / subpixels)
     for (iter_x = -maximal_shift; iter_x <= maximal_shift; iter_x += 1.0 / subpixels)
     {
-        image_deform_lc_get_area(img, pre_align, &global_area, iter_x, iter_y);
+        image_deform_lc_get_area(img, pre_align, &global_area, iter_x + img->w/2.0, iter_y + img->h/2.0);
         double corr = image_grid_correlation(&global_area, ref_img);
         if (corr > best_corr)
         {
