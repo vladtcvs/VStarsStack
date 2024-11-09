@@ -1,5 +1,11 @@
 # Installation
 
+## From PyPa
+```
+python3 -m pip install vstarstack
+```
+
+## From sources
 ```
 python3 setup.py install [--user]
 ```
