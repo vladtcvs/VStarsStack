@@ -42,7 +42,13 @@ class Aligner:
         self.deform = ImageDeform(self.image_w, self.image_h, self.grid_w, self.grid_h)
         self.deform.fill(shift_array=shift_array)
 
-    def apply_alignment(self, dataframe : DataFrame, subpixels : int):
+    def divergence(self, subpixels : int) -> np.ndarray:
+        """Find divergence"""
+        if type(subpixels) != int:
+            raise Exception("Invalid argument type")
+        return self.deform.divergence(subpixels)
+
+    def apply_alignment(self, dataframe : DataFrame, subpixels : int) -> DataFrame:
         """Apply alignment descriptor to file"""
         for channel in dataframe.get_channels():
             image, opts = dataframe.get_channel(channel)
@@ -58,7 +64,7 @@ class Aligner:
             dataframe.replace_channel(fixed, channel)
         return dataframe
 
-    def serialize(self):
+    def serialize(self) -> dict:
         """Serialize image deform"""
         nitems = self.grid_h * self.grid_w * 2
         shift_array = np.reshape(self.deform.content(), (nitems,))
