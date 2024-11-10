@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -56,6 +56,28 @@ def align_file(project : vstarstack.tool.cfg.Project,
 
 def _align_file_wrapper(arg):
     align_file(*arg)
+
+def display(project: vstarstack.tool.cfg.Project, argv: list):
+    import matplotlib.pyplot as plt
+    import numpy as np
+    align_f = argv[0]
+    with open(align_f) as f:
+        desc = json.load(f)
+
+    if len(argv) >= 3:
+        image_w = int(argv[1])
+        image_h = int(argv[2])
+        desc["image_w"] = image_w
+        desc["image_h"] = image_h
+    elif len(argv) == 2:
+        subpixels = int(argv[1])
+        desc["image_w"] *= subpixels
+        desc["image_h"] *= subpixels
+
+    aligner = Aligner.deserialize(desc)
+    divergence = aligner.divergence(1).content()
+    plt.imshow(divergence)
+    plt.show()
 
 def apply(project: vstarstack.tool.cfg.Project, argv: list):
     if len(argv) >= 3:
