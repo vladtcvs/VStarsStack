@@ -59,23 +59,23 @@ def _align_file_wrapper(arg):
 
 def display(project: vstarstack.tool.cfg.Project, argv: list):
     import matplotlib.pyplot as plt
+    import numpy as np
     align_f = argv[0]
     with open(align_f) as f:
-        aligner = Aligner.deserialize(json.load(f))
+        desc = json.load(f)
 
     if len(argv) >= 3:
         image_w = int(argv[1])
         image_h = int(argv[2])
-    else:
-        image_w = aligner.image_w
-        image_h = aligner.image_h
-    
-    if len(argv) >= 4:
-        subpixels = int(argv[3])
-    else:
-        subpixels = 1
+        desc["image_w"] = image_w
+        desc["image_h"] = image_h
+    elif len(argv) == 2:
+        subpixels = int(argv[1])
+        desc["image_w"] *= subpixels
+        desc["image_h"] *= subpixels
 
-    divergence = aligner.divergence(subpixels)
+    aligner = Aligner.deserialize(desc)
+    divergence = aligner.divergence(1).content()
     plt.imshow(divergence)
     plt.show()
 

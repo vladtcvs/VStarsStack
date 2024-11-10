@@ -103,7 +103,7 @@ double image_deform_get_shift(const struct ImageDeform *deform,
 
     double dx = x - xi;
     double dy = y - yi;
-    if (fabs(dx) < 1e-3 && fabs(dy) < 1e-3)
+    if (dx < 1e-3 && dy < 1e-3)
     {
         return image_deform_get_array(deform, xi, yi, axis);
     }
@@ -218,12 +218,12 @@ void image_deform_calculate_divergence(const struct ImageDeform *deform,
                 dx2 = 1;
             }
 
-            double vx1 = image_deform_get_shift(deform, (x+dx1)*kx, y*ky, 0);
-            double vx2 = image_deform_get_shift(deform, (x+dx2)*kx, y*ky, 0);
+            double vx1 = image_deform_get_shift(deform, (x+dx1)*kx*deform->sx, y*ky*deform->sy, 1);
+            double vx2 = image_deform_get_shift(deform, (x+dx2)*kx*deform->sx, y*ky*deform->sy, 1);
             double ddx = (vx2 - vx1) / (dx2-dx1);
 
-            double vy1 = image_deform_get_shift(deform, x*kx, (y+dy1)*ky, 0);
-            double vy2 = image_deform_get_shift(deform, x*kx, (y+dy2)*ky, 0);
+            double vy1 = image_deform_get_shift(deform, x*kx*deform->sx, (y+dy1)*ky*deform->sy, 0);
+            double vy2 = image_deform_get_shift(deform, x*kx*deform->sx, (y+dy2)*ky*deform->sy, 0);
             double ddy = (vy2 - vy1) / (dy2-dy1);
 
             double div = ddx + ddy;

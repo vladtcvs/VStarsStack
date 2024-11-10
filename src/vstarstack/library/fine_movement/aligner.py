@@ -75,7 +75,7 @@ class Aligner:
             "image_h" : self.image_h,
             "array" : list(shift_array),
         }
-    
+
     @staticmethod
     def deserialize(description : dict):
         """Deserialize image deform"""
