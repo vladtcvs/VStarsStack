@@ -21,7 +21,7 @@ import vstarstack.tool.common
 import vstarstack.tool.cfg
 import vstarstack.library.data
 
-def deconvolution(df : vstarstack.library.data.DataFrame, psf_df : vstarstack.library.data.DataFrame, strength : int):
+def deconvolution(df : vstarstack.library.data.DataFrame, psf_df : vstarstack.library.data.DataFrame, strength : int, method : str):
     for channel in df.get_channels():
         image, opts = df.get_channel(channel)
         if not opts["brightness"]:
@@ -29,30 +29,35 @@ def deconvolution(df : vstarstack.library.data.DataFrame, psf_df : vstarstack.li
         psf,_ = psf_df.get_channel(channel)
         if psf is None:
             continue
-        norm = np.amax(image)
-        deconvolved_RL = skimage.restoration.richardson_lucy(image/norm, psf, num_iter=strength)*norm
-        deconvolved_RL[np.where(np.isnan(deconvolved_RL))] = 0
-        df.replace_channel(deconvolved_RL, channel, **opts)
+        if method == "RL":
+            norm = np.amax(image)
+            deconvolved = skimage.restoration.richardson_lucy(image/norm, psf, num_iter=strength)*norm
+            deconvolved[np.where(np.isnan(deconvolved))] = 0
+        else:
+            raise Exception(f"Unknown method {method}")
+        df.replace_channel(deconvolved, channel, **opts)
     return df
 
-def _process_file(input : str, psf : vstarstack.library.data.DataFrame, output : str, strength : int):
+def _process_file(input : str, psf : vstarstack.library.data.DataFrame, output : str, strength : int, method : str):
     df = vstarstack.library.data.DataFrame.load(input)
-    deconvolution(df, psf, strength)
+    deconvolution(df, psf, strength, method)
+    vstarstack.tool.common.check_dir_exists(output)
     df.store(output)
 
-def _process_single_file(input : str, psf_fname : str, output : str, strength : int):
+def _process_single_file(input : str, psf_fname : str, output : str, strength : int, method : str):
     psf = vstarstack.library.data.DataFrame.load(psf_fname)
-    _process_file(input, psf, output, strength)
+    _process_file(input, psf, output, strength, method)
 
-def _process_dir(inputs : str, psf_fname : str, outputs : str, strength : int):
+def _process_dir(inputs : str, psf_fname : str, outputs : str, strength : int, method : str):
     files = vstarstack.tool.common.listfiles(inputs, ".zip")
     psf = vstarstack.library.data.DataFrame.load(psf_fname)
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
         pool.starmap(_process_file, [(fname, psf,
                                       os.path.join(outputs, name + ".zip"),
-                                      strength) for name, fname in files])
+                                      strength,
+                                      method) for name, fname in files])
 
-def run(project : vstarstack.tool.cfg.Project, argv : list[str]):
+def _process(project : vstarstack.tool.cfg.Project, argv : list[str], method : str):
     """Deconvolution"""
     inputs = argv[0]
     psf_fname = argv[1]
@@ -60,6 +65,10 @@ def run(project : vstarstack.tool.cfg.Project, argv : list[str]):
     strength = int(argv[3])
 
     if os.path.isdir(inputs):
-        _process_dir(inputs, psf_fname, outputs, strength)
+        _process_dir(inputs, psf_fname, outputs, strength, method)
     else:
-        _process_single_file(inputs, psf_fname, outputs, strength)
+        _process_single_file(inputs, psf_fname, outputs, strength, method)
+
+commands = {
+    "rl": (lambda project, argv : _process(project, argv, "RL"),  "Richardson-Lucy deconvolution", "inputs/ psf.zip outputs/ <num_steps>"),
+}
