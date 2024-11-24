@@ -50,6 +50,6 @@ commands = {
     "border": (vstarstack.tool.image_processing.border.run,     "remove border"),
     "normalize": (vstarstack.tool.image_processing.normalize.run,  "normalize to weight"),
     "blur": (vstarstack.tool.image_processing.blur.run,  "gaussian blur"),
-    "deconvolution": (vstarstack.tool.image_processing.deconvolution.run,  "RL deconvolution"),
+    "deconvolution": (vstarstack.tool.image_processing.deconvolution.run,  "RL deconvolution", "inputs/ psf.zip outputs/ <num steps>"),
     "select-sharp" : (vstarstack.tool.image_processing.drop_unsharp.commands, "select sharp images"),
 }
