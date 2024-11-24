@@ -54,6 +54,13 @@ def readfits(filename: str):
         else:
             params["gain"] = 1
 
+        if "BAYERPAT" in plane.header:
+            bayer = "bayer_2_2_" + str(plane.header["BAYERPAT"])
+            encoded = True
+        else:
+            bayer = None
+            encoded = False
+
         if "CCD-TEMP" in plane.header:
             params["temperature"] = float(plane.header["CCD-TEMP"])
 
@@ -63,10 +70,13 @@ def readfits(filename: str):
         dataframe = vstarstack.library.data.DataFrame(params, tags)
 
         if shape[0] == 1:
-            if "FILTER" in plane.header:
-                channel_name = plane.header["FILTER"].strip()
+            if bayer is None:
+                if "FILTER" in plane.header:
+                    channel_name = plane.header["FILTER"].strip()
+                else:
+                    channel_name = "L"
             else:
-                channel_name = "L"
+                channel_name = "raw"
             slice_names.append(channel_name)
         elif shape[0] == 3:
             slice_names.append('R')
@@ -77,6 +87,7 @@ def readfits(filename: str):
             yield None
 
         for i, slice_name in enumerate(slice_names):
-            dataframe.add_channel(original[i, :, :], slice_name, brightness=True, signal=True)
-
+            dataframe.add_channel(original[i, :, :], slice_name, brightness=True, signal=True, encoded=encoded)
+        if bayer is not None:
+            dataframe.add_parameter(bayer, "format")
         yield dataframe
