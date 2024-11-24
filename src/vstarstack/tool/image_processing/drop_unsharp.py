@@ -17,6 +17,7 @@ import os
 import numpy as np
 import scipy.ndimage
 from enum import Enum
+import cv2
 
 import vstarstack.library.data
 import vstarstack.tool.cfg
@@ -44,9 +45,7 @@ def measure_sharpness_sobel(img : np.ndarray, mask : np.ndarray | None) -> float
 def measure_sharpness_laplace(img : np.ndarray, mask : np.ndarray | None) -> float:
     if mask is not None:
         img = img * mask
-    sx = scipy.ndimage.laplace(img, mode='constant')
-    sy = scipy.ndimage.laplace(img, mode='constant')
-    laplace = np.sqrt(sx**2 + sy**2)
+    laplace = cv2.Laplacian(img, cv2.CV_64F).var()
     if mask is not None:
         laplace = laplace * mask
     metric = np.sum(laplace)
@@ -64,9 +63,6 @@ def measure_sharpness_df(df : vstarstack.library.data.DataFrame, method : Estima
         img, opts = df.get_channel(channel)
         if not df.get_channel_option(channel, "brightness"):
             continue
-        amax = np.amax(img)
-        amin = np.amin(img)
-        img = (img - amin)/(amax - amin)
         mask, _, _ = df.get_linked_channel(channel, "mask")
         if method == EstimationMethod.SOBEL:
             metric += measure_sharpness_sobel(img, mask)
