@@ -15,6 +15,7 @@ import os
 import multiprocessing as mp
 import json
 
+import vstarstack.library.calibration.psf
 import vstarstack.tool.common
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
@@ -232,6 +233,20 @@ def _process_approximate_flat(project : vstarstack.tool.cfg.Project,
     df = vstarstack.library.calibration.flat.approximate_flat_image(df)
     df.store(flat_fname)
 
+def _process_build_psf(project : vstarstack.tool.cfg.Project,
+                       argv : list[str]):
+    input_path = argv[0]
+    psf_fname = argv[1]
+    if len(argv) >= 3:
+        threshold = float(argv[2]) / 100.0
+    else:
+        threshold = 0
+    files = vstarstack.tool.common.listfiles(input_path, ".zip")
+    psfs = [item[1] for item in files]
+    src = vstarstack.library.common.FilesImageSource(psfs)
+    psf = vstarstack.library.calibration.psf.prepare_psf(src, threshold)
+    psf.store(psf_fname)
+
 commands = {
     "flatten": (_process_flatten,
                 "Flatten image",
@@ -253,5 +268,8 @@ commands = {
                            "flats/ flat.zip"),
     "approximate-flat" : (_process_approximate_flat,
                           "Approximate flat with polynomic function",
-                          "original_flat.zip result_flat.zip")
+                          "original_flat.zip result_flat.zip"),
+    "build-psf" : (_process_build_psf,
+                   "Create point spread function for deconvolution",
+                   "star_images/ psf.zip [threshold%]")
 }
