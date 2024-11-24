@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,12 +13,15 @@
 #
 import json
 import os
+import logging
 
 import vstarstack.tool.common
 import vstarstack.tool.cfg
 import vstarstack.library.common
 
 from vstarstack.library.stars import describe
+
+logger = logging.getLogger(__name__)
 
 def build_descriptions(image_description: dict,
                        use_angles : bool):
@@ -49,7 +52,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
     files = vstarstack.tool.common.listfiles(path, ".json")
 
     for name, filename in files:
-        print(name)
+        logger.info(f"Processing {name}")
         with open(filename, encoding='utf8') as f:
             description = json.load(f)
         description = build_descriptions(description, project.config.stars.use_angles)

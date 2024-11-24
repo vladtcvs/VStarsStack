@@ -12,12 +12,16 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
+
 import vstarstack.library.data
 import vstarstack.library.fwhm
 import vstarstack.library.stars.detect
 import vstarstack.tool.common
 import numpy as np
 import os
+
+logger = logging.getLogger(__name__)
 
 def _measure_single_fwhm(project, argv):
     fname = argv[0]

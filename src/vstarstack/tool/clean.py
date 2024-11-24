@@ -13,9 +13,11 @@
 #
 
 import os
-
+import logging
 import vstarstack.tool.common
 import vstarstack.tool.cfg
+logger = logging.getLogger(__name__)
+
 
 def run(project: vstarstack.tool.cfg.Project, _argv: list):
     orig = project.config.paths.light.npy
@@ -24,5 +26,5 @@ def run(project: vstarstack.tool.cfg.Project, _argv: list):
     for path in [orig, shifted]:
         files = vstarstack.tool.common.listfiles(path, ".zip")
         for _, filename in files:
-            print(filename)
+            logger.info(f"Remove {filename}")
             os.remove(filename)

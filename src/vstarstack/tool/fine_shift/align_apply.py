@@ -12,7 +12,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-
+import logging
 import os
 import json
 import multiprocessing as mp
@@ -27,6 +27,8 @@ import vstarstack.library.common
 import vstarstack.tool.common
 
 ncpu = vstarstack.tool.cfg.nthreads
+logger = logging.getLogger(__name__)
+
 
 def align_file(project : vstarstack.tool.cfg.Project,
                name : str,
@@ -35,7 +37,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
                output_image_f : str,
                subpixels : int):
     """Apply alignment to each file"""
-    print(f"{name}: {input_image_f} : {desc_f} -> {output_image_f} [{subpixels}]")
+    logger.info(f"{name}: {input_image_f} : {desc_f} -> {output_image_f} [{subpixels}]")
 
     if not os.path.exists(input_image_f):
         return
@@ -49,7 +51,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
 
     # apply alignment to file
     df = aligner.apply_alignment(df, subpixels)
-    print(f"{name} - aligned")
+    logger.info(f"{name} - aligned")
 
     vstarstack.tool.common.check_dir_exists(output_image_f)
     df.store(output_image_f)

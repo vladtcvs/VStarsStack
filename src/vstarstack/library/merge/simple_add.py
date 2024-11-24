@@ -12,12 +12,15 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import numpy as np
 import vstarstack.library.data
 import vstarstack.library.common
 import vstarstack.library.image_process.normalize
 from vstarstack.library.data import DataFrame
 from copy import deepcopy
+
+logger = logging.getLogger(__name__)
 
 def simple_add(images : vstarstack.library.common.IImageSource) -> DataFrame:
     """Just add images"""
@@ -53,12 +56,12 @@ def simple_add(images : vstarstack.library.common.IImageSource) -> DataFrame:
                 try:
                     summary[channel_name] += channel
                     summary_weight[channel_name] += weight
-                except Exception:
-                    print("Can not add image. Skipping")
+                except Exception as excp:
+                    logger.error(f"Can not add image. Skipping. Error = {excp}")
 
     result = vstarstack.library.data.DataFrame(params=params)
     for channel_name, channel in summary.items():
-        print(channel_name)
+        logger.info(channel_name)
         weight_channel_name = "weight-"+channel_name
         result.add_channel(channel, channel_name, **channel_opts[channel_name])
         result.add_channel(summary_weight[channel_name], weight_channel_name, weight=True)

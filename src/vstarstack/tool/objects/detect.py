@@ -15,6 +15,7 @@
 import json
 import os
 import numpy as np
+import logging
 
 import vstarstack.library.data
 import vstarstack.library.image_process
@@ -27,6 +28,8 @@ import vstarstack.tool.common
 import vstarstack.library.objects.brightness_detector as bd
 import vstarstack.library.objects.disc_detector as dd
 
+logger = logging.getLogger(__name__)
+
 def _process_file(project, filename, descfilename, detector):
     image = vstarstack.library.data.DataFrame.load(filename)
 
@@ -37,7 +40,7 @@ def _process_file(project, filename, descfilename, detector):
         desc = {}
     desc["object"] = {}
 
-    print("detector = ", detector)
+    logger.info(f"detector = {detector}")
     gray,_ = vstarstack.library.image_process.togray.df_to_gray(image)
     gray = gray / np.amax(gray)
     if vstarstack.tool.cfg.DEBUG:
@@ -68,7 +71,7 @@ def _process_file(project, filename, descfilename, detector):
 def _process_path(project, npys, descs, detector):
     files = vstarstack.tool.common.listfiles(npys, ".zip")
     for name, filename in files:
-        print(name)
+        logger.info(f"Processing {name}")
         out = os.path.join(descs, name + ".json")
         _process_file(project, filename, out, detector)
 

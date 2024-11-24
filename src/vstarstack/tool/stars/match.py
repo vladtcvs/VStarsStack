@@ -1,6 +1,6 @@
 """Match stars on different images"""
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
 import multiprocessing as mp
 import json
 import math
+import logging
 
 import vstarstack.tool.common
 import vstarstack.tool.usage
@@ -25,6 +26,8 @@ import vstarstack.library.common
 from vstarstack.library.stars.match import select_matching_images
 from vstarstack.library.stars.match import DescriptorMatcher
 from vstarstack.library.stars import describe
+
+logger = logging.getLogger(__name__)
 
 def match_stars(matcher : DescriptorMatcher,
                 name1 : str, name2 : str,
@@ -67,10 +70,10 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
     fov2 = math.atan(H / F)
     fov = min(fov1, fov2)
 
-    print(f"W = {W:.2f} mm")
-    print(f"H = {H:.2f} mm")
-    print(f"F = {F:.2f} mm")
-    print(f"Fov = {fov*180/math.pi:.2f}°")
+    logger.info(f"W = {W:.2f} mm")
+    logger.info(f"H = {H:.2f} mm")
+    logger.info(f"F = {F:.2f} mm")
+    logger.info(f"Fov = {fov*180/math.pi:.2f}°")
 
     max_angle_diff = project.config.stars.match.max_angle_diff_k * fov
     max_dangle_diff = project.config.stars.match.max_dangle_diff * math.pi/180
@@ -90,7 +93,7 @@ def process(project: vstarstack.tool.cfg.Project, argv: list):
             args.append((matcher, desc1[0], desc2[0], desc1[1], desc2[1]))
             total += 1
 
-    print(f"total = {total}")
+    logger.info(f"total = {total}")
     match_table = {}
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
         results = pool.starmap(match_stars, args)

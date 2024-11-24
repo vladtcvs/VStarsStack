@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2022-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
 
 import os
 import multiprocessing as mp
+import logging
 
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
@@ -22,13 +23,15 @@ import vstarstack.library.common
 import vstarstack.library.image_process.distorsion
 import vstarstack.library.data
 import vstarstack.tool.common
+logger = logging.getLogger(__name__)
+
 
 def dedistorsion(distorsion : vstarstack.library.image_process.distorsion.Distorsion,
                  name : str,
                  infname : str,
                  outfname : str):
     """Remove distorsion"""
-    print(f"Processing {name}")
+    logger.info(f"Processing {name}")
     dataframe = vstarstack.library.data.DataFrame.load(infname)
     dataframe = vstarstack.library.image_process.distorsion.fix_distorsion(dataframe, distorsion)
     vstarstack.tool.common.check_dir_exists(outfname)

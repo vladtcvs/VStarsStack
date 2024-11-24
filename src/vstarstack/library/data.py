@@ -1,6 +1,6 @@
 """Dataframe structure for images"""
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2022-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,12 +13,14 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import zipfile
 import json
 from typing import Tuple, List
 import numpy as np
 from copy import deepcopy
 
+logger = logging.getLogger(__name__)
 
 class InvalidParameterException(Exception):
     """Invalid parameter in DataFrame"""
@@ -284,6 +286,6 @@ class DataFrame:
                             name, links[link_type][name], link_type)
 
         except Exception as excp:
-            print(f"Error reading {input} : {excp}")
+            logger.error(f"Error reading {input} : {excp}")
             raise excp
         return data

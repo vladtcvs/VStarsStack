@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
 import os
 import json
 import numpy  as np
+import logging
 
 import vstarstack.tool.common
 import vstarstack.tool.cfg
@@ -23,6 +24,8 @@ import vstarstack.library.common
 import vstarstack.library.projection.tools
 from vstarstack.library.stars import detect
 import vstarstack.library.image_process.togray
+
+logger = logging.getLogger(__name__)
 
 def detect_stars(projection,
                  gray : np.ndarray):
@@ -53,7 +56,7 @@ def _process_file(name, fname, jsonfile, num_stars, mindist):
     gray,_ = vstarstack.library.image_process.togray.df_to_gray(image)
     projection = vstarstack.library.projection.tools.get_projection(image)
     stars = detect_stars(projection, gray)
-    print("Detected ", len(stars))
+    logger.info(f"Detected {len(stars)}")
     stars = get_brightest(stars, num_stars, mindist)
     stars = [{"keypoint" : item} for item in stars]
     desc = {
@@ -72,7 +75,7 @@ def _process_dir(path, jsonpath, num_stars, mindist):
     files = vstarstack.tool.common.listfiles(path, ".zip")
 
     for name, filename in files:
-        print(name)
+        logger.info(f"Processing {name}")
         _process_file(name, filename, os.path.join(jsonpath, name + ".json"), num_stars, mindist)
 
 def run(project: vstarstack.tool.cfg.Project, argv: list):

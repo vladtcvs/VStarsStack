@@ -12,11 +12,14 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import math
 from typing import Generator
 import vstarstack.library.common
 import vstarstack.library.data
 import vstarstack.library.merge.simple_mean
+
+logger = logging.getLogger(__name__)
 
 def remove_dark(dataframe : vstarstack.library.data.DataFrame,
                 dark : vstarstack.library.data.DataFrame):
@@ -31,7 +34,7 @@ def remove_dark(dataframe : vstarstack.library.data.DataFrame,
                 break
 
     if dark_channel_name is None:
-        print("Can not find brightness channel, skip")
+        logger.warning("Can not find brightness channel, skip")
         return None
 
     for channel in dataframe.get_channels():
@@ -39,10 +42,10 @@ def remove_dark(dataframe : vstarstack.library.data.DataFrame,
         if dataframe.get_channel_option(channel, "weight"):
             continue
         if not dataframe.get_channel_option(channel, "brightness"):
-            print(f"Skipping {channel}, not brightness")
+            logger.info(f"Skipping {channel}, not brightness")
             continue
         if dataframe.get_channel_option(channel, "dark-removed"):
-            print(f"Skipping {channel}, dark already removed")
+            logger.info(f"Skipping {channel}, dark already removed")
             continue
 
         if channel in dark.get_channels():

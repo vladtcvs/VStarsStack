@@ -15,6 +15,7 @@
 
 import os
 import multiprocessing as mp
+import logging
 
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
@@ -28,6 +29,8 @@ import vstarstack.tool.common
 
 from vstarstack.library.projection import ProjectionType
 from vstarstack.library.projection.tools import add_description
+
+logger = logging.getLogger(__name__)
 
 def _work(reader,
           project: vstarstack.tool.cfg.Project,
@@ -46,7 +49,7 @@ def _work(reader,
             "kw": project.config.telescope.camera.pixel_W / 1000,
         }
 
-    print(f"File: {input_file}")
+    logger.info(f"Processing file: {input_file}")
     for frame_id, dataframe in enumerate(reader(input_file)):
         outfname = os.path.join(output_dir, f"{output_name}_{frame_id:06}.zip")
         add_description(dataframe, projection, **params)

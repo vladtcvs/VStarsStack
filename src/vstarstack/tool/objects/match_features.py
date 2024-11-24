@@ -15,11 +15,14 @@
 import csv
 import json
 import numpy as np
+import logging
 
 import vstarstack.tool.common
 import vstarstack.tool.cfg
 import vstarstack.library.data
 from vstarstack.library.objects.features import match_images
+
+logger = logging.getLogger(__name__)
 
 def _load_keypoints(files):
     points = {}
@@ -68,10 +71,10 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
     features_percent = project.config.objects.features.features_percent / 100.0
 
     files = vstarstack.tool.common.listfiles(points_path, ".json")
-    print(f"Found {len(files)} files")
+    logger.info(f"Found {len(files)} files")
     files = [filename for _, filename in files]
     keypoints = _load_keypoints(files)
-    print("Found keypoints")
+    logger.info("Found keypoints")
 
     points = {}
     descs = {}
@@ -82,17 +85,17 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
 
     if comparsion_list_file is not None:
         match_list = _load_match_table(comparsion_list_file)
-        print(f"Load comparsion list from {comparsion_list_file}: {len(match_list)} comparsions")
+        logger.info(f"Load comparsion list from {comparsion_list_file}: {len(match_list)} comparsions")
     else:
         match_list = _build_default_match_table(keypoints.keys())
-        print(f"Build default comparsion list: {len(match_list)} comparsions")
+        logger.info(f"Build default comparsion list: {len(match_list)} comparsions")
 
     matches = match_images(points, descs,
                            max_feature_delta,
                            features_percent,
                            match_list)
 
-    print("Builded match table")
+    logger.info("Builded match table")
     vstarstack.tool.common.check_dir_exists(matchtable_fname)
     with open(matchtable_fname, "w", encoding='utf8') as f:
         json.dump(matches, f, indent=4, ensure_ascii=False)

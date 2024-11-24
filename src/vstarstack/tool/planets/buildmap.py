@@ -13,6 +13,7 @@
 #
 
 import os
+import logging
 
 import vstarstack.library.data
 import vstarstack.tool.cfg
@@ -20,6 +21,8 @@ import vstarstack.tool.usage
 import vstarstack.library.common
 import vstarstack.library.planetmap
 import vstarstack.tool.common
+
+logger = logging.getLogger(__name__)
 
 def _process_file(project : vstarstack.tool.cfg.Project,
                  filename : str,
@@ -31,7 +34,7 @@ def _process_path(project : vstarstack.tool.cfg.Project,
                  maps_path : str):
     files = vstarstack.tool.common.listfiles(images_path, ".zip")
     for name, filename in files:
-        print(name)
+        logger.info(f"Processing {name}")
         out = os.path.join(maps_path, name + ".zip")
         _process_file(project, filename, out)
 

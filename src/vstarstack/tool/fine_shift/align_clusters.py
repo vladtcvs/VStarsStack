@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,7 +12,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-
+import logging
 import os
 import json
 import multiprocessing as mp
@@ -26,6 +26,7 @@ import vstarstack.library.common
 
 import vstarstack.tool.common
 
+logger = logging.getLogger(__name__)
 ncpu = vstarstack.tool.cfg.nthreads
 
 def create_aligner(project: vstarstack.tool.cfg.Project, W: int, H: int):
@@ -46,7 +47,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
                cluster_f : str,
                desc_f : str):
     """Apply alignment to each file"""
-    print(name)
+    logger.info(f"Processing {name}")
     if not os.path.exists(input_image_f):
         return
     with open(cluster_f, encoding='utf8') as f:
@@ -58,9 +59,9 @@ def align_file(project : vstarstack.tool.cfg.Project,
     aligner_factory = create_aligner(project, w, h)
 
     # find alignment
-    print(f"{name} - start alignment")
+    logger.info(f"{name} - start alignment")
     alignment = aligner_factory.find_alignment(name, clusters)
-    print(f"{name} - align found")
+    logger.info(f"{name} - align found")
     vstarstack.tool.common.check_dir_exists(desc_f)
     with open(desc_f, "w", encoding='utf8') as f:
         json.dump(alignment.serialize(), f, ensure_ascii=False, indent=2)

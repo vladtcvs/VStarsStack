@@ -12,6 +12,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import numpy as np
 import scipy
 
@@ -21,6 +22,8 @@ from vstarstack.library.fine_movement.module import ImageDeformLC
 from vstarstack.library.fine_movement.module import ImageDeformGC
 
 from vstarstack.library.data import DataFrame
+
+logger = logging.getLogger(__name__)
 
 def _cluster_average(cluster):
     xs = [cluster[name]["x"] for name in cluster]
@@ -119,9 +122,9 @@ class ClusterAlignerBuilder:
         mean_points_coordinates = np.array(mean_points_coordinates).astype("double")
         image_points_coordinates = np.array(image_points_coordinates).astype("double")
 
-        print(f"\tusing {len(mean_points_coordinates)} points")
+        logger.info(f"using {len(mean_points_coordinates)} points")
         if len(mean_points_coordinates) < self.min_points:
-            print("\tskip - too low points")
+            logger.warning(f"skip - too low points: {len(mean_points_coordinates)}, need {self.min_points}")
             return None
 
         deform = self.correlator.find(points=mean_points_coordinates,
@@ -185,7 +188,7 @@ class CorrelationAlignedBuilder:
                                       self.radius,
                                       self.max_shift,
                                       self.subpixels)
-        print(f"smooth = {smooth}")
+        logger.info(f"smooth = {smooth}")
         if smooth is not None:
             data = deform.content()
             data = scipy.ndimage.gaussian_filter(data, sigma=smooth, axes=(0,1))

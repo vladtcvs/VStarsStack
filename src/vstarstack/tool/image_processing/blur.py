@@ -13,6 +13,7 @@
 #
 import os
 import multiprocessing as mp
+import logging
 
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
@@ -22,8 +23,10 @@ import vstarstack.library.image_process.blur
 
 import vstarstack.tool.common
 
+logger = logging.getLogger(__name__)
+
 def blur(name, fname, outname, size):
-    print(name)
+    logger.info(f"Processing {name}")
 
     img = vstarstack.library.data.DataFrame.load(fname)
     img = vstarstack.library.image_process.blur.blur(img, size)

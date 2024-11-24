@@ -12,6 +12,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import os
 import numpy as np
 import scipy.ndimage
@@ -20,6 +21,8 @@ from enum import Enum
 import vstarstack.library.data
 import vstarstack.tool.cfg
 import vstarstack.tool.common
+
+logger = logging.getLogger(__name__)
 
 class EstimationMethod(Enum):
     """Sharpness estimation method"""
@@ -54,7 +57,9 @@ def measure_sharpness_df(df : vstarstack.library.data.DataFrame, method : Estima
     metric = 0
     nch = 0
     if method not in [EstimationMethod.LAPLACE, EstimationMethod.SOBEL]:
-        raise Exception(f"Invalid method {method}")
+        logger.error(f"Invalid method {method}")
+        return None
+
     for channel in df.get_channels():
         img, opts = df.get_channel(channel)
         if not df.get_channel_option(channel, "brightness"):
@@ -77,7 +82,9 @@ def select_sharpests(fnames : list[str], percent : int, method : EstimationMetho
     for fname in fnames:
         df = vstarstack.library.data.DataFrame.load(fname)
         metric = measure_sharpness_df(df, method)
-        print(f"{fname} : {metric}")
+        if metric is None:
+            continue
+        logger.info(f"{fname} : {metric}")
         metrics.append((fname, metric))
     metrics = sorted(metrics, key=lambda item: item[1], reverse=True)
     metrics = metrics[:int(len(metrics)*percent/100)]
@@ -97,7 +104,7 @@ def _process(project : vstarstack.tool.cfg.Project, argv : list[str], method : E
         fnames.remove(fname)
 
     for fname in fnames:
-        print(f"Removing {fname}")
+        logger.info(f"Removing {fname}")
         os.remove(fname)
 
 commands = {

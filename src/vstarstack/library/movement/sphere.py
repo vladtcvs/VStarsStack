@@ -13,6 +13,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import math
 import json
 from typing import Any
@@ -22,6 +23,8 @@ from scipy.spatial.transform import Rotation
 
 import vstarstack.library.movement.basic_movement
 from vstarstack.library.movement.movements import SphereMovement
+
+logger = logging.getLogger(__name__)
 
 def p2vec(pos):
     """Lon,lat -> x,y,z"""
@@ -124,8 +127,7 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
         v1_int = v1_int / np.linalg.norm(v1_int)
         v2_int = v2_int / np.linalg.norm(v2_int)
 
-        if debug:
-            print("angle1 = ", angle1)
+        logger.debug(f"angle1 = {angle1}")
         assert (vecangle(v1_int, v1_to) < 1e-5)
 
         # build rotation2, which moves v2_int to v2_to
@@ -172,7 +174,7 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
             rotvec = transformation.rot.as_rotvec()
             axises[i, 0:3] = rotvec
 
-        # print("axises", axises)
+        logger.debug(f"axises {axises}")
         if percent == 100:
             # Use all vectors
             rotvec = np.average(axises, axis=0)
