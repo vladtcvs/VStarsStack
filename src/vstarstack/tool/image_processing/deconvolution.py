@@ -21,57 +21,61 @@ import vstarstack.tool.common
 import vstarstack.tool.cfg
 import vstarstack.library.data
 
-def deconvolution(df : vstarstack.library.data.DataFrame, strength : int):
-    psf = np.zeros((3, 3))
-
-    psf[1, 1] = 1
-
-    psf[0, 1] = 1/strength
-    psf[2, 1] = 1/strength
-    psf[1, 0] = 1/strength
-    psf[1, 2] = 1/strength
-
-    psf[0, 0] = 1/strength/1.41
-    psf[0, 2] = 1/strength/1.41
-    psf[2, 0] = 1/strength/1.41
-    psf[2, 0] = 1/strength/1.41
-
-    psf = psf / np.sum(psf)
-
+def deconvolution(df : vstarstack.library.data.DataFrame, psf_df : vstarstack.library.data.DataFrame, argv : list, method : str):
     for channel in df.get_channels():
         image, opts = df.get_channel(channel)
         if not opts["brightness"]:
             continue
+        psf,_ = psf_df.get_channel(channel)
+        if psf is None:
+            continue
         norm = np.amax(image)
-        deconvolved_RL = skimage.restoration.richardson_lucy(image/norm, psf, num_iter=100)*norm
-        deconvolved_RL[np.where(np.isnan(deconvolved_RL))] = 0
-        df.replace_channel(deconvolved_RL, channel)
+        image = image / norm
+        if method == "RL":
+            num_steps = int(argv[0])
+            deconvolved = skimage.restoration.richardson_lucy(image, psf, num_iter=num_steps)
+        elif method == "Wiener":
+            balance = float(argv[0])
+            deconvolved = skimage.restoration.wiener(image, psf, balance)
+        else:
+            raise Exception(f"Unknown method {method}")
+        deconvolved[np.where(np.isnan(deconvolved))] = 0
+        deconvolved = deconvolved * norm
+        df.replace_channel(deconvolved, channel, **opts)
     return df
 
-def _process_file(input : str, output : str, strength : int):
+def _process_file(input : str, psf : vstarstack.library.data.DataFrame, output : str, argv : list, method : str):
     df = vstarstack.library.data.DataFrame.load(input)
-    deconvolution(df, strength)
+    deconvolution(df, psf, argv, method)
+    vstarstack.tool.common.check_dir_exists(output)
     df.store(output)
 
-def _process_dir(inputs : str, outputs : str, strength : int):
-    files = vstarstack.tool.common.listfiles(inputs, ".zip")
-    with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
-        pool.starmap(_process_file, [(fname,
-                                      os.path.join(outputs, name + ".zip"),
-                                      strength) for name, fname in files])
+def _process_single_file(input : str, psf_fname : str, output : str, argv : list, method : str):
+    psf = vstarstack.library.data.DataFrame.load(psf_fname)
+    _process_file(input, psf, output, argv, method)
 
-def run(project : vstarstack.tool.cfg.Project, argv : list[str]):
+def _process_dir(inputs : str, psf_fname : str, outputs : str, argv : list, method : str):
+    files = vstarstack.tool.common.listfiles(inputs, ".zip")
+    psf = vstarstack.library.data.DataFrame.load(psf_fname)
+    with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
+        pool.starmap(_process_file, [(fname, psf,
+                                      os.path.join(outputs, name + ".zip"),
+                                      argv,
+                                      method) for name, fname in files])
+
+def _process(project : vstarstack.tool.cfg.Project, argv : list[str], method : str):
     """Deconvolution"""
-    if len(argv) >= 3:
-        inputs = argv[0]
-        strength = int(argv[1])
-        outputs = argv[2]
-    else:
-        inputs = project.config.paths.light.npy
-        outputs = project.config.paths.light.npy
-        strength = int(argv[0])
+    inputs = argv[0]
+    psf_fname = argv[1]
+    outputs = argv[2]
+    argv = argv[3:]
 
     if os.path.isdir(inputs):
-        _process_dir(inputs, outputs, strength)
+        _process_dir(inputs, psf_fname, outputs, argv, method)
     else:
-        _process_file(inputs, outputs, strength)
+        _process_single_file(inputs, psf_fname, outputs, argv, method)
+
+commands = {
+    "rl": (lambda project, argv : _process(project, argv, "RL"),  "Richardson-Lucy deconvolution", "inputs/ psf.zip outputs/ <num_steps>"),
+    "wiener": (lambda project, argv : _process(project, argv, "Wiener"),  "Wiener deconvolution", "inputs/ psf.zip outputs/ <balance>"),
+}
