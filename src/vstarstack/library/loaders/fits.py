@@ -13,9 +13,11 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 from astropy.io import fits
 
 import vstarstack.library.data
+logger = logging.getLogger(__name__)
 
 def readfits(filename: str):
     """Read fits image file"""
@@ -71,7 +73,7 @@ def readfits(filename: str):
             slice_names.append('G')
             slice_names.append('B')
         else:
-            print("Unknown image format, skip")
+            logger.error(f"Unknown image format with shape {shape}, skip")
             yield None
 
         for i, slice_name in enumerate(slice_names):

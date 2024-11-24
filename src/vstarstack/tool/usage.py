@@ -12,10 +12,13 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import os
 import importlib
 
 _PRGNAME = "vstarstack"
+
+logger = logging.getLogger(__name__)
 
 def complete_path_in_dir(dirname : str | None, prefix : str):
     paths = os.listdir(dirname)
@@ -146,7 +149,7 @@ def run(project, argv, base, commands, message=None):
             new_base = base + " " + cmd
         else:
             new_base = cmd
-        print("Load module: %s" % submodule)
+        logger.info("Load module: %s" % submodule)
         loaded_submodule = importlib.import_module(submodule)
         if "commands" in dir(loaded_submodule):
             run(project, argv[1:], new_base, loaded_submodule.commands, message)

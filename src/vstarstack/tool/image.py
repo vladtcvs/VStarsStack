@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2022-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@ import os
 import math
 import numpy as np
 import multiprocessing as mp
+import logging
 
 import vstarstack.library
 import vstarstack.library.data
@@ -29,6 +30,8 @@ FLOOR = vstarstack.tool.cfg.get_param("clip_floor", bool, False)
 HDR = vstarstack.tool.cfg.get_param("hdr", bool, False)
 NORM = vstarstack.tool.cfg.get_param("normalize", bool, True)
 ADJUST_BLACK = vstarstack.tool.cfg.get_param("adjust_black", bool, False)
+
+logger = logging.getLogger(__name__)
 
 def compress_clip(img, slope):
     img = img / np.amax(img)
@@ -63,7 +66,7 @@ def convert_to_uint16(img, slope, maxshift, adjust_black):
         intimg = (compressed*65535).astype('int')
         count_0 = intimg[np.where(intimg == 0)].size
         count_1 = intimg[np.where(intimg == 1)].size
-        print("%i : %0.5f: %i - %i" % (idx, shift, count_0, count_1))
+        logger.info(f"{idx} : {shift} : {count_0} - {count_1}")
         if count_0 <= count_1:
             idx2 = idx
         else:
@@ -88,15 +91,15 @@ def _make_frames(dataframe, channels):
 
             frames["RGB"] = rgb
         else:
-            print("Channel = ", channel)
+            logger.info(f"Channel = {channel}")
             img, options = dataframe.get_channel(channel)
-            print("Shape = ", img.shape)
+            logger.info(f"Shape = {img.shape}")
 
             if options["brightness"] or options["weight"]:
                 img = img.astype(np.float64)
                 amin = max(np.amin(img), 0)
                 amax = np.amax(img)
-                print(f"{channel}: {amin} - {amax}")
+                logger.info(f"{channel}: {amin} - {amax}")
 
             frames[channel] = img
     return frames
@@ -189,7 +192,7 @@ def _convert(_project, argv):
 def _cut_file(path, out, left, top, right, bottom):
     import vstarstack.library.data
     from vstarstack.library.image_process.cut import cut
-    print("Processing %s" % path)
+    logger.info(f"Processing {path}")
     dataframe = vstarstack.library.data.DataFrame.load(path)
     result = cut(dataframe, left, top, right, bottom)
     vstarstack.tool.common.check_dir_exists(out)
@@ -220,7 +223,7 @@ def _rename_channel(_project, argv):
     name = argv[0]
     channel = argv[1]
     target = argv[2]
-    print(name)
+    logger.info(f"Rename channel \"{channel}\" to \"{target}\" in file {name}")
     dataframe = vstarstack.library.data.DataFrame.load(name)
     dataframe.rename_channel(channel, target)
     vstarstack.tool.common.check_dir_exists(name)
@@ -293,7 +296,7 @@ def _select_bpp(_project, argv):
     if os.path.isdir(inpath):
         files = vstarstack.tool.common.listfiles(inpath, ".zip")
         for name, fname in files:
-            print(f"Processing {name}")
+            logger.info(f"Processing {name}")
             outname = os.path.join(outpath, name+".zip")
             _select_bpp_file(fname, format, outname)
     else:

@@ -1,6 +1,6 @@
 """Image fixes"""
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
 
 import os
 import shutil
+import logging
 
 import vstarstack.library.common
 import vstarstack.tool.cfg
@@ -29,22 +30,21 @@ import vstarstack.tool.image_processing.drop_unsharp
 import vstarstack.tool.image_processing.deconvolution
 import vstarstack.tool.common
 
+logger = logging.getLogger(__name__)
+
 def copy(project: vstarstack.tool.cfg.Project, argv: list):
     """Copy files"""
-    if len(argv) > 2:
-        orig = argv[0]
-        fixed = argv[1]
-    else:
-        orig = project.config.paths.light.npy
-        fixed = project.config.paths.light.npy
+    orig = argv[0]
+    fixed = argv[1]
+
     files = vstarstack.tool.common.listfiles(orig, ".zip")
     for name, fname in files:
-        print("Copying ", name)
+        logger.info("Copying {name} to {fixed} dir")
         fname_out = os.path.join(fixed, name + ".zip")
         shutil.copyfile(fname, fname_out)
 
 commands = {
-    "copy": (copy, "just copy images from original to pipeline dir"),
+    "copy": (copy, "just copy images from original to pipeline dir", "source/ destination/"),
     "distorsion": (vstarstack.tool.image_processing.distorsion.run, "fix distorsion"),
     "remove-sky": (vstarstack.tool.image_processing.remove_sky.commands, "remove sky"),
     "border": (vstarstack.tool.image_processing.border.run,     "remove border"),

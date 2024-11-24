@@ -13,7 +13,7 @@
 #
 import os
 import multiprocessing as mp
-import json
+import logging
 
 import vstarstack.library.calibration.psf
 import vstarstack.tool.common
@@ -26,11 +26,13 @@ import vstarstack.library.calibration.flat
 
 from vstarstack.tool.darks_library import DarksLibrary
 
+logger = logging.getLogger(__name__)
+
 # applying flats
 def _process_file_flatten(input_fname : str,
                           flat : vstarstack.library.data.DataFrame,
                           output_fname : str):
-    print(f"Processing {input_fname}")
+    logger.info(f"Processing {input_fname}")
     dataframe = vstarstack.library.data.DataFrame.load(input_fname)
     result = vstarstack.library.calibration.flat.flatten(dataframe, flat)
     vstarstack.tool.common.check_dir_exists(output_fname)
@@ -60,11 +62,11 @@ def _process_flatten(_project : vstarstack.tool.cfg.Project,
 def _process_file_remove_dark(input_fname : str,
                               dark : vstarstack.library.data.DataFrame,
                               output_fname : str):
-    print(f"Processing {input_fname}")
+    logger.info(f"Processing {input_fname}")
     dataframe = vstarstack.library.data.DataFrame.load(input_fname)
     result = vstarstack.library.calibration.dark.remove_dark(dataframe, dark)
     if result is None:
-        print(f"Can not remove dark from {input_fname}")
+        logger.warning(f"Can not remove dark from {input_fname}")
     vstarstack.tool.common.check_dir_exists(output_fname)
     result.store(output_fname)
 
@@ -93,7 +95,7 @@ def _process_file_remove_dark_auto(input_fname : str,
                                    lib : DarksLibrary,
                                    dark_dfs : dict,
                                    output_fname : str):
-    print(f"Processing {input_fname}")
+    logger.info(f"Processing {input_fname}")
     dataframe = vstarstack.library.data.DataFrame.load(input_fname)
     params = dataframe.params
     exposure = params["exposure"]
@@ -104,19 +106,19 @@ def _process_file_remove_dark_auto(input_fname : str,
         temperature = None
 
     if temperature is not None:
-        print(f"\tParameters: exposure = {exposure}, gain = {gain}, temperature = {temperature}")
+        logger.info(f"Parameters: exposure = {exposure}, gain = {gain}, temperature = {temperature}")
     else:
-        print(f"\tParameters: exposure = {exposure}, gain = {gain}")
+        logger.info(f"Parameters: exposure = {exposure}, gain = {gain}")
 
     darks = lib.find_darks(exposure, gain, temperature)
     if len(darks) == 0:
-        print(f"\tCan not find corresponsing dark for {input_fname}, skipping")
+        logger.warning(f"Can not find corresponsing dark for {input_fname}, skipping")
         return
     dark_fname = darks[0]["name"]
-    print(f"\tUsing dark {dark_fname}")
+    logger.info(f"Using dark {dark_fname}")
     result = vstarstack.library.calibration.dark.remove_dark(dataframe, dark_dfs[dark_fname])
     if result is None:
-        print(f"\tCan not remove dark from {input_fname}")
+        logger.warning(f"Can not remove dark from {input_fname}")
     vstarstack.tool.common.check_dir_exists(output_fname)
     result.store(output_fname)
 
@@ -139,7 +141,7 @@ def _process_remove_dark_auto(project : vstarstack.tool.cfg.Project,
     darks = vstarstack.tool.common.listfiles(darks_path, ".zip")
     dark_dfs = {}
     for name, fname in darks:
-        print(f"Loading {name}")
+        logger.info(f"Loading {name}")
         df = vstarstack.library.data.DataFrame.load(fname)
         params = df.params
         exposure = params["exposure"]

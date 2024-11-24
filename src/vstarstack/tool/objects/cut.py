@@ -15,11 +15,14 @@ import json
 import os
 import numpy as np
 import cv2
+import logging
 
 import vstarstack.tool.cfg
 import vstarstack.library.common
 import vstarstack.library.data
 import vstarstack.tool.common
+
+logger = logging.getLogger(__name__)
 
 def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
     if len(argv) < 3:
@@ -42,19 +45,19 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
         with open(filename, encoding='utf8') as f:
             detection = json.load(f)
         r = int(detection["object"]["r"])
-        print(f"Loading info: {name}, r = {r}")
+        logger.info(f"Loading info: {name}, r = {r}")
         if r > maxr:
             maxr = r
     disk_radius=int(maxr+0.5)
     maxr = int(maxr+0.5)+margin
     size = 2*maxr+1
-    print("maxr = ", maxr, " size = ", size)
+    logger.info(f"maxr = {maxr} size = {size}")
 
     mask = np.zeros((size,size))
     cv2.circle(mask, (maxr,maxr), disk_radius, 1, -1)
 
     for name, filename in files:
-        print(name)
+        logger.info(f"Processing {name}")
         with open(filename, encoding='utf8') as f:
             detection = json.load(f)
 
@@ -66,11 +69,7 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
         bottom = top + size
 
         imagename = os.path.join(npypath, name + ".zip")
-        try:
-            image = vstarstack.library.data.DataFrame.load(imagename)
-        except Exception:
-            print("Can not load ", name)
-            continue
+        image = vstarstack.library.data.DataFrame.load(imagename)
 
         image.add_channel(mask, "mask", mask=True)
         for channel in list(image.get_channels()):
@@ -135,6 +134,6 @@ def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
             vstarstack.tool.common.check_dir_exists(outname)
             image.store(outname)
         else:
-            print(f"Skipping {outname}")
+            logger.warning(f"Skipping {outname}")
             if os.path.exists(outname):
                 os.remove(outname)

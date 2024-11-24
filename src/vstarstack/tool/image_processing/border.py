@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 Vladislav Tsendrovskii
+# Copyright (c) 2022-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,6 +13,7 @@
 #
 import os
 import multiprocessing as mp
+import logging
 
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
@@ -21,8 +22,10 @@ import vstarstack.library.data
 import vstarstack.library.image_process.border
 import vstarstack.tool.common
 
+logger = logging.getLogger(__name__)
+
 def border(name, fname, outname, bw_left, bw_top, bw_right, bw_bottom):
-    print(name)
+    logger.info(f"Processing {name}")
 
     img = vstarstack.library.data.DataFrame.load(fname)
     img = vstarstack.library.image_process.border.border(img,
@@ -83,4 +86,4 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
         else:
             process_file(argv)
     else:
-        print("No border specified")
+        logger.error("No border specified")

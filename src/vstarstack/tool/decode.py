@@ -14,6 +14,7 @@
 
 import os
 import multiprocessing as mp
+import logging
 
 import vstarstack.library.data
 import vstarstack.library.debayer.bayer
@@ -27,16 +28,17 @@ import vstarstack.library.common
 from vstarstack.library.debayer.bayer import DebayerMethod
 
 nthreads = vstarstack.tool.cfg.nthreads
+logger = logging.getLogger(__name__)
 
 def _process_file(name, default_format, fname, output):
-    print(name)
+    logger.info(f"Processing {name}")
     dataframe = vstarstack.library.data.DataFrame.load(fname)
     if "format" in dataframe.params:
         mode = dataframe.params["format"]
     else:
         mode = default_format
 
-    print(f"Mode = {mode}")
+    logger.info(f"Mode = {mode}")
     if mode[:6] == "bayer_":
         mask_desc = mode[6:]
         mask = vstarstack.library.debayer.bayer.generate_mask(mask_desc)

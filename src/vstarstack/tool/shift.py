@@ -16,7 +16,7 @@
 import os
 import math
 import json
-import typing
+import logging
 import multiprocessing as mp
 import numpy as np
 
@@ -33,6 +33,8 @@ import vstarstack.library.movement.move_image
 from vstarstack.library.projection import ProjectionType
 
 import vstarstack.tool.common
+
+logger = logging.getLogger(__name__)
 
 ncpu = vstarstack.tool.cfg.nthreads
 #ncpu = 1
@@ -62,16 +64,16 @@ def _make_shift_same_size(name : str, filename : str,
                           outfname : str,
                           interpolate : bool | None):
     if shift is None:
-        print(f"Skip {name}")
+        logger.warning(f"Skip {name}")
         return
-    print(f"Processing {name}")
+    logger.info(f"Processing {name}")
     dataframe = vstarstack.library.data.DataFrame.load(filename)
-    print(f"Loaded {name}")
+    logger.info(f"Loaded {name}")
     result = vstarstack.library.movement.move_image.move_dataframe(dataframe, shift, interpolate=interpolate)
-    print(f"Transformed {name}")
+    logger.info(f"Transformed {name}")
     vstarstack.tool.common.check_dir_exists(outfname)
     result.store(outfname)
-    print(f"Saved {name}")
+    logger.info(f"Saved {name}")
 
 def _make_shift_extended_size(name : str, filename : str,
                               shift : Movement | None,
@@ -81,11 +83,11 @@ def _make_shift_extended_size(name : str, filename : str,
                               output_proj_desc : dict,
                               interpolate : bool | None):
     if shift is None:
-        print(f"Skip {name}")
+        logger.warning(f"Skip {name}")
         return
-    print(f"Processing {name}")
+    logger.info(f"Processing {name}")
     dataframe = vstarstack.library.data.DataFrame.load(filename)
-    print(f"Loaded {name}")
+    logger.info(f"Loaded {name}")
 
     input_proj = vstarstack.library.projection.tools.get_projection(dataframe)
     output_proj = vstarstack.library.projection.tools.build_projection(output_proj, output_proj_desc, output_shape)
@@ -94,10 +96,10 @@ def _make_shift_extended_size(name : str, filename : str,
                                                                    output_proj=output_proj,
                                                                    output_shape=output_shape,
                                                                    interpolate=interpolate)
-    print(f"Transformed {name}")
+    logger.info(f"Transformed {name}")
     vstarstack.tool.common.check_dir_exists(outfname)
     result.store(outfname)
-    print(f"Saved {name}")
+    logger.info(f"Saved {name}")
 
 def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
     """Apply shifts to images"""
@@ -127,11 +129,11 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
 
 def _find_shifted_corners(arg):
     filename, name, shifts = arg
-    print(f"Estimating size of {name}")
+    logger.info(f"Estimating size of {name}")
     df = vstarstack.library.data.DataFrame.load(filename)
     input_proj_type, input_proj_desc = vstarstack.library.projection.tools.extract_description(df)
     if input_proj_type != ProjectionType.Perspective:
-        print("Invalid projection type: ", input_proj_type)
+        logger.error(f"Invalid projection type: {input_proj_type}")
         return (None, None, None, None, None, None, None)
 
     w = df.get_parameter("w")
@@ -142,7 +144,7 @@ def _find_shifted_corners(arg):
 
     points = np.array([(0,0),(w,0),(0,h),(w,h)])
     if name not in shifts:
-        print(f"Skip {name}")
+        logger.warning(f"Skip {name} which is not present in shifts")
         return (None, None, None, None, None, None, None)
     shift = shifts[name]
     shifted_points = shift.apply(points.astype('double'), input_proj, input_proj)
@@ -218,7 +220,7 @@ def apply_shift_extended(project: vstarstack.tool.cfg.Project, argv: list[str]):
 
     output_shape, output_proj, output_proj_desc = _find_extended_perspective(images, shifts)
 
-    print(f"Resulting size: {output_shape[1]}x{output_shape[0]} ")
+    logger.info(f"Resulting size: {output_shape[1]}x{output_shape[0]}")
 
     args = [(name,
              filename,

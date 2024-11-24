@@ -16,7 +16,8 @@
 
 
 import sys
-
+import logging
+import vstarstack.tool.common
 import vstarstack.tool.process
 import vstarstack.tool.cfg
 import vstarstack.tool.usage
@@ -31,6 +32,12 @@ def main():
         for variant in variants:
             print(variant)
     else:
+        loglevel = vstarstack.tool.cfg.get_param("log", str, "INFO")
+        numeric_level = getattr(logging, loglevel.upper(), None)
+        if not isinstance(numeric_level, int):
+            raise ValueError('Invalid log level: %s' % loglevel)
+        logging.basicConfig(level=numeric_level)
+
         program_argv = [item for item in sys.argv[1:] if item[:2] != "--"]
         vstarstack.tool.usage.run(program_project,
                                   program_argv,

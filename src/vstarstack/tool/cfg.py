@@ -16,10 +16,13 @@ import sys
 import json
 import os
 import multiprocessing as mp
+import logging
 
 import vstarstack.tool.config
 
 from vstarstack.tool.configuration import Configuration
+
+logger = logging.getLogger(__name__)
 
 def get_param(name, type_of_var, default):
     """Get cmdline parameter --name=value"""
@@ -43,17 +46,18 @@ def get_param(name, type_of_var, default):
 DEBUG = False
 if "DEBUG" in os.environ:
     DEBUG = os.environ["DEBUG"].lower() == "true"
-    print(f"Debug = {DEBUG}")
+    logger.info(f"Debug = {DEBUG}")
 
 SINGLETHREAD = False
 if "SINGLETHREAD" in os.environ:
     SINGLETHREAD = os.environ["SINGLETHREAD"].lower() == "true"
-    print(f"Singlethread = {SINGLETHREAD}")
+    logger.info(f"Singlethread = {SINGLETHREAD}")
 
 if not SINGLETHREAD:
     nthreads = max(int(mp.cpu_count())-1, 1)
 else:
     nthreads = 1
+logger.info(f"Use {nthreads} threads")
 
 class Project(object):
     """Holder for configuration"""
@@ -78,13 +82,13 @@ def get_project(filename=None):
             config = json.load(f)
         _PROJECT = Project(config)
         if _PROJECT.updated:
-            print("Config updated, saving")
+            logger.info("Config updated, saving")
             try:
                 with open(filename, "w", encoding='utf8') as f:
                     json.dump(_PROJECT.config.write_configuration(),
                               f, indent=4, ensure_ascii=False)
             except:
-                print("Can't update project file")
+                logger.error("Can't update project file")
     return _PROJECT
 
 def store_project(project : Project = None, filename=None):

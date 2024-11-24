@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,6 +14,7 @@
 
 import os
 import multiprocessing as mp
+import logging
 
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
@@ -22,9 +23,11 @@ import vstarstack.library.data
 import vstarstack.library.image_process.normalize
 import vstarstack.tool.common
 
+logger = logging.getLogger(__name__)
+
 def normalize(name, infname, outfname):
     """Normalize image"""
-    print(name)
+    logger.info(f"Processing {name}")
     img = vstarstack.library.data.DataFrame.load(infname)
     img = vstarstack.library.image_process.normalize.normalize(img)
     vstarstack.tool.common.check_dir_exists(outfname)

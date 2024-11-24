@@ -18,6 +18,7 @@ import os
 import json
 import numpy as np
 import multiprocessing as mp
+import logging
 
 from vstarstack.library.fine_movement.aligner import CorrelationAlignedBuilder
 from vstarstack.library.fine_movement.aligner import Aligner
@@ -32,6 +33,7 @@ import vstarstack.library.common
 import vstarstack.tool.common
 
 ncpu = vstarstack.tool.cfg.nthreads
+logger = logging.getLogger(__name__)
 
 def create_aligner(project: vstarstack.tool.cfg.Project,
                    image_w: int,
@@ -54,7 +56,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
                pre_align_f : str | None,
                pre_align_ref : Aligner | None):
     """Apply alignment to each file"""
-    print(f"{name} -> {name_ref}")
+    logger.info(f"{name} -> {name_ref}")
     if not os.path.exists(input_image_f):
         return
 
@@ -63,7 +65,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
     max_shift = project.config.fine_shift.max_shift
     pixels = project.config.fine_shift.correlation_grid
     area_radius = project.config.fine_shift.area_radius
-    print(f"Maximal shift: {max_shift}")
+    logger.info(f"Maximal shift: {max_shift}")
     image_w = light_ref.shape[1]
     image_h = light_ref.shape[0]
     aligner_factory = create_aligner(project,
@@ -87,7 +89,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
     alignment = aligner_factory.find_alignment(light, light_ref,
                                                pre_align, pre_align_ref,
                                                3)
-    print(f"{name} - align to {name_ref} found")
+    logger.warning(f"{name} - align to {name_ref} found")
     vstarstack.tool.common.check_dir_exists(align_f)
     with open(align_f, "w", encoding='utf8') as f:
         json.dump(alignment.serialize(), f, ensure_ascii=False, indent=2)
@@ -110,7 +112,7 @@ def align(project: vstarstack.tool.cfg.Project, argv: list):
 
     files = vstarstack.tool.common.listfiles(npys, ".zip")
     name0, input_image0_f = files[0]
-    print("Loading image 0")
+    logger.info("Loading image 0")
     input_image0 = vstarstack.library.data.DataFrame.load(input_image0_f)
     if input_image0 is None:
         raise Exception("No REFERENCE!")

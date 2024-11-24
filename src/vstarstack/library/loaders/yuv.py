@@ -13,10 +13,11 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import numpy as np
 
 import vstarstack.library.data
-
+logger = logging.getLogger(__name__)
 
 def readyuv(fname: str, width: int, height: int):
     """Read YUV file"""
@@ -43,7 +44,7 @@ def readyuv(fname: str, width: int, height: int):
             yuv = np.frombuffer(frame, dtype=np.uint8)
 
             yuv = yuv.reshape(shape)
-            print(f"\tprocessing frame {frame_id}")
+            logger.info(f"processing frame {frame_id}")
 
             dataframe = vstarstack.library.data.DataFrame(params, tags)
             dataframe.add_channel(yuv, "raw", encoded=True, signal=True)

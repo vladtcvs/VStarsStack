@@ -13,6 +13,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import sys
 import math
 import datetime
@@ -20,6 +21,9 @@ import pytz
 import numpy as np
 
 import vstarstack.library.data
+
+logger = logging.getLogger(__name__)
+
 
 def _serread(file, integer_size, little_endian):
     """Read integer from SER file"""
@@ -74,7 +78,7 @@ def readser(fname: str):
     with open(fname, "rb") as file:
         fileid = file.read(14)
         if fileid != b'LUCAM-RECORDER':
-            print(f"Possibly invalid header {fileid.decode('utf8')}", file=sys.stderr)
+            logger.warning(f"Possibly invalid header {fileid.decode('utf8')}")
 
         _luid = _serread4(file)
         colorid = _serread4(file)
@@ -177,7 +181,7 @@ def readser(fname: str):
             opts["signal"] = True
             vpp = 3
         else:
-            print(f"Unsupported colorid = {colorid}")
+            logger.error(f"Unsupported colorid = {colorid}")
             return
 
         tags = {
@@ -202,7 +206,7 @@ def readser(fname: str):
             trailer_f.seek(trailer_offset, 0)
 
             for frame_id in range(frames):
-                print(f"\tprocessing frame {frame_id}")
+                logger.info(f"processing frame {frame_id}")
                 utc = _serread(trailer_f, 8, True)
                 utc = _convert_timestamp(utc)
                 frame = _read_to_npy(file, bpp, le16bit, shape)

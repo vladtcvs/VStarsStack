@@ -1,6 +1,6 @@
 """Detect, describe and match keypoints on the image"""
 #
-# Copyright (c) 2023 Vladislav Tsendrovskii
+# Copyright (c) 2023-2024 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,6 +13,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import cv2
 import numpy as np
 
@@ -20,6 +21,8 @@ import imutils
 import imutils.contours
 
 from skimage import measure
+
+logger = logging.getLogger(__name__)
 
 def _get_subimage(image, num_splits):
     image_shape = image.shape
@@ -155,7 +158,7 @@ def match_images(points : dict, descs : dict,
         descs2 = descs[name2]
 
         if descs1 is None or descs2 is None:
-            print(f"Skipping {name1} <-> {name2}")
+            logger.info(f"Skipping {name1} <-> {name2}")
             continue
 
         imatches = bf_matcher.match(descs1, descs2)

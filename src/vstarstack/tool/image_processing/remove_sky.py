@@ -15,6 +15,7 @@
 
 import os
 import multiprocessing as mp
+import logging
 
 import vstarstack.tool.usage
 import vstarstack.tool.cfg
@@ -23,9 +24,11 @@ import vstarstack.library.data
 import vstarstack.library.image_process.remove_sky
 import vstarstack.tool.common
 
+logger = logging.getLogger(__name__)
+
 def remove_sky(name, infname, outfname, model):
     """Remove sky from file"""
-    print(name)
+    logger.info(f"Processing {name}")
 
     img = vstarstack.library.data.DataFrame.load(infname)
     vstarstack.library.image_process.remove_sky.remove_sky(img, model)

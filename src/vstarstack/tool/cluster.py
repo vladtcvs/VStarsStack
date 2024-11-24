@@ -12,6 +12,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import os
 import json
 import csv
@@ -23,6 +24,8 @@ import vstarstack.library.data
 import vstarstack.library.clusters.clusters
 from vstarstack.library.movement.find_shift import build_movements, complete_movements
 from vstarstack.library.movement.sphere import Movement
+
+logger = logging.getLogger(__name__)
 
 def display(_project: vstarstack.tool.cfg.Project, argv: list):
     """Display clusters"""
@@ -110,14 +113,14 @@ def find_shift(project: vstarstack.tool.cfg.Project, argv: list):
         for name2 in shifts1:
             serialized[name1][name2] = shifts[name1][name2].serialize()
     if len(errors) > 0:
-        print("Couldn't build movement for pairs:")
+        logger.warning("Couldn't build movement for pairs:")
         with open(error_f, "w", encoding='utf8') as f:
             writer = csv.writer(f)
             writer.writerow(["name2", "name1"])
             for name1, name2 in errors:
-                print(f"\t{name2} -> {name1}")
+                logger.warning(f"\t{name2} -> {name1}")
                 writer.writerow([name2,name1])
-        
+
     with open(shifts_f, "w", encoding='utf8') as f:
         json.dump(serialized, f, ensure_ascii=False, indent=4)
     
@@ -135,7 +138,7 @@ def find_shift_to_selected(project: vstarstack.tool.cfg.Project, argv: list):
         error_f = project.config.paths.shift_errors
         basic_image = argv[0]
     else:
-        print("Invalid args")
+        logger.error(f"Invalid args {argv}")
         return
     with open(clusters_f, encoding='utf8') as f:
         clusters = json.load(f)
@@ -147,12 +150,12 @@ def find_shift_to_selected(project: vstarstack.tool.cfg.Project, argv: list):
         serialized[name2] = shifts[basic_image][name2].serialize()
 
     if len(errors) > 0:
-        print("Couldn't build movement for pairs:")
+        logger.warning("Couldn't build movement for pairs:")
         with open(error_f, "w", encoding='utf8') as f:
             writer = csv.writer(f)
             writer.writerow(["name2", "name1"])
             for name1, name2 in errors:
-                print(f"\t{name2} -> {name1}")
+                logger.warning(f"\t{name2} -> {name1}")
                 writer.writerow([name2,name1])
 
     with open(shifts_f, "w", encoding='utf8') as f:
@@ -183,11 +186,11 @@ def build_from_match_table(project: vstarstack.tool.cfg.Project, argv: list):
     with open(match_table_f, encoding='utf8') as f:
         match_table = _prepare_match_table(json.load(f))
 
-    print("Find index cluster")
+    logger.info("Find index cluster")
     clusters = vstarstack.library.clusters.clusters.find_clusters_in_match_table(match_table)
     dclusters = sorted(clusters, key=lambda x : len(x), reverse=True)
     dclusters = [item for item in dclusters if len(item) > 1]
-    print("Done")
+    logger.info("Done")
 
     stars_files = vstarstack.tool.common.listfiles(descs_path, ".json")
     descs = {}
