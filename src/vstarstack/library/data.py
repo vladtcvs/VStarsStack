@@ -157,6 +157,8 @@ class DataFrame:
         Returns:
             tuple(image, options) - ndarray with pixel data and channel options
         """
+        if channel not in self.channels:
+            return None, None
         return self.channels[channel]["data"], self.channels[channel]["options"]
 
     def get_channels(self) -> List[str]:
