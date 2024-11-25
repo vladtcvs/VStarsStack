@@ -36,6 +36,7 @@ def measure_sharpness_sobel(img : np.ndarray, mask : np.ndarray | None) -> float
     sobel = np.sqrt(sx**2 + sy**2)
     if mask is not None:
         sobel = sobel * mask
+        img = img * mask
     metric = np.sum(sobel)
     summ = np.sum(img)
     return metric / summ
@@ -44,6 +45,7 @@ def measure_sharpness_laplace(img : np.ndarray, mask : np.ndarray | None) -> flo
     laplace = cv2.Laplacian(img, cv2.CV_64F).var()
     if mask is not None:
         laplace = laplace * mask
+        img = img * mask
     metric = np.sum(laplace)
     summ = np.sum(img)
     return metric / summ
