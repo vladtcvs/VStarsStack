@@ -31,8 +31,6 @@ class EstimationMethod(Enum):
     LAPLACE = 1
 
 def measure_sharpness_sobel(img : np.ndarray, mask : np.ndarray | None) -> float:
-    if mask is not None:
-        img = img * mask
     sx = scipy.ndimage.sobel(img, axis=0, mode='constant')
     sy = scipy.ndimage.sobel(img, axis=1, mode='constant')
     sobel = np.sqrt(sx**2 + sy**2)
@@ -43,8 +41,6 @@ def measure_sharpness_sobel(img : np.ndarray, mask : np.ndarray | None) -> float
     return metric / summ
 
 def measure_sharpness_laplace(img : np.ndarray, mask : np.ndarray | None) -> float:
-    if mask is not None:
-        img = img * mask
     laplace = cv2.Laplacian(img, cv2.CV_64F).var()
     if mask is not None:
         laplace = laplace * mask
