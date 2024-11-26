@@ -18,6 +18,7 @@ import numpy as np
 import scipy.ndimage
 from enum import Enum
 import cv2
+import photutils.morphology
 
 import vstarstack.library.data
 import vstarstack.tool.cfg
@@ -29,6 +30,12 @@ class EstimationMethod(Enum):
     """Sharpness estimation method"""
     SOBEL = 0
     LAPLACE = 1
+    GINI = 2
+
+def measure_sharpness_gini(img : np.ndarray, mask : np.ndarray | None) -> float:
+    if mask is not None:
+        img = img * mask
+    return photutils.morphology.gini(img)
 
 def measure_sharpness_sobel(img : np.ndarray, mask : np.ndarray | None) -> float:
     sx = scipy.ndimage.sobel(img, axis=0, mode='constant')
@@ -53,7 +60,7 @@ def measure_sharpness_laplace(img : np.ndarray, mask : np.ndarray | None) -> flo
 def measure_sharpness_df(df : vstarstack.library.data.DataFrame, method : EstimationMethod) -> float:
     metric = 0
     nch = 0
-    if method not in [EstimationMethod.LAPLACE, EstimationMethod.SOBEL]:
+    if method not in [EstimationMethod.LAPLACE, EstimationMethod.SOBEL, EstimationMethod.GINI]:
         logger.error(f"Invalid method {method}")
         return None
 
@@ -66,6 +73,8 @@ def measure_sharpness_df(df : vstarstack.library.data.DataFrame, method : Estima
             metric += measure_sharpness_sobel(img, mask)
         elif method == EstimationMethod.LAPLACE:
             metric += measure_sharpness_laplace(img, mask)
+        elif method == EstimationMethod.GINI:
+            metric += measure_sharpness_gini(img, mask)
         nch += 1
     if nch == 0:
         return 0
@@ -104,4 +113,5 @@ def _process(project : vstarstack.tool.cfg.Project, argv : list[str], method : E
 commands = {
     "sobel" : (lambda project, argv : _process(project, argv, EstimationMethod.SOBEL), "Use Sobel filter for estimating sharpness", "path/ percent"),
     "laplace" : (lambda project, argv : _process(project, argv, EstimationMethod.LAPLACE), "Use Laplace filter for estimating sharpness", "path/ percent"),
+    "gini" : (lambda project, argv : _process(project, argv, EstimationMethod.GINI), "Use Laplace filter for estimating sharpness", "path/ percent"),
 }
