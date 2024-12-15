@@ -156,15 +156,15 @@ def _find_extended_dimensions(images : list, shifts : dict) -> Tuple[float, floa
         df = vstarstack.library.data.DataFrame.load(filename)
         projection_type, projection_desc = vstarstack.library.projection.tools.extract_description(df)
         if projection_type != ProjectionType.Perspective:
-            raise Exception(f"Invalid projection {projection_type}")
-        input_proj = vstarstack.library.projection.tools.build_projection(projection_type, projection_desc)
+            raise ValueError(f"Invalid projection {projection_type}")
         input_w = df.get_parameter("w")
         input_h = df.get_parameter("h")
+        input_proj = vstarstack.library.projection.tools.build_projection(projection_type, projection_desc, (input_h, input_w))
         (min_lon, min_lat), (max_lon, max_lat) = _find_shifted_corners(input_proj, input_w, input_h, shift)
         max_w = max([max_w, abs(min_lon), abs(max_lon)])
         max_h = max([max_h, abs(min_lat), abs(max_lat)])
         projections.append((projection_type, projection_desc))
-    
+
     return max_w, max_h, projections
 
 def _auto_build_best_projection(projections : list) -> Tuple[ProjectionType, dict]:
@@ -175,7 +175,7 @@ def _auto_build_best_projection(projections : list) -> Tuple[ProjectionType, dic
     max_F = 0
     for projection_type, projection_desc in projections:
         if projection_type != ProjectionType.Perspective:
-            raise NotImplemented("Not implemented")
+            raise NotImplementedError("Not implemented")
         F = projection_desc["F"]
         kw = projection_desc["kw"]
         kh = projection_desc["kh"]
@@ -224,7 +224,7 @@ def apply_shift_extended(project: vstarstack.tool.cfg.Project, argv: list[str]):
             output_proj_type = ProjectionType.Perspective
             output_proj_desc = json.loads(output_proj_desc)
         else:
-            raise NotImplemented("Not implemented")
+            raise NotImplementedError("Not implemented")
     else:
         output_proj_type, output_proj_desc = _auto_build_best_projection(projections)
 
