@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Vladislav Tsendrovskii
+ * Copyright (c) 2023-2024 Vladislav Tsendrovskii
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -90,6 +90,34 @@ void sphere_movement_apply_forward(struct SphereMovement *mov,
     }
 }
 
+void sphere_movement_apply_forward_lonlat(struct SphereMovement *mov,
+                                          const double *posi, double *poso, size_t num)
+{
+    unsigned i;
+    for (i = 0; i < num; i++)
+    {
+        double x, y, z;
+        double lon = posi[i*2];
+        double lat = posi[i*2+1];
+        x = cos(lon)*cos(lat);
+        y = sin(lon)*cos(lat);
+        z = sin(lat);
+        struct quat v = quat_from_vec(x, y, z);
+        struct quat vf = quat_mul(mov->forward, quat_mul(v, mov->reverse));
+        x = vf.x;
+        y = vf.y;
+        z = vf.z;
+        if (z > 1)
+            z = 1;
+        if (z < -1)
+            z = -1;
+        lon = atan2(y, x);
+        lat = asin(z);
+        poso[2*i] = lon;
+        poso[2*i+1] = lat;
+    }
+}
+
 void sphere_movement_apply_reverse(struct SphereMovement *mov,
                                    const double *posi, double *poso, size_t num,
                                    const struct ProjectionDef *in_proj,
@@ -121,5 +149,33 @@ void sphere_movement_apply_reverse(struct SphereMovement *mov,
         in_proj->reverse(in_proj->projection, lat, lon, &yo, &xo);
         poso[2*i] = xo;
         poso[2*i+1] = yo;
+    }
+}
+
+void sphere_movement_apply_reverse_lonlat(struct SphereMovement *mov,
+                                          const double *posi, double *poso, size_t num)
+{
+    unsigned i;
+    for (i = 0; i < num; i++)
+    {
+        double x, y, z;
+        double lon = posi[i*2];
+        double lat = posi[i*2+1];
+        x = cos(lon)*cos(lat);
+        y = sin(lon)*cos(lat);
+        z = sin(lat);
+        struct quat v = quat_from_vec(x, y, z);
+        struct quat vf = quat_mul(mov->reverse, quat_mul(v, mov->forward));
+        x = vf.x;
+        y = vf.y;
+        z = vf.z;
+        if (z > 1)
+            z = 1;
+        if (z < -1)
+            z = -1;
+        lon = atan2(y, x);
+        lat = asin(z);
+        poso[2*i] = lon;
+        poso[2*i+1] = lat;
     }
 }
