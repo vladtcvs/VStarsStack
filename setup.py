@@ -76,7 +76,7 @@ print("Packages: ", result)
 packages = result
 
 setup (name = 'vstarstack',
-       version = '0.3.3',
+       version = '0.3.4',
        author='Vladislav Tsendrovskii',
        description = 'Stacking astrophotos',
        package_dir = {'vstarstack': 'src/vstarstack'},
