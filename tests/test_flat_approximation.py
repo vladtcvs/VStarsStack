@@ -22,6 +22,7 @@ def test_flat():
     dfg = vstarstack.library.loaders.classic.readjpeg(os.path.join(dir_path, 'flat/flat.jpg'))
     df = next(dfg)
     flat,_ = df.get_channel('L')
+    flat = flat / np.amax(flat)
     approx = vstarstack.library.calibration.flat.approximate_flat_image(df.copy())
     flat_approx,_ = approx.get_channel('L')
     assert flat_approx.shape == flat.shape
