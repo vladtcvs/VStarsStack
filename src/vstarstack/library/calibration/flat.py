@@ -91,7 +91,8 @@ def prepare_flat_sky(images : vstarstack.library.common.IImageSource,
         if not flat.get_channel_option(channel, "signal"):
             continue
         layer = cv2.GaussianBlur(layer, (15, 15), 0)
-        flat.add_channel(layer, channel, **opts)
+        layer = layer / np.amax(layer)
+        flat.replace_channel(layer, channel, **opts)
     for channel in list(flat.get_channels()):
         if not flat.get_channel_option(channel, "weight"):
             continue
@@ -201,5 +202,6 @@ def approximate_flat_image(flat : vstarstack.library.data.DataFrame) -> vstarsta
         ky = ky * k**2
         layer_approximated = generate_flat(layer.shape[1], layer.shape[0], x0, y0, val0, kx, ky)
         layer_approximated = detect_spots(layer, layer_approximated)
+        layer_approximated = layer_approximated / np.amax(layer_approximated)
         flat.replace_channel(layer_approximated, channel, **opts)
     return flat
