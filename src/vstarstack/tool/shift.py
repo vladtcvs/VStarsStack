@@ -71,6 +71,7 @@ def _make_shift_same_size(name : str, filename : str,
     logger.info(f"Loaded {name}")
     result = vstarstack.library.movement.move_image.move_dataframe(dataframe, shift, interpolate=interpolate)
     logger.info(f"Transformed {name}")
+    logger.info(f"Saving {outfname}")
     vstarstack.tool.common.check_dir_exists(outfname)
     result.store(outfname)
     logger.info(f"Saved {name}")
@@ -122,7 +123,7 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
 
     images = vstarstack.tool.common.listfiles(npy_dir, ".zip")
 
-    args = [(name, filename, shifts[name], interpolate if name in shifts else None, os.path.join(shifted_dir, name + ".zip")) 
+    args = [(name, filename, shifts[name], os.path.join(shifted_dir, name + ".zip"), interpolate if name in shifts else None) 
             for name, filename in images]
     with mp.Pool(ncpu) as pool:
         pool.starmap(_make_shift_same_size, args)
