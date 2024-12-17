@@ -21,7 +21,8 @@ import vstarstack.tool.fine_shift.config
 
 _module_configuration = {
     "output" : {
-        "projection" : (str, "COPY"),
+        "projection_type" : (str, "COPY"),
+        "projection_desc" : (str, "COPY"),
     },
     "paths": {
         "light" : {

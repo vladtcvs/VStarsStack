@@ -136,7 +136,7 @@ static PyObject *Perspective_reverse(PyObject *_self,
 
 static PyMethodDef _PerspectiveProjection_methods[] = {
     {"project", (PyCFunction)Perspective_forward, METH_VARARGS | METH_KEYWORDS,
-     "Project x,y to lat,lon"},
+     "Project x,y to lon,lat"},
     {"reverse", (PyCFunction)Perspective_reverse, METH_VARARGS | METH_KEYWORDS,
      "Project lon,lat to x,y"},
     {NULL} /* Sentinel */
