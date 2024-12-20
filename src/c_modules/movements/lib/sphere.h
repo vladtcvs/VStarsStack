@@ -41,7 +41,13 @@ void sphere_movement_apply_forward(struct SphereMovement *mov,
                                    const struct ProjectionDef *in_proj,
                                    const struct ProjectionDef *out_proj);
 
+void sphere_movement_apply_forward_lonlat(struct SphereMovement *mov,
+                                          const double *posi, double *poso, size_t num);
+
 void sphere_movement_apply_reverse(struct SphereMovement *mov,
                                    const double *posi, double *poso, size_t num,
                                    const struct ProjectionDef *in_proj,
                                    const struct ProjectionDef *out_proj);
+
+void sphere_movement_apply_reverse_lonlat(struct SphereMovement *mov,
+                                          const double *posi, double *poso, size_t num);

@@ -126,7 +126,8 @@ def _show(_project, argv):
             subplot = axs[index]
         else:
             subplot = axs
-        img = frames[channel].astype(np.float64)
+        logger.info(f"Channel {channel} has values {np.amin(img)} - {np.amax(img)}")
+        img = frames[channel].astype(np.float32)
         img = compress(img, SLOPE)
 
         if len(img.shape) == 2:
@@ -302,6 +303,18 @@ def _select_bpp(_project, argv):
     else:
         _select_bpp_file(inpath, format, outpath)
 
+def _drop_weight(_project, argv):
+    import vstarstack.library.data
+    inpath = argv[0]
+    outpath = argv[1]
+    df = vstarstack.library.data.DataFrame.load(inpath)
+    df.add_parameter(1, "weight")
+    for channel in list(df.get_channels()):
+        if df.get_channel_option(channel, "weight"):
+            layer, opts = df.get_channel(channel)
+            layer = (layer != 0).astype("int")
+            df.replace_channel(layer, channel, **opts)
+    df.store(outpath)
 
 commands = {
     "show": (_show, "show image"),
@@ -309,5 +322,6 @@ commands = {
     "cut": (_cut, "cut part of image", "path/ <left> <top> <right> <bottom> out/"),
     "rename-channel": (_rename_channel, "filename.zip original_name target_name - rename channel"),
     "info": (_exposures, "display image info", "(file.zip | path/)"),
-    "bpp" : (_select_bpp, "select format", "(input.zip | input/) (float16 | float32 | float64) (output.zip | output/)")
+    "bpp" : (_select_bpp, "select format", "(input.zip | input/) (float16 | float32 | float64) (output.zip | output/)"),
+    "drop-weight" : (_drop_weight, "drop weight info", "input.zip output.zip"),
 } 

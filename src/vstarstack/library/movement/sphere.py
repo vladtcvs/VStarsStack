@@ -54,12 +54,20 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
     """Class of spherical movements"""
 
     def apply(self, positions : np.ndarray, input_proj, output_proj):
-        """Apply movement"""
+        """Apply movement in (x,y) coordinates"""
         return self.mov.apply_forward(positions, input_proj, output_proj)
 
+    def apply_lonlat(self, positions : np.ndarray):
+        """Apply movement in (lon,lat) coordinates"""
+        return self.mov.apply_forward_lonlat(positions)
+
     def reverse(self, positions : np.ndarray, input_proj, output_proj):
-        """Apply reverse movement"""
+        """Apply reverse movement in (x,y) coordinates"""
         return self.mov.apply_reverse(positions, input_proj, output_proj)
+
+    def reverse_lonlat(self, positions : np.ndarray):
+        """Apply reverse movement in (lon,lat) coordinates"""
+        return self.mov.apply_reverse_lonlat(positions)
 
     def __init__(self, rot):
         self.rot = rot

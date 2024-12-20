@@ -111,6 +111,10 @@ typedef void (*action_f)(struct SphereMovement *mov,
                          const struct ProjectionDef *in_proj,
                          const struct ProjectionDef *out_proj);
 
+typedef void (*action_lonlat_f)(struct SphereMovement *mov,
+                                const double *posi, double *poso, size_t num);
+
+
 static PyObject *apply_action(PyObject *_self,
                               PyObject *args,
                               PyObject *kwds,
@@ -187,11 +191,75 @@ static PyObject *apply_action(PyObject *_self,
     return (PyObject *)output_points;
 }
 
+static PyObject *apply_action_lonlat(PyObject *_self,
+                                     PyObject *args,
+                                     PyObject *kwds,
+                                     action_lonlat_f fun)
+{
+    PyArrayObject *points;
+    struct SphereMovementObject *self = (struct SphereMovementObject *)_self;
+
+    static char *kwlist[] = {"points", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O", kwlist, &points))
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    if (PyArray_TYPE(points) != NPY_DOUBLE)
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    if (PyArray_NDIM(points) != 2)
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be len(shape) == 2");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    npy_intp *dims = PyArray_SHAPE(points);
+
+    if (dims[1] != 2)
+    {
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be shape[1] == 2");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    size_t num = dims[0];
+    //printf("Processing %i points\n", (int)num);
+
+    const double *posi = PyArray_DATA(points);
+
+    PyArrayObject *output_points = (PyArrayObject *)PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
+    if (output_points == NULL)
+    {
+        PyErr_SetString(PyExc_ValueError, "can not allocate memory");
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+    double *poso = PyArray_DATA(output_points);
+
+    fun(&self->mov, posi, poso, num);
+    return (PyObject *)output_points;
+}
+
 static PyObject *Sphere_forward(PyObject *_self,
                                 PyObject *args,
                                 PyObject *kwds)
 {
     return apply_action(_self, args, kwds, sphere_movement_apply_forward);
+}
+
+static PyObject *Sphere_forward_lonlat(PyObject *_self,
+                                       PyObject *args,
+                                       PyObject *kwds)
+{
+    return apply_action_lonlat(_self, args, kwds, sphere_movement_apply_forward_lonlat);
 }
 
 static PyObject *Sphere_reverse(PyObject *_self,
@@ -201,11 +269,22 @@ static PyObject *Sphere_reverse(PyObject *_self,
    return apply_action(_self, args, kwds, sphere_movement_apply_reverse);
 }
 
+static PyObject *Sphere_reverse_lonlat(PyObject *_self,
+                                       PyObject *args,
+                                       PyObject *kwds)
+{
+   return apply_action_lonlat(_self, args, kwds, sphere_movement_apply_reverse_lonlat);
+}
+
 static PyMethodDef _SphereMovements_methods[] = {
     {"apply_forward", (PyCFunction)Sphere_forward, METH_VARARGS | METH_KEYWORDS,
      "Apply forward rotation"},
+    {"apply_forward_lonlat", (PyCFunction)Sphere_forward_lonlat, METH_VARARGS | METH_KEYWORDS,
+     "Apply forward rotation in lon, lat coordinates"},
     {"apply_reverse", (PyCFunction)Sphere_reverse, METH_VARARGS | METH_KEYWORDS,
      "Apply reverse rotation"},
+    {"apply_reverse_lonlat", (PyCFunction)Sphere_reverse_lonlat, METH_VARARGS | METH_KEYWORDS,
+     "Apply reverse rotation in lon, lat coordinates"},
     {NULL} /* Sentinel */
 };
 

@@ -21,7 +21,7 @@ bool perspective_projection_init(struct PerspectiveProjection *self,
                                  double kw, double kh, double F,
                                  double w, double h)
 {
-    if (h <= 0 || w <= 0 ||
+    if (h < 0 || w < 0 ||
         kw <= 0 || kh <= 0 ||
         F <= 0)
     {
