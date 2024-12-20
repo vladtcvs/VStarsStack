@@ -192,7 +192,7 @@ def _calculate_shape(dim_lon, dim_lat, output_proj_type, output_proj_desc) -> Tu
     x2, y2 = proj.reverse(dim_lon, dim_lat)
     w = abs(x2-x1)
     h = abs(y2-y1)
-    return (h, w)
+    return (int(h+0.5), int(w+0.5))
 
 def apply_shift_extended(project: vstarstack.tool.cfg.Project, argv: list[str]):
     """Apply shifts to images"""

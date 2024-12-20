@@ -310,7 +310,9 @@ def _drop_weight(_project, argv):
     df.add_parameter(1, "weight")
     for channel in list(df.get_channels()):
         if df.get_channel_option(channel, "weight"):
-            df.remove_channel(channel)
+            layer, opts = df.get_channel(channel)
+            layer = (layer != 0).astype("int")
+            df.replace_channel(layer, channel, **opts)
     df.store(outpath)
 
 commands = {
