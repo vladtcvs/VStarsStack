@@ -57,7 +57,8 @@ def _process_file(name, fname, jsonfile, num_stars, mindist):
     projection = vstarstack.library.projection.tools.get_projection(image)
     stars = detect_stars(projection, gray)
     logger.info(f"Detected {len(stars)}")
-    stars = get_brightest(stars, num_stars, mindist)
+    if num_stars > 0:
+        stars = get_brightest(stars, num_stars, mindist)
     stars = [{"keypoint" : item} for item in stars]
     desc = {
         "fname" : fname,
