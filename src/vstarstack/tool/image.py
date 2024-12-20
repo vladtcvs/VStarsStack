@@ -126,7 +126,8 @@ def _show(_project, argv):
             subplot = axs[index]
         else:
             subplot = axs
-        img = frames[channel].astype(np.float64)
+        logger.info(f"Channel {channel} has values {np.amin(img)} - {np.amax(img)}")
+        img = frames[channel].astype(np.float32)
         img = compress(img, SLOPE)
 
         if len(img.shape) == 2:
