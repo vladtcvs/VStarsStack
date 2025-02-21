@@ -81,6 +81,14 @@ def prepare_flat_sky(images : vstarstack.library.common.IImageSource,
 
         no_stars_dataframe = vstarstack.library.stars.cut.cut_stars(dataframe, descs)
         no_stars_dataframe = remove_hot_pixels(no_stars_dataframe)
+        for channel in no_stars_dataframe.get_channels():
+            layer, opts = no_stars_dataframe.get_channel(channel)
+            if not no_stars_dataframe.get_channel_option(channel, "signal"):
+                continue
+            layer = cv2.GaussianBlur(layer, (15, 15), 0)
+            layer = layer / np.median(layer)
+            no_stars_dataframe.replace_channel(layer, channel, **opts)
+    
         no_star_images.append(no_stars_dataframe)
     
     no_star_source = vstarstack.library.common.ListImageSource(no_star_images)
