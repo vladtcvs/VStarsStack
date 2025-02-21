@@ -78,14 +78,13 @@ class FilterSource(vstarstack.library.common.IImageSource):
     def __init__(self, source : vstarstack.library.common.IImageSource,
                        exposure : float,
                        gain : float,
-                       temperature : float | None,
+                       temperature_idx : int,
                        temperature_indexer : TemperatureIndex):
         self.temperature_indexer = temperature_indexer
         self.source = source
         self.exposure = exposure
         self.gain = gain
-        self.temperature = temperature
-        self.temperature_idx = self.temperature_indexer.temperature_to_index(self.temperature)
+        self.temperature_idx = temperature_idx
 
     def items(self) -> Generator[vstarstack.library.data.DataFrame, None, None]:
         for df in self.source.items():
@@ -111,11 +110,13 @@ def prepare_darks(images : vstarstack.library.common.IImageSource,
         gain = df.get_parameter("gain")
         temperature = df.get_parameter("temperature")
         index = indexer.temperature_to_index(temperature)
+        logger.info(f"Adding exposure = {exposure}, gain = {gain}, temperature = {temperature}, index = {index}")
         parameters.add((exposure, gain, index))
 
     darks = []
     for exposure, gain, index in parameters:
-        image_source  = FilterSource(images, exposure, gain, temperature, indexer)
+        logger.info(f"Processing exposure = {exposure}, gain = {gain}, index = {index}")
+        image_source  = FilterSource(images, exposure, gain, index, indexer)
         dark = vstarstack.library.merge.simple_mean.mean(image_source)
         dark.add_parameter(exposure, "exposure")
         dark.add_parameter(gain, "gain")
