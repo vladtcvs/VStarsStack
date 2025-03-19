@@ -72,9 +72,12 @@ def df_weight_0_to_nan(df : vstarstack.library.data.DataFrame, in_place : bool =
 
         weight, _, _ = df.get_linked_channel(channel, "weight")
         copy = np.copy(layer)
-        copy = copy.astype('float32')
-        copy[np.where(weight == 0)] = np.nan
-        fixed.add_channel(copy, channel, **opts)
+        if weight is not None:
+            copy = copy.astype('float32')
+            copy[np.where(weight == 0)] = np.nan
+            fixed.add_channel(copy, channel, **opts)
+        else:
+            fixed.add_channel(copy, channel, **opts)
     return fixed
 
 def df_weight_0_to_0(df : vstarstack.library.data.DataFrame, in_place : bool = False):
@@ -93,9 +96,12 @@ def df_weight_0_to_0(df : vstarstack.library.data.DataFrame, in_place : bool = F
 
         weight, _, _ = df.get_linked_channel(channel, "weight")
         copy = np.copy(layer)
-        copy = copy.astype('float32')
-        copy[np.where(weight == 0)] = 0
-        fixed.add_channel(copy, channel, **opts)
+        if weight is not None:
+            copy = copy.astype('float32')
+            copy[np.where(weight == 0)] = 0
+            fixed.add_channel(copy, channel, **opts)
+        else:
+            fixed.add_channel(copy, channel, **opts)
     fixed.links = df.links
     return fixed
 
