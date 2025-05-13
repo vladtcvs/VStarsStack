@@ -16,16 +16,18 @@ import cv2
 import numpy as np
 from vstarstack.library.data import DataFrame
 
-def star_magnitude_summ(image : np.ndarray, x : int, y : int, radius : int) -> float:
+def star_magnitude_summ(image : np.ndarray, x : int, y : int, radius : int):
     """Find sum of pixels in circle at x,y"""
     area = image[y-radius:y+radius+1, x-radius:x+radius+1]
+    if area.shape[0] == 0 or area.shape[1] == 0:
+        return None, None, None
     mask = np.zeros((2*radius+1, 2*radius+1))
     cv2.circle(mask, (radius, radius), radius, 1, -1)
     area = area * mask
     maxv = np.amax(area)
     return np.sum(area), int(np.sum(mask)), maxv
 
-def star_magnitude_summ_df(image : DataFrame, x : int, y : int, radius : int) -> dict:
+def star_magnitude_summ_df(image : DataFrame, x : int, y : int, radius : int):
     """Find sum of pixels in circle at x,y"""
     vals = {}
     for cn in image.get_channels():
@@ -34,10 +36,12 @@ def star_magnitude_summ_df(image : DataFrame, x : int, y : int, radius : int) ->
             vals[cn] = star_magnitude_summ(channel, x, y, radius)
     return vals
 
-def star_magnitude_summ_nobg(image : np.ndarray, x : int, y : int, radius : int) -> float:
+def star_magnitude_summ_nobg(image : np.ndarray, x : int, y : int, radius : int):
     """Find sum of pixels in circle at x,y"""
-    mr = radius * 3
+    mr = int(radius * 3)
     area = image[y-mr:y+mr+1, x-mr:x+mr+1]
+    if area.shape[0] == 0 or area.shape[1] == 0:
+        return None, None, None, None
     mask = np.zeros(area.shape)
     cv2.circle(mask, (mr, mr), mr, 1, -1)
     cv2.circle(mask, (mr, mr), radius*2, 0, -1)
@@ -54,7 +58,7 @@ def star_magnitude_summ_nobg(image : np.ndarray, x : int, y : int, radius : int)
 
     return np.sum(area), int(np.sum(mask)), bg, maxv
 
-def star_magnitude_summ_nobg_df(image : DataFrame, x : int, y : int, radius : int) -> dict:
+def star_magnitude_summ_nobg_df(image : DataFrame, x : int, y : int, radius : int):
     """Find sum of pixels in circle at x,y"""
     vals = {}
     for cn in image.get_channels():

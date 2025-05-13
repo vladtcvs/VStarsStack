@@ -13,26 +13,36 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import numpy as np
+import math
 import vstarstack.library.stars.detect
 from vstarstack.library.photometry.magnitude import star_magnitude_summ_nobg
 
 def remove_continuum(narrow : np.ndarray, wide : np.ndarray):
-    stars = vstarstack.library.stars.detect.detect_stars(narrow)
+    stars = vstarstack.library.stars.detect.detect_stars(wide)
     max_wide = np.amax(wide)
     max_narrow = np.amax(narrow)
     coeffs = []
+    stars = sorted(stars, key=lambda item: item["radius"], reverse=True)[:40]
     for star in stars:
         x = int(star["x"]+0.5)
         y = int(star["y"]+0.5)
         r = int(star["radius"]+0.5)
-        narrow_mag, narrow_numpix, narrow_maxv = star_magnitude_summ_nobg(narrow, x, y, r)
-        wide_mag, wide_numpix, wide_maxv = star_magnitude_summ_nobg(narrow, x, y, r)
+        logging.info(f"{x}:{y}:{r}")
+        narrow_mag, narrow_numpix, _, narrow_maxv = star_magnitude_summ_nobg(narrow, x, y, r)
+        wide_mag, wide_numpix, _, wide_maxv = star_magnitude_summ_nobg(wide, x, y, r)
+        if narrow_maxv is None or wide_maxv is None:
+            continue
         if wide_maxv > 0.95 * max_wide:
             continue
         if narrow_maxv > 0.95 * max_narrow:
             continue
         k = (narrow_mag / narrow_numpix) / (wide_mag / wide_numpix)
+        if math.isnan(k) or k < 0 or k >= 1:
+            continue
+        logging.info(f"k = {k}")
         coeffs.append(k)
     coeff = np.mean(coeffs)
+    logging.info(f"Coeff = {coeff}")
     return narrow - wide * coeff
