@@ -51,7 +51,7 @@ commands = {
               "remove temporary files"),
     "fine-shift": ("vstarstack.tool.fine_shift.fine_shift",
                    "fine shift images"),
-    "analyzers": ("vstarstack.tool.analyzers.analyzers",
+    "photometry": ("vstarstack.tool.photometry.photometry",
                    "analyze images"),
     "pipeline": ("vstarstack.tool.generators.generators",
                  "generate pipelines for processing"),

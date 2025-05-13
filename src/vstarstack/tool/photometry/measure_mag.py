@@ -14,30 +14,11 @@
 
 import os
 import csv
-import numpy as np
-import cv2
-
 
 from vstarstack.tool.cfg import Project
 from vstarstack.library.data import DataFrame
 import vstarstack.tool.common
-
-def summ_pixels(image : np.ndarray, x : int, y : int, radius : int) -> float:
-    """Find sum of pixels in circle at x,y"""
-    area = image[y-radius:y+radius+1, x-radius:x+radius+1]
-    mask = np.zeros((2*radius+1, 2*radius+1))
-    cv2.circle(mask, (radius, radius), radius, 1, -1)
-    area = area * mask
-    return np.sum(area), int(np.sum(mask))
-
-def summ_pixels_df(image : DataFrame, x : int, y : int, radius : int) -> dict:
-    """Find sum of pixels in circle at x,y"""
-    vals = {}
-    for cn in image.get_channels():
-        channel, opts = image.get_channel(cn)
-        if opts["brightness"]:
-            vals[cn] = summ_pixels(channel, x, y, radius)
-    return vals
+from vstarstack.library.photometry.magnitude import star_magnitude_summ_df
 
 def _measure_pixels(project : Project, argv : list[str], method : str):
     options = {}
@@ -79,7 +60,7 @@ def _measure_pixels(project : Project, argv : list[str], method : str):
             ts = '-'
         timestamps[name] = ts
         if method == "summ":
-            results[name] = summ_pixels_df(df, x, y, **options)
+            results[name] = star_magnitude_summ_df(df, x, y, options["radius"])
 
         for cn in results[name]:
             channels.add(cn)
@@ -97,6 +78,7 @@ def _measure_pixels(project : Project, argv : list[str], method : str):
                 else:
                     values.append(sums[cn][0])
                     npixels = sums[cn][1]
+                    _ = sums[cn][2]
             writer.writerow([name, timestamp, x, y, npixels] + values)
 
 commands = {

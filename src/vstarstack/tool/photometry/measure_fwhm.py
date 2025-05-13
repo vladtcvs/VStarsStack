@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 Vladislav Tsendrovskii
+# Copyright (c) 2024-2025 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 import logging
 
 import vstarstack.library.data
-import vstarstack.library.fwhm
+import vstarstack.library.photometry.fwhm
 import vstarstack.library.stars.detect
 import vstarstack.tool.common
 import numpy as np
@@ -32,7 +32,7 @@ def _measure_single_fwhm(project, argv):
     else:
         r = 4
     df = vstarstack.library.data.DataFrame.load(fname)
-    channels, mean = vstarstack.library.fwhm.find_fwhm_df(df, x, y, r)
+    channels, mean = vstarstack.library.photometry.fwhm.find_fwhm_df(df, x, y, r)
     print("Mean: %f" % mean)
     for channel in channels:
         print("\t%s: %f" % (channel, channels[channel]))
@@ -51,7 +51,7 @@ def _measure_mean_fwhm_file(fname : str):
             x = int(star["x"]+0.5)
             y = int(star["y"]+0.5)
             r = int(star["radius"])
-            fwhm = vstarstack.library.fwhm.find_fwhm(layer, x, y, r)
+            fwhm = vstarstack.library.photometry.fwhm.find_fwhm(layer, x, y, r)
             if fwhm is not None:
                 values.append(fwhm)
         fwhm = np.median(values)

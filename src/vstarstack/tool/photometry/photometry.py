@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 Vladislav Tsendrovskii
+# Copyright (c) 2024-2025 Vladislav Tsendrovskii
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,6 +13,6 @@
 #
 
 commands = {
-    "measure-mag" : ("vstarstack.tool.analyzers.measure_mag", "measure star magnitude"),
-    "measure-fwhm" : ("vstarstack.tool.analyzers.measure_fwhm", "measure full width at half maximum"),
+    "measure-mag" : ("vstarstack.tool.photometry.measure_mag", "measure star magnitude"),
+    "measure-fwhm" : ("vstarstack.tool.photometry.measure_fwhm", "measure full width at half maximum"),
 }
