@@ -28,6 +28,7 @@ import vstarstack.tool.image_processing.normalize
 import vstarstack.tool.image_processing.blur
 import vstarstack.tool.image_processing.drop_unsharp
 import vstarstack.tool.image_processing.deconvolution
+import vstarstack.tool.image_processing.remove_continuum
 import vstarstack.tool.common
 
 logger = logging.getLogger(__name__)
@@ -52,4 +53,5 @@ commands = {
     "blur": (vstarstack.tool.image_processing.blur.run,  "gaussian blur"),
     "deconvolution": (vstarstack.tool.image_processing.deconvolution.commands,  "deconvolution"),
     "select-sharp" : (vstarstack.tool.image_processing.drop_unsharp.commands, "select sharp images"),
+    "remove-continuum" : (vstarstack.tool.image_processing.remove_continuum.process, "remove continuum", "input.zip Narrow Wide output.zip"),
 }
