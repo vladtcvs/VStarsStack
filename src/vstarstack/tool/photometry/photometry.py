@@ -15,4 +15,5 @@
 commands = {
     "measure-mag" : ("vstarstack.tool.photometry.measure_mag", "measure star magnitude"),
     "measure-fwhm" : ("vstarstack.tool.photometry.measure_fwhm", "measure full width at half maximum"),
+    "measure-background" : ("vstarstack.tool.photometry.measure_pollution", "measure background light level"),
 }
