@@ -45,12 +45,12 @@ def read_video(fname: str):
         for channel_name, channel_index in [("R",0), ("G", 1), ("B", 2)]:
             data = frame[:,:,channel_index]
             dataframe.add_channel(check_datatype(data), channel_name, brightness=True, signal=True)
-            overlight_idx = np.where(data >= max_value*0.99)
-            if len(overlight_idx) > 0:
-                weight = np.ones(data.shape)*params["weight"]
-                weight[overlight_idx] = 0
-                dataframe.add_channel(weight, f"weight-{channel_name}", weight=True)
-                dataframe.add_channel_link(channel_name, f"weight-{channel_name}", "weight")
+            saturated_idx = np.where(data >= max_value*0.99)
+            if len(saturated_idx) > 0:
+                saturated = np.zeros(data.shape, dtype=np.bool)
+                saturated[saturated_idx] = True
+                dataframe.add_channel(saturated, f"saturated-{channel_name}", saturation=True)
+                dataframe.add_channel_link(channel_name, f"saturated-{channel_name}", "saturation")
 
         yield dataframe
         frame_id += 1

@@ -218,10 +218,10 @@ def readser(fname: str):
                 for index, channel in enumerate(channels):
                     data = frame[:, :, index]
                     dataframe.add_channel(check_datatype(data), channel, **opts)
-                    overlight_idx = np.where(data >= max_value*0.99)
-                    if len(overlight_idx) > 0:
-                        weight = np.ones(data.shape)*params["weight"]
-                        weight[overlight_idx] = 0
-                        dataframe.add_channel(weight, f"weight-{channel}", weight=True)
-                        dataframe.add_channel_link(channel, f"weight-{channel}", "weight")
+                    saturated_idx = np.where(data >= max_value*0.99)
+                    if len(saturated_idx) > 0:
+                        saturated = np.zeros(data.shape, dtype=np.bool)
+                        saturated[saturated_idx] = True
+                        dataframe.add_channel(saturated, f"saturated-{channel}", saturation=True)
+                        dataframe.add_channel_link(channel, f"saturated-{channel}", "saturation")
                 yield dataframe
