@@ -50,6 +50,7 @@ def _find_stars(gray_image : np.ndarray):
     """Find stars on image"""
     shape = gray_image.shape
 
+    gray_image = (gray_image.astype(np.float32) / np.amax(gray_image) * 255).astype(np.uint8)
     gray_image = cv2.GaussianBlur(gray_image, (3, 3), 0)
 
     thresh = _threshold(gray_image, _detector_cfg["THRESHOLD_BLOCK_SIZE"],
