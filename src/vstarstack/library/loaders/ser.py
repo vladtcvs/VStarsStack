@@ -14,7 +14,6 @@
 #
 
 import logging
-import sys
 import math
 import datetime
 import pytz

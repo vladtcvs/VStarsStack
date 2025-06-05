@@ -15,14 +15,12 @@
 
 from typing import Tuple
 import numpy as np
-import scipy.ndimage
 
 import vstarstack.library.data
 import vstarstack.library.common
-import vstarstack.tool
-import vstarstack.tool.cfg
 
-def df_to_gray(df : vstarstack.library.data.DataFrame, interpolate_cfa : bool | None = None) -> Tuple[np.ndarray, np.ndarray]:
+def df_to_gray(df : vstarstack.library.data.DataFrame,
+               interpolate_cfa : bool | None = None) -> Tuple[np.ndarray, np.ndarray]:
     """convert dataframe to brightness array"""
     df = vstarstack.library.common.df_weight_0_to_0(df, False)
 
@@ -53,10 +51,10 @@ def df_to_gray(df : vstarstack.library.data.DataFrame, interpolate_cfa : bool | 
 
             shifted[0:h-1,0:w] += layer[1:h,0:w]
             weights[0:h-1,0:w] += weight[1:h,0:w]
-            
+
             shifted[0:h-1,0:w-1] += layer[1:h,1:w]
             weights[0:h-1,0:w-1] += weight[1:h,1:w]
-            
+
             shifted[0:h,0:w-1] += layer[0:h,1:w]
             weights[0:h,0:w-1] += weight[0:h,1:w]
 
