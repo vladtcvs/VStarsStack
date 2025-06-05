@@ -59,11 +59,11 @@ def readnef(filename: str):
     max_value = np.iinfo(image.dtype).max
     dataframe = vstarstack.library.data.DataFrame(params, printable_tags)
     dataframe.add_channel(check_datatype(image), "raw", encoded=True, brightness=True, signal=True)
-    overlight_idx = np.where(image >= max_value*0.99)
-    if len(overlight_idx) > 0:
-        weight = np.ones(image.shape)*params["weight"]
-        weight[overlight_idx] = 0
-        dataframe.add_channel(weight, f"weight-raw", weight=True)
-        dataframe.add_channel_link("raw", f"weight-raw", "weight")
+    saturated_idx = np.where(image >= max_value*0.99)
+    if len(saturated_idx) > 0:
+        saturated = np.zeros(image.shape, dtype=np.bool)
+        saturated[saturated_idx] = True
+        dataframe.add_channel(saturated, f"saturated-raw", saturation=True)
+        dataframe.add_channel_link("raw", f"saturated-raw", "saturation")
     dataframe.add_parameter(bayer, "format")
     yield dataframe

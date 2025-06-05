@@ -94,14 +94,14 @@ def readfits(filename: str):
 
         for i, slice_name in enumerate(slice_names):
             data = original[i, :, :]
-            overlight_idx = np.where(data >= max_value*0.99)
+            saturated_idx = np.where(data >= max_value*0.99)
             dataframe.add_channel(check_datatype(data), slice_name,
                                   brightness=True, signal=True, encoded=encoded)
-            if len(overlight_idx) > 0:
-                weight = np.ones(data.shape)*params["weight"]
-                weight[overlight_idx] = 0
-                dataframe.add_channel(weight, f"weight-{slice_name}", weight=True)
-                dataframe.add_channel_link(slice_name, f"weight-{slice_name}", "weight")
+            if len(saturated_idx) > 0:
+                saturated = np.zeros(data.shape, dtype=np.bool)
+                saturated[saturated_idx] = True
+                dataframe.add_channel(saturated, f"saturated-{slice_name}", saturation=True)
+                dataframe.add_channel_link(slice_name, f"saturated-{slice_name}", "saturation")
         if bayer is not None:
             dataframe.add_parameter(bayer, "format")
         yield dataframe

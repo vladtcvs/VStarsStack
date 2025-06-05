@@ -16,8 +16,6 @@
 import numpy as np
 import scipy.ndimage
 
-import vstarstack.library.common
-import vstarstack.library.data
 from vstarstack.library.data import DataFrame
 
 import vstarstack.library.projection.tools
@@ -36,8 +34,6 @@ def _generate_points(height, width):
 def move_image(image: np.ndarray,
                transformation: basic_movement.Movement,
                input_proj, output_proj,*,
-               image_weight: float = 1,
-               image_weight_layer: np.ndarray | None = None,
                output_shape: tuple | None = None,
                interpolate : bool = True):
     """
@@ -64,10 +60,6 @@ def move_image(image: np.ndarray,
     w = shape[1]
 
     shifted = np.zeros(shape)
-    shifted_weight_layer = np.zeros(shape)
-
-    if image_weight_layer is None:
-        image_weight_layer = np.ones(image.shape)*image_weight
 
     positions = _generate_points(h, w)
     original_positions = transformation.reverse(positions.astype('double'),
@@ -88,8 +80,7 @@ def move_image(image: np.ndarray,
         shifted = scipy.ndimage.geometric_transform(image, crdtf, output_shape=shape, order=3)
     else:
         shifted = scipy.ndimage.geometric_transform(image, crdtf, output_shape=shape, order=0)
-    shifted_weight_layer = scipy.ndimage.geometric_transform(image_weight_layer, crdtf, output_shape=shape, order=3)
-    return shifted, shifted_weight_layer
+    return shifted
 
 def move_dataframe(dataframe: DataFrame,
                    transformation: basic_movement.Movement,*,
@@ -137,21 +128,47 @@ def move_dataframe(dataframe: DataFrame,
             else:
                 weight = np.ones(image.shape)
 
+        if channel in dataframe.links["saturation"]:
+            saturation_channel = dataframe.links["saturation"][channel]
+            saturation, _ = dataframe.get_channel(saturation_channel)
+        else:
+            saturation = None
+
         if interpolate is not None:
             apply_interpolate = interpolate
         else:
             apply_interpolate = not dataframe.get_channel_option(channel, "cfa")
 
-        shifted, shifted_weight = move_image(image,
-                                             transformation,
-                                             input_proj,
-                                             output_proj,
-                                             image_weight_layer=weight,
-                                             output_shape=output_shape,
-                                             interpolate=apply_interpolate)
+        shifted = move_image(image,
+                             transformation,
+                             input_proj,
+                             output_proj,
+                             output_shape=output_shape,
+                             interpolate=apply_interpolate)
+        
+        shifted_weight = move_image(weight,
+                                    transformation,
+                                    input_proj,
+                                    output_proj,
+                                    output_shape=output_shape,
+                                    interpolate=apply_interpolate)
+
+        if saturation is not None:
+            shifted_saturation = move_image(saturation.astype(np.float32),
+                                            transformation,
+                                            input_proj,
+                                            output_proj,
+                                            output_shape=output_shape,
+                                            interpolate=apply_interpolate)
+            shifted_saturation = abs(shifted_saturation) > 1e-6
+        else:
+            shifted_saturation = None
 
         output_dataframe.add_channel(shifted, channel, **opts)
         output_dataframe.add_channel(shifted_weight, weight_channel, weight=True)
         output_dataframe.add_channel_link(channel, weight_channel, "weight")
+        if shifted_saturation is not None:
+            output_dataframe.add_channel(shifted_saturation, saturation_channel, saturation=True)
+            output_dataframe.add_channel_link(channel, saturation_channel, "saturation")
 
     return output_dataframe 
