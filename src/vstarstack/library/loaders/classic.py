@@ -21,7 +21,7 @@ import vstarstack.library.data
 
 def readjpeg(fname: str):
     """Read single image (jpg, png, tiff) file"""
-    rgb = np.asarray(Image.open(fname)).astype(np.float32)
+    rgb = np.asarray(Image.open(fname))
     shape = rgb.shape
     shape = (shape[0], shape[1])
 
