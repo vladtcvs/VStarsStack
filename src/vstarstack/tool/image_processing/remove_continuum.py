@@ -26,14 +26,14 @@ import vstarstack.tool.common
 
 logger = logging.getLogger(__name__)
 
-def remove_continuum(name, infname, outfname, narrow_channel, wide_channel):
+def remove_continuum(name, infname, outfname, narrow_channel, wide_channel, coeff):
     """Remove continuum from file"""
     logger.info(f"Processing {name}: {narrow_channel} - {wide_channel}")
 
     img = vstarstack.library.data.DataFrame.load(infname)
     narrow, opts = img.get_channel(narrow_channel)
     wide,_ = img.get_channel(wide_channel)
-    no_continuum = vstarstack.library.image_process.remove_continuum.remove_continuum(narrow, wide)
+    no_continuum = vstarstack.library.image_process.remove_continuum.remove_continuum(narrow, wide, coeff)
     img.replace_channel(no_continuum, narrow_channel, **opts)
     vstarstack.tool.common.check_dir_exists(outfname)
     img.store(outfname)
@@ -44,8 +44,9 @@ def process_file(argv):
     narrow_channel = argv[1]
     wide_channel = argv[2]
     outfname = argv[3]
+    coeff = float(argv[4]) if len(argv) >= 5 else None
     name = os.path.splitext(os.path.basename(infname))[0]
-    remove_continuum(name, infname, outfname, narrow_channel, wide_channel)
+    remove_continuum(name, infname, outfname, narrow_channel, wide_channel, coeff)
 
 def process_dir(argv):
     """Remove continuum from all files in directory"""
@@ -53,10 +54,11 @@ def process_dir(argv):
     narrow_channel = argv[1]
     wide_channel = argv[2]
     outpath = argv[3]
+    coeff = float(argv[4]) if len(argv) >= 5 else None
     files = vstarstack.tool.common.listfiles(inpath, ".zip")
     with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
         pool.starmap(remove_continuum, [(name, fname, os.path.join(
-            outpath, name + ".zip"), narrow_channel, wide_channel) for name, fname in files])
+            outpath, name + ".zip"), narrow_channel, wide_channel, coeff) for name, fname in files])
 
 def process(project: vstarstack.tool.cfg.Project, argv: list):
     """Process file(s) in path"""
