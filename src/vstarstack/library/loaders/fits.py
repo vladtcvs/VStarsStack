@@ -18,6 +18,8 @@ import logging
 from astropy.io import fits
 
 import vstarstack.library.data
+from vstarstack.library.loaders.datatype import check_datatype
+
 logger = logging.getLogger(__name__)
 
 def readfits(filename: str):
@@ -93,7 +95,7 @@ def readfits(filename: str):
         for i, slice_name in enumerate(slice_names):
             data = original[i, :, :]
             overlight_idx = np.where(data >= max_value*0.99)
-            dataframe.add_channel(data, slice_name,
+            dataframe.add_channel(check_datatype(data), slice_name,
                                   brightness=True, signal=True, encoded=encoded)
             if len(overlight_idx) > 0:
                 weight = np.ones(data.shape)*params["weight"]

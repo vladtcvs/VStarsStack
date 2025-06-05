@@ -20,6 +20,7 @@ import pytz
 import numpy as np
 
 import vstarstack.library.data
+from vstarstack.library.loaders.datatype import check_datatype
 
 logger = logging.getLogger(__name__)
 
@@ -216,7 +217,7 @@ def readser(fname: str):
                 index = 0
                 for index, channel in enumerate(channels):
                     data = frame[:, :, index]
-                    dataframe.add_channel(data, channel, **opts)
+                    dataframe.add_channel(check_datatype(data), channel, **opts)
                     overlight_idx = np.where(data >= max_value*0.99)
                     if len(overlight_idx) > 0:
                         weight = np.ones(data.shape)*params["weight"]

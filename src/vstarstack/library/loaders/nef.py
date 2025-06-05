@@ -18,7 +18,7 @@ import exifread
 import numpy as np
 
 import vstarstack.library.data
-
+from vstarstack.library.loaders.datatype import check_datatype
 
 def readnef(filename: str):
     """Read NEF file"""
@@ -58,7 +58,7 @@ def readnef(filename: str):
 
     max_value = np.iinfo(image.dtype).max
     dataframe = vstarstack.library.data.DataFrame(params, printable_tags)
-    dataframe.add_channel(image, "raw", encoded=True, brightness=True, signal=True)
+    dataframe.add_channel(check_datatype(image), "raw", encoded=True, brightness=True, signal=True)
     overlight_idx = np.where(image >= max_value*0.99)
     if len(overlight_idx) > 0:
         weight = np.ones(image.shape)*params["weight"]

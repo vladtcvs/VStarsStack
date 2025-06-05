@@ -17,6 +17,8 @@ import logging
 import numpy as np
 
 import vstarstack.library.data
+from vstarstack.library.loaders.datatype import check_datatype
+
 logger = logging.getLogger(__name__)
 
 def readyuv(fname: str, width: int, height: int):
@@ -47,6 +49,6 @@ def readyuv(fname: str, width: int, height: int):
             logger.info(f"processing frame {frame_id}")
 
             dataframe = vstarstack.library.data.DataFrame(params, tags)
-            dataframe.add_channel(yuv, "raw", encoded=True, signal=True)
+            dataframe.add_channel(check_datatype(yuv), "raw", encoded=True, signal=True)
             yield dataframe
             frame_id += 1
