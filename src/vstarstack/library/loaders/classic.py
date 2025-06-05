@@ -47,14 +47,29 @@ def readjpeg(fname: str):
 
     params["weight"] = params["exposure"] * params["gain"]
 
+    max_value = np.iinfo(rgb.dtype).max
+
     dataframe = vstarstack.library.data.DataFrame(params, tags)
 
     if len(rgb.shape) == 3:
-        dataframe.add_channel(rgb[:, :, 0], "R", brightness=True, signal=True)
-        dataframe.add_channel(rgb[:, :, 1], "G", brightness=True, signal=True)
-        dataframe.add_channel(rgb[:, :, 2], "B", brightness=True, signal=True)
+        for channel_name, channel_index in [("R",0), ("G", 1), ("B", 2)]:
+            data = rgb[:,:,channel_index]
+            dataframe.add_channel(data, channel_name, brightness=True, signal=True)
+            overlight_idx = np.where(data >= max_value*0.99)
+            if len(overlight_idx) > 0:
+                weight = np.ones(data.shape)*params["weight"]
+                weight[overlight_idx] = 0
+                dataframe.add_channel(weight, f"weight-{channel_name}", weight=True)
+                dataframe.add_channel_link(channel_name, f"weight-{channel_name}", "weight")
+
     elif len(rgb.shape) == 2:
-        dataframe.add_channel(rgb[:, :], "L", brightness=True, signal=True)
+        dataframe.add_channel(rgb, "L", brightness=True, signal=True)
+        overlight_idx = np.where(rgb >= max_value*0.99)
+        if len(overlight_idx) > 0:
+            weight = np.ones(rgb.shape)*params["weight"]
+            weight[overlight_idx] = 0
+            dataframe.add_channel(weight, f"weight-L", weight=True)
+            dataframe.add_channel_link("L", f"weight-L", "weight")
     else:
         # unknown shape!
         pass

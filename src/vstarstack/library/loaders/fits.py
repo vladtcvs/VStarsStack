@@ -13,6 +13,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import numpy as np
 import logging
 from astropy.io import fits
 
@@ -32,10 +33,12 @@ def readfits(filename: str):
 
         shape = plane.data.shape
         if len(shape) == 2:
-            original = plane.data.reshape((1, shape[0], shape[1]))
+            original : np.ndarray = plane.data.reshape((1, shape[0], shape[1]))
         else:
-            original = plane.data
+            original : np.ndarray = plane.data
         shape = original.shape
+
+        max_value = np.iinfo(original.dtype).max
 
         params = {
             "w": shape[2],
@@ -67,6 +70,7 @@ def readfits(filename: str):
         slice_names = []
 
         params["weight"] = params["exposure"]*params["gain"]
+
         dataframe = vstarstack.library.data.DataFrame(params, tags)
 
         if shape[0] == 1:
@@ -87,8 +91,15 @@ def readfits(filename: str):
             yield None
 
         for i, slice_name in enumerate(slice_names):
-            dataframe.add_channel(original[i, :, :], slice_name,
+            data = original[i, :, :]
+            overlight_idx = np.where(data >= max_value*0.99)
+            dataframe.add_channel(data, slice_name,
                                   brightness=True, signal=True, encoded=encoded)
+            if len(overlight_idx) > 0:
+                weight = np.ones(data.shape)*params["weight"]
+                weight[overlight_idx] = 0
+                dataframe.add_channel(weight, f"weight-{slice_name}", weight=True)
+                dataframe.add_channel_link(slice_name, f"weight-{slice_name}", "weight")
         if bayer is not None:
             dataframe.add_parameter(bayer, "format")
         yield dataframe

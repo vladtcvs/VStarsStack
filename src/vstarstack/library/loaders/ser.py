@@ -43,7 +43,7 @@ def _serread8(file):
     """Read 8-byte integer"""
     return _serread(file, 8, True)
 
-def _read_to_npy(file, bpp, little_endian, shape):
+def _read_to_npy(file, bpp, little_endian, shape) -> np.ndarray:
     """Read block of SER file"""
     num = 1
     for _, dim in enumerate(shape):
@@ -200,6 +200,8 @@ def readser(fname: str):
             "weight" : 1,
         }
 
+        max_value = 2**depth - 1
+
         with open(fname, "rb") as trailer_f:
             trailer_offset = 178 + frames * width * height * (bpp * vpp)
             trailer_f.seek(trailer_offset, 0)
@@ -213,5 +215,12 @@ def readser(fname: str):
                 dataframe = vstarstack.library.data.DataFrame(params, tags)
                 index = 0
                 for index, channel in enumerate(channels):
-                    dataframe.add_channel(frame[:, :, index], channel, **opts)
+                    data = frame[:, :, index]
+                    dataframe.add_channel(data, channel, **opts)
+                    overlight_idx = np.where(data >= max_value*0.99)
+                    if len(overlight_idx) > 0:
+                        weight = np.ones(data.shape)*params["weight"]
+                        weight[overlight_idx] = 0
+                        dataframe.add_channel(weight, f"weight-{channel}", weight=True)
+                        dataframe.add_channel_link(channel, f"weight-{channel}", "weight")
                 yield dataframe

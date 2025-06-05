@@ -15,6 +15,7 @@
 
 import rawpy
 import exifread
+import numpy as np
 
 import vstarstack.library.data
 
@@ -55,7 +56,14 @@ def readnef(filename: str):
     for tag_name in tags:
         printable_tags[tag_name] = tags[tag_name].printable
 
+    max_value = np.iinfo(image.dtype).max
     dataframe = vstarstack.library.data.DataFrame(params, printable_tags)
     dataframe.add_channel(image, "raw", encoded=True, brightness=True, signal=True)
+    overlight_idx = np.where(image >= max_value*0.99)
+    if len(overlight_idx) > 0:
+        weight = np.ones(image.shape)*params["weight"]
+        weight[overlight_idx] = 0
+        dataframe.add_channel(weight, f"weight-raw", weight=True)
+        dataframe.add_channel_link("raw", f"weight-raw", "weight")
     dataframe.add_parameter(bayer, "format")
     yield dataframe
