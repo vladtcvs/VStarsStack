@@ -1,3 +1,4 @@
+"""Mean filter with allowing to have NaN values"""
 #
 # Copyright (c) 2023 Vladislav Tsendrovskii
 #
@@ -22,7 +23,8 @@ def nanmean_filter(image : np.ndarray,
                    radius : int):
     """nanmean filter"""
     fpsize=2*int(radius)+1
-    filtered = scipy.ndimage.generic_filter(image, np.nanmean, [fpsize, fpsize], mode='constant', cval=np.nan)
+    filtered = scipy.ndimage.generic_filter(image, np.nanmean, [fpsize, fpsize],
+                                            mode='constant', cval=np.nan)
     idx = np.where(np.isfinite(image))
     filtered[idx] = image[idx]
     return filtered

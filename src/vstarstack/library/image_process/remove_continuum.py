@@ -14,12 +14,13 @@
 #
 
 import logging
-import numpy as np
 import math
+import numpy as np
 import vstarstack.library.stars.detect
 from vstarstack.library.photometry.magnitude import star_magnitude_summ_nobg
 
 def calculate_coeff(narrow : np.ndarray, wide : np.ndarray) -> float:
+    """Calculate coefficient between narrowband and wideband image"""
     stars = vstarstack.library.stars.detect.detect_stars(wide)
     max_wide = np.amax(wide)
     max_narrow = np.amax(narrow)
@@ -30,7 +31,7 @@ def calculate_coeff(narrow : np.ndarray, wide : np.ndarray) -> float:
         x = int(star["x"]+0.5)
         y = int(star["y"]+0.5)
         r = int(star["radius"]+0.5)
-        
+
         narrow_mag, narrow_numpix, _, narrow_maxv = star_magnitude_summ_nobg(narrow, x, y, r)
         wide_mag, wide_numpix, _, wide_maxv = star_magnitude_summ_nobg(wide, x, y, r)
         if narrow_maxv is None or wide_maxv is None:

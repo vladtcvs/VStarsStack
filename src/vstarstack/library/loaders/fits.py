@@ -87,7 +87,8 @@ def readfits(filename: str):
             yield None
 
         for i, slice_name in enumerate(slice_names):
-            dataframe.add_channel(original[i, :, :], slice_name, brightness=True, signal=True, encoded=encoded)
+            dataframe.add_channel(original[i, :, :], slice_name,
+                                  brightness=True, signal=True, encoded=encoded)
         if bayer is not None:
             dataframe.add_parameter(bayer, "format")
         yield dataframe

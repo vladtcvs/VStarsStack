@@ -1,3 +1,4 @@
+"""Remove image borders"""
 #
 # Copyright (c) 2023 Vladislav Tsendrovskii
 #

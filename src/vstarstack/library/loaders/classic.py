@@ -17,7 +17,6 @@ import numpy as np
 from PIL import Image
 import exifread
 
-import vstarstack.library.common
 import vstarstack.library.data
 
 def readjpeg(fname: str):

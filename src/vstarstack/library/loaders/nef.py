@@ -16,7 +16,6 @@
 import rawpy
 import exifread
 
-import vstarstack.library.common
 import vstarstack.library.data
 
 
