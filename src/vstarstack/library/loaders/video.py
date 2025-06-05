@@ -14,8 +14,10 @@
 #
 
 import cv2
+import numpy as np
 
 import vstarstack.library.data
+from vstarstack.library.loaders.datatype import check_datatype
 
 def read_video(fname: str):
     """Read frames from video file"""
@@ -38,9 +40,17 @@ def read_video(fname: str):
             "weight" : 1,
         }
 
+        max_value = np.iinfo(frame.dtype).max
         dataframe = vstarstack.library.data.DataFrame(params, tags)
-        dataframe.add_channel(frame[:, :, 0], "R", brightness=True, signal=True)
-        dataframe.add_channel(frame[:, :, 1], "G", brightness=True, signal=True)
-        dataframe.add_channel(frame[:, :, 2], "B", brightness=True, signal=True)
+        for channel_name, channel_index in [("R",0), ("G", 1), ("B", 2)]:
+            data = frame[:,:,channel_index]
+            dataframe.add_channel(check_datatype(data), channel_name, brightness=True, signal=True)
+            overlight_idx = np.where(data >= max_value*0.99)
+            if len(overlight_idx) > 0:
+                weight = np.ones(data.shape)*params["weight"]
+                weight[overlight_idx] = 0
+                dataframe.add_channel(weight, f"weight-{channel_name}", weight=True)
+                dataframe.add_channel_link(channel_name, f"weight-{channel_name}", "weight")
+
         yield dataframe
         frame_id += 1
