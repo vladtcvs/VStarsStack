@@ -268,7 +268,8 @@ So
 So we can find $f_n$ as
 \begin{eqnarray}
     (1-1/k) \cdot f_n = f_{signal, 1} - \frac{f_{signal, 2}}{k} \\
-    f_n = \frac{k \cdot f_{signal, 1} - f_{signal, 2}}{k-1}
+    f_n = \frac{k \cdot f_{signal, 1} - f_{signal, 2}}{k-1} \\
+    f_c = f_{signal,1} - f_n = \frac{f_{signal, 2} - f_{signal, 1}}{k-1}
 \end{eqnarray}
 
 But as in previous parts, it's also a first approach.
@@ -284,5 +285,27 @@ So we can write:
 \begin{eqnarray}
     E\left[ f_n \right] = \int df_n f_n \cdot p(f_n | \left\{ F_{i,1}, F_{j,2} \right\})
 \end{eqnarray}
+
+But the next step make a lot of effort, if we try to write
+\begin{eqnarray}
+    p(f_n | \left\{ F_{i,1}, F_{j,2} \right\}) = \frac{p(\left\{ F_{i,1}, F_{j,2} \right\} | f_n) \cdot p(f_n)}{p(\left\{ F_{i,1}, F_{j,2} \right\})}
+\end{eqnarray}
+
+we get value $p(\left\{ F_{i,1}, F_{j,2} \right\} | f_n)$ which require integration over $f_c$:
+\begin{equation}
+    p(\left\{F_{i,1}, F_{j,2} \right\} | f_n)= \int p(\left\{F_{i,1}, F_{j,2}\right\} | f_n, f_c) \cdot p(f_c) df_c
+\end{equation}
+
+Let's write this in vector form. It doesn't make calculations simpler, but helps to better understand.
+
+\begin{eqnarray}
+    E\left[ f_n \atop f_c \right] = \int df_n df_c \left({f_n \atop f_c} \right) \cdot p\left( {f_n \atop f_c} | \left\{ F_{i,1}, F_{j,2} \right\}\right) \\
+    p\left({f_n \atop f_c} | \left\{ F_{i,1}, F_{j,2} \right\}\right) = 
+    \frac{p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f_n \atop f_c} \right) \cdot p\left( f_n \atop f_c \right)}
+    {p\left(\left\{F_{i,1}, F_{j,2} \right\}\right)} \\
+    p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f_n \atop f_c} \right) = \prod_i p\left(F_{i,1} | {f_n \atop f_c} \right) \cdot \prod_j p\left(F_{j,2} | {f_n \atop f_c} \right) \\
+    p\left(\left\{F_{i,1}, F_{j,2} \right\} \right) = \prod_i p\left(F_{i,1} \right) \cdot \prod_j p\left(F_{j,2}\right)
+\end{eqnarray}
+
 
 \end{document}
