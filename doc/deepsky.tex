@@ -97,94 +97,111 @@ As input we have:
     \item $F_j(x,y)$ --- frames
 \end{itemize}
 
-We have frames $F_i$:
+Our whole signal $f(x,y)$ contains of multiple stages. In simple case we have just sky light pollution:
 \begin{eqnarray}
-    F_i(x,y) = Poisson\left( f_{dark}(x,y) + \nu(x,y) \cdot \left( f_{sky}(x,y) + f_{true}(x,y) \right) \right)
+    f(x,y) = f_{sky}(x,y) + f_{true}(x,y)
 \end{eqnarray}
 
-First, we have to find $f_{sky}(x,y) + f_{true}(x,y)$.
+In more complex cases when we want to obtain narrowband signal we have continuum in addition to sky:
+\begin{eqnarray}
+    f(x,y) = f_{sky}(x,y) + f_{continuum}(x,y) + f_{true}(x,y)
+\end{eqnarray}
+
+So our task is to find $f(x,y)$.
+
+We have frames $F_i$:
+\begin{eqnarray}
+    F_i(x,y) = Poisson\left( f_{dark}(x,y) + \nu(x,y) \cdot f(x,y) \right)
+\end{eqnarray}
 
 \subsection{Naive method}
 
 We act the same way as for flats calculation:
 \begin{eqnarray}
-    <F_i(x,y)> = f_{dark}(x,y) + \nu(x,y) \cdot \left( f_{sky}(x,y) + f_{true}(x,y) \right) \\
-    f_{sky}(x,y) + f_{true}(x,y) = \frac{<F_i(x,y)> - f_{dark}(x,y)}{\nu(x,y)} = \frac{<F_i(x,y) - f_{dark}(x,y)>}{\nu(x,y)}
+    <F_i(x,y)> = f_{dark}(x,y) + \nu(x,y) \cdot f(x,y) \\
+    f(x,y) = \frac{<F_i(x,y)> - f_{dark}(x,y)}{\nu(x,y)} = \frac{<F_i(x,y) - f_{dark}(x,y)>}{\nu(x,y)}
 \end{eqnarray}
 
 Here we use Sigma-Clipping:
 
 \begin{eqnarray}
-    f_{value}(x,y) = f_{sky}(x,y) + f_{true}(x,y) = \frac{SC(\left\{ F_i(x,y) - f_{dark}(x,y)\right\})}{\nu(x,y)} \\
-    f_{sky} = SkyEstimation(f_{value}(x,y)) \\
-    f_{true} = f_{value}(x,y) - f_{sky}(x,y)
+    f(x,y) = \frac{SC(\left\{ F_i(x,y) - f_{dark}(x,y)\right\})}{\nu(x,y)}
 \end{eqnarray}
 
-This implements the most basic approach: substract darks, then apply flats, then do Sigma-Clipping. After this estimate and subtract sky level.
+This implements the most basic approach: substract darks, then apply flats, then do Sigma-Clipping.
 
 This method is simple, but can generate negative values, especially for low SNR case.
 
 \subsection{Bayesian analysis}
 
-We have set of frames $F_i(x,y)$. We want to find estimation for $f_{true}(x,y)$:
+We have set of frames $F_i(x,y)$. We want to find estimation for $f(x,y)$:
 
 \begin{eqnarray}
-    E\left[ f_{true}(x,y) \right] = \int df_{true}(x,y) f_{true}(x,y) p(f_{true}(x,y) | \left\{ F_i(x,y) \right\})
+    E\left[ f(x,y) \right] = \int df(x,y) f(x,y) p(f(x,y) | \left\{ F_i(x,y) \right\})
 \end{eqnarray}
 
 Here we integrating independently for each $x,y$, so they are just parameters, not integration varables. So we won't write them
 for readability.
 
-Let's find $p(f_{true} | \left\{ F_i \right\})$:
+Let's find $p(f | \left\{ F_i \right\})$:
 
 \begin{eqnarray}
-    p(f_{true} | \left\{ F_i \right\}) = \frac{p(\left\{ F_i \right\} | f_{true}) \cdot p(f_{true})}{p(\left\{ F_i \right\})} \\
+    p(f | \left\{ F_i \right\}) = \frac{p(\left\{ F_i \right\} | f) \cdot p(f)}{p(\left\{ F_i \right\})} \\
     p(\left\{ F_i \right\}) = \prod_i p(F_i) \\
-    p(\left\{ F_i \right\} | f_{true}) = \prod_i p(F_i | f_{true})
+    p(\left\{ F_i \right\} | f) = \prod_i p(F_i | f)
 \end{eqnarray}
 
 Let's find full probability $p(F_i)$:
 \begin{eqnarray}
-    p(F_i) = \int p(F_i | f_{true}) p(f'_{true}) df'_{true}
+    p(F_i) = \int p(F_i | f') p(f') df'
 \end{eqnarray}
 
 And finally
 \begin{eqnarray}
-    p(f_{true} | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f_{true}) \cdot p(f_{true})}{\prod_i \int p(F_i | f'_{true}) p(f'_{true}) df'_{true}}
+    p(f | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f) \cdot p(f)}{\prod_i \int p(F_i | f') p(f') df'}
 \end{eqnarray}
 
-Let's remember what $p(F_i | f_{true})$ is:
+Let's remember what $p(F_i | f)$ is:
 \begin{eqnarray}
-    p(F_i | f_{true}) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\
-    \lambda = f_{dark}(x,y) + \nu(x,y) \cdot \left( f_{sky}(x,y) + f_{true}(x,y) \right)
+    p(F_i | f) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\
+    \lambda = f_{dark}(x,y) + \nu(x,y) f(x,y)
 \end{eqnarray}
 
 So what we have as result:
 \begin{eqnarray}
-    E\left[ f_{true} \right] = \int df_{true} f_{true} p(f_{true} | \left\{ F_i \right\}) \\
-    p(f_{true} | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f_{true}) \cdot p(f_{true})}{\prod_i \int p(F_i | f'_{true}) p(f'_{true}) df'_{true}} \\
-    p(F_i | f_{true}) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\
-    \lambda = f_{dark}(x,y) + \nu(x,y) \cdot \left( f_{sky}(x,y) + f_{true}(x,y) \right)
+    E\left[ f \right] = \int df f \cdot p(f | \left\{ F_i \right\}) \\
+    p(f | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f) \cdot p(f)}{\prod_i \int p(F_i | f') p(f') df'} \\
+    p(F_i | f) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\
+    \lambda = f_{dark} + \nu(x,y) \cdot f
 \end{eqnarray}
 
 Challenges with such approach:
 \begin{itemize}
 \item $F_i!$ --- calculation can be really challenging if do it straightforward
-\item we need some a-priori knowledge of probability $p(f_{true})$
-\item integral calculation is pretty long procedure. So we can calculate it only in some area around maxima of $p(f_{true})$
+\item we need some a-priori knowledge of probability $p(f)$
+\item integral calculation is pretty long procedure. So we can calculate it only in some area around maxima of $p(f)$
 \end{itemize}
 
-Good points that we can calculate factorials approximately. And we can estimate $p(f_{true})$ from "naive" method.
+Good points that we can calculate factorials approximately. And we can estimate $p(f)$ from "naive" method.
 
 \subsubsection{Pipeline}
 So the pipeline is following:
 
 \begin{itemize}
-    \item Perform a "naive" estimation to obtain initial $f_{sky}$ and $f_{true}$
-    \item Using a sliding window, build local histograms of $f_{true}$ to estimate the local prior $p(f_{true})$. Normalize and optionally smooth these histograms.
-    \item Use the Bayesian estimator for $E\left[ f_{true} \right]$ to refine $f_{true}$, based on the current prior and estimate of $f_{sky}$
-    \item (Optional) Re-estimate $f_{sky}$ using residuals and background-only regions
+    \item Perform a "naive" estimation to obtain initial $f$
+    \item Using a sliding window, build local histograms of $f$ to estimate the local prior $p(f)$. Normalize and optionally smooth these histograms.
+    \item Use the Bayesian estimator for $E\left[ f \right]$ to refine $f$, based on the current prior
     \item Iterate the prior estimation and refinement steps until convergence or acceptable error level
 \end{itemize}
+
+\section{Sky removing}
+
+During previous step we obtained signal $f(x,y)$. But it contains sky light pollution:
+\begin{eqnarray}
+    f(x,y) = f_{sky}(x,y) + f_{signal}(x,y)
+\end{eqnarray}
+
+We can estimate $f_{sky}$ using regions on the side of image, where target signal is expected to be absent.
+But we should be careful, because overestimating sky level will lead to negative values in $f_{signal}(x,y)$
 
 \end{document}
