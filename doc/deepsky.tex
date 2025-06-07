@@ -147,20 +147,26 @@ Let's find $p(f | \left\{ F_i \right\})$:
 
 \begin{eqnarray}
     p(f | \left\{ F_i \right\}) = \frac{p(\left\{ F_i \right\} | f) \cdot p(f)}{p(\left\{ F_i \right\})} \\
-    p(\left\{ F_i \right\}) = \prod_i p(F_i) \\
     p(\left\{ F_i \right\} | f) = \prod_i p(F_i | f)
 \end{eqnarray}
 
-We can assume that $p(\left\{ F_i \right\}) = \prod_i p(F_i)$ because frames are independent.
+But it's very important that
+\begin{equation}
+    p(\left\{ F_i \right\}) \ne \prod_i p(F_i)
+\end{equation}
 
-Let's find full probability $p(F_i)$:
+It happens because $F_i$ are not marginally independent:
+
+If $P(AB|C_i) = P(A|C_i) \cdot P(B|C_i)$ for each $i$, it doesn't mean that $P(AB) = P(A)\cdot P(B)$
+
+Let's find full probability $p(\left\{F_i\right\})$:
 \begin{eqnarray}
-    p(F_i) = \int p(F_i | f') p(f') df'
+    p(\left\{F_i\right\}) = \int p(\left\{ F_i \right\} | f') p(f') df' = \int \prod_i p(F_i | f') p(f') df'
 \end{eqnarray}
 
 And finally
 \begin{eqnarray}
-    p(f | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f) \cdot p(f)}{\prod_i \int p(F_i | f') p(f') df'}
+    p(f | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f) \cdot p(f)}{\int \prod_i p(F_i | f') p(f') df'}
 \end{eqnarray}
 
 Let's remember what $p(F_i | f)$ is:
@@ -175,7 +181,7 @@ So what we have as result:
 \begin{equation}
 \begin{array}{r@{}l}
     E\left[ f \right] = \int df f \cdot p(f | \left\{ F_i \right\}) \\[6pt]
-    p(f | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f) \cdot p(f)}{\prod_i \int p(F_i | f') p(f') df'} \\[9pt]
+    p(f | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f) \cdot p(f)}{\int \prod_i p(F_i | f') p(f') df'} \\[9pt]
     p(F_i | f) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\[6pt]
     \lambda = f_{dark} + \nu(x,y) \cdot f
 \end{array}
@@ -185,7 +191,8 @@ Challenges with such approach:
 \begin{itemize}
 \item $F_i!$ --- calculation can be really challenging if do it straightforward
 \item we need some a-priori knowledge of probability $p(f)$
-\item integral calculation is pretty long procedure. So we can calculate it only in some area around maxima of $p(f)$
+\item integral calculation is pretty long procedure. So we can calculate it only in some area around maxima of $p(f')$
+\item we have product of probabilites under integral
 \end{itemize}
 
 Good points that we can calculate factorials approximately. And we can estimate $p(f)$ from "naive" method.
@@ -221,7 +228,7 @@ So we want to use Bayesian approach again ($x,y$ are omitted):
 \begin{eqnarray}
     F_i = Poisson\left( f_{dark} + \nu \cdot \left( f_{sky} + f_{signal} \right) \right) \\
     E\left[ f_{signal} \right] = \int df_{signal} f_{signal} \cdot p(f_{signal} | \left\{ F_i \right\}) \label{eq:expected_fsignal} \\
-    p(f_{signal} | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f_{signal}) \cdot p(f_{signal})}{\prod_i \int p(F_i | f_{signal}') p(f_{signal}') df_{signal}'}
+    p(f_{signal} | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f_{signal}) \cdot p(f_{signal})}{\int \prod_i p(F_i | f_{signal}') p(f_{signal}') df_{signal}'}
 \end{eqnarray}
 
 Formula for $p(F_i | f_{signal})$ looks very similar to previous one:
@@ -281,21 +288,6 @@ But as in previous parts, it's also a first approach.
     F_{i,2} = Poisson\left( f_{dark, 2} + \nu_2 \cdot \left( f_{sky, 2} + k \cdot f_c + f_n \right) \right)
 \end{eqnarray}
 
-So we can write:
-\begin{eqnarray}
-    E\left[ f_n \right] = \int df_n f_n \cdot p(f_n | \left\{ F_{i,1}, F_{j,2} \right\})
-\end{eqnarray}
-
-But the next step make a lot of effort, if we try to write
-\begin{eqnarray}
-    p(f_n | \left\{ F_{i,1}, F_{j,2} \right\}) = \frac{p(\left\{ F_{i,1}, F_{j,2} \right\} | f_n) \cdot p(f_n)}{p(\left\{ F_{i,1}, F_{j,2} \right\})}
-\end{eqnarray}
-
-we get value $p(\left\{ F_{i,1}, F_{j,2} \right\} | f_n)$ which require integration over $f_c$:
-\begin{equation}
-    p(\left\{F_{i,1}, F_{j,2} \right\} | f_n)= \int p(\left\{F_{i,1}, F_{j,2}\right\} | f_n, f_c) \cdot p(f_c) df_c
-\end{equation}
-
 Let's write this in vector form. It doesn't make calculations simpler, but helps to better understand.
 
 \begin{eqnarray}
@@ -303,8 +295,12 @@ Let's write this in vector form. It doesn't make calculations simpler, but helps
     p\left({f_n \atop f_c} | \left\{ F_{i,1}, F_{j,2} \right\}\right) = 
     \frac{p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f_n \atop f_c} \right) \cdot p\left( f_n \atop f_c \right)}
     {p\left(\left\{F_{i,1}, F_{j,2} \right\}\right)} \\
-    p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f_n \atop f_c} \right) = \prod_i p\left(F_{i,1} | {f_n \atop f_c} \right) \cdot \prod_j p\left(F_{j,2} | {f_n \atop f_c} \right) \\
-    p\left(\left\{F_{i,1}, F_{j,2} \right\} \right) = \prod_i p\left(F_{i,1} \right) \cdot \prod_j p\left(F_{j,2}\right)
+    p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f_n \atop f_c} \right) = \prod_i p\left(F_{i,1} | {f_n \atop f_c} \right) \cdot \prod_j p\left(F_{j,2} | {f_n \atop f_c} \right)
+\end{eqnarray}
+
+\begin{eqnarray}
+    p\left(\left\{F_{i,1}, F_{j,2} \right\}\right) = \int p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f_n \atop f_c}\right) \cdot p\left( f_n \atop f_c \right) df_n df_c = \\
+    = \int \prod_i p\left(F_{i,1} | {f_n \atop f_c} \right) \cdot \prod_j p\left(F_{j,2} | {f_n \atop f_c} \right) \cdot p\left( f_n \atop f_c \right) df_n df_c
 \end{eqnarray}
 
 
