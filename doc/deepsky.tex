@@ -88,7 +88,7 @@ Also we expect $\nu$ be so that $max(\nu) = 1$. As result we have:
 
 After this we can denoise obtained $\nu(x,y)$ with blur or other methods.
 
-\section{True signal obtaining}
+\section{Signal obtaining}
 
 As input we have:
 \begin{itemize}
@@ -99,22 +99,22 @@ As input we have:
 
 Our whole signal $f(x,y)$ contains of multiple stages. In simple case we have just sky light pollution:
 \begin{eqnarray}
-    f(x,y) = f_{sky}(x,y) + f_{true}(x,y)
+    f(x,y) = f_{sky}(x,y) + f_{signal}(x,y)
 \end{eqnarray}
 
 In more complex cases when we want to obtain narrowband signal we have continuum in addition to sky:
 \begin{eqnarray}
-    f(x,y) = f_{sky}(x,y) + f_{continuum}(x,y) + f_{true}(x,y)
+    f(x,y) = f_{sky}(x,y) + f_{continuum}(x,y) + f_{narrow}(x,y)
 \end{eqnarray}
 
-So our task is to find $f(x,y)$.
+But on this stage our task is to find $f(x,y)$.
 
 We have frames $F_i$:
 \begin{eqnarray}
     F_i(x,y) = Poisson\left( f_{dark}(x,y) + \nu(x,y) \cdot f(x,y) \right)
 \end{eqnarray}
 
-\subsection{Naive method}
+\subsection{First approach}
 
 We act the same way as for flats calculation:
 \begin{eqnarray}
@@ -151,6 +151,8 @@ Let's find $p(f | \left\{ F_i \right\})$:
     p(\left\{ F_i \right\} | f) = \prod_i p(F_i | f)
 \end{eqnarray}
 
+We can assume that $p(\left\{ F_i \right\}) = \prod_i p(F_i)$ because frames are independent.
+
 Let's find full probability $p(F_i)$:
 \begin{eqnarray}
     p(F_i) = \int p(F_i | f') p(f') df'
@@ -162,18 +164,22 @@ And finally
 \end{eqnarray}
 
 Let's remember what $p(F_i | f)$ is:
-\begin{eqnarray}
+\begin{equation}
+\begin{array}{r@{}l}
     p(F_i | f) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\
     \lambda = f_{dark}(x,y) + \nu(x,y) f(x,y)
-\end{eqnarray}
+\end{array}
+\end{equation}
 
 So what we have as result:
-\begin{eqnarray}
-    E\left[ f \right] = \int df f \cdot p(f | \left\{ F_i \right\}) \\
-    p(f | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f) \cdot p(f)}{\prod_i \int p(F_i | f') p(f') df'} \\
-    p(F_i | f) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\
+\begin{equation}
+\begin{array}{r@{}l}
+    E\left[ f \right] = \int df f \cdot p(f | \left\{ F_i \right\}) \\[6pt]
+    p(f | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f) \cdot p(f)}{\prod_i \int p(F_i | f') p(f') df'} \\[9pt]
+    p(F_i | f) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\[6pt]
     \lambda = f_{dark} + \nu(x,y) \cdot f
-\end{eqnarray}
+\end{array}
+\end{equation}
 
 Challenges with such approach:
 \begin{itemize}
@@ -184,7 +190,7 @@ Challenges with such approach:
 
 Good points that we can calculate factorials approximately. And we can estimate $p(f)$ from "naive" method.
 
-\subsubsection{Pipeline}
+\subsection{Pipeline}
 So the pipeline is following:
 
 \begin{itemize}
@@ -194,14 +200,89 @@ So the pipeline is following:
     \item Iterate the prior estimation and refinement steps until convergence or acceptable error level
 \end{itemize}
 
-\section{Sky removing}
+\section{True signal obtain}
 
-During previous step we obtained signal $f(x,y)$. But it contains sky light pollution:
+During previous step we obtained signal $f$. But it contains sky light pollution:
 \begin{eqnarray}
-    f(x,y) = f_{sky}(x,y) + f_{signal}(x,y)
+    f = f_{sky} + f_{signal}
 \end{eqnarray}
 
+\subsection{First approach}
 We can estimate $f_{sky}$ using regions on the side of image, where target signal is expected to be absent.
 But we should be careful, because overestimating sky level will lead to negative values in $f_{signal}(x,y)$
+
+\begin{equation}
+    f_{signal} = f - f_{sky} \label{eq:apriori_fsignal}
+\end{equation}
+
+\subsection{Bayesian analysis}
+So we want to use Bayesian approach again ($x,y$ are omitted):
+
+\begin{eqnarray}
+    F_i = Poisson\left( f_{dark} + \nu \cdot \left( f_{sky} + f_{signal} \right) \right) \\
+    E\left[ f_{signal} \right] = \int df_{signal} f_{signal} \cdot p(f_{signal} | \left\{ F_i \right\}) \label{eq:expected_fsignal} \\
+    p(f_{signal} | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f_{signal}) \cdot p(f_{signal})}{\prod_i \int p(F_i | f_{signal}') p(f_{signal}') df_{signal}'}
+\end{eqnarray}
+
+Formula for $p(F_i | f_{signal})$ looks very similar to previous one:
+\begin{equation}
+\begin{array}{r@{}l}
+    p(F_i | f_{signal}) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\
+    \lambda = f_{dark} + \nu(x,y) \cdot \left( f_{sky} + f_{signal} \right)
+\end{array}
+\end{equation}
+
+$p(f_{signal})$ we obtain from (\ref{eq:apriori_fsignal}) with local histograms.
+
+\subsection{Pipeline}
+So the pipeline is following:
+
+\begin{itemize}
+    \item obtain $f(x,y)$ on previous section
+    \item find $f_{sky}$ from $f(x,y)$
+    \item estimate first approach of $f_{signal} = f - f_{sky}$
+    \item find expected $f_{signal}$ with (\ref{eq:expected_fsignal})
+\end{itemize}
+
+\section{Narrowband signal extraction}
+
+In this case we have 2 signal images, captured with narrow (1) and wide (2) filters. Whole signal has 2 components: $f_{c,*}$ --- continuum,
+and $f_{n,*}$ --- narrow signal:
+
+\begin{eqnarray}
+    f_{signal, 1} = f_{c, 1} + f_{n} \\
+    f_{signal, 2} = f_{c, 2} + f_{n}
+\end{eqnarray}
+
+And we assume that continuum for both cases is proportional. We can assume that if wide filter not too wide.
+\begin{equation}
+    f_{c,2} = k \cdot f_{c,1} = k \cdot f_c
+\end{equation}, where $k > 1$. Value $k$ we obtain from calibration by stars --- they emit only continuum.
+
+So
+\begin{eqnarray}
+    f_{signal, 1} = f_c + f_n \\
+    f_{signal, 2} = k \cdot f_c + f_n
+\end{eqnarray}
+
+So we can find $f_n$ as
+\begin{eqnarray}
+    (1-1/k) \cdot f_n = f_{signal, 1} - \frac{f_{signal, 2}}{k} \\
+    f_n = \frac{k \cdot f_{signal, 1} - f_{signal, 2}}{k-1}
+\end{eqnarray}
+
+But as in previous parts, it's also a first approach.
+
+\subsection{Bayesian analysis}
+
+\begin{eqnarray}
+    F_{i,1} = Poisson\left( f_{dark, 1} + \nu_1 \cdot \left( f_{sky, 1} + f_c + f_n \right) \right) \\
+    F_{i,2} = Poisson\left( f_{dark, 2} + \nu_2 \cdot \left( f_{sky, 2} + k \cdot f_c + f_n \right) \right)
+\end{eqnarray}
+
+So we can write:
+\begin{eqnarray}
+    E\left[ f_n \right] = \int df_n f_n \cdot p(f_n | \left\{ F_{i,1}, F_{j,2} \right\})
+\end{eqnarray}
 
 \end{document}
