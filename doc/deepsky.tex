@@ -208,10 +208,22 @@ of $\lambda_i(f)$ and formula slightly changes:
 \begin{array}{r@{}l}
     E[f]\left( \left\{ F_i \right\} \right) = \int f \cdot p(f | {F_i}) df \\
     p(f | \left\{ F_i \right\}) = \left( \int \prod_i \left( \frac{\lambda_i(f')}{\lambda_i(f)} \right)^{F_i} \cdot 
-    e^{-\sum_i \left(\lambda_i(f')-\lambda_i(f)\right)} \cdot \left( \frac{p(f')}{p(f)} \right) df'\right)^{-1} = \\[9pt]
-    = \left( \int e^{\sum_i \left( F_i ln \lambda_i(f') - \lambda_i(f')\right) - \left( F_i ln \lambda_i(f) - \lambda_i(f)\right)} \cdot \left( \frac{p(f')}{p(f)} \right) df' \right)^{-1}
+    e^{-\sum_i \left(\lambda_i(f')-\lambda_i(f)\right)} \cdot \left( \frac{p(f')}{p(f)} \right) df'\right)^{-1}
 \end{array}
 \end{equation}
+
+In this formul wie have 2 components $\prod_i \left( \frac{\lambda_i(f')}{\lambda_i(f)} \right)^{F_i}$ and
+$e^{-\sum_i \left(\lambda_i(f')-\lambda_i(f)\right)}$. For big $f'$ first would be big, but it will be compensated by exponent.
+But it can cause overflow. So we can write:
+
+\begin{eqnarray}
+    p(f | \left\{ F_i \right\}) = \left( \int e^{\sum_i \left( F_i ln \lambda_i(f') - \lambda_i(f')\right) 
+            - \left( F_i ln \lambda_i(f) - \lambda_i(f)\right)} \cdot \frac{p(f')}{p(f)} df' \right)^{-1} \label{eq:bayes3} \\[9pt]
+    \Lambda_i(f) = F_i ln \lambda_i(f) - \lambda_i(f) \\[9pt]
+    p(f | \left\{ F_i \right\}) = \left( \int e^{\sum_i \Lambda_i(f') - \Lambda_i(f) }\cdot \frac{p(f')}{p(f)} df' \right)^{-1}
+\end{eqnarray}
+
+
 
 Challenges with such approach:
 \begin{itemize}
@@ -291,33 +303,24 @@ But as in previous parts, it's also a first approach.
 \subsection{Bayesian analysis}
 
 \begin{eqnarray}
-    F_{i,1} = Poisson(\lambda_{1,i}({f_n \atop f_c})) = Poisson\left( f_{dark, 1, i} + \nu_{1,i} \cdot \left( f_{sky, 1, i} + f_c + f_n \right) \right) \\
-    F_{i,2} = Poisson(\lambda_{2,i}({f_n \atop f_c})) = Poisson\left( f_{dark, 2, i} + \nu_{2,i} \cdot \left( f_{sky, 2, i} + k \cdot f_c + f_n \right) \right)
+    F_{i,1} = Poisson\left( \lambda_{i,1}\left({f_n \atop f_c}\right) \right) \\
+    F_{j,2} = Poisson\left( \lambda_{j,2}\left({f_n \atop f_c}\right) \right)
 \end{eqnarray}
 
-Let's write this in vector form. It doesn't make calculations simpler, but helps to better understand.
-
 \begin{eqnarray}
-    E\left[ f_n \atop f_c \right] = \int df_n df_c \left({f_n \atop f_c} \right) \cdot p\left( {f_n \atop f_c} | \left\{ F_{i,1}, F_{j,2} \right\}\right) \\
-    p\left({f_n \atop f_c} | \left\{ F_{i,1}, F_{j,2} \right\}\right) = 
-    \frac{p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f_n \atop f_c} \right) \cdot p\left( f_n \atop f_c \right)}
-    {p\left(\left\{F_{i,1}, F_{j,2} \right\}\right)} \\
-    p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f_n \atop f_c} \right) = \prod_i p\left(F_{i,1} | {f_n \atop f_c} \right) \cdot \prod_j p\left(F_{j,2} | {f_n \atop f_c} \right) = \nonumber \\
-    = \frac{\prod_i \lambda_{i,1}({f_n \atop f_c})^{F_{i,1}} e^{-\lambda_{i,1}({f_n \atop f_c})} }{\prod_i F_{i,1}!} \cdot \frac{\prod_j \lambda_{j,2}({f_n \atop f_c})^{F_{j,2}} e^{-\lambda_{j,2}({f_n \atop f_c})}}{\prod_j F_{j,2}!} \\
-    p\left(\left\{F_{i,1}, F_{j,2} \right\}\right) = \int p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f'_n \atop f'_c}\right) \cdot p\left( f'_n \atop f'_c \right) df'_n df'_c = \nonumber \\
-    = \int \frac{\prod_i \lambda_{i,1}({f'_n \atop f'_c})^{F_{i,1}} e^{-\lambda_{i,1}({f'_n \atop f'_c})} }{\prod_i F_{i,1}!} \cdot \frac{\prod_j \lambda_{j,2}({f'_n \atop f'_c})^{F_{j,2}} e^{-\lambda_{j,2}({f'_n \atop f'_c})}}{\prod_j F_{j,2}!} \cdot p\left({f'_n \atop f'_c}\right) df'_n df'_c
+    \lambda_{i,1}\left({f_n \atop f_c}\right) = f_{dark, 1, i} + \nu_{1,i} \cdot \left( f_{sky, 1, i} + f_c + f_n \right) \\
+    \lambda_{j,2}\left({f_n \atop f_c}\right) = f_{dark, 2, j} + \nu_{2,j} \cdot \left( f_{sky, 2, j} + k \cdot f_c + f_n \right)
 \end{eqnarray}
 
-So we get:
+We can concatinate $\left\{F_{i,1}, F_{j,2}\right\}$ frames to single frames list and
+$\left\{ \lambda_{i,1}, \lambda_{j,2} \right\}$ to single $\lambda$ list, and like in (\ref{eq:bayes3}) we get:
 
 \begin{eqnarray}
-    p\left({f_n \atop f_c} | \left\{ F_{i,1}, F_{j,2} \right\}\right) = \\
-    \mathclap{= \left( \int 
-    \prod_i \left( \frac{\lambda_{i,1}({f'_n \atop f'_c})}{\lambda_{i,1}({f_n \atop f_c})} \right)^{F_{i,1}} \cdot 
-    \prod_j \left( \frac{\lambda_{j,2}({f'_n \atop f'_c})}{\lambda_{j,2}({f_n \atop f_c})} \right)^{F_{j,2}} \cdot 
-    e^{-\sum_i \left(\lambda_{i,1}({f'_n \atop f'_c}) - \lambda_{i,1}({f_n \atop f_c})\right)
-       -\sum_j \left(\lambda_{j,2}({f'_n \atop f'_c}) - \lambda_{j,2}({f_n \atop f_c})\right)} df'_n df'_c
-    \right)^{-1}} \nonumber
+p\left({f_n \atop f_c} | \left\{ F_{i,1}, F_{j,2} \right\}\right) =
+\left( \int e^{
+    -\sum_i \left[\Lambda_{i,1}\left({f'_n \atop f'_c}\right) - \Lambda_{i,1}\left({f_n \atop f_c}\right) \right]
+    -\sum_j \left[\Lambda_{j,2}\left({f'_n \atop f'_c}\right) - \Lambda_{j,2}\left({f_n \atop f_c}\right) \right]}
+\cdot \frac{p\left({f'_n \atop f'_c}\right)}{p\left({f_n \atop f_c}\right)} df'_n df'_c \right)^{-1}
 \end{eqnarray}
 
 \end{document}
