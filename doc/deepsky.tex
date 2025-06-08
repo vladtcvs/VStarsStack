@@ -1,4 +1,5 @@
 \documentclass{article}
+\usepackage{mathtools}
 
 \begin{document}
 
@@ -140,33 +141,37 @@ We have set of frames $F_i(x,y)$. We want to find estimation for $f(x,y)$:
     E\left[ f(x,y) \right] = \int df(x,y) f(x,y) p(f(x,y) | \left\{ F_i(x,y) \right\})
 \end{eqnarray}
 
-Here we integrating independently for each $x,y$, so they are just parameters, not integration varables. So we won't write them
-for readability.
-
-Let's find $p(f | \left\{ F_i \right\})$:
+Let's find $p(f(x,y) | \left\{ F_i(x,y) \right\})$. We process independently for each $x,y$, so they are just parameters,
+not integration varables. So we won't write them for readability:
 
 \begin{eqnarray}
-    p(f | \left\{ F_i \right\}) = \frac{p(\left\{ F_i \right\} | f) \cdot p(f)}{p(\left\{ F_i \right\})} \\
-    p(\left\{ F_i \right\} | f) = \prod_i p(F_i | f)
+    E\left[ f \right] = \int df f p(f | \left\{ F_i \right\})
 \end{eqnarray}
 
-But it's very important that
+According to Bayes' theorem
+
+\begin{eqnarray}
+    p(f | \left\{ F_i \right\}) = \frac{p(\left\{ F_i \right\} | f) \cdot p(f)}{p(\left\{ F_i \right\})} =
+    \frac{p(\left\{ F_i \right\} | f) \cdot p(f)}{\int p(\left\{ F_i \right\} | f') \cdot p(f')} df' \label{eq:bayes}
+\end{eqnarray}
+
+where $p(f)$ --- apriori probability of $f$. We should estimate it before starting Bayesian analysis.
+
+It's very important that
 \begin{equation}
     p(\left\{ F_i \right\}) \ne \prod_i p(F_i)
 \end{equation}
 
-It happens because $F_i$ are not marginally independent:
+It happens because $F_i$ are not marginally independent: if $P(AB|C_i) = P(A|C_i) \cdot P(B|C_i)$ for each $i$, it doesn't mean that $P(AB) = P(A)\cdot P(B)$
 
-If $P(AB|C_i) = P(A|C_i) \cdot P(B|C_i)$ for each $i$, it doesn't mean that $P(AB) = P(A)\cdot P(B)$
+But $F_i|f$ are conditionally independent, so we can write
+\begin{equation}
+    p(\left\{ F_i \right\} | f) = \prod_i p(F_i | f)
+\end{equation}
 
-Let's find full probability $p(\left\{F_i\right\})$:
+So we can continue (\ref{eq:bayes}) and write it as
 \begin{eqnarray}
-    p(\left\{F_i\right\}) = \int p(\left\{ F_i \right\} | f') p(f') df' = \int \prod_i p(F_i | f') p(f') df'
-\end{eqnarray}
-
-And finally
-\begin{eqnarray}
-    p(f | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f) \cdot p(f)}{\int \prod_i p(F_i | f') p(f') df'}
+    p(f | \left\{ F_i \right\}) = \frac{\prod_i p(F_i|f) \cdot p(f)}{\int \prod_i p(F_i|f') \cdot p(f') df'} \label{eq:bayes2}
 \end{eqnarray}
 
 Let's remember what $p(F_i | f)$ is:
@@ -177,25 +182,42 @@ Let's remember what $p(F_i | f)$ is:
 \end{array}
 \end{equation}
 
-So what we have as result:
+Let's substutute it into (\ref{eq:bayes2}):
 \begin{equation}
 \begin{array}{r@{}l}
-    E\left[ f \right] = \int df f \cdot p(f | \left\{ F_i \right\}) \\[6pt]
-    p(f | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f) \cdot p(f)}{\int \prod_i p(F_i | f') p(f') df'} \\[9pt]
-    p(F_i | f) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\[6pt]
-    \lambda = f_{dark} + \nu(x,y) \cdot f
+    p(f | \left\{ F_i \right\}) = \frac{\prod_i \frac{\lambda(f)^{F_i} \cdot e^{-\lambda(f)}}{F_i!} \cdot p(f)}
+    {\int \prod_i \frac{\lambda(f)^{F_i} \cdot e^{-\lambda(f)}}{F_i!} p(f') df'}
+\end{array}
+\end{equation}
+
+After simplyfying it we have:
+\begin{equation}
+    p(f | \left\{ F_i \right\}) = \frac{\lambda(f)^{\sum F_i} \cdot e^{-N\lambda(f)} \cdot p(f)}
+    {\int \lambda(f')^{\sum F_i} \cdot e^{-N\lambda(f')} \cdot p(f') df'}
+\end{equation}
+
+where $N$ --- amount of $F_i$. Factorials are gone. And for case where $p(f) \ne 0$, $\lambda(f) \ne 0$ we can simplify:
+
+\begin{equation}
+    p(f | \left\{ F_i \right\}) = \left( \int \left( \frac{\lambda(f')}{\lambda(f)} \right)^{\sum F_i} \cdot e^{-N(\lambda(f')-\lambda(f))} \cdot \left( \frac{p(f')}{p(f)} \right) df'\right)^{-1}
+\end{equation}
+
+But there can be some practical case: what if different frames have different $f_{dark}$ or $f_{sky}$ or $\nu$? In that case we have series
+of $\lambda_i(f)$ and formula slightly changes:
+\begin{equation}
+\begin{array}{r@{}l}
+    E[f]\left( \left\{ F_i \right\} \right) = \int f \cdot p(f | {F_i}) df \\
+    p(f | \left\{ F_i \right\}) = \left( \int \prod_i \left( \frac{\lambda_i(f')}{\lambda_i(f)} \right)^{F_i} \cdot 
+    e^{-\sum_i \left(\lambda_i(f')-\lambda_i(f)\right)} \cdot \left( \frac{p(f')}{p(f)} \right) df'\right)^{-1} = \\[9pt]
+    = \left( \int e^{\sum_i \left( F_i ln \lambda_i(f') - \lambda_i(f')\right) - \left( F_i ln \lambda_i(f) - \lambda_i(f)\right)} \cdot \left( \frac{p(f')}{p(f)} \right) df' \right)^{-1}
 \end{array}
 \end{equation}
 
 Challenges with such approach:
 \begin{itemize}
-\item $F_i!$ --- calculation can be really challenging if do it straightforward
 \item we need some a-priori knowledge of probability $p(f)$
-\item integral calculation is pretty long procedure. So we can calculate it only in some area around maxima of $p(f')$
-\item we have product of probabilites under integral
+\item integral calculation over $R_{+}$ is pretty long procedure. So we can calculate it only in some area around maxima of $p(f')$
 \end{itemize}
-
-Good points that we can calculate factorials approximately. And we can estimate $p(f)$ from "naive" method.
 
 \subsection{Pipeline}
 So the pipeline is following:
@@ -209,46 +231,31 @@ So the pipeline is following:
 
 \section{True signal obtain}
 
-During previous step we obtained signal $f$. But it contains sky light pollution:
+During previous step we studied how to obtain signal $f$. But it contains sky light pollution:
 \begin{eqnarray}
-    f = f_{sky} + f_{signal}
+    f = f_{sky} + f_{signal} \\
+    \lambda(f_{signal}) = f_{dark} + \nu \left( f_{sky} + f_{signal} \right)
 \end{eqnarray}
 
-\subsection{First approach}
-We can estimate $f_{sky}$ using regions on the side of image, where target signal is expected to be absent.
-But we should be careful, because overestimating sky level will lead to negative values in $f_{signal}(x,y)$
+So, we need to estimate $f_{sky}$.
 
-\begin{equation}
-    f_{signal} = f - f_{sky} \label{eq:apriori_fsignal}
-\end{equation}
+\subsection{Sky estimation}
+Firstly, let's using formula $\lambda(f) = f_{dark} + \nu f$ find whole captured signal $f$.
+
+We can estimate $f_{sky}$ from $f$ using regions on the side of image, where target signal is expected to be absent.
+But we should be careful, not to overestimate.
 
 \subsection{Bayesian analysis}
-So we want to use Bayesian approach again ($x,y$ are omitted):
 
-\begin{eqnarray}
-    F_i = Poisson\left( f_{dark} + \nu \cdot \left( f_{sky} + f_{signal} \right) \right) \\
-    E\left[ f_{signal} \right] = \int df_{signal} f_{signal} \cdot p(f_{signal} | \left\{ F_i \right\}) \label{eq:expected_fsignal} \\
-    p(f_{signal} | \left\{ F_i \right\}) = \frac{\prod_i p(F_i | f_{signal}) \cdot p(f_{signal})}{\int \prod_i p(F_i | f_{signal}') p(f_{signal}') df_{signal}'}
-\end{eqnarray}
-
-Formula for $p(F_i | f_{signal})$ looks very similar to previous one:
-\begin{equation}
-\begin{array}{r@{}l}
-    p(F_i | f_{signal}) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\
-    \lambda = f_{dark} + \nu(x,y) \cdot \left( f_{sky} + f_{signal} \right)
-\end{array}
-\end{equation}
-
-$p(f_{signal})$ we obtain from (\ref{eq:apriori_fsignal}) with local histograms.
+So, now we use $\lambda(f_{signal}) = f_{dark} + \nu \left( f_{sky} + f_{signal} \right)$ to find $f_{signal}$.
 
 \subsection{Pipeline}
 So the pipeline is following:
 
 \begin{itemize}
-    \item obtain $f(x,y)$ on previous section
+    \item obtain whole signal $f(x,y)$
     \item find $f_{sky}$ from $f(x,y)$
-    \item estimate first approach of $f_{signal} = f - f_{sky}$
-    \item find expected $f_{signal}$ with (\ref{eq:expected_fsignal})
+    \item find expected $f_{signal}$
 \end{itemize}
 
 \section{Narrowband signal extraction}
@@ -284,8 +291,8 @@ But as in previous parts, it's also a first approach.
 \subsection{Bayesian analysis}
 
 \begin{eqnarray}
-    F_{i,1} = Poisson\left( f_{dark, 1} + \nu_1 \cdot \left( f_{sky, 1} + f_c + f_n \right) \right) \\
-    F_{i,2} = Poisson\left( f_{dark, 2} + \nu_2 \cdot \left( f_{sky, 2} + k \cdot f_c + f_n \right) \right)
+    F_{i,1} = Poisson(\lambda_{1,i}({f_n \atop f_c})) = Poisson\left( f_{dark, 1, i} + \nu_{1,i} \cdot \left( f_{sky, 1, i} + f_c + f_n \right) \right) \\
+    F_{i,2} = Poisson(\lambda_{2,i}({f_n \atop f_c})) = Poisson\left( f_{dark, 2, i} + \nu_{2,i} \cdot \left( f_{sky, 2, i} + k \cdot f_c + f_n \right) \right)
 \end{eqnarray}
 
 Let's write this in vector form. It doesn't make calculations simpler, but helps to better understand.
@@ -295,13 +302,22 @@ Let's write this in vector form. It doesn't make calculations simpler, but helps
     p\left({f_n \atop f_c} | \left\{ F_{i,1}, F_{j,2} \right\}\right) = 
     \frac{p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f_n \atop f_c} \right) \cdot p\left( f_n \atop f_c \right)}
     {p\left(\left\{F_{i,1}, F_{j,2} \right\}\right)} \\
-    p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f_n \atop f_c} \right) = \prod_i p\left(F_{i,1} | {f_n \atop f_c} \right) \cdot \prod_j p\left(F_{j,2} | {f_n \atop f_c} \right)
+    p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f_n \atop f_c} \right) = \prod_i p\left(F_{i,1} | {f_n \atop f_c} \right) \cdot \prod_j p\left(F_{j,2} | {f_n \atop f_c} \right) = \nonumber \\
+    = \frac{\prod_i \lambda_{i,1}({f_n \atop f_c})^{F_{i,1}} e^{-\lambda_{i,1}({f_n \atop f_c})} }{\prod_i F_{i,1}!} \cdot \frac{\prod_j \lambda_{j,2}({f_n \atop f_c})^{F_{j,2}} e^{-\lambda_{j,2}({f_n \atop f_c})}}{\prod_j F_{j,2}!} \\
+    p\left(\left\{F_{i,1}, F_{j,2} \right\}\right) = \int p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f'_n \atop f'_c}\right) \cdot p\left( f'_n \atop f'_c \right) df'_n df'_c = \nonumber \\
+    = \int \frac{\prod_i \lambda_{i,1}({f'_n \atop f'_c})^{F_{i,1}} e^{-\lambda_{i,1}({f'_n \atop f'_c})} }{\prod_i F_{i,1}!} \cdot \frac{\prod_j \lambda_{j,2}({f'_n \atop f'_c})^{F_{j,2}} e^{-\lambda_{j,2}({f'_n \atop f'_c})}}{\prod_j F_{j,2}!} \cdot p\left({f'_n \atop f'_c}\right) df'_n df'_c
 \end{eqnarray}
+
+So we get:
 
 \begin{eqnarray}
-    p\left(\left\{F_{i,1}, F_{j,2} \right\}\right) = \int p\left(\left\{F_{i,1}, F_{j,2} \right\} | {f_n \atop f_c}\right) \cdot p\left( f_n \atop f_c \right) df_n df_c = \\
-    = \int \prod_i p\left(F_{i,1} | {f_n \atop f_c} \right) \cdot \prod_j p\left(F_{j,2} | {f_n \atop f_c} \right) \cdot p\left( f_n \atop f_c \right) df_n df_c
+    p\left({f_n \atop f_c} | \left\{ F_{i,1}, F_{j,2} \right\}\right) = \\
+    \mathclap{= \left( \int 
+    \prod_i \left( \frac{\lambda_{i,1}({f'_n \atop f'_c})}{\lambda_{i,1}({f_n \atop f_c})} \right)^{F_{i,1}} \cdot 
+    \prod_j \left( \frac{\lambda_{j,2}({f'_n \atop f'_c})}{\lambda_{j,2}({f_n \atop f_c})} \right)^{F_{j,2}} \cdot 
+    e^{-\sum_i \left(\lambda_{i,1}({f'_n \atop f'_c}) - \lambda_{i,1}({f_n \atop f_c})\right)
+       -\sum_j \left(\lambda_{j,2}({f'_n \atop f'_c}) - \lambda_{j,2}({f_n \atop f_c})\right)} df'_n df'_c
+    \right)^{-1}} \nonumber
 \end{eqnarray}
-
 
 \end{document}
