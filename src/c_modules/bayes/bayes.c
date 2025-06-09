@@ -55,7 +55,7 @@ static float Lambda(int num_dim,
                     const int *F,
                     const float *f,
                     const float *lambdas_d,
-                    const float **lambdas_v)
+                    const float *lambdas_v)
 {
     float sum = 0;
     int i, k;
@@ -63,7 +63,7 @@ static float Lambda(int num_dim,
     {
         float item = lambdas_d[i];
         for (k = 0; k < num_dim; k++)
-            item += lambdas_v[i][k] * f[k];
+            item += lambdas_v[i * num_dim + k] * f[k];
         sum += F[i] * logf(item) - item;
     }
     return sum;
@@ -75,7 +75,7 @@ static float posterior_item(int num_dim,
                             const float *f,
                             const float *f_integration,
                             const float *lambdas_d,
-                            const float **lambdas_v)
+                            const float *lambdas_v)
 {
     float Lambdas_f_posterior = Lambda(num_dim, num_frames, F, f, lambdas_d, lambdas_v);
     float Lambdas_f_integration = Lambda(num_dim, num_frames, F, f_integration, lambdas_d, lambdas_v);
@@ -87,7 +87,7 @@ static float _bayes_posterior(struct bayes_posterior_ctx_s *ctx,
                               const int *F,
                               const float *f,
                               const float *lambdas_d,
-                              const float **lambdas_v,
+                              const float *lambdas_v,
                               const apriori_f apriori,
                               const void *apriori_params,
                               const float *limits_low,
@@ -132,7 +132,7 @@ float bayes_posterior(struct bayes_posterior_ctx_s *ctx,
                       const int *F,
                       const float *f,
                       const float *lambdas_d,
-                      const float **lambdas_v,
+                      const float *lambdas_v,
                       const apriori_f apriori,
                       const void *apriori_params,
                       const float *limits_low,
@@ -147,7 +147,7 @@ void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
                 int num_frames,
                 const int *F,
                 const float *lambdas_d,
-                const float **lambdas_v,
+                const float *lambdas_v,
                 const apriori_f apriori,
                 const void *apriori_params,
                 const float *limits_low,
@@ -179,7 +179,7 @@ void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
                     int num_frames,
                     const int *F,
                     const float *lambdas_d,
-                    const float **lambdas_v,
+                    const float *lambdas_v,
                     const apriori_f apriori,
                     const void *apriori_params,
                     const float *limits_low,
@@ -269,6 +269,7 @@ void bayes_posterior_free(struct bayes_posterior_ctx_s *ctx)
 bool bayes_posterior_init(struct bayes_posterior_ctx_s *ctx, int num_dim)
 {
     bayes_posterior_free(ctx);
+    ctx->num_dim = num_dim;
     ctx->f_integration = calloc(num_dim, sizeof(float));
     ctx->f_estimation = calloc(num_dim, sizeof(float));
     ctx->index_max = calloc(num_dim, sizeof(int));
