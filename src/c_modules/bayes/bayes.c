@@ -52,7 +52,7 @@ static void index_2_f(int num_dim, const int *index, const double *low, double d
 
 static double Lambda(int num_dim,
                     int num_frames,
-                    const unsigned *F,
+                    const uint64_t *F,
                     const double *f,
                     const double *lambdas_d,
                     const double *lambdas_v)
@@ -71,7 +71,7 @@ static double Lambda(int num_dim,
 
 static double posterior_item(int num_dim,
                             int num_frames,
-                            const unsigned *F,
+                            const uint64_t *F,
                             const double *f,
                             const double *f_integration,
                             const double *lambdas_d,
@@ -84,7 +84,7 @@ static double posterior_item(int num_dim,
 
 static double _bayes_posterior(struct bayes_posterior_ctx_s *ctx,
                               int num_frames,
-                              const unsigned *F,
+                              const uint64_t *F,
                               const double *f,
                               const double *lambdas_d,
                               const double *lambdas_v,
@@ -129,7 +129,7 @@ static void bayes_index_max(int num_dim,
 
 double bayes_posterior(struct bayes_posterior_ctx_s *ctx,
                       int num_frames,
-                      const unsigned *F,
+                      const uint64_t *F,
                       const double *f,
                       const double *lambdas_d,
                       const double *lambdas_v,
@@ -145,7 +145,7 @@ double bayes_posterior(struct bayes_posterior_ctx_s *ctx,
 
 void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
                 int num_frames,
-                const unsigned *F,
+                const uint64_t *F,
                 const double *lambdas_d,
                 const double *lambdas_v,
                 const apriori_f apriori,
@@ -177,7 +177,7 @@ void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
 
 void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
                     int num_frames,
-                    const unsigned *F,
+                    const uint64_t *F,
                     const double *lambdas_d,
                     const double *lambdas_v,
                     const apriori_f apriori,
@@ -211,6 +211,7 @@ void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
     double dln = pow(dl, ctx->num_dim);
     int i;
     double sump = 0;
+    memset(f, 0, ctx->num_dim * sizeof(double));
     init_index(ctx->num_dim, ctx->index_estimation);
     do
     {

@@ -138,7 +138,7 @@ static PyObject *posterior(PyObject *_self,
         return Py_None;
     }
 
-    PyArrayObject *arr_F = (PyArrayObject *)PyArray_FROM_OTF(F, NPY_UINT, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr_F = (PyArrayObject *)PyArray_FROM_OTF(F, NPY_UINT64, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_f = (PyArrayObject *)PyArray_FROM_OTF(f, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_lambdas_d = (PyArrayObject *)PyArray_FROM_OTF(lambdas_d, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_lambdas_v = (PyArrayObject *)PyArray_FROM_OTF(lambdas_v, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
@@ -190,7 +190,7 @@ static PyObject *posterior(PyObject *_self,
 
     // arr_limits_low: [num_dim]
     if (PyArray_NDIM(arr_limits_low) != 1 ||
-        PyArray_DIM(arr_limits_low, 0) != num_frames)
+        PyArray_DIM(arr_limits_low, 0) != self->num_dim)
     {
         PyErr_SetString(PyExc_ValueError, "limits_low must be shape [num_dim]");
         goto fail;
@@ -204,7 +204,7 @@ static PyObject *posterior(PyObject *_self,
         goto fail;
     }
 
-    unsigned *F_data = (unsigned *)PyArray_DATA(arr_F);
+    uint64_t *F_data = (uint64_t *)PyArray_DATA(arr_F);
     double *f_data = (double *)PyArray_DATA(arr_f);
     double *lambdas_d_data = (double *)PyArray_DATA(arr_lambdas_d);
     double *lambdas_v_data = (double *)PyArray_DATA(arr_lambdas_v);
@@ -268,7 +268,7 @@ static PyObject *maxp(PyObject *_self,
     struct BayesEstimatorObject *self = (struct BayesEstimatorObject *)_self;
 
     static char *kwlist[] = {"F", "lambdas_d", "lambdas_v", "apriori_params", "limits_low", "limits_high", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOO", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOO", kwlist,
                                      &F,
                                      &lambdas_d, &lambdas_v,
                                      &apriori_params,
@@ -278,7 +278,7 @@ static PyObject *maxp(PyObject *_self,
         return Py_None;
     }
 
-    PyArrayObject *arr_F = (PyArrayObject *)PyArray_FROM_OTF(F, NPY_UINT, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr_F = (PyArrayObject *)PyArray_FROM_OTF(F, NPY_UINT64, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_lambdas_d = (PyArrayObject *)PyArray_FROM_OTF(lambdas_d, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_lambdas_v = (PyArrayObject *)PyArray_FROM_OTF(lambdas_v, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_limits_low = (PyArrayObject *)PyArray_FROM_OTF(limits_low, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
@@ -317,7 +317,7 @@ static PyObject *maxp(PyObject *_self,
 
     // arr_limits_low: [num_dim]
     if (PyArray_NDIM(arr_limits_low) != 1 ||
-        PyArray_DIM(arr_limits_low, 0) != num_frames)
+        PyArray_DIM(arr_limits_low, 0) != self->num_dim)
     {
         PyErr_SetString(PyExc_ValueError, "limits_low must be shape [num_dim]");
         goto fail;
@@ -331,7 +331,7 @@ static PyObject *maxp(PyObject *_self,
         goto fail;
     }
 
-    unsigned *F_data = (unsigned *)PyArray_DATA(arr_F);
+    uint64_t *F_data = (uint64_t *)PyArray_DATA(arr_F);
     double *lambdas_d_data = (double *)PyArray_DATA(arr_lambdas_d);
     double *lambdas_v_data = (double *)PyArray_DATA(arr_lambdas_v);
     double *limits_low_data = (double *)PyArray_DATA(arr_limits_low);
@@ -404,7 +404,7 @@ static PyObject *estimate(PyObject *_self,
     struct BayesEstimatorObject *self = (struct BayesEstimatorObject *)_self;
 
     static char *kwlist[] = {"F", "lambdas_d", "lambdas_v", "apriori_params", "limits_low", "limits_high", "clip", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOOd", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOd", kwlist,
                                      &F,
                                      &lambdas_d, &lambdas_v,
                                      &apriori_params,
@@ -415,7 +415,7 @@ static PyObject *estimate(PyObject *_self,
         return Py_None;
     }
 
-    PyArrayObject *arr_F = (PyArrayObject *)PyArray_FROM_OTF(F, NPY_UINT, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr_F = (PyArrayObject *)PyArray_FROM_OTF(F, NPY_UINT64, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_lambdas_d = (PyArrayObject *)PyArray_FROM_OTF(lambdas_d, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_lambdas_v = (PyArrayObject *)PyArray_FROM_OTF(lambdas_v, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_limits_low = (PyArrayObject *)PyArray_FROM_OTF(limits_low, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
@@ -454,7 +454,7 @@ static PyObject *estimate(PyObject *_self,
 
     // arr_limits_low: [num_dim]
     if (PyArray_NDIM(arr_limits_low) != 1 ||
-        PyArray_DIM(arr_limits_low, 0) != num_frames)
+        PyArray_DIM(arr_limits_low, 0) != self->num_dim)
     {
         PyErr_SetString(PyExc_ValueError, "limits_low must be shape [num_dim]");
         goto fail;
@@ -468,7 +468,7 @@ static PyObject *estimate(PyObject *_self,
         goto fail;
     }
 
-    unsigned *F_data = (unsigned *)PyArray_DATA(arr_F);
+    uint64_t *F_data = (uint64_t *)PyArray_DATA(arr_F);
     double *lambdas_d_data = (double *)PyArray_DATA(arr_lambdas_d);
     double *lambdas_v_data = (double *)PyArray_DATA(arr_lambdas_v);
     double *limits_low_data = (double *)PyArray_DATA(arr_limits_low);
