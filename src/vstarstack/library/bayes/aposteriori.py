@@ -15,7 +15,7 @@
 
 import numpy as np
 
-def _posterior_item(F : np.ndarray,
+def posterior_item(F : np.ndarray,
                    f_posteriori : np.ndarray,
                    f_integration : np.ndarray,
                    lambdas_d : np.ndarray,
@@ -48,7 +48,7 @@ def _posterior_item(F : np.ndarray,
     apriori_f_integration : float = _find_apriori(apriori_table, indexes_integration)
     if apriori_f_integration == 0:
         return 0
-    return _posterior_item(F, f_posteriori, f_integration, lambdas_d, lambdas_v, apriori_f_posterior, apriori_f_integration)
+    return posterior_item(F, f_posteriori, f_integration, lambdas_d, lambdas_v, apriori_f_posterior, apriori_f_integration)
 
 def _get_indexes(limits_low : np.ndarray, num_indexes : np.ndarray, dl : float):
     dims = limits_low.shape[0]
