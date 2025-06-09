@@ -61,10 +61,10 @@ double call_apriori(const double *f, int num_dim, const void *param)
     npy_intp dims[1] = {num_dim};
 
     PyObject *f_ndarray = PyArray_SimpleNewFromData(
-        1,           // ndim
-        dims,        // dimensions
+        1,          // ndim
+        dims,       // dimensions
         NPY_DOUBLE, // dtype
-        (void *)f    // pointer to your double data
+        (void *)f   // pointer to your double data
     );
 
     if (!f_ndarray)
@@ -151,54 +151,60 @@ static PyObject *posterior(PyObject *_self,
         goto fail;
     }
 
-    // arr_f: [num_frames]
-    if (PyArray_NDIM(arr_F) != 1)
+    // arr_f: [num_seq, num_frames]
+    if (PyArray_NDIM(arr_F) != 2)
     {
-        PyErr_SetString(PyExc_ValueError, "F must be a 1D array");
+        PyErr_SetString(PyExc_ValueError, "F must be a 2D array");
         goto fail;
     }
-    npy_intp num_frames = PyArray_DIM(arr_F, 0);
+    npy_intp num_seq = PyArray_DIM(arr_F, 0);
+    npy_intp num_frames = PyArray_DIM(arr_F, 1);
 
-    // arr_f: [num_dim]
-    if (PyArray_NDIM(arr_f) != 1)
+    // arr_f: [num_seq, num_dim]
+    if (PyArray_NDIM(arr_f) != 2)
     {
-        PyErr_SetString(PyExc_ValueError, "f must be a 1D array");
+        PyErr_SetString(PyExc_ValueError, "f must be a 2D array");
         goto fail;
     }
-    if (PyArray_DIM(arr_f, 0) != self->num_dim)
+    if (PyArray_DIM(arr_f, 0) != num_seq ||
+        PyArray_DIM(arr_f, 1) != self->num_dim)
     {
-        PyErr_SetString(PyExc_ValueError, "f must be a 1D array of shape [num_dim]");
-        goto fail;
-    }
-
-    // arr_lambdas_d: [num_dim]
-    if (PyArray_NDIM(arr_lambdas_d) != 1 ||
-        PyArray_DIM(arr_lambdas_v, 0) != num_frames)
-    {
-        PyErr_SetString(PyExc_ValueError, "lambdas_d must be shape [num_frames]");
+        PyErr_SetString(PyExc_ValueError, "f must be a 2D array of shape [num_seq, num_dim]");
         goto fail;
     }
 
-    // arr_lambdas_v: [num_frames, num_dim]
-    if (PyArray_NDIM(arr_lambdas_v) != 2 ||
-        PyArray_DIM(arr_lambdas_v, 0) != num_frames ||
-        PyArray_DIM(arr_lambdas_v, 1) != self->num_dim)
+    // arr_lambdas_d: [num_seq, num_dim]
+    if (PyArray_NDIM(arr_lambdas_d) != 2 ||
+        PyArray_DIM(arr_lambdas_d, 0) != num_seq ||
+        PyArray_DIM(arr_lambdas_d, 1) != num_frames)
     {
-        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames, num_dim]");
+        PyErr_SetString(PyExc_ValueError, "lambdas_d must be shape [num_seq, num_frames]");
         goto fail;
     }
 
-    // arr_limits_low: [num_dim]
-    if (PyArray_NDIM(arr_limits_low) != 1 ||
-        PyArray_DIM(arr_limits_low, 0) != self->num_dim)
+    // arr_lambdas_v: [num_seq, num_frames, num_dim]
+    if (PyArray_NDIM(arr_lambdas_v) != 3 ||
+        PyArray_DIM(arr_lambdas_v, 0) != num_seq ||
+        PyArray_DIM(arr_lambdas_v, 1) != num_frames ||
+        PyArray_DIM(arr_lambdas_v, 2) != self->num_dim)
+    {
+        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_seq, num_frames, num_dim]");
+        goto fail;
+    }
+
+    // arr_limits_low: [num_seq, num_dim]
+    if (PyArray_NDIM(arr_limits_low) != 2 ||
+        PyArray_DIM(arr_limits_low, 0) != num_seq ||
+        PyArray_DIM(arr_limits_low, 1) != self->num_dim)
     {
         PyErr_SetString(PyExc_ValueError, "limits_low must be shape [num_dim]");
         goto fail;
     }
 
-    // arr_limits_high: [num_dim]
-    if (PyArray_NDIM(arr_limits_high) != 1 ||
-        PyArray_DIM(arr_limits_high, 0) != self->num_dim)
+    // arr_limits_high: [num_seq, num_dim]
+    if (PyArray_NDIM(arr_limits_high) != 2 ||
+        PyArray_DIM(arr_limits_high, 0) != num_seq ||
+        PyArray_DIM(arr_limits_high, 1) != self->num_dim)
     {
         PyErr_SetString(PyExc_ValueError, "limits_high must be shape [num_dim]");
         goto fail;
@@ -237,15 +243,30 @@ static PyObject *posterior(PyObject *_self,
         goto fail;
     }
 
-    double p = bayes_posterior(&self->ctx,
-                               num_frames,
-                               F_data,
-                               f_data,
-                               lambdas_d_data, lambdas_v_data,
-                               self->apriori, &params,
-                               limits_low_data, limits_high_data, self->dl);
+    npy_intp dims[2] = {num_seq, self->num_dim};
 
-    return PyFloat_FromDouble(p);
+    PyArrayObject *p_ndarray = (PyArrayObject *)PyArray_SimpleNew(
+        2,         // ndim
+        dims,      // dimensions
+        NPY_DOUBLE // dtype
+    );
+
+    double *p = (double *)PyArray_DATA(p_ndarray);
+    int seq;
+    for (seq = 0; seq < num_seq; seq++)
+    {
+        p[seq] = bayes_posterior(&self->ctx,
+                                 num_frames,
+                                 &F_data[seq * num_frames],
+                                 &f_data[seq * self->num_dim],
+                                 &lambdas_d_data[seq * num_frames],
+                                 &lambdas_v_data[seq * num_frames * self->num_dim],
+                                 self->apriori, &params,
+                                 &limits_low_data[seq * self->num_dim],
+                                 &limits_high_data[seq * self->num_dim],
+                                 self->dl);
+    }
+    return (PyObject*)p_ndarray;
 fail:
     Py_XDECREF(arr_F);
     Py_XDECREF(arr_f);
@@ -290,42 +311,47 @@ static PyObject *maxp(PyObject *_self,
         goto fail;
     }
 
-    // arr_f: [num_frames]
-    if (PyArray_NDIM(arr_F) != 1)
+    // arr_f: [num_seq, num_frames]
+    if (PyArray_NDIM(arr_F) != 2)
     {
-        PyErr_SetString(PyExc_ValueError, "F must be a 1D array");
+        PyErr_SetString(PyExc_ValueError, "F must be a 2D array");
         goto fail;
     }
-    npy_intp num_frames = PyArray_DIM(arr_F, 0);
+    npy_intp num_seq = PyArray_DIM(arr_F, 0);
+    npy_intp num_frames = PyArray_DIM(arr_F, 1);
 
-    // arr_lambdas_d: [num_dim]
-    if (PyArray_NDIM(arr_lambdas_d) != 1 ||
-        PyArray_DIM(arr_lambdas_v, 0) != num_frames)
+    // arr_lambdas_d: [num_seq, num_dim]
+    if (PyArray_NDIM(arr_lambdas_d) != 2 ||
+        PyArray_DIM(arr_lambdas_d, 0) != num_seq ||
+        PyArray_DIM(arr_lambdas_d, 1) != num_frames)
     {
-        PyErr_SetString(PyExc_ValueError, "lambdas_d must be shape [num_frames]");
-        goto fail;
-    }
-
-    // arr_lambdas_v: [num_frames, num_dim]
-    if (PyArray_NDIM(arr_lambdas_v) != 2 ||
-        PyArray_DIM(arr_lambdas_v, 0) != num_frames ||
-        PyArray_DIM(arr_lambdas_v, 1) != self->num_dim)
-    {
-        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames, num_dim]");
+        PyErr_SetString(PyExc_ValueError, "lambdas_d must be shape [num_seq, num_frames]");
         goto fail;
     }
 
-    // arr_limits_low: [num_dim]
-    if (PyArray_NDIM(arr_limits_low) != 1 ||
-        PyArray_DIM(arr_limits_low, 0) != self->num_dim)
+    // arr_lambdas_v: [num_seq, num_frames, num_dim]
+    if (PyArray_NDIM(arr_lambdas_v) != 3 ||
+        PyArray_DIM(arr_lambdas_v, 0) != num_seq ||
+        PyArray_DIM(arr_lambdas_v, 1) != num_frames ||
+        PyArray_DIM(arr_lambdas_v, 2) != self->num_dim)
+    {
+        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_seq, num_frames, num_dim]");
+        goto fail;
+    }
+
+    // arr_limits_low: [num_seq, num_dim]
+    if (PyArray_NDIM(arr_limits_low) != 2 ||
+        PyArray_DIM(arr_limits_low, 0) != num_seq ||
+        PyArray_DIM(arr_limits_low, 1) != self->num_dim)
     {
         PyErr_SetString(PyExc_ValueError, "limits_low must be shape [num_dim]");
         goto fail;
     }
 
-    // arr_limits_high: [num_dim]
-    if (PyArray_NDIM(arr_limits_high) != 1 ||
-        PyArray_DIM(arr_limits_high, 0) != self->num_dim)
+    // arr_limits_high: [num_seq, num_dim]
+    if (PyArray_NDIM(arr_limits_high) != 2 ||
+        PyArray_DIM(arr_limits_high, 0) != num_seq ||
+        PyArray_DIM(arr_limits_high, 1) != self->num_dim)
     {
         PyErr_SetString(PyExc_ValueError, "limits_high must be shape [num_dim]");
         goto fail;
@@ -363,23 +389,29 @@ static PyObject *maxp(PyObject *_self,
         goto fail;
     }
 
-    npy_intp dims[1] = {self->num_dim};
+    npy_intp dims[2] = {num_seq, self->num_dim};
 
     PyArrayObject *f_ndarray = (PyArrayObject *)PyArray_SimpleNew(
-        1,           // ndim
-        dims,        // dimensions
-        NPY_DOUBLE   // dtype
+        2,         // ndim
+        dims,      // dimensions
+        NPY_DOUBLE // dtype
     );
 
     double *f = (double *)PyArray_DATA(f_ndarray);
-    bayes_maxp(&self->ctx,
-               num_frames,
-               F_data,
-               lambdas_d_data, lambdas_v_data,
-               self->apriori, &params,
-               limits_low_data, limits_high_data,
-               self->dl,
-               f);
+    int seq;
+    for (seq = 0; seq < num_seq; seq++)
+    {
+        bayes_maxp(&self->ctx,
+                   num_frames,
+                   &F_data[seq * num_frames],
+                   &lambdas_d_data[seq * num_frames],
+                   &lambdas_v_data[seq * num_frames * self->num_dim],
+                   self->apriori, &params,
+                   &limits_low_data[seq * self->num_dim],
+                   &limits_high_data[seq * self->num_dim],
+                   self->dl,
+                   &f[seq * self->num_dim]);
+    }
 
     return (PyObject *)f_ndarray;
 fail:
@@ -392,8 +424,8 @@ fail:
 }
 
 static PyObject *estimate(PyObject *_self,
-                      PyObject *args,
-                      PyObject *kwds)
+                          PyObject *args,
+                          PyObject *kwds)
 {
     PyObject *F;
     PyObject *lambdas_d, *lambdas_v;
@@ -427,42 +459,47 @@ static PyObject *estimate(PyObject *_self,
         goto fail;
     }
 
-    // arr_f: [num_frames]
-    if (PyArray_NDIM(arr_F) != 1)
+    // arr_f: [num_seq, num_frames]
+    if (PyArray_NDIM(arr_F) != 2)
     {
-        PyErr_SetString(PyExc_ValueError, "F must be a 1D array");
+        PyErr_SetString(PyExc_ValueError, "F must be a 2D array");
         goto fail;
     }
-    npy_intp num_frames = PyArray_DIM(arr_F, 0);
+    npy_intp num_seq = PyArray_DIM(arr_F, 0);
+    npy_intp num_frames = PyArray_DIM(arr_F, 1);
 
-    // arr_lambdas_d: [num_dim]
-    if (PyArray_NDIM(arr_lambdas_d) != 1 ||
-        PyArray_DIM(arr_lambdas_v, 0) != num_frames)
+    // arr_lambdas_d: [num_seq, num_dim]
+    if (PyArray_NDIM(arr_lambdas_d) != 2 ||
+        PyArray_DIM(arr_lambdas_d, 0) != num_seq ||
+        PyArray_DIM(arr_lambdas_d, 1) != num_frames)
     {
-        PyErr_SetString(PyExc_ValueError, "lambdas_d must be shape [num_frames]");
-        goto fail;
-    }
-
-    // arr_lambdas_v: [num_frames, num_dim]
-    if (PyArray_NDIM(arr_lambdas_v) != 2 ||
-        PyArray_DIM(arr_lambdas_v, 0) != num_frames ||
-        PyArray_DIM(arr_lambdas_v, 1) != self->num_dim)
-    {
-        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames, num_dim]");
+        PyErr_SetString(PyExc_ValueError, "lambdas_d must be shape [num_seq, num_frames]");
         goto fail;
     }
 
-    // arr_limits_low: [num_dim]
-    if (PyArray_NDIM(arr_limits_low) != 1 ||
-        PyArray_DIM(arr_limits_low, 0) != self->num_dim)
+    // arr_lambdas_v: [num_seq, num_frames, num_dim]
+    if (PyArray_NDIM(arr_lambdas_v) != 3 ||
+        PyArray_DIM(arr_lambdas_v, 0) != num_seq ||
+        PyArray_DIM(arr_lambdas_v, 1) != num_frames ||
+        PyArray_DIM(arr_lambdas_v, 2) != self->num_dim)
+    {
+        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_seq, num_frames, num_dim]");
+        goto fail;
+    }
+
+    // arr_limits_low: [num_seq, num_dim]
+    if (PyArray_NDIM(arr_limits_low) != 2 ||
+        PyArray_DIM(arr_limits_low, 0) != num_seq ||
+        PyArray_DIM(arr_limits_low, 1) != self->num_dim)
     {
         PyErr_SetString(PyExc_ValueError, "limits_low must be shape [num_dim]");
         goto fail;
     }
 
-    // arr_limits_high: [num_dim]
-    if (PyArray_NDIM(arr_limits_high) != 1 ||
-        PyArray_DIM(arr_limits_high, 0) != self->num_dim)
+    // arr_limits_high: [num_seq, num_dim]
+    if (PyArray_NDIM(arr_limits_high) != 2 ||
+        PyArray_DIM(arr_limits_high, 0) != num_seq ||
+        PyArray_DIM(arr_limits_high, 1) != self->num_dim)
     {
         PyErr_SetString(PyExc_ValueError, "limits_high must be shape [num_dim]");
         goto fail;
@@ -500,12 +537,12 @@ static PyObject *estimate(PyObject *_self,
         goto fail;
     }
 
-    npy_intp dims[1] = {self->num_dim};
+    npy_intp dims[2] = {num_seq, self->num_dim};
 
     PyArrayObject *f_ndarray = (PyArrayObject *)PyArray_SimpleNew(
-        1,           // ndim
-        dims,        // dimensions
-        NPY_DOUBLE   // dtype
+        2,         // ndim
+        dims,      // dimensions
+        NPY_DOUBLE // dtype
     );
 
     if (clip > 1)
@@ -514,14 +551,20 @@ static PyObject *estimate(PyObject *_self,
         clip = 0;
 
     double *f = (double *)PyArray_DATA(f_ndarray);
-    bayes_estimate(&self->ctx,
-               num_frames,
-               F_data,
-               lambdas_d_data, lambdas_v_data,
-               self->apriori, &params,
-               limits_low_data, limits_high_data,
-               self->dl, clip,
-               f);
+    int seq;
+    for (seq = 0; seq < num_seq; seq++)
+    {
+        bayes_estimate(&self->ctx,
+                       num_frames,
+                       &F_data[seq * num_frames],
+                       &lambdas_d_data[seq * num_frames],
+                       &lambdas_v_data[seq * num_frames * self->num_dim],
+                       self->apriori, &params,
+                       &limits_low_data[seq * self->num_dim],
+                       &limits_high_data[seq * self->num_dim],
+                       self->dl, clip,
+                       &f[seq * self->num_dim]);
+    }
 
     return (PyObject *)f_ndarray;
 fail:
@@ -532,7 +575,6 @@ fail:
     Py_XDECREF(arr_limits_high);
     return NULL;
 }
-
 
 static int BayesEstimator_init(PyObject *_self, PyObject *args, PyObject *kwds)
 {
