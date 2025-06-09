@@ -56,6 +56,7 @@ def find_posterior(F : np.ndarray,
     """
         Find p(f_posteriori | {F_i})
     """
+    assert len(F.shape) == 1
     assert lambdas_v.shape[1] == f_posteriori.shape[0]
     assert lambdas_d.shape[0] == lambdas_v.shape[0]
     assert lambdas_v.shape[0] == F.shape[0]
