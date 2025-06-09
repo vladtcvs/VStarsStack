@@ -48,7 +48,7 @@ void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
                     const apriori_f apriori,
                     const void *apriori_params,
                     const float *limits_low,
-                    const int *index_max,
+                    const float *limits_high,
                     float dl,
                     float clip,
                     float *f);
@@ -61,15 +61,9 @@ void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
                 const apriori_f apriori,
                 const void *apriori_params,
                 const float *limits_low,
-                const int *index_max,
+                const float *limits_high,
                 float dl,
                 float *f);
-
-void bayes_index_max(int num_dim,
-                     const float *limits_low,
-                     const float *limits_high,
-                     float dl,
-                     int *index_max);
 
 void bayes_posterior_free(struct bayes_posterior_ctx_s *ctx);
 bool bayes_posterior_init(struct bayes_posterior_ctx_s *ctx, int num_dim);

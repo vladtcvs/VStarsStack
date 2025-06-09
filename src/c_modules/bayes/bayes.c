@@ -114,6 +114,19 @@ float bayes_posterior(struct bayes_posterior_ctx_s *ctx,
     return apriori_f / s;
 }
 
+void bayes_index_max(int num_dim,
+                     const float *limits_low,
+                     const float *limits_high,
+                     float dl,
+                     int *index_max)
+{
+    int i;
+    for (i = 0; i < num_dim; i++)
+    {
+        index_max[i] = ceilf((limits_high[i] - limits_low[i]) / dl);
+    }
+}
+
 void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
                 int num_frames,
                 const int *F,
@@ -122,11 +135,12 @@ void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
                 const apriori_f apriori,
                 const void *apriori_params,
                 const float *limits_low,
-                const int *index_max,
+                const float *limits_high,
                 float dl,
                 float *f)
 {
     float maxp = 0;
+    bayes_index_max(ctx->num_dim, limits_low, limits_high, dl, ctx->index_max);
     init_index(ctx->num_dim, ctx->index_estimation);
     do
     {
@@ -136,13 +150,13 @@ void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
                                   ctx->f_estimation,
                                   lambdas_d, lambdas_v,
                                   apriori, apriori_params,
-                                  limits_low, index_max, dl);
+                                  limits_low, ctx->index_max, dl);
         if (p > maxp)
         {
             memcpy(f, ctx->f_estimation, sizeof(float) * ctx->num_dim);
             maxp = p;
         }
-    } while (next_index(ctx->num_dim, index_max, ctx->index_estimation));
+    } while (next_index(ctx->num_dim, ctx->index_max, ctx->index_estimation));
 }
 
 void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
@@ -153,13 +167,14 @@ void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
                     const apriori_f apriori,
                     const void *apriori_params,
                     const float *limits_low,
-                    const int *index_max,
+                    const float *limits_high,
                     float dl,
                     float clip,
                     float *f)
 {
     float maxp = 0;
 
+    bayes_index_max(ctx->num_dim, limits_low, limits_high, dl, ctx->index_max);
     if (clip > 0)
     {
         init_index(ctx->num_dim, ctx->index_estimation);
@@ -171,10 +186,10 @@ void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
                                       ctx->f_estimation,
                                       lambdas_d, lambdas_v,
                                       apriori, apriori_params,
-                                      limits_low, index_max, dl);
+                                      limits_low, ctx->index_max, dl);
             if (p > maxp)
                 maxp = p;
-        } while (next_index(ctx->num_dim, index_max, ctx->index_estimation));
+        } while (next_index(ctx->num_dim, ctx->index_max, ctx->index_estimation));
     }
 
     float dln = powf(dl, ctx->num_dim);
@@ -189,7 +204,7 @@ void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
                                   ctx->f_estimation,
                                   lambdas_d, lambdas_v,
                                   apriori, apriori_params,
-                                  limits_low, index_max, dl);
+                                  limits_low, ctx->index_max, dl);
         if (p > maxp * clip)
         {
             for (i = 0; i < ctx->num_dim; i++)
@@ -198,23 +213,11 @@ void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
                 sump += p * dln;
             }
         }
-    } while (next_index(ctx->num_dim, index_max, ctx->index_estimation));
+    } while (next_index(ctx->num_dim, ctx->index_max, ctx->index_estimation));
 
     for (i = 0; i < ctx->num_dim; i++)
     {
         f[i] /= sump;
-    }
-}
-
-void bayes_index_max(int num_dim,
-                     const float *limits_low,
-                     const float *limits_high,
-                     float dl,
-                     int *index_max)
-{
-    int i;
-    for (i = 0; i < num_dim; i++) {
-        index_max[i] = ceilf((limits_high[i]-limits_low[i])/dl);
     }
 }
 
