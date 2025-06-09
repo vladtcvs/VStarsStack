@@ -39,13 +39,13 @@ def _posterior_item(F : np.ndarray,
                     f_posteriori : np.ndarray,
                     lambdas_d : np.ndarray,
                     lambdas_v : np.ndarray,
-                    apriori : np.ndarray,
+                    apriori_table : np.ndarray,
                     apriori_f_posterior : float,
                     indexes_integration : np.ndarray,
                     limits_low : np.ndarray,
                     dl : float) -> float:
     f_integration : np.ndarray = limits_low + indexes_integration * dl
-    apriori_f_integration : float = _find_apriori(apriori, indexes_integration)
+    apriori_f_integration : float = _find_apriori(apriori_table, indexes_integration)
     if apriori_f_integration == 0:
         return 0
     return _posterior_item(F, f_posteriori, f_integration, lambdas_d, lambdas_v, apriori_f_posterior, apriori_f_integration)
@@ -67,7 +67,7 @@ def find_posterior(F : np.ndarray,
                    indexes_posteriori : np.ndarray,
                    lambdas_d : np.ndarray,
                    lambdas_v : np.ndarray,
-                   apriori : np.ndarray,
+                   apriori_table : np.ndarray,
                    limits_low : np.ndarray,
                    num_indexes : np.ndarray,
                    dl : float) -> float:
@@ -82,10 +82,11 @@ def find_posterior(F : np.ndarray,
 
     f_posteriori : np.ndarray = limits_low + indexes_posteriori * dl
 
-    apriori_f_posterior : float = _find_apriori(apriori, f_posteriori)
+    apriori_f_posterior : float = _find_apriori(apriori_table, f_posteriori)
     if apriori_f_posterior == 0:
         return 0
     s = 0
     for indexes in _get_indexes(limits_low, num_indexes, dl):
-        s += _posterior_item(F, f_posteriori, lambdas_d, lambdas_v, apriori, apriori_f_posterior, indexes, limits_low, dl) * dl**len(indexes)
+        item = _posterior_item(F, f_posteriori, lambdas_d, lambdas_v, apriori_table, apriori_f_posterior, indexes, limits_low, dl)
+        s += item * dl**len(indexes)
     return 1/s
