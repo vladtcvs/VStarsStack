@@ -42,6 +42,8 @@ def _get_indexes(limits_low : np.ndarray, limits_high : np.ndarray, dl : float):
             if index[i] == num_indexes[i]:
                 index[i] = 0
                 index[i+1] += 1
+            else:
+                break
         if index[-1] == num_indexes[-1]:
             break
 
