@@ -508,6 +508,11 @@ static PyObject *estimate(PyObject *_self,
         NPY_DOUBLE   // dtype
     );
 
+    if (clip > 1)
+        clip = 1;
+    if (clip < 0)
+        clip = 0;
+
     double *f = (double *)PyArray_DATA(f_ndarray);
     bayes_estimate(&self->ctx,
                num_frames,
