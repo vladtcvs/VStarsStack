@@ -43,70 +43,70 @@ static bool next_index(int num_dim, const int *index_max, int *index)
     return true;
 }
 
-static void index_2_f(int num_dim, const int *index, const float *low, float dl, float *f)
+static void index_2_f(int num_dim, const int *index, const double *low, double dl, double *f)
 {
     int i;
     for (i = 0; i < num_dim; i++)
         f[i] = low[i] + dl * index[i];
 }
 
-static float Lambda(int num_dim,
+static double Lambda(int num_dim,
                     int num_frames,
-                    const int *F,
-                    const float *f,
-                    const float *lambdas_d,
-                    const float *lambdas_v)
+                    const unsigned *F,
+                    const double *f,
+                    const double *lambdas_d,
+                    const double *lambdas_v)
 {
-    float sum = 0;
+    double sum = 0;
     int i, k;
     for (i = 0; i < num_frames; i++)
     {
-        float item = lambdas_d[i];
+        double item = lambdas_d[i];
         for (k = 0; k < num_dim; k++)
             item += lambdas_v[i * num_dim + k] * f[k];
-        sum += F[i] * logf(item) - item;
+        sum += F[i] * log(item) - item;
     }
     return sum;
 }
 
-static float posterior_item(int num_dim,
+static double posterior_item(int num_dim,
                             int num_frames,
-                            const int *F,
-                            const float *f,
-                            const float *f_integration,
-                            const float *lambdas_d,
-                            const float *lambdas_v)
+                            const unsigned *F,
+                            const double *f,
+                            const double *f_integration,
+                            const double *lambdas_d,
+                            const double *lambdas_v)
 {
-    float Lambdas_f_posterior = Lambda(num_dim, num_frames, F, f, lambdas_d, lambdas_v);
-    float Lambdas_f_integration = Lambda(num_dim, num_frames, F, f_integration, lambdas_d, lambdas_v);
-    return expf(Lambdas_f_integration - Lambdas_f_posterior);
+    double Lambdas_f_posterior = Lambda(num_dim, num_frames, F, f, lambdas_d, lambdas_v);
+    double Lambdas_f_integration = Lambda(num_dim, num_frames, F, f_integration, lambdas_d, lambdas_v);
+    return exp(Lambdas_f_integration - Lambdas_f_posterior);
 }
 
-static float _bayes_posterior(struct bayes_posterior_ctx_s *ctx,
+static double _bayes_posterior(struct bayes_posterior_ctx_s *ctx,
                               int num_frames,
-                              const int *F,
-                              const float *f,
-                              const float *lambdas_d,
-                              const float *lambdas_v,
+                              const unsigned *F,
+                              const double *f,
+                              const double *lambdas_d,
+                              const double *lambdas_v,
                               const apriori_f apriori,
                               const void *apriori_params,
-                              const float *limits_low,
+                              const double *limits_low,
                               const int *index_max,
-                              float dl)
+                              double dl)
 {
-    float apriori_f = apriori(f, ctx->num_dim, apriori_params);
+    double apriori_f = apriori(f, ctx->num_dim, apriori_params);
     if (apriori_f > -1e-12 && apriori_f < 1e-12)
         return 0;
-    float s = 0;
-    float dln = powf(dl, ctx->num_dim);
+    double s = 0;
+    double dln = pow(dl, ctx->num_dim);
     init_index(ctx->num_dim, ctx->index_integration);
     do
     {
         index_2_f(ctx->num_dim, ctx->index_integration, limits_low, dl, ctx->f_integration);
-        float apriori_f_integration = apriori(ctx->f_integration, ctx->num_dim, apriori_params);
+        double apriori_f_integration = apriori(ctx->f_integration, ctx->num_dim, apriori_params);
         if (apriori_f_integration > -1e-12 && apriori_f_integration < 1e-12)
             continue;
-        float item = posterior_item(ctx->num_dim, num_frames, F, f, ctx->f_integration, lambdas_d, lambdas_v) * apriori_f_integration;
+        double item = posterior_item(ctx->num_dim, num_frames, F, f, ctx->f_integration, lambdas_d, lambdas_v) * apriori_f_integration;
         s += item * dln;
     } while (next_index(ctx->num_dim, index_max, ctx->index_integration));
     if (s < 1e-14)
@@ -115,9 +115,9 @@ static float _bayes_posterior(struct bayes_posterior_ctx_s *ctx,
 }
 
 static void bayes_index_max(int num_dim,
-                            const float *limits_low,
-                            const float *limits_high,
-                            float dl,
+                            const double *limits_low,
+                            const double *limits_high,
+                            double dl,
                             int *index_max)
 {
     int i;
@@ -127,17 +127,17 @@ static void bayes_index_max(int num_dim,
     }
 }
 
-float bayes_posterior(struct bayes_posterior_ctx_s *ctx,
+double bayes_posterior(struct bayes_posterior_ctx_s *ctx,
                       int num_frames,
-                      const int *F,
-                      const float *f,
-                      const float *lambdas_d,
-                      const float *lambdas_v,
+                      const unsigned *F,
+                      const double *f,
+                      const double *lambdas_d,
+                      const double *lambdas_v,
                       const apriori_f apriori,
                       const void *apriori_params,
-                      const float *limits_low,
-                      const float *limits_high,
-                      float dl)
+                      const double *limits_low,
+                      const double *limits_high,
+                      double dl)
 {
     bayes_index_max(ctx->num_dim, limits_low, limits_high, dl, ctx->index_max);
     return _bayes_posterior(ctx, num_frames, F, f, lambdas_d, lambdas_v, apriori, apriori_params, limits_low, ctx->index_max, dl);
@@ -145,23 +145,23 @@ float bayes_posterior(struct bayes_posterior_ctx_s *ctx,
 
 void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
                 int num_frames,
-                const int *F,
-                const float *lambdas_d,
-                const float *lambdas_v,
+                const unsigned *F,
+                const double *lambdas_d,
+                const double *lambdas_v,
                 const apriori_f apriori,
                 const void *apriori_params,
-                const float *limits_low,
-                const float *limits_high,
-                float dl,
-                float *f)
+                const double *limits_low,
+                const double *limits_high,
+                double dl,
+                double *f)
 {
-    float maxp = 0;
+    double maxp = 0;
     bayes_index_max(ctx->num_dim, limits_low, limits_high, dl, ctx->index_max);
     init_index(ctx->num_dim, ctx->index_estimation);
     do
     {
         index_2_f(ctx->num_dim, ctx->index_estimation, limits_low, dl, ctx->f_estimation);
-        float p = _bayes_posterior(ctx,
+        double p = _bayes_posterior(ctx,
                                    num_frames, F,
                                    ctx->f_estimation,
                                    lambdas_d, lambdas_v,
@@ -169,7 +169,7 @@ void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
                                    limits_low, ctx->index_max, dl);
         if (p > maxp)
         {
-            memcpy(f, ctx->f_estimation, sizeof(float) * ctx->num_dim);
+            memcpy(f, ctx->f_estimation, sizeof(double) * ctx->num_dim);
             maxp = p;
         }
     } while (next_index(ctx->num_dim, ctx->index_max, ctx->index_estimation));
@@ -177,18 +177,18 @@ void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
 
 void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
                     int num_frames,
-                    const int *F,
-                    const float *lambdas_d,
-                    const float *lambdas_v,
+                    const unsigned *F,
+                    const double *lambdas_d,
+                    const double *lambdas_v,
                     const apriori_f apriori,
                     const void *apriori_params,
-                    const float *limits_low,
-                    const float *limits_high,
-                    float dl,
-                    float clip,
-                    float *f)
+                    const double *limits_low,
+                    const double *limits_high,
+                    double dl,
+                    double clip,
+                    double *f)
 {
-    float maxp = 0;
+    double maxp = 0;
 
     bayes_index_max(ctx->num_dim, limits_low, limits_high, dl, ctx->index_max);
     if (clip > 0)
@@ -197,7 +197,7 @@ void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
         do
         {
             index_2_f(ctx->num_dim, ctx->index_estimation, limits_low, dl, ctx->f_estimation);
-            float p = bayes_posterior(ctx,
+            double p = _bayes_posterior(ctx,
                                       num_frames, F,
                                       ctx->f_estimation,
                                       lambdas_d, lambdas_v,
@@ -208,14 +208,14 @@ void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
         } while (next_index(ctx->num_dim, ctx->index_max, ctx->index_estimation));
     }
 
-    float dln = powf(dl, ctx->num_dim);
+    double dln = pow(dl, ctx->num_dim);
     int i;
-    float sump = 0;
+    double sump = 0;
     init_index(ctx->num_dim, ctx->index_estimation);
     do
     {
         index_2_f(ctx->num_dim, ctx->index_estimation, limits_low, dl, ctx->f_estimation);
-        float p = bayes_posterior(ctx,
+        double p = _bayes_posterior(ctx,
                                   num_frames, F,
                                   ctx->f_estimation,
                                   lambdas_d, lambdas_v,
@@ -270,8 +270,8 @@ bool bayes_posterior_init(struct bayes_posterior_ctx_s *ctx, int num_dim)
 {
     bayes_posterior_free(ctx);
     ctx->num_dim = num_dim;
-    ctx->f_integration = calloc(num_dim, sizeof(float));
-    ctx->f_estimation = calloc(num_dim, sizeof(float));
+    ctx->f_integration = calloc(num_dim, sizeof(double));
+    ctx->f_estimation = calloc(num_dim, sizeof(double));
     ctx->index_max = calloc(num_dim, sizeof(int));
     ctx->index_estimation = calloc(num_dim, sizeof(int));
     ctx->index_integration = calloc(num_dim, sizeof(int));

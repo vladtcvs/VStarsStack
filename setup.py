@@ -44,6 +44,17 @@ movements = Extension(  name="vstarstack.library.movement.movements",
                             np.get_include(),
                         ])
 
+bayes = Extension(  name="vstarstack.library.bayes.bayes",
+                        sources=[
+                            "src/c_modules/bayes/bayes.c",
+                            "src/c_modules/bayes/module.c",
+                        ],
+                        include_dirs=[
+                            "src/c_modules/bayes",
+                            np.get_include(),
+                        ])
+
+
 libimagedeform_root = "src/c_modules/fine_movement/libimagedeform"
 libimagedeform_headers = [libimagedeform_root + "/include"]
 libimagedeform_sources = [libimagedeform_root + "/src/interpolation.c",
@@ -76,7 +87,7 @@ print("Packages: ", result)
 packages = result
 
 setup (name = 'vstarstack',
-       version = '0.3.4',
+       version = '0.3.5',
        author='Vladislav Tsendrovskii',
        description = 'Stacking astrophotos',
        package_dir = {'vstarstack': 'src/vstarstack'},
@@ -85,6 +96,7 @@ setup (name = 'vstarstack',
                       movements,
                       image_deform,
                       clusterization,
+                      bayes,
                     ],
        entry_points = {
            'console_scripts': [

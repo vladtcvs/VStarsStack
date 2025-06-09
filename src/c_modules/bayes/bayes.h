@@ -15,8 +15,9 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stdint.h>
 
-typedef float (*apriori_f)(const float *f, int num_dim, const void *param);
+typedef double (*apriori_f)(const double *f, int num_dim, const void *param);
 
 struct bayes_posterior_ctx_s
 {
@@ -24,46 +25,46 @@ struct bayes_posterior_ctx_s
     int *index_integration;
     int *index_estimation;
     int *index_max;
-    float *f_integration;
-    float *f_estimation;
+    double *f_integration;
+    double *f_estimation;
 };
 
-float bayes_posterior(struct bayes_posterior_ctx_s *ctx,
-                      int num_frames,
-                      const int *F,
-                      const float *f,
-                      const float *lambdas_d,
-                      const float *lambdas_v,
-                      const apriori_f apriori,
-                      const void *apriori_params,
-                      const float *limits_low,
-                      const float *limits_high,
-                      float dl);
+double bayes_posterior(struct bayes_posterior_ctx_s *ctx,
+                       int num_frames,
+                       const unsigned *F,
+                       const double *f,
+                       const double *lambdas_d,
+                       const double *lambdas_v,
+                       const apriori_f apriori,
+                       const void *apriori_params,
+                       const double *limits_low,
+                       const double *limits_high,
+                       double dl);
 
 void bayes_estimate(struct bayes_posterior_ctx_s *ctx,
                     int num_frames,
-                    const int *F,
-                    const float *lambdas_d,
-                    const float *lambdas_v,
+                    const unsigned *F,
+                    const double *lambdas_d,
+                    const double *lambdas_v,
                     const apriori_f apriori,
                     const void *apriori_params,
-                    const float *limits_low,
-                    const float *limits_high,
-                    float dl,
-                    float clip,
-                    float *f);
+                    const double *limits_low,
+                    const double *limits_high,
+                    double dl,
+                    double clip,
+                    double *f);
 
 void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
                 int num_frames,
-                const int *F,
-                const float *lambdas_d,
-                const float *lambdas_v,
+                const unsigned *F,
+                const double *lambdas_d,
+                const double *lambdas_v,
                 const apriori_f apriori,
                 const void *apriori_params,
-                const float *limits_low,
-                const float *limits_high,
-                float dl,
-                float *f);
+                const double *limits_low,
+                const double *limits_high,
+                double dl,
+                double *f);
 
 void bayes_posterior_free(struct bayes_posterior_ctx_s *ctx);
 bool bayes_posterior_init(struct bayes_posterior_ctx_s *ctx, int num_dim);

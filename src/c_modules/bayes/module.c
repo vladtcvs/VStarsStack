@@ -20,20 +20,41 @@
 #include <numpy/ndarraytypes.h>
 #include <numpy/ndarrayobject.h>
 
+#include <math.h>
+
 #include "bayes.h"
 
 #define BASENAME "vstarstack.library.bayes.bayes"
 
-struct default_apriori_params_s
+struct apriori_params_s
 {
     PyObject *apriori;
     PyObject *param_dict;
+    double max_f;
 };
 
-float call_apriori(const float *f, int num_dim, void *param)
+enum BayesAprioriType_e {
+    APRIORI_UNKNOWN = 0,
+    APRIORI_CALLABLE,
+    APRIORI_UNIFORM,
+    APRIORI_GAMMA,
+};
+
+struct BayesEstimatorObject
 {
-    struct default_apriori_params_s *params_s = param;
-    
+    PyObject_HEAD
+    PyObject *apriori_callable_object;
+    apriori_f apriori;
+    double dl;
+    enum BayesAprioriType_e apriori_type;
+    int num_dim;
+    struct bayes_posterior_ctx_s ctx;
+};
+
+double call_apriori(const double *f, int num_dim, const void *param)
+{
+    const struct apriori_params_s *params_s = param;
+
     PyObject *apriori = params_s->apriori;
     PyObject *param_dict = params_s->param_dict;
  
@@ -42,11 +63,11 @@ float call_apriori(const float *f, int num_dim, void *param)
     PyObject *f_ndarray = PyArray_SimpleNewFromData(
         1,               // ndim
         dims,            // dimensions
-        NPY_FLOAT32,     // dtype
-        (void *)f        // pointer to your float data
+        NPY_FLOAT64,     // dtype
+        (void *)f        // pointer to your double data
     );
 
-    if (!array) {
+    if (!f_ndarray) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to create NumPy array");
         return 0;
     }
@@ -70,11 +91,23 @@ float call_apriori(const float *f, int num_dim, void *param)
     Py_DECREF(result);
     
     if (PyErr_Occurred()) {
-        PyErr_SetString(PyExc_TypeError, "apriori function did not return a float");
+        PyErr_SetString(PyExc_TypeError, "apriori function did not return a double");
         return 0;
     }
 
     return apriori_val;
+}
+
+static bool uniform_update;
+double uniform_apriori(const double *f, int num_dim, const void *param)
+{
+    const struct apriori_params_s *params_s = param;
+    static double p = 1;
+    if (uniform_update) {
+        p = 1.0 / pow(params_s->max_f, num_dim);
+        uniform_update = false;
+    }
+    return p;
 }
 
 static PyObject *posterior(PyObject *_self,
@@ -84,16 +117,18 @@ static PyObject *posterior(PyObject *_self,
     PyObject *F;
     PyObject *f;
     PyObject *lambdas_d, *lambdas_v;
-    PyObject *apriori, *apriori_params;
+    PyObject *apriori_params;
     PyObject *limits_low, *limits_high;
-    float dl;
+    double dl;
 
-    static char *kwlist[] = {"F", "f", "lambdas_d", "lambdas_v", "apriori", "apriori_params", "limits_low", "limits_high", "dl", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOOOf", kwlist,
+    struct BayesEstimatorObject *self = (struct BayesEstimatorObject *)_self;
+
+    static char *kwlist[] = {"F", "f", "lambdas_d", "lambdas_v", "apriori_params", "limits_low", "limits_high", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOO", kwlist,
                                      &F,
                                      &f,
                                      &lambdas_d, &lambdas_v,
-                                     &apriori, &apriori_params,
+                                     &apriori_params,
                                      &limits_low, &limits_high,
                                      &dl))
     {
@@ -101,12 +136,12 @@ static PyObject *posterior(PyObject *_self,
         return Py_None;
     }
 
-    PyArrayObject *arr_F = (PyArrayObject *)PyArray_FROM_OTF(F, NPY_INT32, NPY_ARRAY_IN_ARRAY);
-    PyArrayObject *arr_f = (PyArrayObject *)PyArray_FROM_OTF(f, NPY_FLOAT32, NPY_ARRAY_IN_ARRAY);
-    PyArrayObject *arr_lambdas_d = (PyArrayObject *)PyArray_FROM_OTF(lambdas_d, NPY_FLOAT32, NPY_ARRAY_IN_ARRAY);
-    PyArrayObject *arr_lambdas_v = (PyArrayObject *)PyArray_FROM_OTF(lambdas_v, NPY_FLOAT32, NPY_ARRAY_IN_ARRAY);
-    PyArrayObject *arr_limits_low = (PyArrayObject *)PyArray_FROM_OTF(limits_low, NPY_FLOAT32, NPY_ARRAY_IN_ARRAY);
-    PyArrayObject *arr_limits_high = (PyArrayObject *)PyArray_FROM_OTF(limits_high, NPY_FLOAT32, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr_F = (PyArrayObject *)PyArray_FROM_OTF(F, NPY_UINT, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr_f = (PyArrayObject *)PyArray_FROM_OTF(f, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr_lambdas_d = (PyArrayObject *)PyArray_FROM_OTF(lambdas_d, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr_lambdas_v = (PyArrayObject *)PyArray_FROM_OTF(lambdas_v, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr_limits_low = (PyArrayObject *)PyArray_FROM_OTF(limits_low, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr_limits_high = (PyArrayObject *)PyArray_FROM_OTF(limits_high, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
     if (!arr_F || !arr_f || !arr_lambdas_d || !arr_lambdas_v || !arr_limits_low || !arr_limits_high)
     {
@@ -128,7 +163,10 @@ static PyObject *posterior(PyObject *_self,
         PyErr_SetString(PyExc_ValueError, "f must be a 1D array");
         goto fail;
     }
-    npy_intp num_dim = PyArray_DIM(arr_f, 0);
+    if (PyArray_DIM(arr_f, 0) != self->num_dim) {
+        PyErr_SetString(PyExc_ValueError, "f must be a 1D array of shape [num_dim]");
+        goto fail;
+    }
 
     // arr_lambdas_d: [num_dim]
     if (PyArray_NDIM(arr_lambdas_d) != 1 ||
@@ -141,7 +179,7 @@ static PyObject *posterior(PyObject *_self,
     // arr_lambdas_v: [num_frames, num_dim]
     if (PyArray_NDIM(arr_lambdas_v) != 2 ||
         PyArray_DIM(arr_lambdas_v, 0) != num_frames ||
-        PyArray_DIM(arr_lambdas_v, 1) != num_dim)
+        PyArray_DIM(arr_lambdas_v, 1) != self->num_dim)
     {
         PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames, num_dim]");
         goto fail;
@@ -157,76 +195,51 @@ static PyObject *posterior(PyObject *_self,
 
     // arr_limits_high: [num_dim]
     if (PyArray_NDIM(arr_limits_high) != 1 ||
-        PyArray_DIM(arr_limits_high, 0) != num_dim)
+        PyArray_DIM(arr_limits_high, 0) != self->num_dim)
     {
         PyErr_SetString(PyExc_ValueError, "limits_high must be shape [num_dim]");
         goto fail;
     }
 
-    if (!(PyCallable_Check(apriori) || PyUnicode_Check(apriori))) {
-        PyErr_SetString(PyExc_TypeError, "apriori must be a string or callable");
-        goto fail;
-    }
+    unsigned *F_data = (unsigned *)PyArray_DATA(arr_F);
+    double *f_data = (double *)PyArray_DATA(arr_f);
+    double *lambdas_d_data = (double *)PyArray_DATA(arr_lambdas_d);
+    double *lambdas_v_data = (double *)PyArray_DATA(arr_lambdas_v);
+    double *limits_low_data = (double *)PyArray_DATA(arr_limits_low);
+    double *limits_high_data = (double *)PyArray_DATA(arr_limits_high);
 
-    int *F_data = (int *)PyArray_DATA(arr_F);
-    float *f_data = (float *)PyArray_DATA(arr_f);
-    float *lambdas_d_data = (float *)PyArray_DATA(arr_lambdas_d);
-    float *lambdas_v_data = (float *)PyArray_DATA(arr_lambdas_v);
-    float *limits_low_data = (float *)PyArray_DATA(arr_limits_low);
-    float *limits_high_data = (float *)PyArray_DATA(arr_limits_high);
-
-    struct 
-
-    struct bayes_posterior_ctx_s ctx;
-    if (!bayes_posterior_init(&ctx, num_dim))
-    {
-        PyErr_SetString(PyExc_ValueError, "initialization error");
-        goto fail;
-    }
-
-    apriori_f apriori_fun = NULL;
-    void *apriori_params = NULL;
-
-    // Callable apriori
-    struct default_apriori_params_s params;
-    if (PyCallable_Check(apriori)) {    
-        params.apriori = apriori;
-        params.param_dict = apriori_params;
-        apriori_fun = call_apriori;
-        apriori_params = &params;
-    }
-
-    // Uniform apriori
-    float max_f;
-    if (PyUnicode_Check(apriori) && !strcmp(PyUnicode_AsUTF8(apriori), "uniform")) {
-        apriori_fun = uniform_apriori;
-        PyObject *val = PyDict_GetItemString(apriori_params, "f_max");  // no new ref
-        if (!val) {
-            PyErr_SetString(PyExc_ValueError, "apriori params must have 'f_max' key");
+    struct apriori_params_s params;
+    switch(self->apriori_type) {
+        case APRIORI_CALLABLE:
+            params.apriori = self->apriori_callable_object;
+            params.param_dict = apriori_params;
+            break;
+        case APRIORI_UNIFORM:
+            PyObject *val = PyDict_GetItemString(apriori_params, "f_max");  // no new ref
+            if (!val) {
+                PyErr_SetString(PyExc_ValueError, "apriori params must have 'f_max' key");
+                goto fail;
+            }
+            params.max_f = PyFloat_AsDouble(val);
+            if (PyErr_Occurred()) {
+                PyErr_SetString(PyExc_TypeError, "Value for 'f_max' is not a double");
+                goto fail;
+            }
+            break;
+        default:
+            PyErr_SetString(PyExc_TypeError, "Invalid apriori type");
             goto fail;
-        }
-        max_f = PyFloat_AsDouble(val);
-        if (PyErr_Occurred()) {
-            PyErr_SetString(PyExc_TypeError, "Value for 'f_max' is not a float");
-            goto fail;
-        }
-        apriori_params = &max_f;
     }
 
-
-    if (apriori_fun == NULL) {
-        PyErr_SetString(PyExc_TypeError, "apriori function not setted");
-        goto fail;
-    }
-    float p = bayes_posterior(&ctx,
+    
+    double p = bayes_posterior(&self->ctx,
                               num_frames,
                               F_data,
                               f_data,
                               lambdas_d_data, lambdas_v_data,
-                              apriori_fun, &apriori_params,
+                              self->apriori, &params,
                               limits_low_data, limits_high_data, dl);
-    }
-    bayes_posterior_free(&ctx);
+
     return PyFloat_FromDouble(p);
 fail:
     Py_XDECREF(arr_F);
@@ -238,16 +251,85 @@ fail:
     return NULL;
 }
 
-static PyMethodDef bayes_methods[] = {
-    {"bayes_estimation", (PyCFunction)estimation, METH_VARARGS | METH_KEYWORDS,
-     "Find Bayes posterior mean"},
+static int BayesEstimator_init(PyObject *_self, PyObject *args, PyObject *kwds)
+{
+    PyObject *apriori;
+    double dl;
+    int num_dim;
 
-    {"bayes_map", (PyCFunction)map, METH_VARARGS | METH_KEYWORDS,
-     "Build Bayes MAP"},
+    static char *kwlist[] = {"apriori", "dl", "ndim", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Odi", kwlist, &apriori, &dl, &num_dim))
+    {
+        return -1;
+    }
+    struct BayesEstimatorObject *self = (struct BayesEstimatorObject *)_self;
 
+    self->apriori_callable_object = NULL;
+    self->apriori_type = APRIORI_UNKNOWN;
+    self->dl = dl;
+    self->num_dim = num_dim;
+
+    // Callable apriori
+    if (PyCallable_Check(apriori)) {
+        self->apriori = call_apriori;
+        self->apriori_type = APRIORI_CALLABLE;
+        Py_INCREF(apriori);
+        self->apriori_callable_object = apriori;
+    }
+
+    // Uniform apriori
+    if (PyUnicode_Check(apriori) && !strcmp(PyUnicode_AsUTF8(apriori), "uniform")) {
+        self->apriori = uniform_apriori;
+        self->apriori_type = APRIORI_UNIFORM;
+    }
+
+    if (self->apriori_type == APRIORI_UNKNOWN) {
+        return -1;
+    }
+
+    if (!bayes_posterior_init(&self->ctx, self->num_dim))
+    {
+        PyErr_SetString(PyExc_ValueError, "initialization error");
+        return -1;
+    }
+
+    return 0;
+}
+
+static void BayesEstimator_dealloc(PyObject *_self)
+{
+    struct BayesEstimatorObject *self =
+            (struct  BayesEstimatorObject *)_self;
+    bayes_posterior_free(&self->ctx);
+    if (self->apriori_callable_object) {
+        Py_DECREF(self->apriori_callable_object);
+        self->apriori_callable_object = NULL;
+    }
+}
+
+static PyMethodDef BayesEstimator_methods[] = {
     {"posterior", (PyCFunction)posterior, METH_VARARGS | METH_KEYWORDS,
      "Build Bayes posterior"},
+    
+    {NULL} /* Sentinel */
+};
 
+
+static PyTypeObject bayesEstimator = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = BASENAME ".Estimator",
+    .tp_doc = PyDoc_STR("Bayes estimator object"),
+    .tp_basicsize = sizeof(struct BayesEstimatorObject),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_new = PyType_GenericNew,
+    .tp_init = BayesEstimator_init,
+    .tp_dealloc = BayesEstimator_dealloc,
+    .tp_methods = BayesEstimator_methods,
+};
+
+
+static PyMethodDef bayes_methods[] = {
     {NULL} /* Sentinel */
 };
 
@@ -262,9 +344,21 @@ static PyModuleDef bayesModule = {
 PyMODINIT_FUNC
 PyInit_bayes(void)
 {
+    import_array();
+    if (PyType_Ready(&bayesEstimator) < 0)
+        return NULL;
+    
     PyObject *m = PyModule_Create(&bayesModule);
     if (m == NULL)
         return NULL;
-    import_array();
+
+    Py_INCREF(&bayesEstimator);
+    if (PyModule_AddObject(m, "BayesEstimator", (PyObject *)&bayesEstimator) < 0)
+    {
+        Py_DECREF(&bayesEstimator);
+        Py_DECREF(m);
+        return NULL;
+    }
+
     return m;
 }
