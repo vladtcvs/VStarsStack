@@ -82,17 +82,17 @@ static float posterior_item(int num_dim,
     return expf(Lambdas_f_integration - Lambdas_f_posterior);
 }
 
-float bayes_posterior(struct bayes_posterior_ctx_s *ctx,
-                      int num_frames,
-                      const int *F,
-                      const float *f,
-                      const float *lambdas_d,
-                      const float **lambdas_v,
-                      const apriori_f apriori,
-                      const void *apriori_params,
-                      const float *limits_low,
-                      const int *index_max,
-                      float dl)
+static float _bayes_posterior(struct bayes_posterior_ctx_s *ctx,
+                              int num_frames,
+                              const int *F,
+                              const float *f,
+                              const float *lambdas_d,
+                              const float **lambdas_v,
+                              const apriori_f apriori,
+                              const void *apriori_params,
+                              const float *limits_low,
+                              const int *index_max,
+                              float dl)
 {
     float apriori_f = apriori(f, ctx->num_dim, apriori_params);
     if (apriori_f > -1e-12 && apriori_f < 1e-12)
@@ -114,17 +114,33 @@ float bayes_posterior(struct bayes_posterior_ctx_s *ctx,
     return apriori_f / s;
 }
 
-void bayes_index_max(int num_dim,
-                     const float *limits_low,
-                     const float *limits_high,
-                     float dl,
-                     int *index_max)
+static void bayes_index_max(int num_dim,
+                            const float *limits_low,
+                            const float *limits_high,
+                            float dl,
+                            int *index_max)
 {
     int i;
     for (i = 0; i < num_dim; i++)
     {
         index_max[i] = ceilf((limits_high[i] - limits_low[i]) / dl);
     }
+}
+
+float bayes_posterior(struct bayes_posterior_ctx_s *ctx,
+                      int num_frames,
+                      const int *F,
+                      const float *f,
+                      const float *lambdas_d,
+                      const float **lambdas_v,
+                      const apriori_f apriori,
+                      const void *apriori_params,
+                      const float *limits_low,
+                      const float *limits_high,
+                      float dl)
+{
+    bayes_index_max(ctx->num_dim, limits_low, limits_high, dl, ctx->index_max);
+    return _bayes_posterior(ctx, num_frames, F, f, lambdas_d, lambdas_v, apriori, apriori_params, limits_low, ctx->index_max, dl);
 }
 
 void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
@@ -145,12 +161,12 @@ void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
     do
     {
         index_2_f(ctx->num_dim, ctx->index_estimation, limits_low, dl, ctx->f_estimation);
-        float p = bayes_posterior(ctx,
-                                  num_frames, F,
-                                  ctx->f_estimation,
-                                  lambdas_d, lambdas_v,
-                                  apriori, apriori_params,
-                                  limits_low, ctx->index_max, dl);
+        float p = _bayes_posterior(ctx,
+                                   num_frames, F,
+                                   ctx->f_estimation,
+                                   lambdas_d, lambdas_v,
+                                   apriori, apriori_params,
+                                   limits_low, ctx->index_max, dl);
         if (p > maxp)
         {
             memcpy(f, ctx->f_estimation, sizeof(float) * ctx->num_dim);
