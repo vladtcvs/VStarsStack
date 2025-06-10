@@ -102,10 +102,9 @@ double call_apriori(const double *f, int num_dim, const void *param)
     return apriori_val;
 }
 
-static double uniform_p;
 double uniform_apriori(const double *f, int num_dim, const void *param)
 {
-    return uniform_p;
+    return 1;
 }
 
 static bool validate_shape(const PyArrayObject *array, int ndim, ...)
@@ -225,13 +224,6 @@ static PyObject *posterior(PyObject *_self,
         params.param_dict = apriori_params;
         break;
     case APRIORI_UNIFORM:
-        params.max_f = PyFloat_AsDouble(apriori_params);
-        if (PyErr_Occurred())
-        {
-            PyErr_SetString(PyExc_TypeError, "Value 'apriori_params' must me double");
-            goto fail;
-        }
-        uniform_p = 1.0 / pow(params.max_f, self->num_dim);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "Invalid apriori type");
@@ -351,13 +343,6 @@ static PyObject *maxp(PyObject *_self,
         params.param_dict = apriori_params;
         break;
     case APRIORI_UNIFORM:
-        params.max_f = PyFloat_AsDouble(apriori_params);
-        if (PyErr_Occurred())
-        {
-            PyErr_SetString(PyExc_TypeError, "Value 'apriori_params' must me double");
-            goto fail;
-        }
-        uniform_p = 1.0 / pow(params.max_f, self->num_dim);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "Invalid apriori type");
@@ -483,13 +468,6 @@ static PyObject *estimate(PyObject *_self,
         params.param_dict = apriori_params;
         break;
     case APRIORI_UNIFORM:
-        params.max_f = PyFloat_AsDouble(apriori_params);
-        if (PyErr_Occurred())
-        {
-            PyErr_SetString(PyExc_TypeError, "Value 'apriori_params' must me double");
-            goto fail;
-        }
-        uniform_p = 1.0 / pow(params.max_f, self->num_dim);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "Invalid apriori type");
