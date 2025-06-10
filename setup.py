@@ -16,6 +16,11 @@ import os
 import numpy as np
 from setuptools import setup, Extension
 
+use_gcov = True
+
+extra_compile_args=["-O0", "-fprofile-arcs", "-ftest-coverage", "-g"] if use_gcov else []
+extra_link_args=["-fprofile-arcs", "-ftest-coverage"] if use_gcov else []
+
 clusterization = Extension(name="vstarstack.library.clusters.clusterization",
                            sources=[
                                "src/c_modules/clusterization/module.cc",
@@ -23,7 +28,10 @@ clusterization = Extension(name="vstarstack.library.clusters.clusterization",
                            ],
                            include_dirs=[
                                "src/c_modules/clusterization/lib/include"
-                           ])
+                           ],
+                        extra_compile_args=extra_compile_args,
+                        extra_link_args=extra_link_args
+)
 
 projection = Extension( name="vstarstack.library.projection.projections",
                         sources=[
@@ -31,7 +39,10 @@ projection = Extension( name="vstarstack.library.projection.projections",
                             "src/c_modules/projections/lib/perspective.c",
                             "src/c_modules/projections/lib/orthographic.c",
                             "src/c_modules/projections/lib/equirectangular.c",
-                        ])
+                        ],
+                        extra_compile_args=extra_compile_args,
+                        extra_link_args=extra_link_args
+)
 
 movements = Extension(  name="vstarstack.library.movement.movements",
                         sources=[
@@ -42,7 +53,10 @@ movements = Extension(  name="vstarstack.library.movement.movements",
                         include_dirs=[
                             "src/c_modules/projections",
                             np.get_include(),
-                        ])
+                        ],
+                        extra_compile_args=extra_compile_args,
+                        extra_link_args=extra_link_args
+)
 
 bayes = Extension(  name="vstarstack.library.bayes.bayes",
                         sources=[
@@ -52,7 +66,10 @@ bayes = Extension(  name="vstarstack.library.bayes.bayes",
                         include_dirs=[
                             "src/c_modules/bayes",
                             np.get_include(),
-                        ])
+                        ],
+                        extra_compile_args=extra_compile_args,
+                        extra_link_args=extra_link_args
+)
 
 
 libimagedeform_root = "src/c_modules/fine_movement/libimagedeform"
