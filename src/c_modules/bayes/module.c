@@ -21,6 +21,7 @@
 #include <numpy/ndarrayobject.h>
 
 #include <math.h>
+#include <stdarg.h>
 
 #include "bayes.h"
 
@@ -101,17 +102,32 @@ double call_apriori(const double *f, int num_dim, const void *param)
     return apriori_val;
 }
 
-static bool uniform_update;
+static double uniform_p;
 double uniform_apriori(const double *f, int num_dim, const void *param)
 {
-    const struct apriori_params_s *params_s = param;
-    static double p = 1;
-    if (uniform_update)
+    return uniform_p;
+}
+
+static bool validate_shape(const PyArrayObject *array, int ndim, ...)
+{
+    if (PyArray_NDIM(array) != ndim)
+        return false;
+
+    va_list args;
+    va_start(args, ndim);
+    int i;
+    for (i = 0; i < ndim; i++)
     {
-        p = 1.0 / pow(params_s->max_f, num_dim);
-        uniform_update = false;
+        int expected_dim = va_arg(args, int);
+        int actual_dim = PyArray_DIM(array, i);
+        if (actual_dim != expected_dim)
+        {
+            va_end(args);
+            return false;
+        }
     }
-    return p;
+    va_end(args);
+    return true;
 }
 
 static PyObject *posterior(PyObject *_self,
@@ -151,60 +167,44 @@ static PyObject *posterior(PyObject *_self,
         goto fail;
     }
 
-    // arr_f: [num_seq, num_frames]
-    if (PyArray_NDIM(arr_F) != 2)
+    // arr_F: [num_frames]
+    if (PyArray_NDIM(arr_F) != 1)
     {
-        PyErr_SetString(PyExc_ValueError, "F must be a 2D array");
+        PyErr_SetString(PyExc_ValueError, "F must be a 1D array");
         goto fail;
     }
-    npy_intp num_seq = PyArray_DIM(arr_F, 0);
-    npy_intp num_frames = PyArray_DIM(arr_F, 1);
+    int num_frames = PyArray_DIM(arr_F, 0);
 
-    // arr_f: [num_seq, num_dim]
-    if (PyArray_NDIM(arr_f) != 2)
+    // arr_f: [num_frames]
+    if (!validate_shape(arr_f, 1, self->num_dim))
     {
-        PyErr_SetString(PyExc_ValueError, "f must be a 2D array");
-        goto fail;
-    }
-    if (PyArray_DIM(arr_f, 0) != num_seq ||
-        PyArray_DIM(arr_f, 1) != self->num_dim)
-    {
-        PyErr_SetString(PyExc_ValueError, "f must be a 2D array of shape [num_seq, num_dim]");
+        PyErr_SetString(PyExc_ValueError, "f must be shape [num_dim]");
         goto fail;
     }
 
-    // arr_lambdas_d: [num_seq, num_dim]
-    if (PyArray_NDIM(arr_lambdas_d) != 2 ||
-        PyArray_DIM(arr_lambdas_d, 0) != num_seq ||
-        PyArray_DIM(arr_lambdas_d, 1) != num_frames)
+    // arr_lambdas_d: [num_dim]
+    if (!validate_shape(arr_lambdas_d, 1, num_frames))
     {
-        PyErr_SetString(PyExc_ValueError, "lambdas_d must be shape [num_seq, num_frames]");
+        PyErr_SetString(PyExc_ValueError, "lambdas_d must be shape [num_frames]");
         goto fail;
     }
 
-    // arr_lambdas_v: [num_seq, num_frames, num_dim]
-    if (PyArray_NDIM(arr_lambdas_v) != 3 ||
-        PyArray_DIM(arr_lambdas_v, 0) != num_seq ||
-        PyArray_DIM(arr_lambdas_v, 1) != num_frames ||
-        PyArray_DIM(arr_lambdas_v, 2) != self->num_dim)
+    // arr_lambdas_v: [num_frames, num_dim]
+    if (!validate_shape(arr_lambdas_v, 2, num_frames, self->num_dim))
     {
-        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_seq, num_frames, num_dim]");
+        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames, num_dim]");
         goto fail;
     }
 
-    // arr_limits_low: [num_seq, num_dim]
-    if (PyArray_NDIM(arr_limits_low) != 2 ||
-        PyArray_DIM(arr_limits_low, 0) != num_seq ||
-        PyArray_DIM(arr_limits_low, 1) != self->num_dim)
+    // arr_limits_low: [num_dim]
+    if (!validate_shape(arr_limits_low, 1, self->num_dim))
     {
         PyErr_SetString(PyExc_ValueError, "limits_low must be shape [num_dim]");
         goto fail;
     }
 
-    // arr_limits_high: [num_seq, num_dim]
-    if (PyArray_NDIM(arr_limits_high) != 2 ||
-        PyArray_DIM(arr_limits_high, 0) != num_seq ||
-        PyArray_DIM(arr_limits_high, 1) != self->num_dim)
+    // arr_limits_high: [num_dim]
+    if (!validate_shape(arr_limits_high, 1, self->num_dim))
     {
         PyErr_SetString(PyExc_ValueError, "limits_high must be shape [num_dim]");
         goto fail;
@@ -225,48 +225,37 @@ static PyObject *posterior(PyObject *_self,
         params.param_dict = apriori_params;
         break;
     case APRIORI_UNIFORM:
-        PyObject *val = PyDict_GetItemString(apriori_params, "f_max"); // no new ref
-        if (!val)
-        {
-            PyErr_SetString(PyExc_ValueError, "apriori params must have 'f_max' key");
-            goto fail;
-        }
-        params.max_f = PyFloat_AsDouble(val);
+        params.max_f = PyFloat_AsDouble(apriori_params);
         if (PyErr_Occurred())
         {
-            PyErr_SetString(PyExc_TypeError, "Value for 'f_max' is not a double");
+            PyErr_SetString(PyExc_TypeError, "Value 'apriori_params' must me double");
             goto fail;
         }
+        uniform_p = 1.0 / pow(params.max_f, self->num_dim);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "Invalid apriori type");
         goto fail;
     }
 
-    npy_intp dims[2] = {num_seq, self->num_dim};
-
-    PyArrayObject *p_ndarray = (PyArrayObject *)PyArray_SimpleNew(
-        2,         // ndim
-        dims,      // dimensions
-        NPY_DOUBLE // dtype
-    );
-
-    double *p = (double *)PyArray_DATA(p_ndarray);
-    int seq;
-    for (seq = 0; seq < num_seq; seq++)
-    {
-        p[seq] = bayes_posterior(&self->ctx,
+    double p = bayes_posterior(&self->ctx,
                                  num_frames,
-                                 &F_data[seq * num_frames],
-                                 &f_data[seq * self->num_dim],
-                                 &lambdas_d_data[seq * num_frames],
-                                 &lambdas_v_data[seq * num_frames * self->num_dim],
+                                 F_data,
+                                 f_data,
+                                 lambdas_d_data,
+                                 lambdas_v_data,
                                  self->apriori, &params,
-                                 &limits_low_data[seq * self->num_dim],
-                                 &limits_high_data[seq * self->num_dim],
+                                 limits_low_data,
+                                 limits_high_data,
                                  self->dl);
-    }
-    return (PyObject*)p_ndarray;
+
+    Py_DECREF(arr_F);
+    Py_DECREF(arr_f);
+    Py_DECREF(arr_lambdas_d);
+    Py_DECREF(arr_lambdas_v);
+    Py_DECREF(arr_limits_low);
+    Py_DECREF(arr_limits_high);
+    return PyFloat_FromDouble(p);
 fail:
     Py_XDECREF(arr_F);
     Py_XDECREF(arr_f);
@@ -311,47 +300,38 @@ static PyObject *maxp(PyObject *_self,
         goto fail;
     }
 
-    // arr_f: [num_seq, num_frames]
-    if (PyArray_NDIM(arr_F) != 2)
+
+    // arr_F: [num_frames]
+    if (PyArray_NDIM(arr_F) != 1)
     {
-        PyErr_SetString(PyExc_ValueError, "F must be a 2D array");
+        PyErr_SetString(PyExc_ValueError, "F must be a 1D array");
         goto fail;
     }
-    npy_intp num_seq = PyArray_DIM(arr_F, 0);
-    npy_intp num_frames = PyArray_DIM(arr_F, 1);
+    int num_frames = PyArray_DIM(arr_F, 0);
 
-    // arr_lambdas_d: [num_seq, num_dim]
-    if (PyArray_NDIM(arr_lambdas_d) != 2 ||
-        PyArray_DIM(arr_lambdas_d, 0) != num_seq ||
-        PyArray_DIM(arr_lambdas_d, 1) != num_frames)
+    // arr_lambdas_d: [num_frames]
+    if (!validate_shape(arr_lambdas_d, 1, num_frames))
     {
-        PyErr_SetString(PyExc_ValueError, "lambdas_d must be shape [num_seq, num_frames]");
-        goto fail;
-    }
-
-    // arr_lambdas_v: [num_seq, num_frames, num_dim]
-    if (PyArray_NDIM(arr_lambdas_v) != 3 ||
-        PyArray_DIM(arr_lambdas_v, 0) != num_seq ||
-        PyArray_DIM(arr_lambdas_v, 1) != num_frames ||
-        PyArray_DIM(arr_lambdas_v, 2) != self->num_dim)
-    {
-        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_seq, num_frames, num_dim]");
+        PyErr_SetString(PyExc_ValueError, "lambdas_d must be shape [num_frames]");
         goto fail;
     }
 
-    // arr_limits_low: [num_seq, num_dim]
-    if (PyArray_NDIM(arr_limits_low) != 2 ||
-        PyArray_DIM(arr_limits_low, 0) != num_seq ||
-        PyArray_DIM(arr_limits_low, 1) != self->num_dim)
+    // arr_lambdas_v: [num_frames, num_dim]
+    if (!validate_shape(arr_lambdas_v, 2, num_frames, self->num_dim))
+    {
+        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames, num_dim]");
+        goto fail;
+    }
+
+    // arr_limits_low: [num_dim]
+    if (!validate_shape(arr_limits_low, 1, self->num_dim))
     {
         PyErr_SetString(PyExc_ValueError, "limits_low must be shape [num_dim]");
         goto fail;
     }
 
-    // arr_limits_high: [num_seq, num_dim]
-    if (PyArray_NDIM(arr_limits_high) != 2 ||
-        PyArray_DIM(arr_limits_high, 0) != num_seq ||
-        PyArray_DIM(arr_limits_high, 1) != self->num_dim)
+    // arr_limits_high: [num_dim]
+    if (!validate_shape(arr_limits_high, 1, self->num_dim))
     {
         PyErr_SetString(PyExc_ValueError, "limits_high must be shape [num_dim]");
         goto fail;
@@ -371,48 +351,42 @@ static PyObject *maxp(PyObject *_self,
         params.param_dict = apriori_params;
         break;
     case APRIORI_UNIFORM:
-        PyObject *val = PyDict_GetItemString(apriori_params, "f_max"); // no new ref
-        if (!val)
-        {
-            PyErr_SetString(PyExc_ValueError, "apriori params must have 'f_max' key");
-            goto fail;
-        }
-        params.max_f = PyFloat_AsDouble(val);
+        params.max_f = PyFloat_AsDouble(apriori_params);
         if (PyErr_Occurred())
         {
-            PyErr_SetString(PyExc_TypeError, "Value for 'f_max' is not a double");
+            PyErr_SetString(PyExc_TypeError, "Value 'apriori_params' must me double");
             goto fail;
         }
+        uniform_p = 1.0 / pow(params.max_f, self->num_dim);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "Invalid apriori type");
         goto fail;
     }
 
-    npy_intp dims[2] = {num_seq, self->num_dim};
-
+    npy_intp dims[1] = {self->num_dim};
     PyArrayObject *f_ndarray = (PyArrayObject *)PyArray_SimpleNew(
-        2,         // ndim
+        1,         // ndim
         dims,      // dimensions
         NPY_DOUBLE // dtype
     );
 
     double *f = (double *)PyArray_DATA(f_ndarray);
-    int seq;
-    for (seq = 0; seq < num_seq; seq++)
-    {
-        bayes_maxp(&self->ctx,
-                   num_frames,
-                   &F_data[seq * num_frames],
-                   &lambdas_d_data[seq * num_frames],
-                   &lambdas_v_data[seq * num_frames * self->num_dim],
-                   self->apriori, &params,
-                   &limits_low_data[seq * self->num_dim],
-                   &limits_high_data[seq * self->num_dim],
-                   self->dl,
-                   &f[seq * self->num_dim]);
-    }
-
+    bayes_maxp(&self->ctx,
+               num_frames,
+               F_data,
+               lambdas_d_data,
+               lambdas_v_data,
+               self->apriori, &params,
+               limits_low_data,
+               limits_high_data,
+               self->dl,
+               f);
+    Py_DECREF(arr_F);
+    Py_DECREF(arr_lambdas_d);
+    Py_DECREF(arr_lambdas_v);
+    Py_DECREF(arr_limits_low);
+    Py_DECREF(arr_limits_high);
     return (PyObject *)f_ndarray;
 fail:
     Py_XDECREF(arr_F);
@@ -459,47 +433,37 @@ static PyObject *estimate(PyObject *_self,
         goto fail;
     }
 
-    // arr_f: [num_seq, num_frames]
-    if (PyArray_NDIM(arr_F) != 2)
+    // arr_F: [num_frames]
+    if (PyArray_NDIM(arr_F) != 1)
     {
-        PyErr_SetString(PyExc_ValueError, "F must be a 2D array");
+        PyErr_SetString(PyExc_ValueError, "F must be a 1D array");
         goto fail;
     }
-    npy_intp num_seq = PyArray_DIM(arr_F, 0);
-    npy_intp num_frames = PyArray_DIM(arr_F, 1);
+    int num_frames = PyArray_DIM(arr_F, 0);
 
-    // arr_lambdas_d: [num_seq, num_dim]
-    if (PyArray_NDIM(arr_lambdas_d) != 2 ||
-        PyArray_DIM(arr_lambdas_d, 0) != num_seq ||
-        PyArray_DIM(arr_lambdas_d, 1) != num_frames)
+    // arr_lambdas_d: [num_frames]
+    if (!validate_shape(arr_lambdas_d, 1, num_frames))
     {
-        PyErr_SetString(PyExc_ValueError, "lambdas_d must be shape [num_seq, num_frames]");
+        PyErr_SetString(PyExc_ValueError, "lambdas_d must be shape [num_frames]");
         goto fail;
     }
 
-    // arr_lambdas_v: [num_seq, num_frames, num_dim]
-    if (PyArray_NDIM(arr_lambdas_v) != 3 ||
-        PyArray_DIM(arr_lambdas_v, 0) != num_seq ||
-        PyArray_DIM(arr_lambdas_v, 1) != num_frames ||
-        PyArray_DIM(arr_lambdas_v, 2) != self->num_dim)
+    // arr_lambdas_v: [num_frames, num_dim]
+    if (!validate_shape(arr_lambdas_v, 2, num_frames, self->num_dim))
     {
-        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_seq, num_frames, num_dim]");
+        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames, num_dim]");
         goto fail;
     }
 
-    // arr_limits_low: [num_seq, num_dim]
-    if (PyArray_NDIM(arr_limits_low) != 2 ||
-        PyArray_DIM(arr_limits_low, 0) != num_seq ||
-        PyArray_DIM(arr_limits_low, 1) != self->num_dim)
+    // arr_limits_low: [num_dim]
+    if (!validate_shape(arr_limits_low, 1, self->num_dim))
     {
         PyErr_SetString(PyExc_ValueError, "limits_low must be shape [num_dim]");
         goto fail;
     }
 
-    // arr_limits_high: [num_seq, num_dim]
-    if (PyArray_NDIM(arr_limits_high) != 2 ||
-        PyArray_DIM(arr_limits_high, 0) != num_seq ||
-        PyArray_DIM(arr_limits_high, 1) != self->num_dim)
+    // arr_limits_high: [num_dim]
+    if (!validate_shape(arr_limits_high, 1, self->num_dim))
     {
         PyErr_SetString(PyExc_ValueError, "limits_high must be shape [num_dim]");
         goto fail;
@@ -519,28 +483,23 @@ static PyObject *estimate(PyObject *_self,
         params.param_dict = apriori_params;
         break;
     case APRIORI_UNIFORM:
-        PyObject *val = PyDict_GetItemString(apriori_params, "f_max"); // no new ref
-        if (!val)
-        {
-            PyErr_SetString(PyExc_ValueError, "apriori params must have 'f_max' key");
-            goto fail;
-        }
-        params.max_f = PyFloat_AsDouble(val);
+        params.max_f = PyFloat_AsDouble(apriori_params);
         if (PyErr_Occurred())
         {
-            PyErr_SetString(PyExc_TypeError, "Value for 'f_max' is not a double");
+            PyErr_SetString(PyExc_TypeError, "Value 'apriori_params' must me double");
             goto fail;
         }
+        uniform_p = 1.0 / pow(params.max_f, self->num_dim);
         break;
     default:
         PyErr_SetString(PyExc_TypeError, "Invalid apriori type");
         goto fail;
     }
 
-    npy_intp dims[2] = {num_seq, self->num_dim};
+    npy_intp dims[1] = {self->num_dim};
 
     PyArrayObject *f_ndarray = (PyArrayObject *)PyArray_SimpleNew(
-        2,         // ndim
+        1,         // ndim
         dims,      // dimensions
         NPY_DOUBLE // dtype
     );
@@ -551,21 +510,21 @@ static PyObject *estimate(PyObject *_self,
         clip = 0;
 
     double *f = (double *)PyArray_DATA(f_ndarray);
-    int seq;
-    for (seq = 0; seq < num_seq; seq++)
-    {
-        bayes_estimate(&self->ctx,
-                       num_frames,
-                       &F_data[seq * num_frames],
-                       &lambdas_d_data[seq * num_frames],
-                       &lambdas_v_data[seq * num_frames * self->num_dim],
-                       self->apriori, &params,
-                       &limits_low_data[seq * self->num_dim],
-                       &limits_high_data[seq * self->num_dim],
-                       self->dl, clip,
-                       &f[seq * self->num_dim]);
-    }
-
+    bayes_estimate(&self->ctx,
+                   num_frames,
+                   F_data,
+                   lambdas_d_data,
+                   lambdas_v_data,
+                   self->apriori, &params,
+                   limits_low_data,
+                   limits_high_data,
+                   self->dl, clip,
+                   f);
+    Py_DECREF(arr_F);
+    Py_DECREF(arr_lambdas_d);
+    Py_DECREF(arr_lambdas_v);
+    Py_DECREF(arr_limits_low);
+    Py_DECREF(arr_limits_high);
     return (PyObject *)f_ndarray;
 fail:
     Py_XDECREF(arr_F);
