@@ -105,7 +105,7 @@ static PyMethodDef clusterization_methods[] = {
     {NULL} /* Sentinel */
 };
 
-static PyModuleDef bayesModule = {
+static PyModuleDef clusterizationModule = {
     PyModuleDef_HEAD_INIT,
     .m_name = BASENAME,
     .m_doc = "Clusterization module",
@@ -116,7 +116,7 @@ static PyModuleDef bayesModule = {
 PyMODINIT_FUNC
 PyInit_clusterization(void)
 {
-    PyObject *m = PyModule_Create(&bayesModule);
+    PyObject *m = PyModule_Create(&clusterizationModule);
     if (m == NULL)
         return NULL;
 
