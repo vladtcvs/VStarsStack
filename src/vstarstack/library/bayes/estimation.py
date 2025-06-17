@@ -81,13 +81,23 @@ def estimate_with_dark_flat(samples : np.ndarray,
     assert len(samples.shape) == 3
     nsamples = samples.shape[0]
 
-    bgs = np.zeros((nsamples, darks.shape[0], darks.shape[0]))
-    for i in range(nsamples):
-        bgs[i,:,:] = darks
+    if len(darks.shape) == 2:
+        bgs = np.zeros((nsamples, darks.shape[0], darks.shape[0]))
+        for i in range(nsamples):
+            bgs[i,:,:] = darks
+    elif len(darks.shape) == 3:
+        bgs = darks
+    else:
+        return None
 
-    nus = np.zeros((nsamples, flats.shape[0], flats.shape[0], 1))
-    for i in range(nsamples):
-        nus[i,:,:,0] = flats
+    if len(flats.shape) == 2:
+        nus = np.zeros((nsamples, flats.shape[0], flats.shape[0], 1))
+        for i in range(nsamples):
+            nus[i,:,:,0] = flats
+    elif len(flats.shape) == 3:
+        nus = flats.reshape(nsamples, flats.shape[1], flats.shape[2], 1)
+    else:
+        return None
 
     _max_signal = np.array([max_signal], dtype=np.double)
 
@@ -106,50 +116,34 @@ def estimate_with_dark_flat_sky(samples : np.ndarray,
     assert len(samples.shape) == 3
     nsamples = samples.shape[0]
 
-    darks = np.zeros((nsamples, dark.shape[0], dark.shape[0]))
-    for i in range(nsamples):
-        darks[i,:,:] = dark
+    if len(darks.shape) == 2:
+        darks = np.zeros((nsamples, dark.shape[0], dark.shape[0]))
+        for i in range(nsamples):
+            darks[i,:,:] = dark
+    elif len(darks.shape) == 3:
+        bgs = darks
+    else:
+        return None
 
-    nus = np.zeros((nsamples, flat.shape[0], flat.shape[0], 1))
-    for i in range(nsamples):
-        nus[i,:,:,0] = flat
+    if len(flat.shape) == 2:
+        nus = np.zeros((nsamples, flat.shape[0], flat.shape[0], 1))
+        for i in range(nsamples):
+            nus[i,:,:,0] = flat
+    elif len(flat.shape) == 3:
+        nus = flat.reshape(nsamples, flat.shape[1], flat.shape[2], 1)
+    else:
+        return None
 
-    skies = np.zeros((nsamples, sky.shape[0], sky.shape[0]))
-    for i in range(nsamples):
-        skies[i,:,:] = sky
+    if len(sky.shape) == 2:
+        skies = np.zeros((nsamples, sky.shape[0], sky.shape[0]))
+        for i in range(nsamples):
+            skies[i,:,:] = sky
+    elif len(sky.shape) == 3:
+        skies = sky
+    else:
+        return None
 
     bgs = darks + skies
-
-    _max_signal = np.array([max_signal], dtype=np.double)
-
-    estimator = vstarstack.library.bayes.bayes.BayesEstimator(apriori=apriori_fun, dl=integration_dl, ndim=1)
-    return estimate(samples, bgs, nus, _max_signal, estimator, apriori_fun_params, clip)
-
-def estimate_with_dark_flat_sky(samples : np.ndarray,
-                                dark : np.ndarray,
-                                flat : np.ndarray,
-                                sky : np.ndarray,
-                                max_signal : float,
-                                integration_dl : float,
-                                apriori_fun : any,
-                                apriori_fun_params : any = None,
-                                clip : float = 0) -> np.ndarray:
-    assert len(samples.shape) == 3
-    nsamples = samples.shape[0]
-
-    darks = np.zeros((nsamples, dark.shape[0], dark.shape[0]))
-    for i in range(nsamples):
-        darks[i,:,:] = dark
-
-    nus = np.zeros((nsamples, flat.shape[0], flat.shape[0], 1))
-    for i in range(nsamples):
-        nus[i,:,:,0] = flat
-
-    skies = np.zeros((nsamples, sky.shape[0], sky.shape[0]))
-    for i in range(nsamples):
-        skies[i,:,:] = sky
-
-    bgs = darks + skies * nus[:,:,:,0]
 
     _max_signal = np.array([max_signal], dtype=np.double)
 
@@ -179,34 +173,70 @@ def estimate_with_dark_flat_sky_continuum(samples_narrow : np.ndarray,
     # f = (f_n f_c)
 
     # prepare parameters for images with wide filter
-    darks_wide = np.zeros((nsamples_wide, dark_wide.shape[0], dark_wide.shape[0]))
-    for i in range(nsamples_wide):
-        darks_wide[i,:,:] = dark_wide
+    if len(dark_wide.shape) == 2:
+        darks_wide = np.zeros((nsamples_wide, dark_wide.shape[0], dark_wide.shape[0]))
+        for i in range(nsamples_wide):
+            darks_wide[i,:,:] = dark_wide
+    elif len(dark_wide.shape) == 3:
+        darks_wide = dark_wide
+    else:
+        return None
 
-    nus_wide = np.zeros((nsamples_wide, flat_wide.shape[0], flat_wide.shape[0], 2))
-    for i in range(nsamples_wide):
-        nus_wide[i,:,:,0] = flat_wide
-        nus_wide[i,:,:,1] = flat_wide * wide_narrow_k
+    if len(flat_wide.shape) == 2:
+        nus_wide = np.zeros((nsamples_wide, flat_wide.shape[0], flat_wide.shape[0], 2))
+        for i in range(nsamples_wide):
+            nus_wide[i,:,:,0] = flat_wide
+            nus_wide[i,:,:,1] = flat_wide * wide_narrow_k
+    elif len(flat_wide.shape) == 3:
+        nus_wide = np.zeros((nsamples_wide, flat_wide.shape[0], flat_wide.shape[0], 2))
+        for i in range(nsamples_wide):
+            nus_wide[i,:,:,0] = flat_wide[i,:,:]
+            nus_wide[i,:,:,1] = flat_wide[i,:,:] * wide_narrow_k
+    else:
+        return None
 
-    skies_wide = np.zeros((nsamples_wide, sky_wide.shape[0], sky_wide.shape[0]))
-    for i in range(nsamples_wide):
-        skies_wide[i,:,:] = sky_wide
+    if len(sky_wide.shape) == 2:
+        skies_wide = np.zeros((nsamples_wide, sky_wide.shape[0], sky_wide.shape[0]))
+        for i in range(nsamples_wide):
+            skies_wide[i,:,:] = sky_wide
+    elif len(sky_wide.shape) == 3:
+        skies_wide = sky_wide
+    else:
+        return None
     
     bgs_wide = darks_wide + skies_wide * nus_wide[:,:,:,0] # 0 because nu for sky doesn't include wide_narrow_k
 
     # prepare parameters for images with narrow filter
-    darks_narrow = np.zeros((nsamples_narrow, dark_narrow.shape[0], dark_narrow.shape[0]))
-    for i in range(nsamples_narrow):
-        darks_narrow[i,:,:] = dark_narrow
+    if len(dark_narrow.shape) == 2:
+        darks_narrow = np.zeros((nsamples_narrow, dark_narrow.shape[0], dark_narrow.shape[0]))
+        for i in range(nsamples_narrow):
+            darks_narrow[i,:,:] = dark_narrow
+    elif len(dark_narrow.shape) == 3:
+        darks_narrow = dark_narrow
+    else:
+        return None
 
-    nus_narrow = np.zeros((nsamples_narrow, flat_narrow.shape[0], flat_narrow.shape[0], 2))
-    for i in range(nsamples_narrow):
-        nus_narrow[i,:,:,0] = flat_narrow
-        nus_narrow[i,:,:,1] = flat_narrow
+    if len(flat_narrow.shape) == 2:
+        nus_narrow = np.zeros((nsamples_narrow, flat_narrow.shape[0], flat_narrow.shape[0], 2))
+        for i in range(nsamples_narrow):
+            nus_narrow[i,:,:,0] = flat_narrow
+            nus_narrow[i,:,:,1] = flat_narrow
+    elif len(flat_narrow.shape) == 3:
+        nus_narrow = np.zeros((nsamples_narrow, flat_narrow.shape[0], flat_narrow.shape[0], 2))
+        for i in range(nsamples_narrow):
+            nus_narrow[i,:,:,0] = flat_narrow[i,:,:]
+            nus_narrow[i,:,:,1] = flat_narrow[i,:,:]
+    else:
+        return None
 
-    skies_narrow = np.zeros((nsamples_narrow, sky_narrow.shape[0], sky_narrow.shape[0]))
-    for i in range(nsamples_narrow):
-        skies_narrow[i,:,:] = sky_narrow
+    if len(sky_narrow.shape) == 2:
+        skies_narrow = np.zeros((nsamples_narrow, sky_narrow.shape[0], sky_narrow.shape[0]))
+        for i in range(nsamples_narrow):
+            skies_narrow[i,:,:] = sky_narrow
+    elif len(sky_narrow.shape) == 3:
+        skies_narrow = sky_narrow
+    else:
+        return None
 
     bgs_narrow = darks_narrow + skies_narrow * nus_narrow[:,:,:,0] # 0 because nu for sky doesn't include wide_narrow_k
 
