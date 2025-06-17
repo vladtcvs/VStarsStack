@@ -24,6 +24,8 @@ import vstarstack.tool.common
 
 from vstarstack.library.common import FilesImageSource
 
+IGNS = vstarstack.tool.cfg.get_param("ignore-saturated", bool, False)
+
 def simple_add(project: vstarstack.tool.cfg.Project, argv: list):
     """Calculate simple sum of images"""
     if len(argv) > 0:
@@ -35,7 +37,7 @@ def simple_add(project: vstarstack.tool.cfg.Project, argv: list):
 
     imgs = vstarstack.tool.common.listfiles(path_images, ".zip")
     filenames = [img[1] for img in imgs]
-    dataframe = vstarstack.library.merge.simple_add.simple_add(FilesImageSource(filenames))
+    dataframe = vstarstack.library.merge.simple_add.simple_add(FilesImageSource(filenames), IGNS)
     if dataframe is not None:
         vstarstack.tool.common.check_dir_exists(out)
         dataframe.store(out)
