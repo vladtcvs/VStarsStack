@@ -22,7 +22,7 @@ from copy import deepcopy
 
 logger = logging.getLogger(__name__)
 
-def simple_add(images : vstarstack.library.common.IImageSource) -> DataFrame:
+def simple_add(images : vstarstack.library.common.IImageSource, ignore_saturated : bool = False) -> DataFrame:
     """Just add images"""
 
     summary = {}
@@ -48,6 +48,13 @@ def simple_add(images : vstarstack.library.common.IImageSource) -> DataFrame:
                 if (weight_k := img.get_parameter("weight")) is None:
                     weight_k = 1
                 weight = np.ones(channel.shape, dtype=np.float64) * weight_k
+
+            if ignore_saturated:
+                saturated, _, _ = img.get_linked_channel(channel_name, "saturation")
+                if saturated is not None:
+                    mask = (saturated == 0).astype(np.uint)
+                    weight = weight * mask
+                    channel = channel * mask
 
             if channel_name not in summary:
                 summary[channel_name] = deepcopy(channel.astype(np.float64))
