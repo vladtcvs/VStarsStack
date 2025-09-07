@@ -1,0 +1,328 @@
+\documentclass{article}
+\usepackage{mathtools}
+
+\begin{document}
+
+\section{Task}
+
+We have frames $F(x,y)$:
+
+\begin{eqnarray}
+    F(x,y) \sim Poisson\left( \lambda(x,y) \right) \\
+    \lambda(x,y) = f_{dark}(x,y) + \nu(x,y) \cdot \left( f_{sky}(x,y) + f_{true}(x,y) \right)
+\end{eqnarray}
+
+Where 
+\begin{itemize}
+    \item $f_{dark}(x,y)$ --- dark signal
+    \item $f_{sky}(x,y)$ --- sky signal (light pollution)
+    \item $f_{true}(x,y)$ --- true signal
+    \item $\nu(x,y)$ --- flat relative calibration function (vignetting, particles on sensor, etc)
+\end{itemize}
+
+What does "relative" means? We have telescope lens or mirror, sensor with some QE, exposure, sensor gain. We have Poisson--distributed amount
+of photons and dark electrons on sensor, which is multiplied by x,y--independent factor of QE, lens size, exposure, and x,y--dependent factor
+of vignetting, particles on sensor, etc. We want to compensate x,y--dependent factors. So we can assume $max(\nu) = 1$, because it shows
+relative coefficient to x,y--maximal value. If $max(\nu)$ would be, for example, $0.5$, it would be same as twice less QE with $max(\nu) = 1$.
+And we know that it also would be Poisson distribution.
+
+We want to estimate true value of signal: $f_{true}(x,y)$.
+
+\section{Calibrations}
+
+\subsection{Dark signal}
+
+We can find $f_{dark}(x,y)$ by taking enough dark frames $D_k(x,y)$ and find mean of them.
+In later research we assume that we know $f_{dark}(x,y)$ with absolute precision.
+
+\begin{equation}
+    D_k(x,y) \sim Poisson(f_{dark}(x,y))
+\end{equation}
+
+So we find
+
+\begin{equation}
+    f_{dark}(x,y) = \frac{\sum_{k=1}^K D_k(x,y)}{K}
+\end{equation}
+
+\subsection{Flats}
+
+We need to calculate $\nu(x,y)$. We capture multiple images of sky in different positions:
+
+\begin{eqnarray}
+    \Omega_i(x,y) \sim Poisson(\omega_i(x,y)) \\
+    \omega_i(x,y) = f_{dark}(x,y) + \nu(x,y) \cdot \left( \tilde f_{sky, i}(x,y) + \tilde f_{value,i}(x,y) \right)
+\end{eqnarray}
+
+Where
+\begin{itemize}
+    \item $\tilde f_{sky, i}(x,y)$ --- sky signal (light pollution) at position $i$
+    \item $\tilde f_{value, i}(x,y)$ --- stars signal at position $i$
+\end{itemize}
+
+As inputs we have
+\begin{itemize}
+    \item $f_{dark}(x,y)$ --- dark signal
+    \item $\Omega_i(x,y)$ --- flat frames
+\end{itemize}
+
+Since 
+\begin{equation}
+    \Omega_i(x,y) \sim Poisson(\omega_i(x,y)) = Poisson(f_{dark}(x,y) + \nu(x,y) \cdot \left( \tilde f_i(x,y) \right))
+\end{equation}
+
+We find mean $<\Omega_i>$:
+\begin{eqnarray}
+    <\Omega_i(x,y)> = \frac{\sum \Omega_i(x,y)}{N} = f_{dark}(x,y) + \nu(x,y) \cdot \frac{\tilde f_{sky, i}(x,y) + \tilde f_{value,i}(x,y)}{N} \\
+    \nu(x,y) = \frac{\frac{\sum \Omega_i(x,y)}{N} - f_{dark}(x,y)}{\frac{\sum \tilde f_{sky, i}(x,y) + \tilde f_{value,i}(x,y)}{N}}
+    = \frac{< \Omega_i(x,y) - f_{dark}(x,y) >}{<\tilde f_{sky, i}(x,y) + \tilde f_{value,i}(x,y)>}
+\end{eqnarray}
+
+Now we need to estimate both parts of this fractions. Since we have random selections of areas on each $i$, we can assume that
+$<\tilde f_{sky, i}(x,y) + \tilde f_{value,i}(x,y)> = const$. Also we can use Sigma-Clipping algorithm to reduce amount of images $\Omega_i$.
+
+Also we expect $\nu$ be so that $max(\nu) = 1$. As result we have:
+
+\begin{eqnarray}
+    \nu(x,y) = \frac{SC(\left\{ \Omega_i(x,y) - f_{dark}(x,y) \right\})}{max\left(SC(\left\{ \Omega_i(x,y) - f_{dark}(x,y) \right\})\right)}
+\end{eqnarray}
+
+After this we can denoise obtained $\nu(x,y)$ with blur or other methods.
+
+\section{Signal obtaining}
+
+As input we have:
+\begin{itemize}
+    \item $f_{dark}(x,y)$ --- dark signal
+    \item $\nu(x,y)$ --- normalized flats calibration function
+    \item $F_j(x,y)$ --- frames
+\end{itemize}
+
+Our whole signal $f(x,y)$ contains of multiple stages. In simple case we have just sky light pollution:
+\begin{eqnarray}
+    f(x,y) = f_{sky}(x,y) + f_{signal}(x,y)
+\end{eqnarray}
+
+In more complex cases when we want to obtain narrowband signal we have continuum in addition to sky:
+\begin{eqnarray}
+    f(x,y) = f_{sky}(x,y) + f_{continuum}(x,y) + f_{narrow}(x,y)
+\end{eqnarray}
+
+But on this stage our task is to find $f(x,y)$.
+
+We have frames $F_i$:
+\begin{eqnarray}
+    F_i(x,y) = Poisson\left( f_{dark}(x,y) + \nu(x,y) \cdot f(x,y) \right)
+\end{eqnarray}
+
+\subsection{First approach}
+
+We act the same way as for flats calculation:
+\begin{eqnarray}
+    <F_i(x,y)> = f_{dark}(x,y) + \nu(x,y) \cdot f(x,y) \\
+    f(x,y) = \frac{<F_i(x,y)> - f_{dark}(x,y)}{\nu(x,y)} = \frac{<F_i(x,y) - f_{dark}(x,y)>}{\nu(x,y)}
+\end{eqnarray}
+
+Here we use Sigma-Clipping:
+
+\begin{eqnarray}
+    f(x,y) = \frac{SC(\left\{ F_i(x,y) - f_{dark}(x,y)\right\})}{\nu(x,y)}
+\end{eqnarray}
+
+This implements the most basic approach: substract darks, then apply flats, then do Sigma-Clipping.
+
+This method is simple, but can generate negative values, especially for low SNR case.
+
+\subsection{Bayesian analysis}
+
+We have set of frames $F_i(x,y)$. We want to find estimation for $f(x,y)$:
+
+\begin{eqnarray}
+    E\left[ f(x,y) \right] = \int df(x,y) f(x,y) p(f(x,y) | \left\{ F_i(x,y) \right\})
+\end{eqnarray}
+
+Let's find $p(f(x,y) | \left\{ F_i(x,y) \right\})$. We process independently for each $x,y$, so they are just parameters,
+not integration varables. So we won't write them for readability:
+
+\begin{eqnarray}
+    E\left[ f \right] = \int df f p(f | \left\{ F_i \right\})
+\end{eqnarray}
+
+According to Bayes' theorem
+
+\begin{eqnarray}
+    p(f | \left\{ F_i \right\}) = \frac{p(\left\{ F_i \right\} | f) \cdot p(f)}{p(\left\{ F_i \right\})} =
+    \frac{p(\left\{ F_i \right\} | f) \cdot p(f)}{\int p(\left\{ F_i \right\} | f') \cdot p(f')} df' \label{eq:bayes}
+\end{eqnarray}
+
+where $p(f)$ --- apriori probability of $f$. We should estimate it before starting Bayesian analysis.
+
+It's very important that
+\begin{equation}
+    p(\left\{ F_i \right\}) \ne \prod_i p(F_i)
+\end{equation}
+
+It happens because $F_i$ are not marginally independent: if $P(AB|C_i) = P(A|C_i) \cdot P(B|C_i)$ for each $i$, it doesn't mean that $P(AB) = P(A)\cdot P(B)$
+
+But $F_i|f$ are conditionally independent, so we can write
+\begin{equation}
+    p(\left\{ F_i \right\} | f) = \prod_i p(F_i | f)
+\end{equation}
+
+So we can continue (\ref{eq:bayes}) and write it as
+\begin{eqnarray}
+    p(f | \left\{ F_i \right\}) = \frac{\prod_i p(F_i|f) \cdot p(f)}{\int \prod_i p(F_i|f') \cdot p(f') df'} \label{eq:bayes2}
+\end{eqnarray}
+
+Let's remember what $p(F_i | f)$ is:
+\begin{equation}
+\begin{array}{r@{}l}
+    p(F_i | f) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\
+    \lambda = f_{dark}(x,y) + \nu(x,y) f(x,y)
+\end{array}
+\end{equation}
+
+Let's substutute it into (\ref{eq:bayes2}):
+\begin{equation}
+\begin{array}{r@{}l}
+    p(f | \left\{ F_i \right\}) = \frac{\prod_i \frac{\lambda(f)^{F_i} \cdot e^{-\lambda(f)}}{F_i!} \cdot p(f)}
+    {\int \prod_i \frac{\lambda(f)^{F_i} \cdot e^{-\lambda(f)}}{F_i!} p(f') df'}
+\end{array}
+\end{equation}
+
+After simplyfying it we have:
+\begin{equation}
+    p(f | \left\{ F_i \right\}) = \frac{\lambda(f)^{\sum F_i} \cdot e^{-N\lambda(f)} \cdot p(f)}
+    {\int \lambda(f')^{\sum F_i} \cdot e^{-N\lambda(f')} \cdot p(f') df'}
+\end{equation}
+
+where $N$ --- amount of $F_i$. Factorials are gone. And for case where $p(f) \ne 0$, $\lambda(f) \ne 0$ we can simplify:
+
+\begin{equation}
+    p(f | \left\{ F_i \right\}) = \left( \int \left( \frac{\lambda(f')}{\lambda(f)} \right)^{\sum F_i} \cdot e^{-N(\lambda(f')-\lambda(f))} \cdot \left( \frac{p(f')}{p(f)} \right) df'\right)^{-1}
+\end{equation}
+
+But there can be some practical case: what if different frames have different $f_{dark}$ or $f_{sky}$ or $\nu$? In that case we have series
+of $\lambda_i(f)$ and formula slightly changes:
+\begin{equation}
+\begin{array}{r@{}l}
+    E[f]\left( \left\{ F_i \right\} \right) = \int f \cdot p(f | {F_i}) df \\
+    p(f | \left\{ F_i \right\}) = \left( \int \prod_i \left( \frac{\lambda_i(f')}{\lambda_i(f)} \right)^{F_i} \cdot 
+    e^{-\sum_i \left(\lambda_i(f')-\lambda_i(f)\right)} \cdot \left( \frac{p(f')}{p(f)} \right) df'\right)^{-1}
+\end{array}
+\end{equation}
+
+In this formul wie have 2 components $\prod_i \left( \frac{\lambda_i(f')}{\lambda_i(f)} \right)^{F_i}$ and
+$e^{-\sum_i \left(\lambda_i(f')-\lambda_i(f)\right)}$. For big $f'$ first would be big, but it will be compensated by exponent.
+But it can cause overflow. So we can write:
+
+\begin{eqnarray}
+    p(f | \left\{ F_i \right\}) = \left( \int e^{\sum_i \left( F_i ln \lambda_i(f') - \lambda_i(f')\right) 
+            - \left( F_i ln \lambda_i(f) - \lambda_i(f)\right)} \cdot \frac{p(f')}{p(f)} df' \right)^{-1} \label{eq:bayes3} \\[9pt]
+    \Lambda_i(f) = F_i ln \lambda_i(f) - \lambda_i(f) \\[9pt]
+    p(f | \left\{ F_i \right\}) = \left( \int e^{\sum_i \Lambda_i(f') - \Lambda_i(f) }\cdot \frac{p(f')}{p(f)} df' \right)^{-1}
+\end{eqnarray}
+
+
+
+Challenges with such approach:
+\begin{itemize}
+\item we need some a-priori knowledge of probability $p(f)$
+\item integral calculation over $R_{+}$ is pretty long procedure. So we can calculate it only in some area around maxima of $p(f')$
+\end{itemize}
+
+Good point is that for some priors, integral can be taken analytically.
+
+\subsection{Pipeline}
+So the pipeline is following:
+
+\begin{itemize}
+    \item Perform a "naive" estimation to obtain initial $f$
+    \item Using a sliding window, build local histograms of $f$ to estimate the local prior $p(f)$. Normalize and optionally smooth these histograms.
+    \item Use the Bayesian estimator for $E\left[ f \right]$ to refine $f$, based on the current prior
+    \item Iterate the prior estimation and refinement steps until convergence or acceptable error level
+\end{itemize}
+
+\section{True signal obtain}
+
+During previous step we studied how to obtain signal $f$. But it contains sky light pollution:
+\begin{eqnarray}
+    f = f_{sky} + f_{signal} \\
+    \lambda(f_{signal}) = f_{dark} + \nu \left( f_{sky} + f_{signal} \right)
+\end{eqnarray}
+
+So, we need to estimate $f_{sky}$.
+
+\subsection{Sky estimation}
+Firstly, let's using formula $\lambda(f) = f_{dark} + \nu f$ find whole captured signal $f$.
+
+We can estimate $f_{sky}$ from $f$ using regions on the side of image, where target signal is expected to be absent.
+But we should be careful, not to overestimate.
+
+\subsection{Bayesian analysis}
+
+So, now we use $\lambda(f_{signal}) = f_{dark} + \nu \left( f_{sky} + f_{signal} \right)$ to find $f_{signal}$.
+
+\subsection{Pipeline}
+So the pipeline is following:
+
+\begin{itemize}
+    \item obtain whole signal $f(x,y)$
+    \item find $f_{sky}$ from $f(x,y)$
+    \item find expected $f_{signal}$
+\end{itemize}
+
+\section{Narrowband signal extraction}
+
+In this case we have 2 signal images, captured with narrow (1) and wide (2) filters. Whole signal has 2 components: $f_{c,*}$ --- continuum,
+and $f_{n,*}$ --- narrow signal:
+
+\begin{eqnarray}
+    f_{signal, 1} = f_{c, 1} + f_{n} \\
+    f_{signal, 2} = f_{c, 2} + f_{n}
+\end{eqnarray}
+
+And we assume that continuum for both cases is proportional. We can assume that if wide filter not too wide.
+\begin{equation}
+    f_{c,2} = k \cdot f_{c,1} = k \cdot f_c
+\end{equation}, where $k > 1$. Value $k$ we obtain from calibration by stars --- they emit only continuum.
+
+So
+\begin{eqnarray}
+    f_{signal, 1} = f_c + f_n \\
+    f_{signal, 2} = k \cdot f_c + f_n
+\end{eqnarray}
+
+So we can find $f_n$ as
+\begin{eqnarray}
+    (1-1/k) \cdot f_n = f_{signal, 1} - \frac{f_{signal, 2}}{k} \\
+    f_n = \frac{k \cdot f_{signal, 1} - f_{signal, 2}}{k-1} \\
+    f_c = f_{signal,1} - f_n = \frac{f_{signal, 2} - f_{signal, 1}}{k-1}
+\end{eqnarray}
+
+But as in previous parts, it's also a first approach.
+
+\subsection{Bayesian analysis}
+
+\begin{eqnarray}
+    F_{i,1} = Poisson\left( \lambda_{i,1}\left({f_n \atop f_c}\right) \right) \\
+    F_{j,2} = Poisson\left( \lambda_{j,2}\left({f_n \atop f_c}\right) \right)
+\end{eqnarray}
+
+\begin{eqnarray}
+    \lambda_{i,1}\left({f_n \atop f_c}\right) = f_{dark, 1, i} + \nu_{1,i} \cdot \left( f_{sky, 1, i} + f_c + f_n \right) \\
+    \lambda_{j,2}\left({f_n \atop f_c}\right) = f_{dark, 2, j} + \nu_{2,j} \cdot \left( f_{sky, 2, j} + k \cdot f_c + f_n \right)
+\end{eqnarray}
+
+We can concatinate $\left\{F_{i,1}, F_{j,2}\right\}$ frames to single frames list and
+$\left\{ \lambda_{i,1}, \lambda_{j,2} \right\}$ to single $\lambda$ list, and like in (\ref{eq:bayes3}) we get:
+
+\begin{eqnarray}
+p\left({f_n \atop f_c} | \left\{ F_{i,1}, F_{j,2} \right\}\right) =
+\left( \int e^{
+    -\sum_i \left[\Lambda_{i,1}\left({f'_n \atop f'_c}\right) - \Lambda_{i,1}\left({f_n \atop f_c}\right) \right]
+    -\sum_j \left[\Lambda_{j,2}\left({f'_n \atop f'_c}\right) - \Lambda_{j,2}\left({f_n \atop f_c}\right) \right]}
+\cdot \frac{p\left({f'_n \atop f'_c}\right)}{p\left({f_n \atop f_c}\right)} df'_n df'_c \right)^{-1}
+\end{eqnarray}
+
+\end{document}

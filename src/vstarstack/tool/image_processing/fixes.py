@@ -53,5 +53,5 @@ commands = {
     "blur": (vstarstack.tool.image_processing.blur.run,  "gaussian blur"),
     "deconvolution": (vstarstack.tool.image_processing.deconvolution.commands,  "deconvolution"),
     "select-sharp" : (vstarstack.tool.image_processing.drop_unsharp.commands, "select sharp images"),
-    "remove-continuum" : (vstarstack.tool.image_processing.remove_continuum.process, "remove continuum", "input.zip Narrow Wide output.zip"),
+    "remove-continuum" : (vstarstack.tool.image_processing.remove_continuum.process, "remove continuum", "input.zip Narrow Wide output.zip [coeff]"),
 }
