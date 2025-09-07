@@ -128,7 +128,7 @@ def move_dataframe(dataframe: DataFrame,
             else:
                 weight = np.ones(image.shape)
 
-        if channel in dataframe.links["saturation"]:
+        if "saturation" in dataframe.links and channel in dataframe.links["saturation"]:
             saturation_channel = dataframe.links["saturation"][channel]
             saturation, _ = dataframe.get_channel(saturation_channel)
         else:
