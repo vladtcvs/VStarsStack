@@ -14,7 +14,8 @@
 
 import numpy as np
 import vstarstack.library.bayes
-import vstarstack.library.bayes.bayes
+from vstarstack.library.bayes.bayes import BayesEstimator
+from vstarstack.library.bayes.estimation import *
 
 def test_MAP_single_value():
     f_signal_max = 10
@@ -23,7 +24,7 @@ def test_MAP_single_value():
 
     low = np.array([0], dtype=np.double)
     high = np.array([f_signal_max], dtype=np.double)
-    estimator = vstarstack.library.bayes.bayes.BayesEstimator(apriori = "uniform", dl=dl, ndim=1)
+    estimator = BayesEstimator(apriori = "uniform", dl=dl, ndim=1)
     lambdas_v = np.array([[1]], dtype=np.double)
     lambdas_d = np.array([5], dtype=np.double)
 
