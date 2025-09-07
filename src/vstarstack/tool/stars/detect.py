@@ -97,7 +97,9 @@ def run(project: vstarstack.tool.cfg.Project, argv: list):
         mindist = project.config.stars.describe.mindist
 
     thr_coeff = project.config.stars.brightness_over_neighbours
-    detect.configure_detector(thresh_coeff=thr_coeff)
+    thr_safety = project.config.stars.min_brightness
+    logger.info(f"Threshold coefficient {thr_coeff}")
+    detect.configure_detector(thresh_coeff=thr_coeff, safety_threshold=thr_safety)
     if os.path.isdir(path):
         _process_dir(path, jsonpath, num_stars, mindist)
     else:
