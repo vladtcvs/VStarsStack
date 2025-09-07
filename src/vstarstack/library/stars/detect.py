@@ -15,8 +15,10 @@
 import math
 import numpy as np
 import cv2
+from scipy.ndimage import gaussian_filter
 import imutils
 import imutils.contours
+import matplotlib.pyplot as plt
 
 from skimage import measure
 
@@ -42,17 +44,17 @@ def calculate_brightness(image : np.ndarray, x : int, y : int, r : int):
     return brightness
 
 def _threshold(image, radius, ratio, safety_threshold):
-    filtered = cv2.GaussianBlur(image, (2*radius+1, 2*radius+1), 0)
-    mask = (image > filtered*ratio + safety_threshold).astype('uint8')
+    filtered = gaussian_filter(image, sigma=radius)
+    threshold = filtered*ratio + safety_threshold*np.amax(filtered)
+    mask = (image > threshold).astype('uint8')
     return mask
 
 def _find_stars(gray_image : np.ndarray):
     """Find stars on image"""
     shape = gray_image.shape
 
-    gray_image = (gray_image.astype(np.float32) / np.amax(gray_image) * 255).astype(np.uint8)
     gray_image = np.clip(gray_image, 0, None)
-    gray_image = cv2.GaussianBlur(gray_image, (3, 3), 0)
+    gray_image = gaussian_filter(gray_image, sigma=2)
 
     thresh = _threshold(gray_image, _detector_cfg["THRESHOLD_BLOCK_SIZE"],
                                     _detector_cfg["THRESHOLD_COEFF"],

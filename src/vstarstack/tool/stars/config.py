@@ -27,6 +27,7 @@ _module_configuration = {
     },
     "use_angles": (bool, True),
     "brightness_over_neighbours": (float, 2.0),
+    "min_brightness" : (float, 0.01),
     "max_compares": (int, 0),
 }
 
