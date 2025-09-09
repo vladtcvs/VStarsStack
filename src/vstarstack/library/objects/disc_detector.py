@@ -12,16 +12,12 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-import matplotlib.pyplot as plt
 import cv2
 import numpy as np
 import math
 import random
 from scipy.ndimage import gaussian_filter
 from scipy.spatial import ConvexHull
-
-
-from typing import Tuple
 
 def get_point(contour, index):
     """Get point on contour"""
@@ -51,13 +47,13 @@ def circle_from_3pts(p1, p2, p3):
     q = (y3 - y2) / 2
 
     D = a*d-b*c
-    ia = d / D
-    ib = -b / D
-    ic = -c / D
-    id = a / D
+    inva = d / D
+    invb = -b / D
+    invc = -c / D
+    invd = a / D
 
-    t = ia * p + ib * q
-    s = ic * p + id * q
+    t = inva * p + invb * q
+    s = invc * p + invd * q
 
     xc2 = x1 + (x2 - x1)/2 + t * (y1 - y2)
     yc2 = y1 + (y2 - y1)/2 + t * (x2 - x1)
@@ -88,7 +84,7 @@ def find_disc(contour_points, iterations, threshold):
 
         try:
             xc, yc, r = circle_from_3pts(p1, p2, p3)
-        except:
+        except Exception as e:
             continue
         dists = np.abs(np.sqrt((contour_points[:,0]-xc)**2 + (contour_points[:,1]-yc)**2) - r)
         inliers = contour_points[dists < threshold]
