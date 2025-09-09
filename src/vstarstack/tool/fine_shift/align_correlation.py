@@ -24,11 +24,8 @@ from vstarstack.library.fine_movement.aligner import CorrelationAlignedBuilder
 from vstarstack.library.fine_movement.aligner import Aligner
 import vstarstack.library.image_process
 import vstarstack.library.image_process.togray
-import vstarstack.tool.usage
 import vstarstack.tool.cfg
-import vstarstack.tool.configuration
 import vstarstack.library.data
-import vstarstack.library.common
 
 import vstarstack.tool.common
 
@@ -61,7 +58,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
         return
 
     df = vstarstack.library.data.DataFrame.load(input_image_f)
-    
+
     max_shift = project.config.fine_shift.max_shift
     pixels = project.config.fine_shift.correlation_grid
     area_radius = project.config.fine_shift.area_radius
