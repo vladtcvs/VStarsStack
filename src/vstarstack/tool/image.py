@@ -18,8 +18,8 @@ import numpy as np
 import multiprocessing as mp
 import logging
 
-import vstarstack.library
-import vstarstack.library.data
+from vstarstack.library.image_process.togray import df_to_gray
+import vstarstack.tool
 import vstarstack.tool
 import vstarstack.tool.common
 import vstarstack.tool.usage
@@ -30,6 +30,7 @@ FLOOR = vstarstack.tool.cfg.get_param("clip_floor", bool, False)
 HDR = vstarstack.tool.cfg.get_param("hdr", bool, False)
 NORM = vstarstack.tool.cfg.get_param("normalize", bool, True)
 ADJUST_BLACK = vstarstack.tool.cfg.get_param("adjust_black", bool, False)
+GRAY = vstarstack.tool.cfg.get_param("gray", bool, False)
 
 logger = logging.getLogger(__name__)
 
@@ -114,7 +115,10 @@ def _show(_project, argv):
         channels = argv[1:]
 
     dataframe = vstarstack.library.data.DataFrame.load(path)
-    frames = _make_frames(dataframe, channels)
+    if not GRAY:
+        frames = _make_frames(dataframe, channels)
+    else:
+        frames = {"gray":df_to_gray(dataframe)[0]}
 
     nch = len(frames)
     fig, axs = plt.subplots(1, nch)

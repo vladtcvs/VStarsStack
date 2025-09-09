@@ -44,6 +44,7 @@ def df_to_gray(df : vstarstack.library.data.DataFrame,
             interpolate_cfa = df.get_channel_option(channel, "cfa")
 
         if interpolate_cfa:
+            # for channel containing CFA data we need to interpolate it
             h = layer.shape[0]
             w = layer.shape[1]
             shifted = np.zeros(layer.shape)
@@ -78,6 +79,12 @@ def df_to_gray(df : vstarstack.library.data.DataFrame,
             weights[np.where(weights != 0)] = 1
             layer[idx] = shifted[idx]
             weight[idx] = weights[idx]
+
+        # drop areas out of ROI
+        mask,_,_ = df.get_linked_channel(channel, "mask")
+        if mask is not None:
+            weight = weight * mask
+            layer = layer * mask
 
         if gray is None:
             gray = layer
