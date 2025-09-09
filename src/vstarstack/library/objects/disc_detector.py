@@ -17,7 +17,7 @@ import numpy as np
 import math
 import random
 from scipy.ndimage import gaussian_filter
-from scipy.spatial import ConvexHull
+from scipy.spatial import ConvexHull # pylint: disable=no-name-in-module
 
 def get_point(contour, index):
     """Get point on contour"""
