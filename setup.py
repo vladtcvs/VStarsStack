@@ -94,7 +94,7 @@ setup (name = 'vstarstack',
        install_requires = [
               'numpy',
               'astropy',
-              'rawpy <= 0.21.0',
+              'rawpy',
               'pillow',
               'imageio',
               'exifread',

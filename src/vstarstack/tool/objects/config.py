@@ -19,10 +19,7 @@ _module_configuration = {
     "margin": (int, 30),
     "use_modules" : (list, ["disc", "brightness", "features"]),
     "disc": ("module", {
-        "mindelta": (int, 40),
-        "maxdelta": (int, 50),
-        "num_bins_curvature": (int, 50),
-        "num_bins_distance": (int, 10),
+        "circle_threshold": (int, 10),
     }),
     "brightness": ("module", {
         "min_diameter": (int, 20),
