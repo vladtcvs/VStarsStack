@@ -12,28 +12,16 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import matplotlib.pyplot as plt
 import cv2
 import numpy as np
 import math
+import random
+from scipy.ndimage import gaussian_filter
+from scipy.spatial import ConvexHull
+
 
 from typing import Tuple
-
-def len_of_vec(vec):
-    """Vector length"""
-    return (vec[0]**2+vec[1]**2)**0.5
-
-def dir_of_vec(vec):
-    """Direction of vector"""
-    return vec / len_of_vec(vec)
-
-def angle(vec1, vec2):
-    """Angle between vectors"""
-    vec1 = dir_of_vec(vec1)
-    vec2 = dir_of_vec(vec2)
-
-    scalar = vec1[0]*vec2[0] + vec1[1]*vec2[1]
-    scalar = np.clip(scalar, 0, 1)
-    return math.acos(scalar)
 
 def get_point(contour, index):
     """Get point on contour"""
@@ -44,94 +32,72 @@ def get_point(contour, index):
     return contour[index, 0, :]
 
 
-def left(vec):
-    """Vector, left to the specified"""
-    return np.array([-vec[1], vec[0]])
+def circle_from_3pts(p1, p2, p3):
+    """Окружность по трём точкам"""
+#    print(p1, p2, p3)
+    x1 = p1[0]
+    x2 = p2[0]
+    x3 = p3[0]
+    y1 = p1[1]
+    y2 = p2[1]
+    y3 = p3[1]
 
-def contour_curvature_d(contour, delta):
-    """Calculate contour curvature"""
-    centers = np.zeros((contour.shape[0], 2))
-    curvatures = np.zeros((contour.shape[0]))
-    for index in range(0, contour.shape[0]):
-        prev_index = index - delta
-        next_index = index + delta
-        p_prev = get_point(contour, prev_index)
-        p_cur = get_point(contour, index)
-        p_next = get_point(contour, next_index)
+    a = y1 - y2
+    b = y3 - y1
+    c = x2 - x1
+    d = x1 - x3
 
-        p = p_prev - p_cur
-        n = p_next - p_cur
-        px = p[0]
-        py = p[1]
-        nx = n[0]
-        ny = n[1]
+    p = (x3 - x2) / 2
+    q = (y3 - y2) / 2
 
-        D = 2*(ny*px-nx*py)
-        if abs(D) < 1e-12:
+    D = a*d-b*c
+    ia = d / D
+    ib = -b / D
+    ic = -c / D
+    id = a / D
+
+    t = ia * p + ib * q
+    s = ic * p + id * q
+
+    xc2 = x1 + (x2 - x1)/2 + t * (y1 - y2)
+    yc2 = y1 + (y2 - y1)/2 + t * (x2 - x1)
+    
+    xc3 = x1 + (x3 - x1)/2 + s * (y1 - y3)
+    yc3 = y1 + (y3 - y1)/2 + s * (x3 - x1)
+
+    xc = (xc2 + xc3)/2
+    yc = (yc2 + yc3)/2
+
+    r = math.sqrt((xc - x1)**2 + (yc - y1)**2)
+
+    return xc, yc, r
+
+def find_disc(contour_points, iterations, threshold):
+    L = contour_points.shape[0]
+    best_inliers = []
+    best_circle = None
+    for _ in range(iterations):
+        i1 = int(random.random() * L)
+        i2 = int(random.random() * L)
+        i3 = int(random.random() * L)
+        if i1 == i2 or i1 == i3 or i2 == i3:
             continue
+        p1 = contour_points[i1]
+        p2 = contour_points[i2]
+        p3 = contour_points[i3]
 
-        t = (ny*(ny-py))/D+(nx*(nx-px))/D
-        # s = -((ny-py)*py)/D-((nx-px)*px)/D
-        center = p_cur + p/2 + left(p)*t
-        centers[index, :] = center
-        radius = ((center[0]-p_cur[0])**2 + (center[1]-p_cur[1])**2)**0.5
-        curvature = 1/radius
-        curvatures[index] = curvature
-    return centers, curvatures
+        try:
+            xc, yc, r = circle_from_3pts(p1, p2, p3)
+        except:
+            continue
+        dists = np.abs(np.sqrt((contour_points[:,0]-xc)**2 + (contour_points[:,1]-yc)**2) - r)
+        inliers = contour_points[dists < threshold]
+        if len(inliers) > len(best_inliers):
+            best_inliers = inliers
+            best_circle = (xc, yc, r)
+            #print(len(inliers), " : ", p1, p2, p3, xc, yc, r)
 
-def contour_curvature(contour, mindelta, maxdelta):
-    """Find contour center and curvature at each point"""
-    nump = maxdelta-mindelta+1
-    contour_len = contour.shape[0]
-    centers = np.zeros((nump, contour_len, 2))
-    curvatures = np.zeros((nump, contour_len))
-    index = 0
-    for delta in range(mindelta, maxdelta+1):
-        center, curvature = contour_curvature_d(contour, delta)
-        centers[index] = center
-        curvatures[index] = curvature
-        index += 1
-    centers = np.median(centers, axis=0)
-    curvatures = np.median(curvatures, axis=0)
-    return centers, curvatures
-
-def radius_to_contour(contour, center):
-    """Median radius from center to contour"""
-    distances = []
-    for i in range(len(contour)):
-        point = contour[i, 0]
-        distance = math.sqrt((point[0]-center[0])**2 + (point[1]-center[1])**2)
-        distances.append(distance)
-    return np.median(distances)
-
-def sigma_clip(values, coefficient):
-    """Select only values which are near the mean"""
-    mean = np.mean(values)
-    dispersion = np.std(values)*coefficient
-    values = values[np.where(values >= mean - dispersion)]
-    values = values[np.where(values <= mean + dispersion)]
-    return values
-
-def mean_center(centers):
-    """Mean center"""
-    centers0 = centers[:, 0]
-    centers1 = centers[:, 1]
-
-    centers0 = sigma_clip(centers0, 1)
-    centers1 = sigma_clip(centers1, 1)
-
-    center0 = np.mean(centers0)
-    center1 = np.mean(centers1)
-    center = np.array([center0, center1])
-    return center
-
-def measure_ring(layer : np.ndarray, x : int, y : int, radius1 : int, radius2 : int) -> float:
-    """Measure average value of ring"""
-    mask = np.zeros(layer.shape)
-    cv2.circle(mask, (x, y), radius2, 1, -1)
-    cv2.circle(mask, (x, y), radius1, 0, -1)
-    pixels = layer * mask
-    return np.average(pixels), np.std(pixels)
+    return best_circle, np.array(best_inliers)
 
 def display_contour(thresh_img : np.ndarray, contour : np.ndarray, centers : np.ndarray | None) -> None:
     import matplotlib.pyplot as plt
@@ -141,12 +107,31 @@ def display_contour(thresh_img : np.ndarray, contour : np.ndarray, centers : np.
     rgb[:,:,1] = thresh_img
     rgb[:,:,2] = thresh_img
 
+    h = thresh_img.shape[0]
+    w = thresh_img.shape[1]
+
     for i in range(contour.shape[0]):
         cx = contour[i, 0, 0]
         cy = contour[i, 0, 1]
         rgb[cy, cx, 0] = 255
         rgb[cy, cx, 1] = 0
         rgb[cy, cx, 2] = 0
+        if cx + 1 < w:
+            rgb[cy, cx+1, 0] = 255
+            rgb[cy, cx+1, 1] = 0
+            rgb[cy, cx+1, 2] = 0
+        if cx - 1 >= 0:
+            rgb[cy, cx-1, 0] = 255
+            rgb[cy, cx-1, 1] = 0
+            rgb[cy, cx-1, 2] = 0
+        if cy + 1 < h:
+            rgb[cy+1, cx, 0] = 255
+            rgb[cy+1, cx, 1] = 0
+            rgb[cy+1, cx, 2] = 0
+        if cy - 1 >= 0:
+            rgb[cy-1, cx, 0] = 255
+            rgb[cy-1, cx, 1] = 0
+            rgb[cy-1, cx, 2] = 0
     
     if centers is not None:
         for i in range(centers.shape[0]):
@@ -161,20 +146,20 @@ def display_contour(thresh_img : np.ndarray, contour : np.ndarray, centers : np.
     plt.imshow(rgb)
     plt.show()
 
-def detect(layer : np.ndarray,
-           thresh : float,
-           mindelta : float,
-           maxdelta : float,
-           num_bins_curvature : int,
-           num_bins_distance : int):
+def find_largest_contour(layer : np.ndarray,
+                         thresh : float,
+                         circle_threshold : float):
     """Detect part of disc on image"""
-    blurred = cv2.GaussianBlur(layer, (5, 5), 0)
+    blurred = gaussian_filter(layer, 2)
     blurred = (blurred / np.amax(blurred) * 255).astype(np.uint8)
 
     thresh = np.average(blurred) * (1 - thresh) + np.amax(blurred) * thresh
     thresh = int(thresh/np.amax(blurred)*255)
 
-    _, thresh_img = cv2.threshold(blurred, thresh, 255, cv2.THRESH_BINARY)
+    thresh_img = (blurred > thresh).astype(np.uint8)*255
+
+    #plt.imshow(thresh_img)
+    #plt.show()
 
     contours, _ = cv2.findContours(
         image=thresh_img,
@@ -185,83 +170,24 @@ def detect(layer : np.ndarray,
     if len(contours) == 0:
         return []
 
-    # select 3 maximal contours
-    contours = sorted(contours, key=lambda item: len(item), reverse=True)
-    contours = [item for item in contours if len(item) >= len(contours[0])/2]
+    contour = max(contours, key=cv2.contourArea)
+    points = np.reshape(contour, (contour.shape[0], 2))
+    hull = ConvexHull(points)
+    contour = contour[hull.vertices, :, :]
+    points = points[hull.vertices, :]
 
-    # select contour with most stable curvature
-    for contour in contours:
-        centers, curvatures = contour_curvature(contour,
-                                                mindelta=mindelta,
-                                                maxdelta=maxdelta)
-        
+    (x, y, radius), inliers = find_disc(points, 500, circle_threshold)
 
-        # select only points of contour, where curvature is near to the most frequet
-        values, bins = np.histogram(curvatures, bins=num_bins_curvature)
-        ind = np.argmax(values)
-        ks1 = bins[ind]
-        ks2 = bins[ind+1]
-
-        contour = contour[np.where(curvatures <= ks2)]
-        centers = centers[np.where(curvatures <= ks2)]
-        curvatures = curvatures[np.where(curvatures <= ks2)]
-        contour = contour[np.where(curvatures >= ks1)]
-        centers = centers[np.where(curvatures >= ks1)]
-        curvatures = curvatures[np.where(curvatures >= ks1)]
-
-#        display_contour(thresh_img, contour, centers)
-
-        # select only points of contour, where center is near to the most frequent
-
-        centers_x = centers[:,0]
-
-        values, bins = np.histogram(centers_x, bins=num_bins_distance)
-        ind = np.argmax(values)
-        ks1 = bins[ind]
-        ks2 = bins[ind+1]
-
-        idx = np.where((centers_x <= ks2) & (centers_x >= ks1))
-        contour = contour[idx]
-        centers = centers[idx]
-        curvatures = curvatures[idx]
-
-        centers_y = centers[:,1]
-
-        values, bins = np.histogram(centers_y, bins=num_bins_distance)
-        ind = np.argmax(values)
-        ks1 = bins[ind]
-        ks2 = bins[ind+1]
-        
-        idx = np.where((centers_y <= ks2) & (centers_y >= ks1))
-        contour = contour[idx]
-        centers = centers[idx]
-        curvatures = curvatures[idx]
-
-#        display_contour(thresh_img, contour, centers)
-
-        center = mean_center(centers)
-
-        radiuses = np.zeros(centers.shape[0])
-        for i in range(centers.shape[0]):
-            point = contour[i, 0, :]
-            radius = math.sqrt((point[0]-center[0])**2 + (point[1]-center[1])**2)
-            radiuses[i] = radius
-
-        radius = int(radius_to_contour(contour, center))
-
-        # check that inside is brighter than outside
-        x = int(center[0] + 0.5)
-        y = int(center[1] + 0.5)
-        light_inside, std_inside  = measure_ring(layer, x, y, radius-20, radius)
-        light_outside, std_outside = measure_ring(layer, x, y, radius, radius+20)
-        #print("inside: ", light_inside, " ", std_inside)
-        #print("outside: ", light_outside, " ", std_outside)
-        if light_inside > light_outside:
-            break
-
+    inliers = np.reshape(inliers, (inliers.shape[0], 1, 2))
+    #display_contour(thresh_img, contour, None)    
     planet = {
         "x": x,
         "y": y,
         "r": int(radius + 0.5)
     }
     return [planet]
+
+def detect(layer : np.ndarray,
+           thresh : float,
+           circle_threshold : float):
+    return find_largest_contour(layer, thresh, circle_threshold)

@@ -16,6 +16,7 @@ import json
 import os
 import numpy as np
 import logging
+import multiprocessing as mp
 
 import vstarstack.library.data
 import vstarstack.library.image_process
@@ -31,6 +32,7 @@ import vstarstack.library.objects.disc_detector as dd
 logger = logging.getLogger(__name__)
 
 def _process_file(project, filename, descfilename, detector):
+    logger.info(f"Processing {filename}")
     image = vstarstack.library.data.DataFrame.load(filename)
 
     if os.path.isfile(descfilename):
@@ -50,11 +52,8 @@ def _process_file(project, filename, descfilename, detector):
 
     thresh = project.config.objects.threshold
     if detector == "disc":
-        mindelta = project.config.objects.disc.mindelta
-        maxdelta = project.config.objects.disc.maxdelta
-        num_bin_curv = project.config.objects.disc.num_bins_curvature
-        num_bin_dist = project.config.objects.disc.num_bins_distance
-        planets = dd.detect(gray, thresh, mindelta, maxdelta, num_bin_curv, num_bin_dist)
+        circle_threshold = project.config.objects.disc.circle_threshold
+        planets = dd.detect(gray, thresh, circle_threshold)
     elif detector == "brightness":
         min_size = project.config.objects.brightness.min_diameter
         max_size = project.config.objects.brightness.max_diameter
@@ -70,10 +69,9 @@ def _process_file(project, filename, descfilename, detector):
 
 def _process_path(project, npys, descs, detector):
     files = vstarstack.tool.common.listfiles(npys, ".zip")
-    for name, filename in files:
-        logger.info(f"Processing {name}")
-        out = os.path.join(descs, name + ".json")
-        _process_file(project, filename, out, detector)
+    with mp.Pool(vstarstack.tool.cfg.nthreads) as pool:
+        args = [(project, filename, os.path.join(descs, name + ".json"), detector) for name, filename in files]
+        pool.starmap(_process_file, args)
 
 def _process(project, detector, argv):
     if len(argv) > 0:
