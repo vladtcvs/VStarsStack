@@ -133,10 +133,10 @@ static void image_deform_lc_find_local(const struct ImageGrid *img,
             continue;
         }
         image_deform_lc_get_area(img, pre_align, area, x+iter_x, y+iter_y);
-        image_deform_lc_get_area(ref_img, pre_align, ref_area, x, y);
+        image_deform_lc_get_area(ref_img, ref_pre_align, ref_area, x, y);
         real_t corr1 = image_grid_correlation(area, ref_area);
         image_deform_lc_get_area(img, pre_align, area, x, y);
-        image_deform_lc_get_area(ref_img, pre_align, ref_area, x-iter_x, y-iter_y);
+        image_deform_lc_get_area(ref_img, ref_pre_align, ref_area, x-iter_x, y-iter_y);
         real_t corr2 = image_grid_correlation(area, ref_area);
         real_t corr = (corr1 + corr2)/2;
         if (corr > best_corr)
