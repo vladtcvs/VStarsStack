@@ -70,7 +70,7 @@ class Aligner:
     def serialize(self) -> dict:
         """Serialize image deform"""
         nitems = self.grid_h * self.grid_w * 2
-        shift_array = np.reshape(self.deform.content(), (nitems,))
+        shift_array = np.reshape(self.deform.content(), (nitems,)).astype(np.double)
         return {
             "grid_w" : self.grid_w,
             "grid_h" : self.grid_h,
