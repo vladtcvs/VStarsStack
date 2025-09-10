@@ -43,6 +43,7 @@ class Aligner:
         self.grid_h = shift_array.shape[0]
         self.grid_w = shift_array.shape[1]
         self.deform = ImageDeform(self.image_w, self.image_h, self.grid_w, self.grid_h)
+        shift_array = shift_array.astype(np.float32)
         self.deform.fill(shift_array=shift_array)
 
     def divergence(self, subpixels : int) -> np.ndarray:
