@@ -22,7 +22,7 @@
 /*
  * Linear interpolation. x lies between points of f0 and f1
  */
-static double linear_interpolation(double f0, double f1, double x)
+static real_t linear_interpolation(real_t f0, real_t f1, real_t x)
 {
     return f0 * (1-x) + f1 * x;
 }
@@ -30,9 +30,9 @@ static double linear_interpolation(double f0, double f1, double x)
 /*
  * Quadratic interpolation with extra area in negative direction
  */
-static double quadratic_interpolation_neg(double fm1, double f0, double f1, double x)
+static real_t quadratic_interpolation_neg(real_t fm1, real_t f0, real_t f1, real_t x)
 {
-    double a, b, c;
+    real_t a, b, c;
     c = f0;
     b = (f1 - fm1)/2;
     a = f1 - b - c;
@@ -42,9 +42,9 @@ static double quadratic_interpolation_neg(double fm1, double f0, double f1, doub
 /*
  * Quadratic interpolation with extra area in positive direction
  */
-static double quadratic_interpolation_pos(double f0, double f1, double f2, double x)
+static real_t quadratic_interpolation_pos(real_t f0, real_t f1, real_t f2, real_t x)
 {
-    double a, b, c;
+    real_t a, b, c;
     c = f0;
     b = (4*f1 - f2 - 3*c)/2;
     a = f1 - b - c;
@@ -54,9 +54,9 @@ static double quadratic_interpolation_pos(double f0, double f1, double f2, doubl
 /*
  * Cubic interpolation. x lies between points of f0 and f1
  */
-static double cubic_interpolation(double fm1, double f0, double f1, double f2, double x)
+static real_t cubic_interpolation(real_t fm1, real_t f0, real_t f1, real_t f2, real_t x)
 {
-    double a, b, c, d;
+    real_t a, b, c, d;
     d = f0;
     b = (fm1 + f1) / 2 - d;
     a = (f2 - 2*f1 - 2*b + d) / 6;
@@ -64,7 +64,7 @@ static double cubic_interpolation(double fm1, double f0, double f1, double f2, d
     return a*x*x*x + b*x*x + c*x + d;
 }
 
-double interpolation_1d_cubic(double fm1, double f0, double f1, double f2, double x)
+real_t interpolation_1d_cubic(real_t fm1, real_t f0, real_t f1, real_t f2, real_t x)
 {
     if (isnan(f0))
     {
@@ -95,29 +95,29 @@ double interpolation_1d_cubic(double fm1, double f0, double f1, double f2, doubl
     return cubic_interpolation(fm1, f0, f1, f2, x);
 }
 
-double interpolation_2d_cubic(double fm1m1, double f0m1, double f1m1, double f2m1,
-                              double fm10,  double f00,  double f10,  double f20,
-                              double fm11,  double f01,  double f11,  double f21,
-                              double fm12,  double f02,  double f12,  double f22,
-                              double x, double y)
+real_t interpolation_2d_cubic(real_t fm1m1, real_t f0m1, real_t f1m1, real_t f2m1,
+                              real_t fm10,  real_t f00,  real_t f10,  real_t f20,
+                              real_t fm11,  real_t f01,  real_t f11,  real_t f21,
+                              real_t fm12,  real_t f02,  real_t f12,  real_t f22,
+                              real_t x, real_t y)
 {
-    double fm1 = interpolation_1d_cubic(fm1m1, fm10, fm11, fm12, y);
-    double f0  = interpolation_1d_cubic(f0m1,  f00,  f01,  f02,  y);
-    double f1  = interpolation_1d_cubic(f1m1,  f10,  f11,  f12,  y);
-    double f2  = interpolation_1d_cubic(f2m1,  f20,  f21,  f22,  y);
+    real_t fm1 = interpolation_1d_cubic(fm1m1, fm10, fm11, fm12, y);
+    real_t f0  = interpolation_1d_cubic(f0m1,  f00,  f01,  f02,  y);
+    real_t f1  = interpolation_1d_cubic(f1m1,  f10,  f11,  f12,  y);
+    real_t f2  = interpolation_1d_cubic(f2m1,  f20,  f21,  f22,  y);
     return interpolation_1d_cubic(fm1, f0, f1, f2, x);
 }
 
-double interpolation_1d_linear(double f0, double f1, double x)
+real_t interpolation_1d_linear(real_t f0, real_t f1, real_t x)
 {
     return linear_interpolation(f0, f1, x);
 }
 
-double interpolation_2d_linear(double f00,  double f10,
-                               double f01,  double f11,
-                               double x, double y)
+real_t interpolation_2d_linear(real_t f00,  real_t f10,
+                               real_t f01,  real_t f11,
+                               real_t x, real_t y)
 {
-    double f0 = interpolation_1d_linear(f00, f01, y);
-    double f1 = interpolation_1d_linear(f10, f11, y);
+    real_t f0 = interpolation_1d_linear(f00, f01, y);
+    real_t f1 = interpolation_1d_linear(f10, f11, y);
     return interpolation_1d_linear(f0, f1, x);
 }

@@ -20,14 +20,16 @@
 
 #include <image_deform_lc.h>
 
+#define UNUSED(x) ((void)(x))
+
 int  image_deform_lc_init(struct ImageDeformLocalCorrelator *self,
                           int image_w, int image_h, int pixels)
 {
     self->image_w = image_w;
     self->image_h = image_h;
     self->pixels = pixels;
-    self->grid_w = ceil((double)image_w/pixels);
-    self->grid_h = ceil((double)image_h/pixels);
+    self->grid_w = ceil((real_t)image_w/pixels);
+    self->grid_h = ceil((real_t)image_h/pixels);
     if (image_deform_init(&self->array, self->grid_w, self->grid_h, self->image_w, self->image_h) != 0)
         return -1;
     return 0;
@@ -41,10 +43,10 @@ void image_deform_lc_finalize(struct ImageDeformLocalCorrelator *self)
 static void image_deform_lc_get_area(const struct ImageGrid *img,
                                      const struct ImageDeform *pre_align,
                                      struct ImageGrid *area,
-                                     double x, double y)
+                                     real_t x, real_t y)
 {
-    double pre_aligned_x;
-    double pre_aligned_y;
+    real_t pre_aligned_x;
+    real_t pre_aligned_y;
     if (pre_align == NULL)
     {
         pre_aligned_x = x;
@@ -63,13 +65,13 @@ void image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
                                    const struct ImageDeform *pre_align,
                                    const struct ImageGrid *ref_img,
                                    const struct ImageDeform *ref_pre_align,
-                                   double maximal_shift,
+                                   real_t maximal_shift,
                                    int subpixels)
 {
     int i, j;
-    double iter_x, iter_y;
-    double best_x, best_y;
-    double best_corr;
+    real_t iter_x, iter_y;
+    real_t best_x, best_y;
+    real_t best_corr;
 
     struct ImageGrid global_area;
     image_grid_init(&global_area, img->w, img->h);
@@ -80,7 +82,7 @@ void image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
     for (iter_x = -maximal_shift; iter_x <= maximal_shift; iter_x += 1.0 / subpixels)
     {
         image_deform_lc_get_area(img, pre_align, &global_area, iter_x + img->w/2.0, iter_y + img->h/2.0);
-        double corr = image_grid_correlation(&global_area, ref_img);
+        real_t corr = image_grid_correlation(&global_area, ref_img);
         if (corr > best_corr)
         {
             best_corr = corr;
@@ -95,6 +97,8 @@ void image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
         image_deform_set_shift(&self->array, j, i, 1, best_x*self->array.sx);
     }
     image_grid_finalize(&global_area);
+
+    UNUSED(ref_pre_align);
 }
 
 static void image_deform_lc_find_local(const struct ImageGrid *img,
@@ -105,21 +109,21 @@ static void image_deform_lc_find_local(const struct ImageGrid *img,
                                        int y,
                                        struct ImageGrid *area,
                                        struct ImageGrid *ref_area,
-                                       double maximal_shift,
+                                       real_t maximal_shift,
                                        int subpixels,
-                                       double mean_shift_x,
-                                       double mean_shift_y,
-                                       double *shift_x,
-                                       double *shift_y)
+                                       real_t mean_shift_x,
+                                       real_t mean_shift_y,
+                                       real_t *shift_x,
+                                       real_t *shift_y)
 {
-    double iter_x, iter_y;
-    double best_x = 0;
-    double best_y = 0;
+    real_t iter_x, iter_y;
+    real_t best_x = 0;
+    real_t best_y = 0;
     int num_best = 1;
     image_deform_lc_get_area(img, pre_align, area, x, y);
     image_deform_lc_get_area(ref_img, ref_pre_align, ref_area, x, y);
-    double best_corr = image_grid_correlation(area, ref_area);
-    double best_dist = fabs(mean_shift_x) + fabs(mean_shift_y);
+    real_t best_corr = image_grid_correlation(area, ref_area);
+    real_t best_dist = fabs(mean_shift_x) + fabs(mean_shift_y);
 
     for (iter_y = -maximal_shift; iter_y <= maximal_shift; iter_y += 1.0 / subpixels)
     for (iter_x = -maximal_shift; iter_x <= maximal_shift; iter_x += 1.0 / subpixels)
@@ -130,11 +134,11 @@ static void image_deform_lc_find_local(const struct ImageGrid *img,
         }
         image_deform_lc_get_area(img, pre_align, area, x+iter_x, y+iter_y);
         image_deform_lc_get_area(ref_img, pre_align, ref_area, x, y);
-        double corr1 = image_grid_correlation(area, ref_area);
+        real_t corr1 = image_grid_correlation(area, ref_area);
         image_deform_lc_get_area(img, pre_align, area, x, y);
         image_deform_lc_get_area(ref_img, pre_align, ref_area, x-iter_x, y-iter_y);
-        double corr2 = image_grid_correlation(area, ref_area);
-        double corr = (corr1 + corr2)/2;
+        real_t corr2 = image_grid_correlation(area, ref_area);
+        real_t corr = (corr1 + corr2)/2;
         if (corr > best_corr)
         {
             best_corr = corr;
@@ -145,7 +149,7 @@ static void image_deform_lc_find_local(const struct ImageGrid *img,
         }
         else if (corr == best_corr)
         {
-            double dist = fabs(iter_x - mean_shift_x) + fabs(iter_y - mean_shift_y);
+            real_t dist = fabs(iter_x - mean_shift_x) + fabs(iter_y - mean_shift_y);
             if (dist < best_dist)
             {
                 best_x = iter_x;
@@ -177,7 +181,7 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
                           const struct ImageGrid *ref_img,
                           const struct ImageDeform *ref_pre_align,
                           int radius,
-                          double maximal_shift,
+                          real_t maximal_shift,
                           int subpixels)
 {
     int i, j;
@@ -198,7 +202,7 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
         int x = j * self->pixels;
         int y = i * self->pixels;
 
-        double best_x, best_y;
+        real_t best_x, best_y;
         image_deform_lc_find_local(img, pre_align, ref_img, ref_pre_align,
                                    x, y, &area, &ref_area,
                                    maximal_shift, subpixels,
@@ -216,18 +220,18 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
         for (i = 0; i < self->grid_h; i++)
         for (j = 0; j < self->grid_w; j++)
         {
-            double sy = image_deform_get_shift(&self->array, j, i, 0);
-            double sx = image_deform_get_shift(&self->array, j, i, 1);
+            real_t sy = image_deform_get_shift(&self->array, j, i, 0);
+            real_t sx = image_deform_get_shift(&self->array, j, i, 1);
             if (!isnan(sy) && !isnan(sx))
                 continue;
             int ii, jj;
-            double shx = 0, shy = 0;
+            real_t shx = 0, shy = 0;
             int cnt = 0;
             for (ii = -1; ii <= 1; ii++)
             for (jj = -1; jj <= 1; jj++)
             {
-                double vy = image_deform_get_array(&self->array, j+jj, i+ii, 0);
-                double vx = image_deform_get_array(&self->array, j+jj, i+ii, 1);
+                real_t vy = image_deform_get_array(&self->array, j+jj, i+ii, 0);
+                real_t vx = image_deform_get_array(&self->array, j+jj, i+ii, 1);
                 if (isnan(vx) || isnan(vy))
                     continue;
                 shx += vx / self->array.sx;
@@ -242,7 +246,7 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
 
             int x = j * self->pixels;
             int y = i * self->pixels;
-            double best_x, best_y;
+            real_t best_x, best_y;
             image_deform_lc_find_local(img, pre_align, ref_img, ref_pre_align,
                                        x, y, &area, &ref_area,
                                        maximal_shift, subpixels,

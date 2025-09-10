@@ -32,9 +32,9 @@ struct ImageDeform
     int image_h;    ///< Image height
     int grid_w;     ///< Grid width
     int grid_h;     ///< Grid height
-    double sx;      ///< Stretch between grid and image
-    double sy;      ///< Stretch between grid and image
-    double *array;  ///< Movement data, grid_h * grid_w * (dy, dx)
+    real_t sx;      ///< Stretch between grid and image
+    real_t sy;      ///< Stretch between grid and image
+    real_t *array;  ///< Movement data, grid_h * grid_w * (dy, dx)
 };
 
 /**
@@ -67,7 +67,7 @@ void image_deform_print(const struct ImageDeform *grid, FILE *out);
  * \param dx dx
  * \param dy dy
  */
-void image_deform_constant_shift(struct ImageDeform *grid, double dx, double dy);
+void image_deform_constant_shift(struct ImageDeform *grid, real_t dx, real_t dy);
 
 /**
  * \brief Set shift at pos (x,y) for axis y (axis=0) or x (axis=1)
@@ -79,7 +79,7 @@ void image_deform_constant_shift(struct ImageDeform *grid, double dx, double dy)
  */
 static inline void image_deform_set_shift(struct ImageDeform *deform,
                                           int x, int y, int axis,
-                                          double val)
+                                          real_t val)
 {
     if (x < 0 || y < 0 || x >= deform->grid_w || x >= deform->grid_w || axis < 0 || axis > 1)
         return;
@@ -89,9 +89,9 @@ static inline void image_deform_set_shift(struct ImageDeform *deform,
 /**
  * \brief Fill image deform by shift data
  */
-static inline void image_deform_set_shifts(struct ImageDeform *deform, const double *data)
+static inline void image_deform_set_shifts(struct ImageDeform *deform, const real_t *data)
 {
-    memcpy(deform->array, data, deform->grid_h*deform->grid_w*2*sizeof(double));
+    memcpy(deform->array, data, deform->grid_h*deform->grid_w*2*sizeof(real_t));
 }
 
 /**
@@ -102,7 +102,7 @@ static inline void image_deform_set_shifts(struct ImageDeform *deform, const dou
  * \param axis axis (0 for 'y' axis, 1 for 'x' axis)
  * \return value
  */
-double image_deform_get_array(const struct ImageDeform *grid,
+real_t image_deform_get_array(const struct ImageDeform *grid,
                               int x, int y, int axis);
 
 /**
@@ -114,8 +114,8 @@ double image_deform_get_array(const struct ImageDeform *grid,
  * @param axis axis. 0 for 'y' axis, 1 for 'x' axis
  * @return shift by specified axis
  */
-double image_deform_get_shift(const struct ImageDeform *deform,
-                              double x, double y, int axis);
+real_t image_deform_get_shift(const struct ImageDeform *deform,
+                              real_t x, real_t y, int axis);
 
 /**
  * \brief Apply image deformation to point
@@ -126,8 +126,8 @@ double image_deform_get_shift(const struct ImageDeform *deform,
  * \param[out] srcy soutce y positionx in image coordinates
  */
 void image_deform_apply_point(const struct ImageDeform *deform,
-                              double x, double y,
-                              double *srcx, double *srcy);
+                              real_t x, real_t y,
+                              real_t *srcx, real_t *srcy);
 
 /**
  * \brief Apply image deformation

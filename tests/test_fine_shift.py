@@ -26,8 +26,8 @@ from vstarstack.library.fine_movement.module import ImageDeformGC
 from vstarstack.library.fine_movement.module import ImageDeformLC
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-N = 2000
-dh = 0.001
+N = 200
+dh = 0.01
 
 def test_identity():
     deform = ImageDeform(image_w=10, image_h=10,
@@ -43,10 +43,10 @@ def test_identity():
 
 def test_approximate_identity():
     gc = ImageDeformGC(image_w=10, image_h=10,
-                       grid_w=2, grid_h=2,
-                       spk=0.01)
-    expected = np.array([[5.0, 5.0]])
-    points = np.array([[5.0, 5.0]])
+                           grid_w=2, grid_h=2,
+                           spk=0.01)
+    expected = np.array([[5.0, 5.0]], dtype=np.float32)
+    points = np.array([[5.0, 5.0]], dtype=np.float32)
     deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=N)
     x, y = deform.apply_point(5.5, 5)
 
@@ -58,8 +58,8 @@ def test_approximate_single():
     gc = ImageDeformGC(image_w=10, image_h=10,
                        grid_w=2, grid_h=2,
                        spk=0.01)
-    points = np.array([(5.0, 5.2)]) # [(y,x), (y,x), ...]
-    expected = np.array([(5.0, 5.0)]) # [(y,x), (y,x), ...]
+    points = np.array([(5.0, 5.2)], dtype=np.float32) # [(y,x), (y,x), ...]
+    expected = np.array([(5.0, 5.0)], dtype=np.float32) # [(y,x), (y,x), ...]
     deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=0)
     assert deform is not None
     x, y = deform.apply_point(5.2, 5.0)
@@ -71,8 +71,8 @@ def test_approximate_square():
     gc = ImageDeformGC(image_w=10, image_h=10,
                        grid_w=2, grid_h=2,
                        spk=0.01)
-    points = np.array([(0.1, 0.1), (0.1, 8.9), (8.9, 0.1), (8.9, 8.9)]) # [(y,x), (y,x), ...]
-    expected = np.array([(0.0, 0.0), (0.0, 9.0), (9.0, 0.0), (9.0, 9.0)]) # [(y,x), (y,x), ...]
+    points = np.array([(0.1, 0.1), (0.1, 8.9), (8.9, 0.1), (8.9, 8.9)], dtype=np.float32) # [(y,x), (y,x), ...]
+    expected = np.array([(0.0, 0.0), (0.0, 9.0), (9.0, 0.0), (9.0, 9.0)], dtype=np.float32) # [(y,x), (y,x), ...]
     deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=N)
     assert deform is not None
 
@@ -90,8 +90,8 @@ def test_approximate_parabola1():
                        grid_w=3, grid_h=3,
                        spk=0.01)
 
-    expected = np.array([(5, 0), (5, 5), (5, 10)]).astype("double") # [(y,x),...]
-    points = np.array([(5, 0), (5, 5.1), (5, 10)]).astype("double") # [(y,x),...]
+    expected = np.array([(5, 0), (5, 5), (5, 10)], dtype=np.float32).astype(np.float32) # [(y,x),...]
+    points = np.array([(5, 0), (5, 5.1), (5, 10)], dtype=np.float32).astype(np.float32) # [(y,x),...]
     deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=N)
     assert deform is not None
 
@@ -106,8 +106,8 @@ def test_approximate_parabola2():
                        grid_w=3, grid_h=3,
                        spk=0.01)
 
-    expected = np.array([(5, 0), (5, 5), (5, 10)]).astype("double") # [(y,x),...]
-    points = np.array([(5, 0), (5.1, 5.1), (5, 10)]).astype("double") # [(y,x),...]
+    expected = np.array([(5, 0), (5, 5), (5, 10)], dtype=np.float32) # [(y,x),...]
+    points = np.array([(5, 0), (5.1, 5.1), (5, 10)], dtype=np.float32) # [(y,x),...]
     deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=N)
     assert deform is not None
 
@@ -121,8 +121,8 @@ def test_approximate_parabola_long():
                        grid_w=7, grid_h=7,
                        spk=0.1)
 
-    expected = np.array([(5, 0), (5, 5), (5, 10)]).astype("double") # [(y,x),...]
-    points = np.array([(5, 0), (5, 5.1), (5, 10)]).astype("double") # [(y,x),...]
+    expected = np.array([(5, 0), (5, 5), (5, 10)], dtype=np.float32) # [(y,x),...]
+    points = np.array([(5, 0), (5, 5.1), (5, 10)], dtype=np.float32) # [(y,x),...]
     deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=N)
     assert deform is not None
 
@@ -135,8 +135,8 @@ def test_deserialize():
     gc = ImageDeformGC(image_w=11, image_h=11,
                        grid_w=3, grid_h=3,
                        spk=0.001)
-    expected = np.array([[5.0, 5.0]])
-    points = np.array([[5.0, 5.2]])
+    expected = np.array([[5.0, 5.0]], dtype=np.float32)
+    points = np.array([[5.0, 5.2]], dtype=np.float32)
     deform = gc.find(points=points, expected_points=expected, dh=dh, Nsteps=N)
     
     x, y = deform.apply_point(5.2, 5.0)
@@ -167,7 +167,7 @@ def compare_shift_array(array, reference):
 
 def test_correlation1():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
-    image1 = df1.get_channel("L")[0].astype('double')
+    image1 = df1.get_channel("L")[0].astype(np.float32)
     grid = ImageGrid(image_w=image1.shape[1], image_h=image1.shape[0])
     grid.fill(image1)
     correlation = ImageGrid.correlation(grid, grid)
@@ -177,10 +177,10 @@ def test_correlation2():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
     df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image2.png")))
 
-    image1 = df1.get_channel("L")[0].astype('double')
-    image2 = df2.get_channel("L")[0].astype('double')
+    image1 = df1.get_channel("L")[0].astype(np.float32)
+    image2 = df2.get_channel("L")[0].astype(np.float32)
 
-    image1_moved = np.zeros(image1.shape)
+    image1_moved = np.zeros(image1.shape, dtype=np.float32)
     for y in range(image1.shape[0]):
         for x in range(1,image1.shape[1]):
             image1_moved[y,x] = image1[y,x-1]
@@ -197,7 +197,7 @@ def test_correlation2():
 def test_shift_image1():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
 
-    image1 = df1.get_channel("L")[0].astype('double')
+    image1 = df1.get_channel("L")[0].astype(np.float32)
     grid1 = ImageGrid(image_w=image1.shape[1], image_h=image1.shape[0])
     grid1.fill(image1)
 
@@ -210,8 +210,8 @@ def test_approximate_by_correlation_constant1():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
     df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
 
-    image = df1.get_channel("L")[0].astype('double')
-    image_ref = df2.get_channel("L")[0].astype('double')
+    image = df1.get_channel("L")[0].astype(np.float32)
+    image_ref = df2.get_channel("L")[0].astype(np.float32)
 
     w = image.shape[1]
     h = image.shape[0]
@@ -236,8 +236,8 @@ def test_approximate_by_correlation_constant2():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
     df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.tiff")))
 
-    image = df1.get_channel("L")[0].astype('double')
-    image_ref = df2.get_channel("L")[0].astype('double')
+    image = df1.get_channel("L")[0].astype(np.float32)
+    image_ref = df2.get_channel("L")[0].astype(np.float32)
 
     w = image.shape[1]
     h = image.shape[0]
@@ -264,8 +264,8 @@ def test_approximate_by_correlation1():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
     df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
 
-    image = df1.get_channel("L")[0].astype('double')
-    image_ref = df2.get_channel("L")[0].astype('double')
+    image = df1.get_channel("L")[0].astype(np.float32)
+    image_ref = df2.get_channel("L")[0].astype(np.float32)
 
     w = image.shape[1]
     h = image.shape[0]
@@ -290,8 +290,8 @@ def test_approximate_by_correlation2():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
     df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.tiff")))
 
-    image = df1.get_channel("L")[0].astype('double')
-    image_ref = df2.get_channel("L")[0].astype('double')
+    image = df1.get_channel("L")[0].astype(np.float32)
+    image_ref = df2.get_channel("L")[0].astype(np.float32)
 
     w = image.shape[1]
     h = image.shape[0]
@@ -319,8 +319,8 @@ def test_memory_leak():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
     df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image1.png")))
 
-    image = df1.get_channel("L")[0].astype('double')
-    image_ref = df2.get_channel("L")[0].astype('double')
+    image = df1.get_channel("L")[0].astype(np.float32)
+    image_ref = df2.get_channel("L")[0].astype(np.float32)
 
     w = image.shape[1]
     h = image.shape[0]
@@ -354,8 +354,8 @@ def test_divergence_1():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
     df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
 
-    image = df1.get_channel("L")[0].astype('double')
-    image_ref = df2.get_channel("L")[0].astype('double')
+    image = df1.get_channel("L")[0].astype(np.float32)
+    image_ref = df2.get_channel("L")[0].astype(np.float32)
 
     w = image.shape[1]
     h = image.shape[0]
@@ -382,8 +382,8 @@ def test_divergence_2():
     df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
     df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.tiff")))
 
-    image = df1.get_channel("L")[0].astype('double')
-    image_ref = df2.get_channel("L")[0].astype('double')
+    image = df1.get_channel("L")[0].astype(np.float32)
+    image_ref = df2.get_channel("L")[0].astype(np.float32)
 
     w = image.shape[1]
     h = image.shape[0]

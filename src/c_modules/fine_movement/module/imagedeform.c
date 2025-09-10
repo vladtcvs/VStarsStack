@@ -68,9 +68,9 @@ static PyObject *ImageDeform_fill(PyObject *_self,
         Py_INCREF(Py_None);
         return Py_None;
     }
-    if (PyArray_TYPE(shift_array) != NPY_DOUBLE)
+    if (PyArray_TYPE(shift_array) != NPY_FLOAT)
     {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == float");
         Py_INCREF(Py_None);
         return Py_None;
     }
@@ -98,16 +98,16 @@ static PyObject *ImageDeform_content(PyObject *_self,
 {
     struct ImageDeformObject *self = (struct ImageDeformObject *)_self;
     npy_intp dims[3] = {self->deform.grid_h, self->deform.grid_w, 2};
-    PyArrayObject *shift_array = (PyArrayObject *)PyArray_ZEROS(3, dims, NPY_DOUBLE, 0);
+    PyArrayObject *shift_array = (PyArrayObject *)PyArray_ZEROS(3, dims, NPY_FLOAT, 0);
     if (shift_array == NULL)
     {
         Py_INCREF(Py_None);
         return Py_None;
     }
-    double *data = PyArray_DATA(shift_array);
+    float *data = PyArray_DATA(shift_array);
     int h = self->deform.grid_h;
     int w = self->deform.grid_w;
-    memcpy(data, self->deform.array, h*w*2*sizeof(double));
+    memcpy(data, self->deform.array, h*w*2*sizeof(float));
     return (PyObject *)shift_array;
 }
 
@@ -172,16 +172,16 @@ static PyObject *ImageDeform_apply_point(PyObject *_self,
 {
     struct ImageDeformObject *self = (struct ImageDeformObject *)_self;
     static char *kwlist[] = {"x", "y", NULL};
-    double x, y;
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "dd", kwlist, &x, &y))
+    float x, y;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "ff", kwlist, &x, &y))
     {
         PyErr_SetString(PyExc_ValueError, "invalid function arguments");
         Py_INCREF(Py_None);
         return Py_None;
     }
-    double sx, sy;
+    float sx, sy;
     image_deform_apply_point(&self->deform, x, y, &sx, &sy);
-    PyObject *res = Py_BuildValue("dd", sx, sy);
+    PyObject *res = Py_BuildValue("ff", sx, sy);
     return res;
 }
 

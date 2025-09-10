@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "real.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,7 +29,7 @@ extern "C" {
  * \param x x position
  * \return interpolated value
  */
-double interpolation_1d_cubic(double fm1, double f0, double f1, double f2, double x);
+real_t interpolation_1d_cubic(real_t fm1, real_t f0, real_t f1, real_t f2, real_t x);
 
 /**
  * \brief 2-Dim cubic interpolation for x and y in range [0..1]
@@ -35,11 +37,11 @@ double interpolation_1d_cubic(double fm1, double f0, double f1, double f2, doubl
  * \param y y position
  * \return interpolated value
  */
-double interpolation_2d_cubic(double fm1m1, double f0m1, double f1m1, double f2m1,
-                              double fm10,  double f00,  double f10,  double f20,
-                              double fm11,  double f01,  double f11,  double f21,
-                              double fm12,  double f02,  double f12,  double f22,
-                              double x, double y);
+real_t interpolation_2d_cubic(real_t fm1m1, real_t f0m1, real_t f1m1, real_t f2m1,
+                              real_t fm10,  real_t f00,  real_t f10,  real_t f20,
+                              real_t fm11,  real_t f01,  real_t f11,  real_t f21,
+                              real_t fm12,  real_t f02,  real_t f12,  real_t f22,
+                              real_t x, real_t y);
 
 /**
  * \brief 1-Dim linear interpolation for x in range [0..1]
@@ -48,7 +50,7 @@ double interpolation_2d_cubic(double fm1m1, double f0m1, double f1m1, double f2m
  * \param x x position
  * \return interpolated value
  */
-double interpolation_1d_linear(double f0, double f1, double x);
+real_t interpolation_1d_linear(real_t f0, real_t f1, real_t x);
 
 /**
  * \brief 2-Dim linear interpolation for x and y in range [0..1]
@@ -56,9 +58,9 @@ double interpolation_1d_linear(double f0, double f1, double x);
  * \param y y position
  * \return interpolated value
  */
-double interpolation_2d_linear(double f00,  double f10,
-                               double f01,  double f11,
-                               double x, double y);
+real_t interpolation_2d_linear(real_t f00,  real_t f10,
+                               real_t f01,  real_t f11,
+                               real_t x, real_t y);
 
 #ifdef __cplusplus
 }

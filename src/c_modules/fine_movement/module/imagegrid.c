@@ -70,9 +70,9 @@ static PyObject *ImageGrid_fill(PyObject *_self,
         Py_INCREF(Py_None);
         return Py_None;
     }
-    if (PyArray_TYPE(image) != NPY_DOUBLE)
+    if (PyArray_TYPE(image) != NPY_FLOAT)
     {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == float");
         Py_INCREF(Py_None);
         return Py_None;
     }
@@ -132,7 +132,7 @@ static PyObject *ImageGrid_correlation(PyObject *self,
         return Py_None;
     }
 
-    double correlation = image_grid_correlation(&img1->grid, &img2->grid);
+    float correlation = image_grid_correlation(&img1->grid, &img2->grid);
     return PyFloat_FromDouble(correlation);
 }
 
@@ -142,9 +142,9 @@ static PyObject *ImageGrid_content(PyObject *_self,
 {
     struct ImageGridObject *self = (struct ImageGridObject *)_self;
     npy_intp dims[2] = {self->grid.h, self->grid.w};
-    PyArrayObject *image = (PyArrayObject *)PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
-    double *data = PyArray_DATA(image);
-    memcpy(data, self->grid.array, self->grid.h*self->grid.w*sizeof(double));
+    PyArrayObject *image = (PyArrayObject *)PyArray_ZEROS(2, dims, NPY_FLOAT, 0);
+    float *data = PyArray_DATA(image);
+    memcpy(data, self->grid.array, self->grid.h*self->grid.w*sizeof(float));
     return (PyObject *)image;
 }
 
