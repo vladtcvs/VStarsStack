@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Vladislav Tsendrovskii
+ * Copyright (c) 2023-2025 Vladislav Tsendrovskii
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,6 +15,9 @@
 #pragma once
 
 #include <string.h>
+#include <stdint.h>
+
+#include "real.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,7 +40,7 @@ struct ImageGrid
      * @brief image data
      * Pixelds data, ordered line by line. Each line has length = image width. 
      */
-    double *array;
+    real_t *array;
 };
 
 /**
@@ -65,7 +68,7 @@ void image_grid_finalize(struct ImageGrid *image);
  * \param val pixel value
  */
 static inline void image_grid_set_pixel(struct ImageGrid *image,
-                                        int x, int y, double val)
+                                        int x, int y, real_t val)
 {
     if (x < 0 || y < 0 || x >= image->w || y >= image->h)
         return;
@@ -75,9 +78,9 @@ static inline void image_grid_set_pixel(struct ImageGrid *image,
 /**
  * \brief Fill image grid by pixel data
  */
-static inline void image_grid_fill_pixels(struct ImageGrid *image, const double *data)
+static inline void image_grid_fill_pixels(struct ImageGrid *image, const real_t *data)
 {
-    memcpy(image->array, data, image->h*image->w*sizeof(double));
+    memcpy(image->array, data, image->h*image->w*sizeof(real_t));
 }
 
 /**
@@ -87,8 +90,8 @@ static inline void image_grid_fill_pixels(struct ImageGrid *image, const double 
  * \param y y
  * \return pixel value
  */
-double image_grid_get_pixel(const struct ImageGrid *image,
-                            double x, double y);
+real_t image_grid_get_pixel(const struct ImageGrid *image,
+                           real_t x, real_t y);
 
 /**
  * \brief Global correlation between 2 images
@@ -96,7 +99,7 @@ double image_grid_get_pixel(const struct ImageGrid *image,
  * \param image2 second image
  * \return correlator
  */
-double image_grid_correlation(const struct ImageGrid *image1,
+real_t image_grid_correlation(const struct ImageGrid *image1,
                               const struct ImageGrid *image2);
 
 /**
@@ -107,7 +110,7 @@ double image_grid_correlation(const struct ImageGrid *image1,
  * \param area allocated ImageGrid for area content with specified w and h
  */
 void image_grid_get_area(const struct ImageGrid *img,
-                         double x, double y,
+                         real_t x, real_t y,
                          struct ImageGrid *area);
 
 #ifdef __cplusplus

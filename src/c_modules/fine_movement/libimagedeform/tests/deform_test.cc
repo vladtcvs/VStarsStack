@@ -34,7 +34,7 @@ TEST(imagedeform, test_identity_integer)
     struct ImageDeform deform;
     int res = image_deform_init(&deform, 2, 2, 10, 10);
     ASSERT_EQ(res, 0);
-    double x, y;
+    real_t x, y;
     
     image_deform_apply_point(&deform, 0, 0, &x, &y);
     EXPECT_EQ(x, 0);
@@ -60,11 +60,11 @@ TEST(imagedeform, test_identity_float)
     struct ImageDeform deform;
     int res = image_deform_init(&deform, 2, 2, 10, 10);
     ASSERT_EQ(res, 0);
-    double x, y;
+    real_t x, y;
 
-    image_deform_apply_point(&deform, 4.5, 3.2, &x, &y);
-    EXPECT_EQ(x, 4.5);
-    EXPECT_EQ(y, 3.2);
+    image_deform_apply_point(&deform, 4.5f, 3.2f, &x, &y);
+    EXPECT_EQ(x, 4.5f);
+    EXPECT_EQ(y, 3.2f);
 
     image_deform_finalize(&deform);
 }

@@ -54,12 +54,12 @@ static PyObject* ImageDeformLC_correlate(PyObject *_self, PyObject *args, PyObje
 
     int subpixels;
     int radius;
-    double maximal_shift;
+    float maximal_shift;
     PyObject *img, *ref_img;
     PyObject *pre_align, *ref_pre_align;
     static char *kwlist[] = {"img", "pre_align", "ref_img", "ref_pre_align",
                              "radius", "maximal_shift", "subpixels", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOidi", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOifi", kwlist,
                                      &img, &pre_align, &ref_img, &ref_pre_align,
                                      &radius, &maximal_shift, &subpixels))
     {
@@ -123,12 +123,12 @@ static PyObject* ImageDeformLC_correlate_constant(PyObject *_self, PyObject *arg
             (struct ImageDeformLocalCorrelatorObject *)_self;
 
     int subpixels;
-    double maximal_shift;
+    float maximal_shift;
     PyObject *img, *ref_img;
     PyObject *pre_align, *ref_pre_align;
     static char *kwlist[] = {"img", "pre_align", "ref_img", "ref_pre_align",
                              "maximal_shift", "subpixels", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOdi", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOfi", kwlist,
                                      &img, &pre_align, &ref_img, &ref_pre_align,
                                      &maximal_shift, &subpixels))
     {

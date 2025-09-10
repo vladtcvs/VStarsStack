@@ -58,7 +58,7 @@ void image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
                                    const struct ImageDeform *pre_align,
                                    const struct ImageGrid *ref_img,
                                    const struct ImageDeform *ref_pre_align,
-                                   double maximal_shift,
+                                   real_t maximal_shift,
                                    int subpixels);
 
 /**
@@ -70,7 +70,7 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
                           const struct ImageGrid *ref_img,
                           const struct ImageDeform *ref_pre_align,
                           int radius,
-                          double maximal_shift,
+                          real_t maximal_shift,
                           int subpixels);
 
 #ifdef __cplusplus

@@ -25,13 +25,13 @@
 
 static int ImageDeformGC_init(PyObject *_self, PyObject *args, PyObject *kwds)
 {
-    double spk;
+    float spk;
     int image_w, image_h;
     int grid_w, grid_h;
     struct ImageDeformGlobalCorrelatorObject *self =
             (struct ImageDeformGlobalCorrelatorObject *)_self;
     static char *kwlist[] = {"image_w", "image_h", "grid_w", "grid_h", "spk", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiiid", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iiiif", kwlist,
                                      &image_w, &image_h, &grid_w, &grid_h, &spk))
         return -1;
 
@@ -48,7 +48,7 @@ static void ImageDeformGC_dealloc(PyObject *_self)
 
 static PyObject* ImageDeformGC_correlate(PyObject *_self, PyObject *args, PyObject *kwds)
 {
-    double dh;
+    float dh;
     int Nsteps;
     PyArrayObject *points;
     PyArrayObject *expected_points;
@@ -56,25 +56,25 @@ static PyObject* ImageDeformGC_correlate(PyObject *_self, PyObject *args, PyObje
     struct ImageDeformGlobalCorrelatorObject *self =
             (struct ImageDeformGlobalCorrelatorObject *)_self;
     static char *kwlist[] = {"points", "expected_points", "dh", "Nsteps", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOdi", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOfi", kwlist,
                                      &points, &expected_points, &dh, &Nsteps))
     {
         Py_INCREF(Py_None);
         return Py_None;
     }
 
-    const double *_points, *_expected_points;
+    const float *_points, *_expected_points;
     int npoints;
 
-    if (PyArray_TYPE(points) != NPY_DOUBLE)
+    if (PyArray_TYPE(points) != NPY_FLOAT)
     {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == float");
         Py_INCREF(Py_None);
         return Py_None;
     }
-    if (PyArray_TYPE(expected_points) != NPY_DOUBLE)
+    if (PyArray_TYPE(expected_points) != NPY_FLOAT)
     {
-        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == double");
+        PyErr_SetString(PyExc_ValueError, "invalid function arguments - should be dtype == float");
         Py_INCREF(Py_None);
         return Py_None;
     }

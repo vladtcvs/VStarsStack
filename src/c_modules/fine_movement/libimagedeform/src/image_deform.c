@@ -25,9 +25,9 @@ int image_deform_init(struct ImageDeform *deform,
     deform->grid_h = grid_h;
     deform->image_w = image_w;
     deform->image_h = image_h;
-    deform->sx = (double)(grid_w-1) / (image_w - 1);
-    deform->sy = (double)(grid_h-1) / (image_h - 1);
-    deform->array = calloc(deform->grid_w * deform->grid_h * 2, sizeof(double));
+    deform->sx = (real_t)(grid_w-1) / (image_w - 1);
+    deform->sy = (real_t)(grid_h-1) / (image_h - 1);
+    deform->array = calloc(deform->grid_w * deform->grid_h * 2, sizeof(real_t));
     if (deform->array == NULL)
         return -1;
     return 0;
@@ -42,7 +42,7 @@ void image_deform_finalize(struct ImageDeform *deform)
     }
 }
 
-void image_deform_constant_shift(struct ImageDeform *deform, double dx, double dy)
+void image_deform_constant_shift(struct ImageDeform *deform, real_t dx, real_t dy)
 {
     int xi, yi;
     for (yi = 0; yi < deform->grid_h; yi++)
@@ -63,7 +63,7 @@ void image_deform_constant_shift(struct ImageDeform *deform, double dx, double d
  * \param axis axis (0 for 'y' axis, 1 for 'x' axis)
  * \return value
  */
-double image_deform_get_array(const struct ImageDeform *grid,
+real_t image_deform_get_array(const struct ImageDeform *grid,
                               int x, int y, int axis)
 {
     if (x >= grid->grid_w)
@@ -95,39 +95,39 @@ void image_deform_print(const struct ImageDeform *deform, FILE *out)
     }
 }
 
-double image_deform_get_shift(const struct ImageDeform *deform,
-                              double x, double y, int axis)
+real_t image_deform_get_shift(const struct ImageDeform *deform,
+                              real_t x, real_t y, int axis)
 {
     int xi = floor(x);
     int yi = floor(y);
 
-    double dx = x - xi;
-    double dy = y - yi;
+    real_t dx = x - xi;
+    real_t dy = y - yi;
     if (dx < 1e-3 && dy < 1e-3)
     {
         return image_deform_get_array(deform, xi, yi, axis);
     }
     else
     {
-        double x_m1m1 = image_deform_get_array(deform, xi-1, yi-1, axis);
-        double x_m10  = image_deform_get_array(deform, xi-1, yi, axis);
-        double x_m11  = image_deform_get_array(deform, xi-1, yi+1, axis);
-        double x_m12  = image_deform_get_array(deform, xi-1, yi+2, axis);
+        real_t x_m1m1 = image_deform_get_array(deform, xi-1, yi-1, axis);
+        real_t x_m10  = image_deform_get_array(deform, xi-1, yi, axis);
+        real_t x_m11  = image_deform_get_array(deform, xi-1, yi+1, axis);
+        real_t x_m12  = image_deform_get_array(deform, xi-1, yi+2, axis);
 
-        double x_0m1 = image_deform_get_array(deform, xi, yi-1, axis);
-        double x_00  = image_deform_get_array(deform, xi, yi, axis);
-        double x_01  = image_deform_get_array(deform, xi, yi+1, axis);
-        double x_02  = image_deform_get_array(deform, xi, yi+2, axis);
+        real_t x_0m1 = image_deform_get_array(deform, xi, yi-1, axis);
+        real_t x_00  = image_deform_get_array(deform, xi, yi, axis);
+        real_t x_01  = image_deform_get_array(deform, xi, yi+1, axis);
+        real_t x_02  = image_deform_get_array(deform, xi, yi+2, axis);
 
-        double x_1m1 = image_deform_get_array(deform, xi+1, yi-1, axis);
-        double x_10  = image_deform_get_array(deform, xi+1, yi, axis);
-        double x_11  = image_deform_get_array(deform, xi+1, yi+1, axis);
-        double x_12  = image_deform_get_array(deform, xi+1, yi+2, axis);
+        real_t x_1m1 = image_deform_get_array(deform, xi+1, yi-1, axis);
+        real_t x_10  = image_deform_get_array(deform, xi+1, yi, axis);
+        real_t x_11  = image_deform_get_array(deform, xi+1, yi+1, axis);
+        real_t x_12  = image_deform_get_array(deform, xi+1, yi+2, axis);
 
-        double x_2m1 = image_deform_get_array(deform, xi+2, yi-1, axis);
-        double x_20  = image_deform_get_array(deform, xi+2, yi, axis);
-        double x_21  = image_deform_get_array(deform, xi+2, yi+1, axis);
-        double x_22  = image_deform_get_array(deform, xi+2, yi+2, axis);
+        real_t x_2m1 = image_deform_get_array(deform, xi+2, yi-1, axis);
+        real_t x_20  = image_deform_get_array(deform, xi+2, yi, axis);
+        real_t x_21  = image_deform_get_array(deform, xi+2, yi+1, axis);
+        real_t x_22  = image_deform_get_array(deform, xi+2, yi+2, axis);
 
         return interpolation_2d_cubic(x_m1m1, x_0m1, x_1m1, x_2m1,
                                       x_m10,  x_00,  x_10,  x_20,
@@ -138,11 +138,11 @@ double image_deform_get_shift(const struct ImageDeform *deform,
 }
 
 void image_deform_apply_point(const struct ImageDeform *deform,
-                              double x, double y,
-                              double *srcx, double *srcy)
+                              real_t x, real_t y,
+                              real_t *srcx, real_t *srcy)
 {
-    double shift_y = image_deform_get_shift(deform, x*deform->sx, y*deform->sy, 0);
-    double shift_x = image_deform_get_shift(deform, x*deform->sx, y*deform->sy, 1);
+    real_t shift_y = image_deform_get_shift(deform, x*deform->sx, y*deform->sy, 0);
+    real_t shift_x = image_deform_get_shift(deform, x*deform->sx, y*deform->sy, 1);
     if (isnan(shift_x) || isnan(shift_y))
     {
         *srcx = NAN;
@@ -160,15 +160,15 @@ void image_deform_apply_image(const struct ImageDeform *deform,
                               struct ImageGrid *output_image)
 {
     int y, x;
-    double kx = (double)input_image->w / output_image->w;
-    double ky = (double)input_image->h / output_image->h;
+    real_t kx = (real_t)input_image->w / output_image->w;
+    real_t ky = (real_t)input_image->h / output_image->h;
     for (y = 0; y < output_image->h; y++)
         for (x = 0; x < output_image->w; x++)
         {
-            double orig_y, orig_x;
+            real_t orig_y, orig_x;
             image_deform_apply_point(deform, x*kx, y*ky, &orig_x, &orig_y);
 
-            double val = image_grid_get_pixel(input_image, orig_x, orig_y);
+            real_t val = image_grid_get_pixel(input_image, orig_x, orig_y);
             image_grid_set_pixel(output_image, x, y, val);
         }
 }
@@ -177,12 +177,12 @@ void image_deform_calculate_divergence(const struct ImageDeform *deform,
                                        struct ImageGrid *divergence)
 {
     int y, x;
-    double kx = (double)deform->image_w / divergence->w;
-    double ky = (double)deform->image_h / divergence->h;
+    real_t kx = (real_t)deform->image_w / divergence->w;
+    real_t ky = (real_t)deform->image_h / divergence->h;
     // Calculate density from original coordinates
     for (y = 0; y < divergence->h; y++)
     {
-        double dy1, dy2;
+        real_t dy1, dy2;
         if (y == 0)
         {
             dy1 = 0;
@@ -201,7 +201,7 @@ void image_deform_calculate_divergence(const struct ImageDeform *deform,
 
         for (x = 0; x < divergence->w; x++)
         {
-            double dx1, dx2;
+            real_t dx1, dx2;
             if (x == 0)
             {
                 dx1 = 0;
@@ -218,15 +218,15 @@ void image_deform_calculate_divergence(const struct ImageDeform *deform,
                 dx2 = 1;
             }
 
-            double vx1 = image_deform_get_shift(deform, (x+dx1)*kx*deform->sx, y*ky*deform->sy, 1);
-            double vx2 = image_deform_get_shift(deform, (x+dx2)*kx*deform->sx, y*ky*deform->sy, 1);
-            double ddx = (vx2 - vx1) / (dx2-dx1);
+            real_t vx1 = image_deform_get_shift(deform, (x+dx1)*kx*deform->sx, y*ky*deform->sy, 1);
+            real_t vx2 = image_deform_get_shift(deform, (x+dx2)*kx*deform->sx, y*ky*deform->sy, 1);
+            real_t ddx = (vx2 - vx1) / (dx2-dx1);
 
-            double vy1 = image_deform_get_shift(deform, x*kx*deform->sx, (y+dy1)*ky*deform->sy, 0);
-            double vy2 = image_deform_get_shift(deform, x*kx*deform->sx, (y+dy2)*ky*deform->sy, 0);
-            double ddy = (vy2 - vy1) / (dy2-dy1);
+            real_t vy1 = image_deform_get_shift(deform, x*kx*deform->sx, (y+dy1)*ky*deform->sy, 0);
+            real_t vy2 = image_deform_get_shift(deform, x*kx*deform->sx, (y+dy2)*ky*deform->sy, 0);
+            real_t ddy = (vy2 - vy1) / (dy2-dy1);
 
-            double div = ddx + ddy;
+            real_t div = ddx + ddy;
 
             image_grid_set_pixel(divergence, x, y, div);
         }

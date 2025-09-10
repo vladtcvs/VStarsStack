@@ -49,6 +49,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
                name_ref : str,
                input_image_f : str,
                light_ref : np.ndarray,
+               mask_ref : np.ndarray,
                align_f : str,
                pre_align_f : str | None,
                pre_align_ref : Aligner | None):
@@ -73,8 +74,9 @@ def align_file(project : vstarstack.tool.cfg.Project,
                                      pixels,
                                      2)
 
-    light,_ = vstarstack.library.image_process.togray.df_to_gray(df)
-    light = light.astype(np.float64)
+    light, weight = vstarstack.library.image_process.togray.df_to_gray(df)
+    light = np.clip(light, 0, None).astype(np.float32)
+    mask = (weight > 0).astype(np.uint8)
 
     if pre_align_f is None or not os.path.isfile(pre_align_f):
         pre_align = None
@@ -83,7 +85,7 @@ def align_file(project : vstarstack.tool.cfg.Project,
             pre_align = Aligner.deserialize(json.load(f))
 
     # find alignment
-    alignment = aligner_factory.find_alignment(light, light_ref,
+    alignment = aligner_factory.find_alignment(light, mask, light_ref, mask_ref,
                                                pre_align, pre_align_ref,
                                                3)
     logger.warning(f"{name} - align to {name_ref} found")
@@ -113,8 +115,10 @@ def align(project: vstarstack.tool.cfg.Project, argv: list):
     input_image0 = vstarstack.library.data.DataFrame.load(input_image0_f)
     if input_image0 is None:
         raise Exception("No REFERENCE!")
-    light0,_ = vstarstack.library.image_process.togray.df_to_gray(input_image0)
-    light0 = light0.astype(np.float64)
+    light0,weight0 = vstarstack.library.image_process.togray.df_to_gray(input_image0)
+    light0 = np.clip(light0, 0, None).astype(np.float32)
+    mask0 = (weight0 > 0).astype(np.uint8)
+
     if vstarstack.tool.cfg.DEBUG:
         import matplotlib.pyplot as plt
         plt.imshow(light0)
@@ -133,6 +137,7 @@ def align(project: vstarstack.tool.cfg.Project, argv: list):
                  name0,
                  input_image_f,
                  light0,
+                 mask0,
                  os.path.join(aligns, name + ".json"),
                  os.path.join(pre_aligns, name + ".json") if pre_aligns is not None else None,
                  pre_align0)

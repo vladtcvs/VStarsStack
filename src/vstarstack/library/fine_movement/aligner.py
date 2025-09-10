@@ -60,7 +60,7 @@ class Aligner:
             w = image.shape[1]
             h = image.shape[0]
             grid = ImageGrid(w, h)
-            grid.fill(image.astype('double'))
+            grid.fill(image.astype(np.float32))
             fixed_grid = self.deform.apply_image(image=grid, subpixels=subpixels)
             fixed = fixed_grid.content()
             fixed[np.where(np.isnan(fixed))] = 0
@@ -166,20 +166,31 @@ class CorrelationAlignedBuilder:
         self.subpixels = subpixels
 
     def find_alignment(self, image : np.ndarray,
+                       mask : np.ndarray,
                        image_ref : np.ndarray,
+                       mask_ref : np.ndarray,
                        pre_align : Aligner | None,
                        pre_align_ref : Aligner | None,
                        smooth : int | None) -> Aligner:
         """Build alignment descriptor of image using correlations"""
         if image.shape != image_ref.shape:
             return None
+        if mask.shape != image_ref.shape:
+            return None
+        if mask_ref.shape != image_ref.shape:
+            return None
         w = image.shape[1]
         h = image.shape[0]
 
         grid = ImageGrid(w, h)
         grid.fill(image)
+        #mask_grid = ImageGrid(w, h)
+        #mask_grid.fill(mask)
+
         grid_ref = ImageGrid(w, h)
         grid_ref.fill(image_ref)
+        #mask_grid_ref = ImageGrid(w, h)
+        #mask_grid_ref.fill(mask_ref)
 
         deform_img = pre_align.deform if pre_align is not None else None
         deform_ref = pre_align_ref.deform if pre_align_ref is not None else None

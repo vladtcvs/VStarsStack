@@ -34,7 +34,7 @@ struct ImageDeformGlobalCorrelator
     int image_h;                ///< Image height
     int grid_w;                 ///< Grid width
     int grid_h;                 ///< Grid height
-    double stretch_penalty_k;   ///< Penalty for image stretching
+    real_t stretch_penalty_k;   ///< Penalty for image stretching
 };
 
 /**
@@ -50,7 +50,7 @@ struct ImageDeformGlobalCorrelator
 int  image_deform_gc_init(struct ImageDeformGlobalCorrelator *self,
                           int grid_w, int grid_h,
                           int image_w, int image_h,
-                          double spk);
+                          real_t spk);
 
 /**
  * \brief Deallocate content of ImageDeformGlobalCorrelation
@@ -68,9 +68,9 @@ void image_deform_gc_finalize(struct ImageDeformGlobalCorrelator *self);
  * \param N num of points
  * \return ImageDeform structure
  */
-struct ImageDeform* image_deform_gc_find(struct ImageDeformGlobalCorrelator *self, double dh, size_t Nsteps,
-                                         const double *points,
-                                         const double *expected_after_shift,
+struct ImageDeform* image_deform_gc_find(struct ImageDeformGlobalCorrelator *self, real_t dh, size_t Nsteps,
+                                         const real_t *points,
+                                         const real_t *expected_after_shift,
                                          size_t N);
 
 #ifdef __cplusplus
