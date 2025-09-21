@@ -119,8 +119,8 @@ def approximate_flat(image : np.ndarray) -> np.ndarray:
     c = c / np.amax(c)
     fft = fft * c
     fft = np.fft.ifftshift(fft)
-    flat = np.fft.ifft2(fft)
-    flat = flat / np.amax(flat)
+    flat = abs(np.fft.ifft2(fft))
+    flat = (flat / np.amax(flat)).astype(np.float32)
     return flat
 
 def detect_spots(image : np.ndarray, approximated : np.ndarray) -> np.ndarray:
