@@ -56,6 +56,12 @@ float find_correlation_for_area(unsigned int image_h, unsigned int image_w,
                                 unsigned int shift_grid_h, unsigned int shift_grid_w,
                                 int shift_grid_row, int shift_grid_col,
 
+                                __global const float *pre_align,
+                                int has_pre_align,
+
+                                __global const float *ref_pre_align,
+                                int has_ref_pre_align,
+
                                 float shift_y, float shift_x,
                                 int correlation_r)
 {
@@ -86,6 +92,7 @@ float find_correlation_for_area(unsigned int image_h, unsigned int image_w,
             continue;
         average += pixel;
         ref_average += ref_pixel;
+        nump++;
     }
     if (nump == 0)
         return NAN;
@@ -93,7 +100,7 @@ float find_correlation_for_area(unsigned int image_h, unsigned int image_w,
     average /= nump;
     ref_average /= nump;
 
-    float top = 0, bottom1 = 0, bottom2 = 0;
+    float top = 0, top1 = 0, top2 = 0, bottom1 = 0, bottom2 = 0;
 
     for (yi = -correlation_r; yi <= correlation_r; yi++)
     for (xi = -correlation_r; xi <= correlation_r; xi++)
@@ -111,56 +118,68 @@ float find_correlation_for_area(unsigned int image_h, unsigned int image_w,
             continue;
 
         top += (pixel - average)*(ref_pixel - ref_average);
+        top1 += (pixel - average);
+        top2 += (ref_pixel - ref_average);
         bottom1 += (pixel - average)*(pixel - average);
         bottom2 += (ref_pixel - ref_average)*(ref_pixel - ref_average);
     }
 
-    if (bottom1 == 0 || bottom2 == 0)
-    {
-        if (bottom1 == 0 && bottom2 == 0)
-            return 1;
-        return 0;
+    float corr = NAN;
+    if (bottom1 < 1e-6f || bottom2 < 1e-6f) {
+        if (bottom1 < 1e-6f && bottom2 < 1e-6f)
+            corr = 1;
+        else if (bottom1 < 1e-6f)
+            corr = 0;
+        else if (bottom2 < 1e-6f)
+            corr = 0;
+    } else {
+        corr = top / sqrt(bottom1 * bottom2);
     }
-    float corr = top / sqrt(bottom1 * bottom2);
+
     if (corr > 1-1e-6f)
         return 1;
     if (corr < -1+1e-6f)
         return -1;
     return corr;
-} 
+}
 
 // image            - float [image_h * image_w]
 // ref_image        - float [image_h * image_w]
+//
+// pre_align        - float [shift_grid_h * shift_grid_w * 2]
+// ref_pre_align    - float [shift_grid_h * shift_grid_w * 2]
 //
 // correlation      - float [shift_grid_h * shift_grid_w * (2*maximal_shift*division+1) * (2*maximal_shift*division+1)]
 __kernel void image_deform_lc_grid( unsigned int image_h, unsigned int image_w,
                                     __global const float *image,
                                     __global const float *ref_image,
 
-                                    float constant_shift_y, float constant_shift_x,
-
                                     unsigned int shift_grid_h, unsigned int shift_grid_w,
+
+                                    __global const float *pre_align,
+                                    int has_pre_align,
+
+                                    __global const float *ref_pre_align,
+                                    int has_ref_pre_align,
+
                                     __global float *correlation,
 
-                                    int maximal_shift,
-                                    int division,
+                                    unsigned int maximal_shift,
+                                    unsigned int division,
                                     unsigned int correlation_r)
 {
-    int shift_grid_row = get_global_id(0);
-    int shift_grid_col = get_global_id(1);
+    int index = get_global_id(0);
 
     // varies  -maximal_shift*division .. maximal_shift*division
-    int correlation_shift_y = get_global_id(2) - maximal_shift*division; 
-    int correlation_shift_x = get_global_id(3) - maximal_shift*division;
+    int correlation_shift_x = index % (2*maximal_shift*division+1) - maximal_shift*division;
+    int correlation_shift_y = (index / (2*maximal_shift*division+1)) % (2*maximal_shift*division+1) - maximal_shift*division;
 
-    int index = correlation_shift_x +
-                (2*maximal_shift*division+1) * correlation_shift_y +
-                (2*maximal_shift*division+1) * (2*maximal_shift*division+1) * shift_grid_col +
-                (2*maximal_shift*division+1) * (2*maximal_shift*division+1) * shift_grid_w * shift_grid_row;
-
+    int shift_grid_col = (index / (2*maximal_shift*division+1) / (2*maximal_shift*division+1)) % shift_grid_w;
+    int shift_grid_row = (index / (2*maximal_shift*division+1) / (2*maximal_shift*division+1) / shift_grid_w);
+    
     // varies -maximal_shift .. maximal_shift with step 1.0/division
-    float shift_y = correlation_shift_y / division;
-    float shift_x = correlation_shift_x / division;
+    float shift_y = (float)correlation_shift_y / division;
+    float shift_x = (float)correlation_shift_x / division;
 
     correlation[index] = find_correlation_for_area(image_h, image_w,
                                                    image, ref_image,
@@ -168,7 +187,10 @@ __kernel void image_deform_lc_grid( unsigned int image_h, unsigned int image_w,
                                                    shift_grid_h, shift_grid_w,
                                                    shift_grid_row, shift_grid_col,
 
-                                                   shift_y + constant_shift_y, shift_x + constant_shift_x,
+                                                   pre_align, has_pre_align,
+                                                   ref_pre_align, has_ref_pre_align,
+
+                                                   shift_y, shift_x,
 
                                                    correlation_r);
 }
@@ -255,10 +277,10 @@ __kernel void image_deform_lc_constant(unsigned int image_h, unsigned int image_
                                        int maximal_shift,
                                        int division)
 {
-    int shift_y_id = get_global_id(0);
-    int shift_x_id = get_global_id(1);
+    int index = get_global_id(0);
 
-    int index = (2*maximal_shift*division + 1)*shift_y_id + shift_x_id;
+    int shift_y_id = index / (2*maximal_shift*division + 1);
+    int shift_x_id = index % (2*maximal_shift*division + 1);
 
     float shift_y = (float)(shift_y_id - maximal_shift*division) / division;
     float shift_x = (float)(shift_x_id - maximal_shift*division) / division;

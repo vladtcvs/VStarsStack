@@ -105,8 +105,9 @@ static int image_deform_lc_find_constant_ocl(struct ImageDeformLocalCorrelator *
         return -1;
     }
 
-    size_t dims[2] = {2*maximal_shift*subpixels + 1, 2*maximal_shift*subpixels + 1};
-    err = clEnqueueNDRangeKernel(self->commands, self->kernel_constant_shift, 2, NULL, dims, NULL, 0, NULL, NULL);
+    size_t dims[1] = {(2*maximal_shift*subpixels + 1) *
+                      (2*maximal_shift*subpixels + 1)};
+    err = clEnqueueNDRangeKernel(self->commands, self->kernel_constant_shift, 1, NULL, dims, NULL, 0, NULL, NULL);
     if (err)
     {
         printf("Error: Failed to execute kernel! Error %i\n", err);
@@ -135,8 +136,8 @@ static int image_deform_lc_find_constant_ocl(struct ImageDeformLocalCorrelator *
         }
     }
 
-    float shift_y = (float)(maxy - maximal_shift*subpixels) / subpixels;
-    float shift_x = (float)(maxx - maximal_shift*subpixels) / subpixels;
+    float shift_y = ((float)maxy - maximal_shift*subpixels) / subpixels;
+    float shift_x = ((float)maxx - maximal_shift*subpixels) / subpixels;
 
     int i, j;
     for (i = 0; i < self->grid_h; i++)

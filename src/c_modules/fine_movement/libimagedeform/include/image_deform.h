@@ -28,10 +28,10 @@ extern "C" {
  */
 struct ImageDeform
 {
-    int image_w;    ///< Image width
-    int image_h;    ///< Image height
-    int grid_w;     ///< Grid width
-    int grid_h;     ///< Grid height
+    unsigned int image_w;    ///< Image width
+    unsigned int image_h;    ///< Image height
+    unsigned int grid_w;     ///< Grid width
+    unsigned int grid_h;     ///< Grid height
     real_t sx;      ///< Stretch between grid and image
     real_t sy;      ///< Stretch between grid and image
     real_t *array;  ///< Movement data, grid_h * grid_w * (dy, dx)
@@ -78,10 +78,10 @@ void image_deform_constant_shift(struct ImageDeform *grid, real_t dx, real_t dy)
  * \param val value
  */
 static inline void image_deform_set_shift(struct ImageDeform *deform,
-                                          int x, int y, int axis,
+                                          unsigned int x, unsigned int y, unsigned int axis,
                                           real_t val)
 {
-    if (x < 0 || y < 0 || x >= deform->grid_w || x >= deform->grid_w || axis < 0 || axis > 1)
+    if (x >= deform->grid_w || x >= deform->grid_w || axis > 1)
         return;
     deform->array[y * deform->grid_w * 2 + x*2 + axis] = val;
 }

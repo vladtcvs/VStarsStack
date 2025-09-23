@@ -148,6 +148,8 @@ class ClusterAlignerBuilder:
                 deforms[name] = deform
         return deforms
 
+kernel_path = "/home/vlad/Astronomy/software/VStarStack/src/c_modules/fine_movement/libimagedeform/cl/image_deform_lc.cl"
+
 class CorrelationAlignedBuilder:
 
     def __init__(self,
@@ -160,7 +162,10 @@ class CorrelationAlignedBuilder:
         self.image_w = image_w
         self.image_h = image_h
         self.pixels = pixels
-        self.correlator = ImageDeformLC(self.image_w, self.image_h, self.pixels)
+
+        with open(kernel_path) as f:
+            kernel = f.read()
+        self.correlator = ImageDeformLC(self.image_w, self.image_h, self.pixels, kernel_source=kernel)
 
         self.radius = radius
         self.max_shift = maximal_shift

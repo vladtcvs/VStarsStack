@@ -103,6 +103,31 @@ int  image_deform_lc_init(struct ImageDeformLocalCorrelator *self,
             clReleaseContext(self->context);
             return -1;
         }
+
+        self->pre_align_buf = clCreateBuffer(self->context, CL_MEM_WRITE_ONLY, sizeof(float) * self->grid_h*self->grid_w*2, NULL, NULL);
+        if (!self->pre_align_buf)
+        {
+            printf("Error: Failed to create buffer pre_align_buf!\n");
+            clReleaseKernel(self->kernel_grid_shift);
+            clReleaseKernel(self->kernel_constant_shift);
+            clReleaseProgram(self->program);
+            clReleaseCommandQueue(self->commands);
+            clReleaseContext(self->context);
+            return -1;
+        }
+
+        self->ref_pre_align_buf = clCreateBuffer(self->context, CL_MEM_WRITE_ONLY, sizeof(float) * self->grid_h*self->grid_w*2, NULL, NULL);
+        if (!self->pre_align_buf)
+        {
+            printf("Error: Failed to create buffer ref_pre_align_buf!\n");
+            clReleaseMemObject(self->pre_align_buf);
+            clReleaseKernel(self->kernel_grid_shift);
+            clReleaseKernel(self->kernel_constant_shift);
+            clReleaseProgram(self->program);
+            clReleaseCommandQueue(self->commands);
+            clReleaseContext(self->context);
+            return -1;
+        }
     }
 
 #endif // USE_OPENCL
@@ -113,11 +138,10 @@ void image_deform_lc_finalize(struct ImageDeformLocalCorrelator *self)
 {
 #ifdef USE_OPENCL
     if (self->use_opencl) {
-        clReleaseKernel(self->kernel_grid_shift);
-        clReleaseKernel(self->kernel_constant_shift);
-        clReleaseProgram(self->program);
-        clReleaseCommandQueue(self->commands);
-        clReleaseContext(self->context);
+        if (self->pre_align_buf)
+            clReleaseMemObject(self->pre_align_buf);
+        if (self->ref_pre_align_buf)
+            clReleaseMemObject(self->ref_pre_align_buf);
         if (self->img_buf)
             clReleaseMemObject(self->img_buf);
         if (self->ref_img_buf)
@@ -126,6 +150,15 @@ void image_deform_lc_finalize(struct ImageDeformLocalCorrelator *self)
             clReleaseMemObject(self->correlations_buf_const);
         if (self->correlations_const)
             free(self->correlations_const);
+
+        clReleaseKernel(self->kernel_grid_shift);
+        clReleaseKernel(self->kernel_constant_shift);
+        clReleaseProgram(self->program);
+        clReleaseCommandQueue(self->commands);
+        clReleaseContext(self->context);
+
+        self->pre_align_buf = NULL;
+        self->ref_pre_align_buf = NULL;
         self->img_buf = NULL;
         self->ref_img_buf = NULL;
         self->correlations_buf_const = NULL;

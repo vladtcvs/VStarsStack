@@ -303,11 +303,11 @@ def test_approximate_by_correlation1():
     assert np.amax(data) == 0
 
 def test_approximate_by_correlation2():
-    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
-    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.tiff")))
+    df = next(readjpeg(os.path.join(dir_path, "fine_shift/image3.tiff")))
+    df_ref = next(readjpeg(os.path.join(dir_path, "fine_shift/image4.tiff")))
 
-    image = df1.get_channel("L")[0].astype(np.float32)
-    image_ref = df2.get_channel("L")[0].astype(np.float32)
+    image = df.get_channel("L")[0].astype(np.float32)
+    image_ref = df_ref.get_channel("L")[0].astype(np.float32)
 
     w = image.shape[1]
     h = image.shape[0]
@@ -321,13 +321,22 @@ def test_approximate_by_correlation2():
         kernel = f.read()
 
     lc = ImageDeformLC(image_w=w, image_h=h, pixels=1, kernel_source=kernel)
-    deform = lc.find(grid, None, grid_ref, None, 5, 3, 1)
+    deform = lc.find(img=grid,
+                     pre_align=None,
+                     ref_img=grid_ref,
+                     ref_pre_align=None,
+                     radius=5,
+                     maximal_shift=3,
+                     subpixels=1)
     assert deform is not None
 
     data = deform.content()
     assert data.shape[0] == h
     assert data.shape[1] == w
     assert data.shape[2] == 2
+    for line_id in range(data.shape[0]):
+        print(data[line_id,:,1])
+
     assert np.amin(data[:,:,0]) == 0
     assert np.amax(data[:,:,0]) == 0
     assert np.amin(data[:,:,1]) == 0

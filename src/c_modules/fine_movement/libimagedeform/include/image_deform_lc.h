@@ -35,11 +35,11 @@ extern "C" {
 struct ImageDeformLocalCorrelator
 {
     struct ImageDeform array;   ///< Movements grid
-    int image_w;                ///< Image width
-    int image_h;                ///< Image height
-    int grid_w;                 ///< Grid width
-    int grid_h;                 ///< Grid height
-    int pixels;
+    unsigned int image_w;                ///< Image width
+    unsigned int image_h;                ///< Image height
+    unsigned int grid_w;                 ///< Grid width
+    unsigned int grid_h;                 ///< Grid height
+    unsigned int pixels;
     bool use_opencl;            ///< Use OpenCL
 
 #ifdef USE_OPENCL
@@ -52,11 +52,15 @@ struct ImageDeformLocalCorrelator
 
     cl_mem img_buf;
     cl_mem ref_img_buf;
+
+    cl_mem pre_align_buf;
+    cl_mem ref_pre_align_buf;
+
     cl_mem correlations_buf_const;
     float *correlations_const;
 
     cl_mem correlations_buf_grid;
-
+    float *correlations_grid;
 
     int maximal_shift;
     int subpixels;
@@ -95,7 +99,7 @@ int image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
 /**
  * \brief Find correlator
  */
-void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
+int image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
                           const struct ImageGrid *img,
                           const struct ImageDeform *pre_align,
                           const struct ImageGrid *ref_img,
