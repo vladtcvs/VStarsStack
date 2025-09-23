@@ -15,10 +15,19 @@
 #pragma once
 
 #include <image_deform.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define USE_OPENCL
+
+#ifdef USE_OPENCL
+#define CL_TARGET_OPENCL_VERSION 120
+#include <CL/cl.h>
+#endif
+
 
 /**
  * \brief Helper structure to find movement grid by local correlation
@@ -31,6 +40,27 @@ struct ImageDeformLocalCorrelator
     int grid_w;                 ///< Grid width
     int grid_h;                 ///< Grid height
     int pixels;
+    bool use_opencl;            ///< Use OpenCL
+
+#ifdef USE_OPENCL
+    cl_device_id device_id;             // compute device id 
+    cl_context context;                 // compute context
+    cl_command_queue commands;          // compute command queue
+    cl_program program;                 // compute program
+    cl_kernel kernel_constant_shift;    // compute kernel
+    cl_kernel kernel_grid_shift;        // compute kernel
+
+    cl_mem img_buf;
+    cl_mem ref_img_buf;
+    cl_mem correlations_buf_const;
+    float *correlations_const;
+
+    cl_mem correlations_buf_grid;
+
+
+    int maximal_shift;
+    int subpixels;
+#endif
 };
 
 /**
@@ -42,7 +72,8 @@ struct ImageDeformLocalCorrelator
  * \return 0 for success, -1 for fail
  */
 int  image_deform_lc_init(struct ImageDeformLocalCorrelator *self,
-                          int image_w, int image_h, int pixels);
+                          int image_w, int image_h, int pixels,
+                          const char *kernel_source);
 
 /**
  * \brief Deallocate content of ImageDeformLocalCorrelation
@@ -53,13 +84,13 @@ void image_deform_lc_finalize(struct ImageDeformLocalCorrelator *self);
 /**
  * \brief Find constant correlator
  */
-void image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
-                                   const struct ImageGrid *img,
-                                   const struct ImageDeform *pre_align,
-                                   const struct ImageGrid *ref_img,
-                                   const struct ImageDeform *ref_pre_align,
-                                   real_t maximal_shift,
-                                   int subpixels);
+int image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
+                                  const struct ImageGrid *img,
+                                  const struct ImageDeform *pre_align,
+                                  const struct ImageGrid *ref_img,
+                                  const struct ImageDeform *ref_pre_align,
+                                  real_t maximal_shift,
+                                  int subpixels);
 
 /**
  * \brief Find correlator

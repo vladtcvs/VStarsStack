@@ -29,6 +29,8 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 N = 200
 dh = 0.01
 
+kernel_path = "/home/vlad/Astronomy/software/VStarStack/src/c_modules/fine_movement/libimagedeform/cl/image_deform_lc.cl"
+
 def test_identity():
     deform = ImageDeform(image_w=10, image_h=10,
                          grid_w=2, grid_h=2)
@@ -221,8 +223,16 @@ def test_approximate_by_correlation_constant1():
     grid_ref = ImageGrid(image_w=w, image_h=h)
     grid_ref.fill(image_ref)
 
-    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
-    deform = lc.find_constant(grid, None, grid_ref, None, 2, 1)
+    with open(kernel_path) as f:
+        kernel = f.read()
+
+    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1, kernel_source=kernel)
+    deform = lc.find_constant(img=grid,
+                              pre_align=None,
+                              ref_img=grid_ref,
+                              ref_pre_align=None,
+                              maximal_shift=2,
+                              subpixels=1)
     assert deform is not None
 
     data = deform.content()
@@ -247,7 +257,10 @@ def test_approximate_by_correlation_constant2():
     grid_ref = ImageGrid(image_w=w, image_h=h)
     grid_ref.fill(image_ref)
 
-    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
+    with open(kernel_path) as f:
+        kernel = f.read()
+
+    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1, kernel_source=kernel)
     deform = lc.find_constant(grid, None, grid_ref, None, 2, 1)
     assert deform is not None
 

@@ -15,6 +15,11 @@
 import os
 import numpy as np
 from setuptools import setup, Extension
+from pathlib import Path
+
+use_opencl = True
+
+package_data = {}
 
 clusterization = Extension(name="vstarstack.library.clusters.clusterization",
                            sources=[
@@ -45,6 +50,13 @@ movements = Extension(  name="vstarstack.library.movement.movements",
                         ])
 
 libimagedeform_root = "src/c_modules/fine_movement/libimagedeform"
+
+if use_opencl:
+    cl_kernel = libimagedeform_root + "/cl/image_deform_lc.cl"
+    if not os.path.exists(cl_kernel):
+        print(f"Kernel {cl_kernel} doesn't exist, fail!")
+    package_data["vstarstack"] = [cl_kernel]
+
 libimagedeform_headers = [libimagedeform_root + "/include"]
 libimagedeform_sources = [libimagedeform_root + "/src/interpolation.c",
                           libimagedeform_root + "/src/image_grid.c",
@@ -62,8 +74,11 @@ imagedeform_sources = [imagedeform_root + "/imagegrid.c",
                         ]
 
 image_deform = Extension(name="vstarstack.library.fine_movement.module",
-       sources=imagedeform_sources+libimagedeform_sources,
-       include_dirs=[np.get_include()]+libimagedeform_headers)
+                         sources=imagedeform_sources+libimagedeform_sources,
+                         include_dirs=[np.get_include()]+libimagedeform_headers,
+                         libraries=["OpenCL"] if use_opencl else [],
+                         define_macros=[("USE_OPENCL", "1")] if use_opencl else [],
+                         )
 
 root = os.path.join(os.path.abspath(os.path.dirname(__file__)), "src")
 result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(root)
@@ -71,9 +86,15 @@ result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(root)
 result = list(set([os.path.dirname(item[len(root)+1:]) for item in result]))
 result = [item.replace("/",".") for item in result if "tests" not in item]
 
-print("Packages: ", result)
-
-packages = result
+packages = sorted(result)
+print("Packages:")
+for package in packages:
+    if package in package_data:
+        print(package, " : ", package_data[package])
+    else:
+        print(package)
+    
+print("-------------------")
 
 setup (name = 'vstarstack',
        version = '0.3.7',
@@ -107,5 +128,7 @@ setup (name = 'vstarstack',
               'psutil',
               'photutils',
        ],
-       requires=["setuptools", "cython", "numpy"]
+       requires=["setuptools", "cython", "numpy"],
+       package_data=package_data,
+       include_package_data=True
 )

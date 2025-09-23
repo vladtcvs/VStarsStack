@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Vladislav Tsendrovskii
+ * Copyright (c) 2022-2025 Vladislav Tsendrovskii
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,10 +20,12 @@
 
 #include <image_deform_lc.h>
 
+
 #define UNUSED(x) ((void)(x))
 
 int  image_deform_lc_init(struct ImageDeformLocalCorrelator *self,
-                          int image_w, int image_h, int pixels)
+                          int image_w, int image_h, int pixels,
+                          const char *kernel_source)
 {
     self->image_w = image_w;
     self->image_h = image_h;
@@ -32,11 +34,108 @@ int  image_deform_lc_init(struct ImageDeformLocalCorrelator *self,
     self->grid_h = ceil((real_t)image_h/pixels);
     if (image_deform_init(&self->array, self->grid_w, self->grid_h, self->image_w, self->image_h) != 0)
         return -1;
+    self->use_opencl = false;
+#ifdef USE_OPENCL
+    if (kernel_source)
+    {
+        self->use_opencl = true;
+        int clerr = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_DEFAULT, 1, &self->device_id, NULL);
+        if (clerr != CL_SUCCESS)
+        {
+            printf("Error: Failed to create an OpenCL device group!\n");
+            return -1;
+        }
+
+        self->context = clCreateContext(0, 1, &self->device_id, NULL, NULL, &clerr);
+        if (!self->context)
+        {
+            printf("Error: Failed to create a compute context!\n");
+            return -1;
+        }
+
+        self->commands = clCreateCommandQueue(self->context, self->device_id, 0, &clerr);
+        if (!self->commands)
+        {
+            printf("Error: Failed to create a command commands!\n");
+            clReleaseContext(self->context);
+            return -1;
+        }
+
+        self->program = clCreateProgramWithSource(self->context, 1, (const char **)&kernel_source, NULL, &clerr);
+        if (!self->program)
+        {
+            printf("Error: Failed to create compute program!\n");
+            clReleaseCommandQueue(self->commands);
+            clReleaseContext(self->context);
+            return -1;
+        }
+
+        clerr = clBuildProgram(self->program, 0, NULL, NULL, NULL, NULL);
+        if (clerr != CL_SUCCESS)
+        {
+            size_t len;
+            char buffer[2048];
+
+            printf("Error: Failed to build program executable!\n");
+            clGetProgramBuildInfo(self->program, self->device_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
+            printf("%s\n", buffer);
+
+            clReleaseProgram(self->program);
+            clReleaseCommandQueue(self->commands);
+            clReleaseContext(self->context);
+            return -1;
+        }
+
+        self->kernel_constant_shift = clCreateKernel(self->program, "image_deform_lc_constant", &clerr);
+        if (!self->kernel_constant_shift || clerr != CL_SUCCESS)
+        {
+            printf("Error: Failed to create compute kernel \"image_deform_lc_constant\"!\n");
+            clReleaseProgram(self->program);
+            clReleaseCommandQueue(self->commands);
+            clReleaseContext(self->context);
+            return -1;
+        }
+
+        self->kernel_grid_shift = clCreateKernel(self->program, "image_deform_lc_grid", &clerr);
+        if (!self->kernel_grid_shift || clerr != CL_SUCCESS)
+        {
+            printf("Error: Failed to create compute kernel \"image_deform_lc_grid\"!\n");
+            clReleaseKernel(self->kernel_constant_shift);
+            clReleaseProgram(self->program);
+            clReleaseCommandQueue(self->commands);
+            clReleaseContext(self->context);
+            return -1;
+        }
+    }
+
+#endif // USE_OPENCL
     return 0;
 }
 
 void image_deform_lc_finalize(struct ImageDeformLocalCorrelator *self)
 {
+#ifdef USE_OPENCL
+    if (self->use_opencl) {
+        clReleaseKernel(self->kernel_grid_shift);
+        clReleaseKernel(self->kernel_constant_shift);
+        clReleaseProgram(self->program);
+        clReleaseCommandQueue(self->commands);
+        clReleaseContext(self->context);
+        if (self->img_buf)
+            clReleaseMemObject(self->img_buf);
+        if (self->ref_img_buf)
+            clReleaseMemObject(self->ref_img_buf);
+        if (self->correlations_buf_const)
+            clReleaseMemObject(self->correlations_buf_const);
+        if (self->correlations_const)
+            free(self->correlations_const);
+        self->img_buf = NULL;
+        self->ref_img_buf = NULL;
+        self->correlations_buf_const = NULL;
+        self->correlations_const = NULL;
+    }
+#endif // USE_OPENCL
+
     image_deform_finalize(&self->array);
 }
 
@@ -60,13 +159,150 @@ static void image_deform_lc_get_area(const struct ImageGrid *img,
     image_grid_get_area(img, pre_aligned_x, pre_aligned_y, area);
 }
 
-void image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
-                                   const struct ImageGrid *img,
-                                   const struct ImageDeform *pre_align,
-                                   const struct ImageGrid *ref_img,
-                                   const struct ImageDeform *ref_pre_align,
-                                   real_t maximal_shift,
-                                   int subpixels)
+#ifdef USE_OPENCL
+static int image_deform_lc_find_constant_ocl(struct ImageDeformLocalCorrelator *self,
+                                              const struct ImageGrid *img,
+                                              const struct ImageDeform *pre_align,
+                                              const struct ImageGrid *ref_img,
+                                              const struct ImageDeform *ref_pre_align,
+                                              int maximal_shift,
+                                              int subpixels)
+{
+    
+    size_t local;
+
+    if (img->h != self->image_h || img->w != self->image_w) {
+        if (self->img_buf)
+            clReleaseMemObject(self->img_buf);
+        if (self->ref_img_buf)
+            clReleaseMemObject(self->ref_img_buf);
+
+        self->img_buf = NULL;
+        self->ref_img_buf = NULL;
+        self->image_w = img->w;
+        self->image_h = img->h;
+    }
+
+    if (maximal_shift != self->maximal_shift || subpixels != self->subpixels) {
+        if (self->correlations_buf_const)
+            clReleaseMemObject(self->correlations_buf_const);
+        if (self->correlations_const)
+            free(self->correlations_const);
+
+        self->correlations_buf_const = NULL;
+        self->correlations_const = NULL;
+        self->maximal_shift = maximal_shift;
+        self->subpixels = subpixels;
+    }
+
+    if (self->img_buf == NULL)
+        self->img_buf = clCreateBuffer(self->context,  CL_MEM_READ_ONLY,  sizeof(real_t) * self->image_w * self->image_h, NULL, NULL);
+
+    if (self->ref_img_buf == NULL)
+        self->ref_img_buf = clCreateBuffer(self->context,  CL_MEM_READ_ONLY,  sizeof(real_t) * self->image_w * self->image_h, NULL, NULL);
+
+    size_t size_corr = (2*maximal_shift*subpixels + 1)*(2*maximal_shift*subpixels + 1);
+    if (self->correlations_buf_const == NULL)
+        self->correlations_buf_const = clCreateBuffer(self->context, CL_MEM_WRITE_ONLY, sizeof(float) * size_corr, NULL, NULL);
+    if (self->correlations_const == NULL)
+        self->correlations_const = malloc(size_corr * sizeof(float));
+
+    if (!self->img_buf || !self->ref_img_buf || !self->correlations_buf_const)
+    {
+        printf("Error: Failed to allocate device memory!\n");
+        return -1;
+    }
+
+    int err = clEnqueueWriteBuffer(self->commands, self->img_buf, CL_TRUE, 0, sizeof(real_t) * img->w * img->h, img->array, 0, NULL, NULL);
+    if (err != CL_SUCCESS)
+    {
+        printf("Error: Failed to write to source array!\n");
+        return -1;
+    }
+
+    err = clEnqueueWriteBuffer(self->commands, self->ref_img_buf, CL_TRUE, 0, sizeof(real_t) * ref_img->w * ref_img->h, ref_img->array, 0, NULL, NULL);
+    if (err != CL_SUCCESS)
+    {
+        printf("Error: Failed to write to source array!\n");
+        return -1;
+    }
+
+    err = 0;
+    err |= clSetKernelArg(self->kernel_constant_shift, 0, sizeof(unsigned), &img->h);
+    err |= clSetKernelArg(self->kernel_constant_shift, 1, sizeof(unsigned), &img->w);
+    err |= clSetKernelArg(self->kernel_constant_shift, 2, sizeof(cl_mem), &self->img_buf);
+    err |= clSetKernelArg(self->kernel_constant_shift, 3, sizeof(cl_mem), &self->ref_img_buf);
+    err |= clSetKernelArg(self->kernel_constant_shift, 4, sizeof(cl_mem), &self->correlations_buf_const);
+    err |= clSetKernelArg(self->kernel_constant_shift, 5, sizeof(int), &maximal_shift);
+    err |= clSetKernelArg(self->kernel_constant_shift, 6, sizeof(int), &subpixels);
+    if (err != CL_SUCCESS)
+    {
+        printf("Error: Failed to set kernel arguments! %d\n", err);
+        return -1;
+    }
+
+    err = clGetKernelWorkGroupInfo(self->kernel_constant_shift, self->device_id,
+                                    CL_KERNEL_WORK_GROUP_SIZE,
+                                    sizeof(local), &local, NULL);
+    if (err != CL_SUCCESS)
+    {
+        printf("Error: Failed to retrieve kernel work group info! %d\n", err);
+        return -1;
+    }
+
+    size_t dims[2] = {2*maximal_shift*subpixels + 1, 2*maximal_shift*subpixels + 1};
+    err = clEnqueueNDRangeKernel(self->commands, self->kernel_constant_shift, 2, NULL, dims, NULL, 0, NULL, NULL);
+    if (err)
+    {
+        printf("Error: Failed to execute kernel! Error %i\n", err);
+        return -1;
+    }
+
+    clFinish(self->commands);
+
+    err = clEnqueueReadBuffer(self->commands, self->correlations_buf_const, CL_TRUE, 0, sizeof(float) * size_corr,
+                              self->correlations_const, 0, NULL, NULL );  
+    if (err != CL_SUCCESS)
+    {
+        printf("Error: Failed to read output array! %d\n", err);
+        return -1;
+    }
+
+    int y, x, maxx, maxy;
+    float maxcorr = -2;
+    for (y = 0; y < 2*maximal_shift*subpixels + 1; y++)
+    for (x = 0; x < 2*maximal_shift*subpixels + 1; x++)
+    {
+        if (self->correlations_const[y*(2*maximal_shift*subpixels + 1)+x] > maxcorr) {
+            maxx = x;
+            maxy = y;
+            maxcorr = self->correlations_const[y*(2*maximal_shift*subpixels + 1)+x];
+        }
+    }
+
+    float shift_y = (float)(maxy - maximal_shift*subpixels) / subpixels;
+    float shift_x = (float)(maxx - maximal_shift*subpixels) / subpixels;
+
+    int i, j;
+    for (i = 0; i < self->grid_h; i++)
+        for (j = 0; j < self->grid_w; j++)
+        {
+            image_deform_set_shift(&self->array, j, i, 0, shift_y * self->array.sy);
+            image_deform_set_shift(&self->array, j, i, 1, shift_x * self->array.sx);
+        }
+
+
+    return 0;
+}
+#endif
+
+static int image_deform_lc_find_constant_cpu(struct ImageDeformLocalCorrelator *self,
+                                              const struct ImageGrid *img,
+                                              const struct ImageDeform *pre_align,
+                                              const struct ImageGrid *ref_img,
+                                              const struct ImageDeform *ref_pre_align,
+                                              real_t maximal_shift,
+                                              int subpixels)
 {
     int i, j;
     real_t iter_x, iter_y;
@@ -76,29 +312,48 @@ void image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
     struct ImageGrid global_area;
     image_grid_init(&global_area, img->w, img->h);
     best_x = best_y = 0;
-    image_deform_lc_get_area(img, pre_align, &global_area, img->w/2.0, img->h/2.0);
+    image_deform_lc_get_area(img, pre_align, &global_area, img->w / 2.0, img->h / 2.0);
     best_corr = image_grid_correlation(&global_area, ref_img);
     for (iter_y = -maximal_shift; iter_y <= maximal_shift; iter_y += 1.0 / subpixels)
-    for (iter_x = -maximal_shift; iter_x <= maximal_shift; iter_x += 1.0 / subpixels)
-    {
-        image_deform_lc_get_area(img, pre_align, &global_area, iter_x + img->w/2.0, iter_y + img->h/2.0);
-        real_t corr = image_grid_correlation(&global_area, ref_img);
-        if (corr > best_corr)
+        for (iter_x = -maximal_shift; iter_x <= maximal_shift; iter_x += 1.0 / subpixels)
         {
-            best_corr = corr;
-            best_x = iter_x;
-            best_y = iter_y;
+            image_deform_lc_get_area(img, pre_align, &global_area, iter_x + img->w / 2.0, iter_y + img->h / 2.0);
+            real_t corr = image_grid_correlation(&global_area, ref_img);
+            if (corr > best_corr)
+            {
+                best_corr = corr;
+                best_x = iter_x;
+                best_y = iter_y;
+            }
         }
-    }
     for (i = 0; i < self->grid_h; i++)
-    for (j = 0; j < self->grid_w; j++)
-    {
-        image_deform_set_shift(&self->array, j, i, 0, best_y*self->array.sy);
-        image_deform_set_shift(&self->array, j, i, 1, best_x*self->array.sx);
-    }
+        for (j = 0; j < self->grid_w; j++)
+        {
+            image_deform_set_shift(&self->array, j, i, 0, best_y * self->array.sy);
+            image_deform_set_shift(&self->array, j, i, 1, best_x * self->array.sx);
+        }
     image_grid_finalize(&global_area);
 
     UNUSED(ref_pre_align);
+    return 0;
+}
+
+int image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
+                                  const struct ImageGrid *img,
+                                  const struct ImageDeform *pre_align,
+                                  const struct ImageGrid *ref_img,
+                                  const struct ImageDeform *ref_pre_align,
+                                  real_t maximal_shift,
+                                  int subpixels)
+{
+#ifdef USE_OPENCL
+    if (self->use_opencl)
+        return image_deform_lc_find_constant_ocl(self, img, pre_align, ref_img, ref_pre_align, maximal_shift, subpixels);
+    else
+        return image_deform_lc_find_constant_cpu(self, img, pre_align, ref_img, ref_pre_align, maximal_shift, subpixels);
+#else
+    return image_deform_lc_find_constant_cpu(self, img, pre_align, ref_img, ref_pre_align, maximal_shift, subpixels);
+#endif
 }
 
 static void image_deform_lc_find_local(const struct ImageGrid *img,

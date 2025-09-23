@@ -29,14 +29,34 @@ static int ImageDeformLC_init(PyObject *_self, PyObject *args, PyObject *kwds)
 {
     int pixels;
     int image_w, image_h;
+    const char *kernel_source = NULL;
     struct ImageDeformLocalCorrelatorObject *self =
             (struct ImageDeformLocalCorrelatorObject *)_self;
-    static char *kwlist[] = {"image_w", "image_h", "pixels", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iii", kwlist,
-                                     &image_w, &image_h, &pixels))
+
+    static char *kwlist[] = {"image_w", "image_h", "pixels", "kernel_source", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iii|s", kwlist,
+                                     &image_w, &image_h, &pixels, &kernel_source))
         return -1;
 
-    image_deform_lc_init(&self->correlator, image_w, image_h, pixels);
+#ifdef USE_OPENCL
+    if (kernel_source) {
+        if (image_deform_lc_init(&self->correlator, image_w, image_h, pixels, kernel_source) != 0) {
+            PyErr_SetString(PyExc_ValueError, "Can not init OpenCL");
+            return -1;
+        }
+    } else {
+        if (image_deform_lc_init(&self->correlator, image_w, image_h, pixels, NULL) != 0) {
+            PyErr_SetString(PyExc_ValueError, "Can not init");
+            return -1;
+        }
+    }
+#else
+    if (image_deform_lc_init(&self->correlator, image_w, image_h, pixels, NULL) != 0) {
+        PyErr_SetString(PyExc_ValueError, "Can not init");
+        return -1;
+    }
+#endif
+
     return 0;
 }
 
