@@ -104,6 +104,13 @@ void image_deform_lc_find(struct ImageDeformLocalCorrelator *self,
                           real_t maximal_shift,
                           int subpixels);
 
+void image_deform_lc_get_area(const struct ImageGrid *img,
+                              const struct ImageDeform *pre_align,
+                              struct ImageGrid *area,
+                              real_t x, real_t y);
+
+#define UNUSED(x) ((void)(x))
+
 #ifdef __cplusplus
 }
 #endif

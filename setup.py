@@ -63,6 +63,8 @@ libimagedeform_sources = [libimagedeform_root + "/src/interpolation.c",
                           libimagedeform_root + "/src/image_deform.c",
                           libimagedeform_root + "/src/image_deform_gc.c",
                           libimagedeform_root + "/src/image_deform_lc.c",
+                          libimagedeform_root + "/src/image_deform_lc_const.c",
+                          libimagedeform_root + "/src/image_deform_lc_grid.c"
                         ]
 
 imagedeform_root = "src/c_modules/fine_movement/module"

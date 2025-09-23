@@ -7,7 +7,9 @@ add_library(imagedeform STATIC src/interpolation.c
                                src/image_grid.c
                                src/image_deform.c
                                src/image_deform_gc.c
-                               src/image_deform_lc.c)
+                               src/image_deform_lc.c
+                               src/image_deform_lc_const.c
+                               src/image_deform_lc_grid.c)
 
 set(HEADERS "include/interpolation.h;"
             "include/image_grid.h;"

@@ -288,7 +288,10 @@ def test_approximate_by_correlation1():
     grid_ref = ImageGrid(image_w=w, image_h=h)
     grid_ref.fill(image_ref)
 
-    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
+    with open(kernel_path) as f:
+        kernel = f.read()
+
+    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1, kernel_source=kernel)
     deform = lc.find(grid, None, grid_ref, None, 5, 5, 1)
     assert deform is not None
 
@@ -314,7 +317,10 @@ def test_approximate_by_correlation2():
     grid_ref = ImageGrid(image_w=w, image_h=h)
     grid_ref.fill(image_ref)
 
-    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1)
+    with open(kernel_path) as f:
+        kernel = f.read()
+
+    lc = ImageDeformLC(image_w=w, image_h=h, pixels=1, kernel_source=kernel)
     deform = lc.find(grid, None, grid_ref, None, 5, 3, 1)
     assert deform is not None
 
