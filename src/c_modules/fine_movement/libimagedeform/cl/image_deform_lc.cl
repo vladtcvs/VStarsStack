@@ -169,14 +169,16 @@ __kernel void image_deform_lc_grid( unsigned int image_h, unsigned int image_w,
                                     unsigned int correlation_r)
 {
     int index = get_global_id(0);
+    int center = maximal_shift*division;
+    int area = 2*center + 1;
 
     // varies  -maximal_shift*division .. maximal_shift*division
-    int correlation_shift_x = index % (2*maximal_shift*division+1) - maximal_shift*division;
-    int correlation_shift_y = (index / (2*maximal_shift*division+1)) % (2*maximal_shift*division+1) - maximal_shift*division;
+    int correlation_shift_x = index % area - center;
+    int correlation_shift_y = (index / area) % area - center;
 
-    int shift_grid_col = (index / (2*maximal_shift*division+1) / (2*maximal_shift*division+1)) % shift_grid_w;
-    int shift_grid_row = (index / (2*maximal_shift*division+1) / (2*maximal_shift*division+1) / shift_grid_w);
-    
+    int shift_grid_col = (index / area / area) % shift_grid_w;
+    int shift_grid_row = (index / area / area / shift_grid_w);
+
     // varies -maximal_shift .. maximal_shift with step 1.0/division
     float shift_y = (float)correlation_shift_y / division;
     float shift_x = (float)correlation_shift_x / division;
@@ -278,12 +280,14 @@ __kernel void image_deform_lc_constant(unsigned int image_h, unsigned int image_
                                        int division)
 {
     int index = get_global_id(0);
+    int center = maximal_shift*division;
+    int area = 2*center + 1;
 
-    int shift_y_id = index / (2*maximal_shift*division + 1);
-    int shift_x_id = index % (2*maximal_shift*division + 1);
+    int shift_y_id = index / area;
+    int shift_x_id = index % area;
 
-    float shift_y = (float)(shift_y_id - maximal_shift*division) / division;
-    float shift_x = (float)(shift_x_id - maximal_shift*division) / division;
+    float shift_y = (float)(shift_y_id - center) / division;
+    float shift_x = (float)(shift_x_id - center) / division;
 
     float corr = find_correlation_for_image(image_h, image_w, image, ref_image, shift_y, shift_x);
     correlation[index] = corr;
