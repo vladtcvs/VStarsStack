@@ -6,7 +6,10 @@ on:
 
 jobs:
   build:
-
+    permissions:
+      contents: write
+      actions: read
+  
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -34,7 +37,7 @@ jobs:
           pylint --rcfile=pylintrc --fail-under=9 src/vstarstack
       - name: Build & Install
         run: |
-          python -m build . --wheel -n
+          python -m build . --wheel
           find ./dist/*.whl | xargs python -m pip install
       - name: Test that tools launches
         run: |
@@ -43,13 +46,6 @@ jobs:
         run: |
           pytest --cov-fail-under=47 --cov=vstarstack.library tests/
 
-  release:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      contents: write
-      actions: read
-    steps:
       - name: Upload assets to the same Release
         uses: softprops/action-gh-release@v2
         with:
