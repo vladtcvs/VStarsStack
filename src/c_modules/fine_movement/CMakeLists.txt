@@ -13,6 +13,8 @@ Python3_add_library(fine_movement MODULE
 target_include_directories(fine_movement PUBLIC . lib "${NUMPY_INCLUDE_DIR}")
 target_link_libraries(fine_movement PUBLIC imagedeform)
 
+set_target_properties(fine_movement PROPERTIES OUTPUT_NAME "module")
+
 install(TARGETS fine_movement
         COMPONENT python_modules
         DESTINATION "${PY_BUILD_CMAKE_IMPORT_NAME}/library/fine_movement")
