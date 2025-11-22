@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(imagedeform)
-
 # Library sources
 add_library(imagedeform STATIC src/interpolation.c
                                src/image_grid.c
@@ -24,9 +22,6 @@ if(MSVC)
 else()
   target_compile_options(imagedeform PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
-
-install(TARGETS imagedeform
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libimagedeform)
 
 # Tests
 if (BUILD_TESTS)
@@ -58,7 +53,7 @@ if (BUILD_TESTS)
     gtest_discover_tests(deform_test)
 
     if (UNIX)
-        add_custom_target(memory_leak_test sh ${CMAKE_SOURCE_DIR}/run_valgrind_tests.sh ${CMAKE_BINARY_DIR}/deform_test
+        add_custom_target(fine_movement_memory_leak_test sh ${CMAKE_SOURCE_DIR}/run_valgrind_tests.sh ${CMAKE_BINARY_DIR}/deform_test
                           DEPENDS deform_test)
     endif()
 endif()

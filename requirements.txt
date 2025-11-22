@@ -1,3 +1,4 @@
+py_build_cmake
 numpy
 astropy
 rawpy

@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/vstarstack/library/fine_movement/libimagedeform/include",
-                "/usr/include/python3.11"
+                "/usr/include/python3.11",
+                "/usr/include/python3.13"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

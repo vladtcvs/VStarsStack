@@ -71,6 +71,10 @@ void image_deform_lc_find_constant(struct ImageDeformLocalCorrelator *self,
     double best_x, best_y;
     double best_corr;
 
+    // TODO: use them
+    (void)ref_pre_align;
+    (void)pre_align;
+
     struct ImageGrid global_area;
     image_grid_init(&global_area, img->w, img->h);
     best_x = best_y = 0;
