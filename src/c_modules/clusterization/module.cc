@@ -23,7 +23,6 @@
 
 #define BASENAME "vstarstack.library.clusters.clusterization"
 
-
 static PyObject *build_clusters_from_matches(PyObject *_self,
                                              PyObject *args,
                                              PyObject *kwds)

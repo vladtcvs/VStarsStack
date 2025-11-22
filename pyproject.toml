@@ -1,0 +1,42 @@
+[build-system]
+requires = ["numpy", "py-build-cmake"]
+build-backend = "py_build_cmake.build"
+
+[project]
+name = "vstarstack"
+version = "0.3.7"
+requires-python = ">=3.10"
+authors = [{name="Vladislav Tsendrovskii", email="vtcendrovskii@gmail.com"}]
+description = 'Stacking astrophotos'
+readme = "readme.md"
+license = "GPL-3.0"
+license-files = ["LICENSE.txt"]
+dependencies = [
+    'numpy',
+    'astropy',
+    'rawpy',
+    'pillow',
+    'imageio',
+    'exifread',
+    'opencv-python',
+    'scikit-image',
+    'scipy >= 1.11.0',
+    'imutils',
+    'matplotlib',
+    'pytz',
+    'psutil',
+    'photutils',
+]
+
+[project.scripts]
+vstarstack = "vstarstack.entry:main"
+
+[tool.py-build-cmake.module]
+directory = "src/" 
+name = "vstarstack"
+
+[tool.py-build-cmake.cmake]
+source_path = "src/c_modules" 
+install_components = [
+    "python_modules"
+]

@@ -42,7 +42,8 @@
         "new": "cpp",
         "span": "cpp",
         "stdexcept": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "imagegrid.h": "c"
     },
     "editor.tabSize": 4,
     "editor.insertSpaces": true,

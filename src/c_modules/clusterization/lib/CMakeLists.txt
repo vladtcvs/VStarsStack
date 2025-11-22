@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(clusters)
-
 # Library sources
 add_library(clusters STATIC src/clusters.cc)
 
@@ -14,11 +12,8 @@ set_target_properties(clusters PROPERTIES PUBLIC_HEADER "${HEADERS}")
 if(MSVC)
   target_compile_options(clusters PRIVATE /W4 /WX)
 else()
-  target_compile_options(clusters PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_compile_options(clusters PRIVATE -Wall -Wextra -Wpedantic -Werror -fPIC)
 endif()
-
-install(TARGETS clusters
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libclusters)
 
 # Tests
 if (BUILD_TESTS)
@@ -49,7 +44,7 @@ if (BUILD_TESTS)
     gtest_discover_tests(clusters_test)
 
     if (UNIX)
-        add_custom_target(memory_leak_test sh ${CMAKE_SOURCE_DIR}/run_valgrind_tests.sh ${CMAKE_BINARY_DIR}/clusters_test
+        add_custom_target(clusterization_memory_leak_test sh ${CMAKE_SOURCE_DIR}/run_valgrind_tests.sh ${CMAKE_BINARY_DIR}/clusters_test
                           DEPENDS clusters_test)
     endif()
 endif()
