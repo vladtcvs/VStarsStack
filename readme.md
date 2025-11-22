@@ -10,6 +10,13 @@ python3 -m pip install vstarstack
 python -m pip install .
 ```
 
+OR
+
+```
+python -m build --wheel .
+python -m pip install dist/vstarstack-<CURRENT_BUILD_PARAMETERS>.whl
+```
+
 # Modes of image presentation
 
 * sphere mode
