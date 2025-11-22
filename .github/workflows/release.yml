@@ -46,12 +46,10 @@ jobs:
         run: |
           pytest --cov-fail-under=47 --cov=vstarstack.library tests/
 
-      - name: Upload assets to the same Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build sdist and remove binaries
+        run: |
+          rm ./dist/*
+          python -m build . --sdist
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@v1.10.0
