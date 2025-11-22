@@ -12,10 +12,10 @@ if(NUMPY_NOT_FOUND)
     message(FATAL_ERROR "NumPy headers not found: ${NUMPY_NOT_FOUND}")
 endif()
 
-
 message("Numpy headers: '${NUMPY_INCLUDE_DIR}'")
 
 add_subdirectory(projections)
 add_subdirectory(movements)
 add_subdirectory(fine_movement)
 add_subdirectory(clusterization)
+add_subdirectory(bayes)
