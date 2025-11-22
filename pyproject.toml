@@ -4,7 +4,7 @@ build-backend = "py_build_cmake.build"
 
 [project]
 name = "vstarstack"
-version = "0.3.7"
+version = "0.3.7.0"
 requires-python = ">=3.10"
 authors = [{name="Vladislav Tsendrovskii", email="vtcendrovskii@gmail.com"}]
 description = 'Stacking astrophotos'
