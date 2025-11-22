@@ -40,7 +40,7 @@ def copy(project: vstarstack.tool.cfg.Project, argv: list):
 
     files = vstarstack.tool.common.listfiles(orig, ".zip")
     for name, fname in files:
-        logger.info("Copying {name} to {fixed} dir")
+        logger.info(f"Copying {name} to {fixed} dir")
         fname_out = os.path.join(fixed, name + ".zip")
         shutil.copyfile(fname, fname_out)
 
