@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Build sdist and remove binaries
+      - name: Build sdist
         run: |
           rm -f ./dist/*
           python -m build . --sdist
