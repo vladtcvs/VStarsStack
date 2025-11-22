@@ -13,12 +13,12 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
-from typing import Callable, Generator
+from typing import Callable, Iterator, Tuple
 import numpy as np
 import vstarstack.library.bayes
 import vstarstack.library.bayes.bayes
 
-def _generate_crds(H : int, W : int) -> Generator[int, int]:
+def _generate_crds(H : int, W : int) -> Iterator[Tuple[int, int]]:
     for y in range(H):
         for x in range(W):
             yield y,x
