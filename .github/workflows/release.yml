@@ -6,10 +6,6 @@ on:
 
 jobs:
   build:
-    permissions:
-      contents: write
-      actions: read
-  
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -46,12 +42,15 @@ jobs:
         run: |
           pytest --cov-fail-under=47 --cov=vstarstack.library tests/
 
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Build sdist and remove binaries
         run: |
-          rm ./dist/*
+          rm -f ./dist/*
           python -m build . --sdist
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@v1.10.0
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
