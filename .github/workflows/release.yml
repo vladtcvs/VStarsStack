@@ -7,6 +7,10 @@ on:
 jobs:
 
   publish:
+    permissions:
+      contents: read
+      id-token: write
+
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -45,4 +49,4 @@ jobs:
           python -m build . --sdist
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@v1.12.4
