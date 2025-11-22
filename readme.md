@@ -7,7 +7,14 @@ python3 -m pip install vstarstack
 
 ## From sources
 ```
-python3 setup.py install [--user]
+python -m pip install .
+```
+
+OR
+
+```
+python -m build --wheel .
+python -m pip install dist/vstarstack-<CURRENT_BUILD_PARAMETERS>.whl
 ```
 
 # Modes of image presentation
