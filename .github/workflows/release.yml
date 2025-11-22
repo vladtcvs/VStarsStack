@@ -2,7 +2,7 @@ name: VStarStack
 
 on:
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   build:
@@ -42,10 +42,20 @@ jobs:
       - name: Test library with pytest
         run: |
           pytest --cov-fail-under=47 --cov=vstarstack.library tests/
-      - name: Upload the artifacts
-        run: |
-          gh release create "$GITHUB_REF_NAME" release/* \
-            --title "$GITHUB_REF_NAME" \
-            --notes "Automated release"
+
+  release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.13"]
+    needs: build
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Upload assets to the same Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

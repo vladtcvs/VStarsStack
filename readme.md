@@ -7,7 +7,7 @@ python3 -m pip install vstarstack
 
 ## From sources
 ```
-python3 setup.py install [--user]
+python -m pip install .
 ```
 
 # Modes of image presentation

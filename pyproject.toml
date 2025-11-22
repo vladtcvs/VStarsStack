@@ -1,5 +1,5 @@
 [build-system]
-requires = ["numpy", "py-build-cmake"]
+requires = ["numpy", "py-build-cmake", "wheel"]
 build-backend = "py_build_cmake.build"
 
 [project]
