@@ -36,6 +36,7 @@ directory = "src/"
 name = "vstarstack"
 
 [tool.py-build-cmake.cmake]
+build_type = "RelWithDebInfo"
 source_path = "src/c_modules" 
 install_components = [
     "python_modules"
