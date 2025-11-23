@@ -9,7 +9,7 @@ We have frames $F(x,y)$:
 
 \begin{eqnarray}
     F(x,y) \sim Poisson\left( \lambda(x,y) \right) \\
-    \lambda(x,y) = f_{dark}(x,y) + \nu(x,y) \cdot \left( f_{sky}(x,y) + f_{true}(x,y) \right)
+    \lambda(x,y) = f_{dark}(x,y) + v(x,y) \cdot \left( f_{sky}(x,y) + f_{true}(x,y) \right)
 \end{eqnarray}
 
 Where 
@@ -17,14 +17,14 @@ Where
     \item $f_{dark}(x,y)$ --- dark signal
     \item $f_{sky}(x,y)$ --- sky signal (light pollution)
     \item $f_{true}(x,y)$ --- true signal
-    \item $\nu(x,y)$ --- flat relative calibration function (vignetting, particles on sensor, etc)
+    \item $v(x,y)$ --- flat relative calibration function (vignetting, particles on sensor, etc)
 \end{itemize}
 
 What does "relative" means? We have telescope lens or mirror, sensor with some QE, exposure, sensor gain. We have Poisson--distributed amount
 of photons and dark electrons on sensor, which is multiplied by x,y--independent factor of QE, lens size, exposure, and x,y--dependent factor
-of vignetting, particles on sensor, etc. We want to compensate x,y--dependent factors. So we can assume $max(\nu) = 1$, because it shows
-relative coefficient to x,y--maximal value. If $max(\nu)$ would be, for example, $0.5$, it would be same as twice less QE with $max(\nu) = 1$.
-And we know that it also would be Poisson distribution.
+of vignetting, particles on sensor, etc. We want to compensate x,y--dependent factors. So we can assume $max(v) = 1$, because it shows
+relative coefficient to x,y--maximal value. If $max(v)$ would be, for example, $0.5$, it would be same as twice less QE with $max(v) = 1$.
+But we know that it still will be Poisson distribution.
 
 We want to estimate true value of signal: $f_{true}(x,y)$.
 
@@ -47,90 +47,51 @@ So we find
 
 \subsection{Flats}
 
-We need to calculate $\nu(x,y)$. We capture multiple images of sky in different positions:
-
-\begin{eqnarray}
-    \Omega_i(x,y) \sim Poisson(\omega_i(x,y)) \\
-    \omega_i(x,y) = f_{dark}(x,y) + \nu(x,y) \cdot \left( \tilde f_{sky, i}(x,y) + \tilde f_{value,i}(x,y) \right)
-\end{eqnarray}
-
-Where
-\begin{itemize}
-    \item $\tilde f_{sky, i}(x,y)$ --- sky signal (light pollution) at position $i$
-    \item $\tilde f_{value, i}(x,y)$ --- stars signal at position $i$
-\end{itemize}
-
-As inputs we have
-\begin{itemize}
-    \item $f_{dark}(x,y)$ --- dark signal
-    \item $\Omega_i(x,y)$ --- flat frames
-\end{itemize}
-
-Since 
-\begin{equation}
-    \Omega_i(x,y) \sim Poisson(\omega_i(x,y)) = Poisson(f_{dark}(x,y) + \nu(x,y) \cdot \left( \tilde f_i(x,y) \right))
-\end{equation}
-
-We find mean $<\Omega_i>$:
-\begin{eqnarray}
-    <\Omega_i(x,y)> = \frac{\sum \Omega_i(x,y)}{N} = f_{dark}(x,y) + \nu(x,y) \cdot \frac{\tilde f_{sky, i}(x,y) + \tilde f_{value,i}(x,y)}{N} \\
-    \nu(x,y) = \frac{\frac{\sum \Omega_i(x,y)}{N} - f_{dark}(x,y)}{\frac{\sum \tilde f_{sky, i}(x,y) + \tilde f_{value,i}(x,y)}{N}}
-    = \frac{< \Omega_i(x,y) - f_{dark}(x,y) >}{<\tilde f_{sky, i}(x,y) + \tilde f_{value,i}(x,y)>}
-\end{eqnarray}
-
-Now we need to estimate both parts of this fractions. Since we have random selections of areas on each $i$, we can assume that
-$<\tilde f_{sky, i}(x,y) + \tilde f_{value,i}(x,y)> = const$. Also we can use Sigma-Clipping algorithm to reduce amount of images $\Omega_i$.
-
-Also we expect $\nu$ be so that $max(\nu) = 1$. As result we have:
-
-\begin{eqnarray}
-    \nu(x,y) = \frac{SC(\left\{ \Omega_i(x,y) - f_{dark}(x,y) \right\})}{max\left(SC(\left\{ \Omega_i(x,y) - f_{dark}(x,y) \right\})\right)}
-\end{eqnarray}
-
-After this we can denoise obtained $\nu(x,y)$ with blur or other methods.
+We need to calculate $v(x,y)$. We can either use flatbox or capture enough images of sky in different positions.
+Building flat is not a subject of current article. In later we assume that we know $v(x,y)$ with absolute precision.
 
 \section{Signal obtaining}
 
 As input we have:
 \begin{itemize}
-    \item $f_{dark}(x,y)$ --- dark signal
-    \item $\nu(x,y)$ --- normalized flats calibration function
-    \item $F_j(x,y)$ --- frames
+    \item $d(x,y)$ --- constant signal (dark or dark + sky, depending on case)
+    \item $v(x,y)$ --- normalized flats function
+    \item $F_j(x,y)$ --- captured frames
 \end{itemize}
 
-Our whole signal $f(x,y)$ contains of multiple stages. In simple case we have just sky light pollution:
+We know that $F_i$ have Poisson distribution:
 \begin{eqnarray}
-    f(x,y) = f_{sky}(x,y) + f_{signal}(x,y)
+    F_i(x,y) = Poisson\left( d(x,y) + v(x,y) \cdot f(x,y) \right)
 \end{eqnarray}
 
-In more complex cases when we want to obtain narrowband signal we have continuum in addition to sky:
-\begin{eqnarray}
-    f(x,y) = f_{sky}(x,y) + f_{continuum}(x,y) + f_{narrow}(x,y)
-\end{eqnarray}
+How $d$ is related with $f_{dark}$, $f_{sky}$? It depends on approach.
+In most basic approach we do 2--step calculation:
+\begin{itemize}
+    \item Capture dark frames
+    \item Capture flat frames
+    \item Capture target frames
+    \item Considering $d = f_{dark}$ find image signal $f_{full}$. It is sum of $f_{sky}$ and $f$
+    \item Analyze $f_{full}$ and find $f_{sky}$ from it
+    \item Considering $d = f_{dark} + v \cdot f_{sky}$ find target image signal $f$
+\end{itemize}
 
-But on this stage our task is to find $f(x,y)$.
-
-We have frames $F_i$:
-\begin{eqnarray}
-    F_i(x,y) = Poisson\left( f_{dark}(x,y) + \nu(x,y) \cdot f(x,y) \right)
-\end{eqnarray}
+In case of high light pollution we even don't need bayesian calculation to obtain $f_{sky}$
 
 \subsection{First approach}
 
 We act the same way as for flats calculation:
 \begin{eqnarray}
-    <F_i(x,y)> = f_{dark}(x,y) + \nu(x,y) \cdot f(x,y) \\
-    f(x,y) = \frac{<F_i(x,y)> - f_{dark}(x,y)}{\nu(x,y)} = \frac{<F_i(x,y) - f_{dark}(x,y)>}{\nu(x,y)}
+    <F_i(x,y)> = d(x,y) + v(x,y) \cdot f(x,y) \\
+    f(x,y) = \frac{<F_i(x,y)> - d(x,y)}{v(x,y)} = \frac{<F_i(x,y) - d(x,y)>}{v(x,y)}
 \end{eqnarray}
 
 Here we use Sigma-Clipping:
 
 \begin{eqnarray}
-    f(x,y) = \frac{SC(\left\{ F_i(x,y) - f_{dark}(x,y)\right\})}{\nu(x,y)}
+    f(x,y) = \frac{SC(\left\{ F_i(x,y) - d(x,y)\right\})}{v(x,y)}
 \end{eqnarray}
 
 This implements the most basic approach: substract darks, then apply flats, then do Sigma-Clipping.
-
 This method is simple, but can generate negative values, especially for low SNR case.
 
 \subsection{Bayesian analysis}
@@ -138,21 +99,21 @@ This method is simple, but can generate negative values, especially for low SNR 
 We have set of frames $F_i(x,y)$. We want to find estimation for $f(x,y)$:
 
 \begin{eqnarray}
-    E\left[ f(x,y) \right] = \int df(x,y) f(x,y) p(f(x,y) | \left\{ F_i(x,y) \right\})
+    E\left[ f(x,y) \right] = \int df(x,y) \cdot f(x,y) \cdot p(f(x,y) | \left\{ F_i(x,y) \right\})
 \end{eqnarray}
 
 Let's find $p(f(x,y) | \left\{ F_i(x,y) \right\})$. We process independently for each $x,y$, so they are just parameters,
 not integration varables. So we won't write them for readability:
 
 \begin{eqnarray}
-    E\left[ f \right] = \int df f p(f | \left\{ F_i \right\})
+    E\left[ f \right] = \int df \cdot f \cdot p(f | \left\{ F_i \right\})
 \end{eqnarray}
 
 According to Bayes' theorem
 
 \begin{eqnarray}
     p(f | \left\{ F_i \right\}) = \frac{p(\left\{ F_i \right\} | f) \cdot p(f)}{p(\left\{ F_i \right\})} =
-    \frac{p(\left\{ F_i \right\} | f) \cdot p(f)}{\int p(\left\{ F_i \right\} | f') \cdot p(f')} df' \label{eq:bayes}
+    \frac{p(\left\{ F_i \right\} | f) \cdot p(f)}{\int p(\left\{ F_i \right\} | f') \cdot p(f') \cdot df'} \label{eq:bayes}
 \end{eqnarray}
 
 where $p(f)$ --- apriori probability of $f$. We should estimate it before starting Bayesian analysis.
@@ -177,53 +138,67 @@ So we can continue (\ref{eq:bayes}) and write it as
 Let's remember what $p(F_i | f)$ is:
 \begin{equation}
 \begin{array}{r@{}l}
-    p(F_i | f) = \frac{\lambda^{F_i} e^{-\lambda}} {F_i!} \\
-    \lambda = f_{dark}(x,y) + \nu(x,y) f(x,y)
+    p(F_i | f) = \frac{\lambda^{F_i} \exp(-\lambda)} {F_i!} \\
+    \lambda = d(x,y) + v(x,y) \cdot f(x,y)
 \end{array}
 \end{equation}
 
 Let's substutute it into (\ref{eq:bayes2}):
 \begin{equation}
 \begin{array}{r@{}l}
-    p(f | \left\{ F_i \right\}) = \frac{\prod_i \frac{\lambda(f)^{F_i} \cdot e^{-\lambda(f)}}{F_i!} \cdot p(f)}
-    {\int \prod_i \frac{\lambda(f)^{F_i} \cdot e^{-\lambda(f)}}{F_i!} p(f') df'}
+    p(f | \left\{ F_i \right\}) = \frac{ \prod_i \frac{\lambda(f)^{F_i} \cdot \exp(-\lambda(f))}{F_i!} \cdot p(f)  }
+    {\int \prod_i \frac{\lambda(f)^{F_i} \cdot \exp(-\lambda(f))}{F_i!} p(f') df'}
 \end{array}
 \end{equation}
 
 After simplyfying it we have:
 \begin{equation}
-    p(f | \left\{ F_i \right\}) = \frac{\lambda(f)^{\sum F_i} \cdot e^{-N\lambda(f)} \cdot p(f)}
-    {\int \lambda(f')^{\sum F_i} \cdot e^{-N\lambda(f')} \cdot p(f') df'}
+    p(f | \left\{ F_i \right\}) = \frac{\lambda(f)^{\sum F_i} \cdot \exp(-N\lambda(f)) \cdot p(f)}
+    {\int \lambda(f')^{\sum F_i} \cdot \exp(-N\lambda(f')) \cdot p(f') df'}
 \end{equation}
 
 where $N$ --- amount of $F_i$. Factorials are gone. And for case where $p(f) \ne 0$, $\lambda(f) \ne 0$ we can simplify:
 
 \begin{equation}
-    p(f | \left\{ F_i \right\}) = \left( \int \left( \frac{\lambda(f')}{\lambda(f)} \right)^{\sum F_i} \cdot e^{-N(\lambda(f')-\lambda(f))} \cdot \left( \frac{p(f')}{p(f)} \right) df'\right)^{-1}
+    p(f | \left\{ F_i \right\}) = \left( \int \left( \frac{\lambda(f')}{\lambda(f)} \right)^{\sum F_i} \cdot
+                                        \exp\left\{-N \cdot (\lambda(f')-\lambda(f)) \right\} \cdot \left( \frac{p(f')}{p(f)} \right) df'\right)^{-1}
 \end{equation}
 
 But there can be some practical case: what if different frames have different $f_{dark}$ or $f_{sky}$ or $\nu$? In that case we have series
 of $\lambda_i(f)$ and formula slightly changes:
 \begin{equation}
-\begin{array}{r@{}l}
-    E[f]\left( \left\{ F_i \right\} \right) = \int f \cdot p(f | {F_i}) df \\
     p(f | \left\{ F_i \right\}) = \left( \int \prod_i \left( \frac{\lambda_i(f')}{\lambda_i(f)} \right)^{F_i} \cdot 
-    e^{-\sum_i \left(\lambda_i(f')-\lambda_i(f)\right)} \cdot \left( \frac{p(f')}{p(f)} \right) df'\right)^{-1}
-\end{array}
+    \exp\left\{-\sum_i \left(\lambda_i(f')-\lambda_i(f)\right)\right\} \cdot \left( \frac{p(f')}{p(f)} \right) df'\right)^{-1}
 \end{equation}
 
-In this formul wie have 2 components $\prod_i \left( \frac{\lambda_i(f')}{\lambda_i(f)} \right)^{F_i}$ and
-$e^{-\sum_i \left(\lambda_i(f')-\lambda_i(f)\right)}$. For big $f'$ first would be big, but it will be compensated by exponent.
+In this formula we have 2 components $\prod_i \left( \frac{\lambda_i(f')}{\lambda_i(f)} \right)^{F_i}$ and
+$\exp\left\{-\sum_i \left(\lambda_i(f')-\lambda_i(f)\right) \right\}$. For big $f'$ first would be big, but it will be compensated by exponent.
 But it can cause overflow. So we can write:
 
 \begin{eqnarray}
-    p(f | \left\{ F_i \right\}) = \left( \int e^{\sum_i \left( F_i ln \lambda_i(f') - \lambda_i(f')\right) 
-            - \left( F_i ln \lambda_i(f) - \lambda_i(f)\right)} \cdot \frac{p(f')}{p(f)} df' \right)^{-1} \label{eq:bayes3} \\[9pt]
-    \Lambda_i(f) = F_i ln \lambda_i(f) - \lambda_i(f) \\[9pt]
-    p(f | \left\{ F_i \right\}) = \left( \int e^{\sum_i \Lambda_i(f') - \Lambda_i(f) }\cdot \frac{p(f')}{p(f)} df' \right)^{-1}
+    p(f | \left\{ F_i \right\}) = \left( \int \exp\left\{\sum_i \left( F_i ln \lambda_i(f') - \lambda_i(f')\right) 
+            - \left( F_i ln \lambda_i(f) - \lambda_i(f)\right) \right\} \cdot \frac{p(f')}{p(f)} df' \right)^{-1} \label{eq:bayes3}
 \end{eqnarray}
 
+Or, introducing $\Lambda_i$:
 
+\begin{eqnarray}
+    \Lambda_i(f) = F_i ln \lambda_i(f) - \lambda_i(f) \\[9pt]
+    p(f | \left\{ F_i \right\}) = \left( \int \exp\left\{\sum_i \Lambda_i(f') - \Lambda_i(f) \right\}\cdot \frac{p(f')}{p(f)} df' \right)^{-1}
+\end{eqnarray}
+
+Also we can use that formula in case when $f$ is a vector. But we have to adjust $\lambda(f)$ in that case:
+
+\begin{eqnarray}
+    \lambda_i (f_{\alpha}) = d_{i} +  v_{i} \cdot \sum_{\beta} K_{i, \alpha} \cdot f_{\alpha}
+\end{eqnarray}
+
+Here:
+\begin{itemize}
+\item $i$ --- index for frames
+\item $\alpha$ --- index for $f$ dimensions
+\item $K$ --- matrix for contribution of each component into common signal
+\end{itemize}
 
 Challenges with such approach:
 \begin{itemize}

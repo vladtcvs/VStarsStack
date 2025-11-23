@@ -135,17 +135,17 @@ static PyObject *posterior(PyObject *_self,
 {
     PyObject *F;
     PyObject *f;
-    PyObject *lambdas_d, *lambdas_v;
+    PyObject *lambdas_d, *lambdas_v, *lambdas_K;
     PyObject *apriori_params;
     PyObject *limits_low, *limits_high;
 
     struct BayesEstimatorObject *self = (struct BayesEstimatorObject *)_self;
 
-    static char *kwlist[] = {"F", "f", "lambdas_d", "lambdas_v", "apriori_params", "limits_low", "limits_high", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOO", kwlist,
+    static char *kwlist[] = {"F", "f", "lambdas_d", "lambdas_v", "lambdas_K", "apriori_params", "limits_low", "limits_high", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOOO", kwlist,
                                      &F,
                                      &f,
-                                     &lambdas_d, &lambdas_v,
+                                     &lambdas_d, &lambdas_v, &lambdas_K,
                                      &apriori_params,
                                      &limits_low, &limits_high))
     {
@@ -157,6 +157,7 @@ static PyObject *posterior(PyObject *_self,
     PyArrayObject *arr_f = (PyArrayObject *)PyArray_FROM_OTF(f, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_lambdas_d = (PyArrayObject *)PyArray_FROM_OTF(lambdas_d, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_lambdas_v = (PyArrayObject *)PyArray_FROM_OTF(lambdas_v, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr_lambdas_K = (PyArrayObject *)PyArray_FROM_OTF(lambdas_K, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_limits_low = (PyArrayObject *)PyArray_FROM_OTF(limits_low, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_limits_high = (PyArrayObject *)PyArray_FROM_OTF(limits_high, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
@@ -188,10 +189,17 @@ static PyObject *posterior(PyObject *_self,
         goto fail;
     }
 
-    // arr_lambdas_v: [num_frames, num_dim]
-    if (!validate_shape(arr_lambdas_v, 2, num_frames, self->num_dim))
+    // arr_lambdas_v: [num_frames]
+    if (!validate_shape(arr_lambdas_v, 1, num_frames))
     {
-        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames, num_dim]");
+        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames]");
+        goto fail;
+    }
+
+    // arr_lambdas_K: [num_frames, num_dim]
+    if (!validate_shape(arr_lambdas_K, 2, num_frames, self->num_dim))
+    {
+        PyErr_SetString(PyExc_ValueError, "lambdas_K must be shape [num_frames, num_dim]");
         goto fail;
     }
 
@@ -213,6 +221,7 @@ static PyObject *posterior(PyObject *_self,
     double *f_data = (double *)PyArray_DATA(arr_f);
     double *lambdas_d_data = (double *)PyArray_DATA(arr_lambdas_d);
     double *lambdas_v_data = (double *)PyArray_DATA(arr_lambdas_v);
+    double *lambdas_K_data = (double *)PyArray_DATA(arr_lambdas_K);
     double *limits_low_data = (double *)PyArray_DATA(arr_limits_low);
     double *limits_high_data = (double *)PyArray_DATA(arr_limits_high);
 
@@ -236,6 +245,7 @@ static PyObject *posterior(PyObject *_self,
                                  f_data,
                                  lambdas_d_data,
                                  lambdas_v_data,
+                                 lambdas_K_data,
                                  self->apriori, &params,
                                  limits_low_data,
                                  limits_high_data,
@@ -263,16 +273,16 @@ static PyObject *maxp(PyObject *_self,
                       PyObject *kwds)
 {
     PyObject *F;
-    PyObject *lambdas_d, *lambdas_v;
+    PyObject *lambdas_d, *lambdas_v, *lambdas_K;
     PyObject *apriori_params;
     PyObject *limits_low, *limits_high;
 
     struct BayesEstimatorObject *self = (struct BayesEstimatorObject *)_self;
 
-    static char *kwlist[] = {"F", "lambdas_d", "lambdas_v", "apriori_params", "limits_low", "limits_high", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOO", kwlist,
+    static char *kwlist[] = {"F", "lambdas_d", "lambdas_v", "lambdas_K", "apriori_params", "limits_low", "limits_high", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOO", kwlist,
                                      &F,
-                                     &lambdas_d, &lambdas_v,
+                                     &lambdas_d, &lambdas_v, &lambdas_K,
                                      &apriori_params,
                                      &limits_low, &limits_high))
     {
@@ -283,6 +293,7 @@ static PyObject *maxp(PyObject *_self,
     PyArrayObject *arr_F = (PyArrayObject *)PyArray_FROM_OTF(F, NPY_UINT64, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_lambdas_d = (PyArrayObject *)PyArray_FROM_OTF(lambdas_d, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_lambdas_v = (PyArrayObject *)PyArray_FROM_OTF(lambdas_v, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr_lambdas_K = (PyArrayObject *)PyArray_FROM_OTF(lambdas_K, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_limits_low = (PyArrayObject *)PyArray_FROM_OTF(limits_low, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_limits_high = (PyArrayObject *)PyArray_FROM_OTF(limits_high, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
@@ -308,10 +319,17 @@ static PyObject *maxp(PyObject *_self,
         goto fail;
     }
 
-    // arr_lambdas_v: [num_frames, num_dim]
-    if (!validate_shape(arr_lambdas_v, 2, num_frames, self->num_dim))
+    // arr_lambdas_v: [num_frames]
+    if (!validate_shape(arr_lambdas_v, 1, num_frames))
     {
-        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames, num_dim]");
+        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames]");
+        goto fail;
+    }
+
+    // arr_lambdas_K: [num_frames, num_dim]
+    if (!validate_shape(arr_lambdas_K, 2, num_frames, self->num_dim))
+    {
+        PyErr_SetString(PyExc_ValueError, "lambdas_K must be shape [num_frames, num_dim]");
         goto fail;
     }
 
@@ -332,6 +350,7 @@ static PyObject *maxp(PyObject *_self,
     uint64_t *F_data = (uint64_t *)PyArray_DATA(arr_F);
     double *lambdas_d_data = (double *)PyArray_DATA(arr_lambdas_d);
     double *lambdas_v_data = (double *)PyArray_DATA(arr_lambdas_v);
+    double *lambdas_K_data = (double *)PyArray_DATA(arr_lambdas_K);
     double *limits_low_data = (double *)PyArray_DATA(arr_limits_low);
     double *limits_high_data = (double *)PyArray_DATA(arr_limits_high);
 
@@ -362,6 +381,7 @@ static PyObject *maxp(PyObject *_self,
                F_data,
                lambdas_d_data,
                lambdas_v_data,
+               lambdas_K_data,
                self->apriori, &params,
                limits_low_data,
                limits_high_data,
@@ -387,17 +407,17 @@ static PyObject *estimate(PyObject *_self,
                           PyObject *kwds)
 {
     PyObject *F;
-    PyObject *lambdas_d, *lambdas_v;
+    PyObject *lambdas_d, *lambdas_v, *lambdas_K;
     PyObject *apriori_params;
     PyObject *limits_low, *limits_high;
     double clip;
 
     struct BayesEstimatorObject *self = (struct BayesEstimatorObject *)_self;
 
-    static char *kwlist[] = {"F", "lambdas_d", "lambdas_v", "apriori_params", "limits_low", "limits_high", "clip", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOd", kwlist,
+    static char *kwlist[] = {"F", "lambdas_d", "lambdas_v", "lambdas_K", "apriori_params", "limits_low", "limits_high", "clip", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OOOOOOOd", kwlist,
                                      &F,
-                                     &lambdas_d, &lambdas_v,
+                                     &lambdas_d, &lambdas_v, &lambdas_K,
                                      &apriori_params,
                                      &limits_low, &limits_high,
                                      &clip))
@@ -409,6 +429,7 @@ static PyObject *estimate(PyObject *_self,
     PyArrayObject *arr_F = (PyArrayObject *)PyArray_FROM_OTF(F, NPY_UINT64, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_lambdas_d = (PyArrayObject *)PyArray_FROM_OTF(lambdas_d, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_lambdas_v = (PyArrayObject *)PyArray_FROM_OTF(lambdas_v, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject *arr_lambdas_K = (PyArrayObject *)PyArray_FROM_OTF(lambdas_K, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_limits_low = (PyArrayObject *)PyArray_FROM_OTF(limits_low, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     PyArrayObject *arr_limits_high = (PyArrayObject *)PyArray_FROM_OTF(limits_high, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
 
@@ -433,10 +454,17 @@ static PyObject *estimate(PyObject *_self,
         goto fail;
     }
 
-    // arr_lambdas_v: [num_frames, num_dim]
-    if (!validate_shape(arr_lambdas_v, 2, num_frames, self->num_dim))
+    // arr_lambdas_v: [num_frames]
+    if (!validate_shape(arr_lambdas_v, 1, num_frames))
     {
-        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames, num_dim]");
+        PyErr_SetString(PyExc_ValueError, "lambdas_v must be shape [num_frames]");
+        goto fail;
+    }
+
+    // arr_lambdas_K: [num_frames, num_dim]
+    if (!validate_shape(arr_lambdas_K, 2, num_frames, self->num_dim))
+    {
+        PyErr_SetString(PyExc_ValueError, "lambdas_K must be shape [num_frames, num_dim]");
         goto fail;
     }
 
@@ -457,6 +485,7 @@ static PyObject *estimate(PyObject *_self,
     uint64_t *F_data = (uint64_t *)PyArray_DATA(arr_F);
     double *lambdas_d_data = (double *)PyArray_DATA(arr_lambdas_d);
     double *lambdas_v_data = (double *)PyArray_DATA(arr_lambdas_v);
+    double *lambdas_K_data = (double *)PyArray_DATA(arr_lambdas_K);
     double *limits_low_data = (double *)PyArray_DATA(arr_limits_low);
     double *limits_high_data = (double *)PyArray_DATA(arr_limits_high);
 
@@ -493,6 +522,7 @@ static PyObject *estimate(PyObject *_self,
                    F_data,
                    lambdas_d_data,
                    lambdas_v_data,
+                   lambdas_K_data,
                    self->apriori, &params,
                    limits_low_data,
                    limits_high_data,
