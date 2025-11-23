@@ -20,18 +20,24 @@ from vstarstack.library.bayes.estimation import *
 def test_MAP_single_value():
     f_signal_max = 10
     dl = 0.1
-    samples = np.array([8], dtype=np.uint64)
+    dark = 5
+    signal = 3
+    v = 1
+    K = 1
+    samples = np.array([dark + signal * v * K], dtype=np.uint64)
 
     low = np.array([0], dtype=np.double)
     high = np.array([f_signal_max], dtype=np.double)
     estimator = BayesEstimator(apriori = "uniform", dl=dl, ndim=1)
-    lambdas_v = np.array([[1]], dtype=np.double)
+    lambdas_K = np.array([[1]], dtype=np.double)
+    lambdas_v = np.array([1], dtype=np.double)
     lambdas_d = np.array([5], dtype=np.double)
 
     f = estimator.MAP(F=samples,
-                               lambdas_d=lambdas_d,
-                               lambdas_v=lambdas_v,
-                               apriori_params=None,
-                               limits_low=low,
-                               limits_high=high)
-    assert f == 3
+                      lambdas_d=lambdas_d,
+                      lambdas_v=lambdas_v,
+                      lambdas_K=lambdas_K,
+                      apriori_params=None,
+                      limits_low=low,
+                      limits_high=high)
+    assert f == signal

@@ -24,14 +24,15 @@ def _generate_crds(H : int, W : int) -> Iterator[Tuple[int, int]]:
             yield y,x
 
 def estimate(samples : np.ndarray,
-             backgrounds : np.ndarray,
-             nus : np.ndarray,
+             Ks : np.ndarray,
+             background : np.ndarray,
+             flat : np.ndarray,
              max_signal : np.ndarray,
              estimator : vstarstack.library.bayes.bayes.BayesEstimator,
              apriori_fun_params : any = None,
              clip : float = 0) -> np.ndarray:
 
-    # lambda(f1, f2) = background + nu_1 * f1 + nu_2 * f2
+    # lambda(f1, f2) = background + flat * (Ks_1 * f1 + Ks_2 * f2)
 
     assert len(max_signal.shape) == 1
     ndim = max_signal.shape[0]
@@ -44,25 +45,30 @@ def estimate(samples : np.ndarray,
     w = samples.shape[2]
     samples = samples.astype(np.uint)
 
-    assert len(backgrounds.shape) == 3
-    assert backgrounds.shape[0] == nsamples
-    assert backgrounds.shape[1] == h
-    assert backgrounds.shape[2] == w
-    backgrounds = backgrounds.astype(np.double)
+    assert len(background.shape) == 3
+    assert background.shape[0] == nsamples
+    assert background.shape[1] == h
+    assert background.shape[2] == w
+    background = background.astype(np.double)
 
-    assert len(nus.shape) == 4
-    assert nus.shape[0] == nsamples
-    assert nus.shape[1] == h
-    assert nus.shape[2] == w
-    assert nus.shape[3] == ndim
-    nus = nus.astype(np.double)
+    assert len(flat.shape) == 3
+    assert flat.shape[0] == nsamples
+    assert flat.shape[1] == h
+    assert flat.shape[2] == w
+    background = background.astype(np.double)
+
+    assert len(Ks.shape) == 2
+    assert Ks.shape[0] == nsamples
+    assert Ks.shape[1] == ndim
+    flat = flat.astype(np.double)
 
     result = np.ndarray((h, w, ndim))
 
     for y,x in _generate_crds(h, w):
         f = estimator.estimate(samples[:,y,x],
-                               backgrounds[:,y,x],
-                               nus[:,y,x,:],
+                               background[:,y,x],
+                               flat[:,y,x],
+                               Ks,
                                apriori_fun_params,
                                limits_low=min_signal,
                                limits_high=max_signal,
@@ -71,8 +77,8 @@ def estimate(samples : np.ndarray,
     return result
 
 def estimate_with_dark_flat(samples : np.ndarray,
-                            darks : np.ndarray,
-                            flats : np.ndarray,
+                            dark : np.ndarray,
+                            flat : np.ndarray,
                             max_signal : float,
                             integration_dl : float,
                             apriori_fun : any,
@@ -81,28 +87,32 @@ def estimate_with_dark_flat(samples : np.ndarray,
     assert len(samples.shape) == 3
     nsamples = samples.shape[0]
 
-    if len(darks.shape) == 2:
-        bgs = np.zeros((nsamples, darks.shape[0], darks.shape[0]))
+    # lambda(f) = dark + flat * 1 * f
+
+    if len(dark.shape) == 2:
+        dks = np.zeros((nsamples, dark.shape[0], dark.shape[0]))
         for i in range(nsamples):
-            bgs[i,:,:] = darks
-    elif len(darks.shape) == 3:
-        bgs = darks
+            dks[i,:,:] = dark
+    elif len(dark.shape) == 3:
+        dks = dark
     else:
         return None
 
-    if len(flats.shape) == 2:
-        nus = np.zeros((nsamples, flats.shape[0], flats.shape[0], 1))
+    if len(flat.shape) == 2:
+        flts = np.zeros((nsamples, flat.shape[0], flat.shape[0]))
         for i in range(nsamples):
-            nus[i,:,:,0] = flats
-    elif len(flats.shape) == 3:
-        nus = flats.reshape(nsamples, flats.shape[1], flats.shape[2], 1)
+            flts[i,:,:] = flat
+    elif len(flat.shape) == 3:
+        flts = flat
     else:
         return None
+
+    Ks = np.ones((nsamples, 1))
 
     _max_signal = np.array([max_signal], dtype=np.double)
 
     estimator = vstarstack.library.bayes.bayes.BayesEstimator(apriori=apriori_fun, dl=integration_dl, ndim=1)
-    return estimate(samples, bgs, nus, _max_signal, estimator, apriori_fun_params, clip)
+    return estimate(samples, Ks, dks, flts, _max_signal, estimator, apriori_fun_params, clip)
 
 def estimate_with_dark_flat_sky(samples : np.ndarray,
                                 dark : np.ndarray,
@@ -116,21 +126,23 @@ def estimate_with_dark_flat_sky(samples : np.ndarray,
     assert len(samples.shape) == 3
     nsamples = samples.shape[0]
 
+    # lambda(f) = (dark + flat * sky) + flat * 1 * f
+
     if len(darks.shape) == 2:
         darks = np.zeros((nsamples, dark.shape[0], dark.shape[0]))
         for i in range(nsamples):
             darks[i,:,:] = dark
     elif len(darks.shape) == 3:
-        bgs = darks
+        pass
     else:
         return None
 
     if len(flat.shape) == 2:
-        nus = np.zeros((nsamples, flat.shape[0], flat.shape[0], 1))
+        flts = np.zeros((nsamples, flat.shape[0], flat.shape[0]))
         for i in range(nsamples):
-            nus[i,:,:,0] = flat
+            flts[i,:,:] = flat
     elif len(flat.shape) == 3:
-        nus = flat.reshape(nsamples, flat.shape[1], flat.shape[2], 1)
+        flts = flat
     else:
         return None
 
@@ -143,12 +155,14 @@ def estimate_with_dark_flat_sky(samples : np.ndarray,
     else:
         return None
 
-    bgs = darks + skies
+    bgs = darks + skies * flts
+
+    Ks = np.ones((nsamples, 1))
 
     _max_signal = np.array([max_signal], dtype=np.double)
 
     estimator = vstarstack.library.bayes.bayes.BayesEstimator(apriori=apriori_fun, dl=integration_dl, ndim=1)
-    return estimate(samples, bgs, nus, _max_signal, estimator, apriori_fun_params, clip)
+    return estimate(samples, Ks, bgs, flts, _max_signal, estimator, apriori_fun_params, clip)
 
 def estimate_with_dark_flat_sky_continuum(samples_narrow : np.ndarray,
                                           dark_narrow : np.ndarray,
@@ -170,7 +184,10 @@ def estimate_with_dark_flat_sky_continuum(samples_narrow : np.ndarray,
     nsamples_wide = samples_wide.shape[0]
     nsamples_narrow = samples_narrow.shape[0]
 
-    # f = (f_n f_c)
+    # lambda_narrow(f) = (dark_narrow + flat_narrow * sky_narrow) + flat_narrow * (1 * f_continuum + 1 * f_emission)
+    # lambda_wide(f) = (dark_wide + flat_wide * sky_wide) + flat_wide * (k * f_continuum + 1 * f_emission)
+
+    # f = [f_continuum f_emission]
 
     # prepare parameters for images with wide filter
     if len(dark_wide.shape) == 2:
@@ -183,15 +200,11 @@ def estimate_with_dark_flat_sky_continuum(samples_narrow : np.ndarray,
         return None
 
     if len(flat_wide.shape) == 2:
-        nus_wide = np.zeros((nsamples_wide, flat_wide.shape[0], flat_wide.shape[0], 2))
+        flats_wide = np.zeros((nsamples_wide, flat_wide.shape[0], flat_wide.shape[0]))
         for i in range(nsamples_wide):
-            nus_wide[i,:,:,0] = flat_wide
-            nus_wide[i,:,:,1] = flat_wide * wide_narrow_k
+            flats_wide[i,:,:] = flat_wide
     elif len(flat_wide.shape) == 3:
-        nus_wide = np.zeros((nsamples_wide, flat_wide.shape[0], flat_wide.shape[0], 2))
-        for i in range(nsamples_wide):
-            nus_wide[i,:,:,0] = flat_wide[i,:,:]
-            nus_wide[i,:,:,1] = flat_wide[i,:,:] * wide_narrow_k
+        flats_wide = flat_wide
     else:
         return None
 
@@ -203,8 +216,10 @@ def estimate_with_dark_flat_sky_continuum(samples_narrow : np.ndarray,
         skies_wide = sky_wide
     else:
         return None
-    
-    bgs_wide = darks_wide + skies_wide * nus_wide[:,:,:,0] # 0 because nu for sky doesn't include wide_narrow_k
+
+    bgs_wide = darks_wide + skies_wide * flats_wide
+
+    Ks_wide = np.ones((nsamples_wide, 2))
 
     # prepare parameters for images with narrow filter
     if len(dark_narrow.shape) == 2:
@@ -217,15 +232,11 @@ def estimate_with_dark_flat_sky_continuum(samples_narrow : np.ndarray,
         return None
 
     if len(flat_narrow.shape) == 2:
-        nus_narrow = np.zeros((nsamples_narrow, flat_narrow.shape[0], flat_narrow.shape[0], 2))
+        flats_narrow = np.zeros((nsamples_narrow, flat_narrow.shape[0], flat_narrow.shape[0]))
         for i in range(nsamples_narrow):
-            nus_narrow[i,:,:,0] = flat_narrow
-            nus_narrow[i,:,:,1] = flat_narrow
+            flats_narrow[i,:,:] = flat_narrow
     elif len(flat_narrow.shape) == 3:
-        nus_narrow = np.zeros((nsamples_narrow, flat_narrow.shape[0], flat_narrow.shape[0], 2))
-        for i in range(nsamples_narrow):
-            nus_narrow[i,:,:,0] = flat_narrow[i,:,:]
-            nus_narrow[i,:,:,1] = flat_narrow[i,:,:]
+        flats_narrow = flat_narrow
     else:
         return None
 
@@ -238,12 +249,17 @@ def estimate_with_dark_flat_sky_continuum(samples_narrow : np.ndarray,
     else:
         return None
 
-    bgs_narrow = darks_narrow + skies_narrow * nus_narrow[:,:,:,0] # 0 because nu for sky doesn't include wide_narrow_k
+    bgs_narrow = darks_narrow + skies_narrow * flats_narrow
+
+    Ks_narrow = np.zeros((nsamples_narrow, 2))
+    Ks_narrow[:,0] = wide_narrow_k
+    Ks_narrow[:,1] = 1
 
     # concat all samples into single array
     samples    = np.concat([samples_wide, samples_narrow], axis=0)
     bgs        = np.concat([bgs_wide, bgs_narrow], axis=0)
-    nus        = np.concat([nus_wide, nus_narrow], axis=0)
+    flats      = np.concat([flats_wide, flats_narrow], axis=0)
+    Ks         = np.concat([Ks_wide, Ks_narrow], axis=0)
     max_signal = np.array([max_signal_emission, max_signal_continuum])
     estimator  = vstarstack.library.bayes.bayes.BayesEstimator(apriori=apriori_fun, dl=integration_dl, ndim=2)
-    return estimate(samples, bgs, nus, max_signal, estimator, apriori_fun_params, clip)
+    return estimate(samples, Ks, bgs, flats, max_signal, estimator, apriori_fun_params, clip)
