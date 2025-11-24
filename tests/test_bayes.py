@@ -41,7 +41,7 @@ def test_MAP_single_value():
                       limits_high=high)
     assert f == signal
 
-def test_estimate_1():
+def test_MAP_1():
     background = np.zeros((5,5))
     flat = np.ones((5,5))
     true_signal = np.ones((5,5))*4
@@ -57,13 +57,13 @@ def test_estimate_1():
         flats[i,:,:] = flat
         Ks[i,0] = 1
 
-    max_signal = np.array([20])
-    clip = 0
-    dl = 0.1
+    max_signal = np.array([10])
+    clip = 0.8
+    dl = 0.05
     apriori_params = None
     estimator = BayesEstimator(apriori = "uniform", dl=dl, ndim=1)
 
-    estimated = estimate(samples, Ks, backgrounds, flats, max_signal, estimator, apriori_params, clip)
+    estimated = estimate(samples, Ks, backgrounds, flats, max_signal, estimator, apriori_params, clip, "MAP")
     assert len(estimated.shape) == 3
     assert estimated.shape[0] == true_signal.shape[0]
     assert estimated.shape[1] == true_signal.shape[1]
