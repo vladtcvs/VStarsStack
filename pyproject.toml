@@ -4,7 +4,11 @@ build-backend = "py_build_cmake.build"
 
 [project]
 name = "vstarstack"
+<<<<<<< HEAD
 version = "0.3.7.11"
+=======
+version = "0.3.8"
+>>>>>>> 4006f6e (Test bayes)
 requires-python = ">=3.10"
 authors = [{name="Vladislav Tsendrovskii", email="vtcendrovskii@gmail.com"}]
 description = 'Stacking astrophotos'
