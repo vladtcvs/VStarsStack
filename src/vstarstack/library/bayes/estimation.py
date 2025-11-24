@@ -31,6 +31,19 @@ def estimate(samples : np.ndarray,
              estimator : vstarstack.library.bayes.bayes.BayesEstimator,
              apriori_fun_params : any = None,
              clip : float = 0) -> np.ndarray:
+    """
+    Estimate value with Bayes theorem
+    
+    samples    - (nsamples, h, w) - 
+    Ks         - (nsamples, ndim) - 
+    background - (nsamples, h, w) - 
+    flat       - (nsamples, h, w) - 
+    max_signal - (ndim)           -
+
+    estimator          - 
+    apriori_fun_params - 
+    clip               - 
+    """
 
     # lambda(f1, f2) = background + flat * (Ks_1 * f1 + Ks_2 * f2)
 
@@ -62,18 +75,23 @@ def estimate(samples : np.ndarray,
     assert Ks.shape[1] == ndim
     flat = flat.astype(np.double)
 
-    result = np.ndarray((h, w, ndim))
+    npixels = w*h
+    samples = np.reshape(samples, (nsamples, npixels))
+    background = np.reshape(background, (nsamples, npixels))
+    flat = np.reshape(flat, (nsamples, npixels))
 
-    for y,x in _generate_crds(h, w):
-        f = estimator.estimate(samples[:,y,x],
-                               background[:,y,x],
-                               flat[:,y,x],
+    result = np.ndarray((npixels, ndim))
+    for i in range(npixels):
+        f = estimator.estimate(samples[:,i],
+                               background[:,i],
+                               flat[:,i],
                                Ks,
                                apriori_fun_params,
                                limits_low=min_signal,
                                limits_high=max_signal,
                                clip=clip)
-        result[y,x] = f
+        result[i,:] = f
+    result = np.reshape(result, (h, w, ndim))
     return result
 
 def estimate_with_dark_flat(samples : np.ndarray,

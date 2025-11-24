@@ -13,7 +13,6 @@
 #
 
 import numpy as np
-import vstarstack.library.bayes
 from vstarstack.library.bayes.bayes import BayesEstimator
 from vstarstack.library.bayes.estimation import *
 
@@ -41,3 +40,33 @@ def test_MAP_single_value():
                       limits_low=low,
                       limits_high=high)
     assert f == signal
+
+def test_estimate_1():
+    background = np.zeros((5,5))
+    flat = np.ones((5,5))
+    true_signal = np.ones((5,5))*4
+
+    nsamples = 10
+    samples = np.zeros((nsamples, 5, 5))
+    backgrounds = np.zeros((nsamples, 5, 5))
+    flats = np.zeros((nsamples, 5, 5))
+    Ks = np.zeros((nsamples, 1))
+    for i in range(nsamples):
+        samples[i,:,:] = true_signal * flat + background
+        backgrounds[i,:,:] = background
+        flats[i,:,:] = flat
+        Ks[i,0] = 1
+
+    max_signal = np.array([20])
+    clip = 0
+    dl = 0.1
+    apriori_params = None
+    estimator = BayesEstimator(apriori = "uniform", dl=dl, ndim=1)
+
+    estimated = estimate(samples, Ks, backgrounds, flats, max_signal, estimator, apriori_params, clip)
+    assert len(estimated.shape) == 3
+    assert estimated.shape[0] == true_signal.shape[0]
+    assert estimated.shape[1] == true_signal.shape[1]
+    assert estimated.shape[2] == 1
+    estimated = estimated[:,:,0]
+    assert (estimated == true_signal).all()
