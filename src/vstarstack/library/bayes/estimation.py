@@ -30,7 +30,8 @@ def estimate(samples : np.ndarray,
              max_signal : np.ndarray,
              estimator : vstarstack.library.bayes.bayes.BayesEstimator,
              apriori_fun_params : any = None,
-             clip : float = 0) -> np.ndarray:
+             clip : float = 0,
+             method : str = "estimate") -> np.ndarray:
     """
     Estimate value with Bayes theorem
     
@@ -43,6 +44,8 @@ def estimate(samples : np.ndarray,
     estimator          - 
     apriori_fun_params - 
     clip               - 
+    method             -
+
     """
 
     # lambda(f1, f2) = background + flat * (Ks_1 * f1 + Ks_2 * f2)
@@ -81,16 +84,27 @@ def estimate(samples : np.ndarray,
     flat = np.reshape(flat, (nsamples, npixels))
 
     result = np.ndarray((npixels, ndim))
-    for i in range(npixels):
-        f = estimator.estimate(samples[:,i],
-                               background[:,i],
-                               flat[:,i],
-                               Ks,
-                               apriori_fun_params,
-                               limits_low=min_signal,
-                               limits_high=max_signal,
-                               clip=clip)
-        result[i,:] = f
+    if method == "estimate":
+        for i in range(npixels):
+            f = estimator.estimate(samples[:,i],
+                                   background[:,i],
+                                   flat[:,i],
+                                   Ks,
+                                   apriori_fun_params,
+                                   limits_low=min_signal,
+                                   limits_high=max_signal,
+                                   clip=clip)
+            result[i,:] = f
+    elif method == "MAP":
+        for i in range(npixels):
+            f = estimator.MAP(samples[:,i],
+                              background[:,i],
+                              flat[:,i],
+                              Ks,
+                              apriori_fun_params,
+                              limits_low=min_signal,
+                              limits_high=max_signal)
+            result[i,:] = f
     result = np.reshape(result, (h, w, ndim))
     return result
 
@@ -101,7 +115,8 @@ def estimate_with_dark_flat(samples : np.ndarray,
                             integration_dl : float,
                             apriori_fun : any,
                             apriori_fun_params : any = None,
-                            clip : float = 0) -> np.ndarray:
+                            clip : float = 0,
+                            method : str = "estimate") -> np.ndarray:
     assert len(samples.shape) == 3
     nsamples = samples.shape[0]
 
@@ -130,7 +145,7 @@ def estimate_with_dark_flat(samples : np.ndarray,
     _max_signal = np.array([max_signal], dtype=np.double)
 
     estimator = vstarstack.library.bayes.bayes.BayesEstimator(apriori=apriori_fun, dl=integration_dl, ndim=1)
-    return estimate(samples, Ks, dks, flts, _max_signal, estimator, apriori_fun_params, clip)
+    return estimate(samples, Ks, dks, flts, _max_signal, estimator, apriori_fun_params, clip, method)
 
 def estimate_with_dark_flat_sky(samples : np.ndarray,
                                 dark : np.ndarray,
@@ -140,7 +155,8 @@ def estimate_with_dark_flat_sky(samples : np.ndarray,
                                 integration_dl : float,
                                 apriori_fun : any,
                                 apriori_fun_params : any = None,
-                                clip : float = 0) -> np.ndarray:
+                                clip : float = 0,
+                                method : str = "estimate") -> np.ndarray:
     assert len(samples.shape) == 3
     nsamples = samples.shape[0]
 
@@ -180,7 +196,7 @@ def estimate_with_dark_flat_sky(samples : np.ndarray,
     _max_signal = np.array([max_signal], dtype=np.double)
 
     estimator = vstarstack.library.bayes.bayes.BayesEstimator(apriori=apriori_fun, dl=integration_dl, ndim=1)
-    return estimate(samples, Ks, bgs, flts, _max_signal, estimator, apriori_fun_params, clip)
+    return estimate(samples, Ks, bgs, flts, _max_signal, estimator, apriori_fun_params, clip, method)
 
 def estimate_with_dark_flat_sky_continuum(samples_narrow : np.ndarray,
                                           dark_narrow : np.ndarray,
@@ -196,7 +212,8 @@ def estimate_with_dark_flat_sky_continuum(samples_narrow : np.ndarray,
                                           integration_dl : float,
                                           apriori_fun : str | Callable[[np.ndarray], float],
                                           apriori_fun_params : any = None,
-                                          clip : float = 0) -> np.ndarray:
+                                          clip : float = 0,
+                                          method : str = "estimate") -> np.ndarray:
     assert len(samples_wide.shape) == 3
     assert len(samples_narrow.shape) == 3
     nsamples_wide = samples_wide.shape[0]
@@ -280,4 +297,4 @@ def estimate_with_dark_flat_sky_continuum(samples_narrow : np.ndarray,
     Ks         = np.concat([Ks_wide, Ks_narrow], axis=0)
     max_signal = np.array([max_signal_emission, max_signal_continuum])
     estimator  = vstarstack.library.bayes.bayes.BayesEstimator(apriori=apriori_fun, dl=integration_dl, ndim=2)
-    return estimate(samples, Ks, bgs, flats, max_signal, estimator, apriori_fun_params, clip)
+    return estimate(samples, Ks, bgs, flats, max_signal, estimator, apriori_fun_params, clip, method)
