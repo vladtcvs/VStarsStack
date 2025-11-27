@@ -118,7 +118,7 @@ def move_dataframe(dataframe: DataFrame,
         if not dataframe.get_channel_option(channel, "signal"):
             continue
 
-        if channel in dataframe.links["weight"]:
+        if "weight" in dataframe.links and channel in dataframe.links["weight"]:
             weight_channel = dataframe.links["weight"][channel]
             weight, _ = dataframe.get_channel(weight_channel)
         else:

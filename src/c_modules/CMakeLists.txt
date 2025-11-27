@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 project(vstarstack)
 
+if (BUILD_TESTS)
+    enable_testing()
+    include(CTest)
+endif()
+
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
 
 message("Python: '${Python3_EXECUTABLE}'")
@@ -12,10 +17,10 @@ if(NUMPY_NOT_FOUND)
     message(FATAL_ERROR "NumPy headers not found: ${NUMPY_NOT_FOUND}")
 endif()
 
-
 message("Numpy headers: '${NUMPY_INCLUDE_DIR}'")
 
 add_subdirectory(projections)
 add_subdirectory(movements)
 add_subdirectory(fine_movement)
 add_subdirectory(clusterization)
+add_subdirectory(bayes)
