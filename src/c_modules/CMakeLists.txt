@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 project(vstarstack)
 
+if (BUILD_TESTS)
+    enable_testing()
+    include(CTest)
+endif()
+
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
 
 message("Python: '${Python3_EXECUTABLE}'")
