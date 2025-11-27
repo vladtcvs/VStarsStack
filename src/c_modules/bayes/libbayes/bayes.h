@@ -46,7 +46,7 @@ struct bayes_posterior_ctx_s
  * @param ctx - context
  * @param num_frames - number of measurements
  * @param F - frames {F_a}, a=0..num_frames-1
- * @param f - {f_i} for which we find p({p_i}|{F_a})
+ * @param f - {f_i} for which we find p({f_i}|{F_a})
  * @param d - constant coefficients {d_i}, for dark, sky
  * @param v - spatial coefficient {v_i}, for flat
  * @param K - contribution coefficients {K_i,a}

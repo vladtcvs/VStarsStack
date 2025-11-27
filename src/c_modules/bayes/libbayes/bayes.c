@@ -311,7 +311,6 @@ void bayes_posterior_free(struct bayes_posterior_ctx_s *ctx)
 
 bool bayes_posterior_init(struct bayes_posterior_ctx_s *ctx, int num_dim)
 {
-    bayes_posterior_free(ctx);
     ctx->N = num_dim;
     ctx->f_integration = calloc(num_dim, sizeof(double));
     ctx->f_estimation = calloc(num_dim, sizeof(double));
