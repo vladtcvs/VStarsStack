@@ -162,12 +162,12 @@ def estimate_with_dark_flat_sky(samples : np.ndarray,
 
     # lambda(f) = (dark + flat * sky) + flat * 1 * f
 
-    if len(darks.shape) == 2:
+    if len(dark.shape) == 2:
         darks = np.zeros((nsamples, dark.shape[0], dark.shape[0]))
         for i in range(nsamples):
             darks[i,:,:] = dark
-    elif len(darks.shape) == 3:
-        pass
+    elif len(dark.shape) == 3:
+        darks = dark
     else:
         return None
 

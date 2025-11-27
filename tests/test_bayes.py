@@ -70,3 +70,125 @@ def test_MAP_1():
     assert estimated.shape[2] == 1
     estimated = estimated[:,:,0]
     assert (estimated == true_signal).all()
+
+def test_dark_flat_1():
+    dark = np.zeros((5,5))
+    flat = np.ones((5,5))
+    true_signal = np.ones((5,5))*4
+
+    nsamples = 10
+    samples = np.zeros((nsamples, 5, 5))
+    for i in range(nsamples):
+        samples[i,:,:] = true_signal * flat + dark
+
+    max_signal = 10
+    clip = 0.8
+    dl = 0.05
+
+    apriori_params = None
+
+    estimated = estimate_with_dark_flat(samples,
+                                        dark,
+                                        flat,
+                                        max_signal,
+                                        dl,
+                                        "uniform",
+                                        None,
+                                        clip,
+                                        "MAP")
+
+    assert len(estimated.shape) == 3
+    assert estimated.shape[0] == true_signal.shape[0]
+    assert estimated.shape[1] == true_signal.shape[1]
+    assert estimated.shape[2] == 1
+    estimated = estimated[:,:,0]
+    assert (estimated == true_signal).all()
+
+def test_dark_flat_sky_1():
+    dark = np.zeros((5,5))
+    sky = np.ones((5,5))
+    flat = np.ones((5,5))
+    true_signal = np.ones((5,5))*4
+
+    nsamples = 10
+    samples = np.zeros((nsamples, 5, 5))
+    for i in range(nsamples):
+        samples[i,:,:] = true_signal * flat + sky * flat + dark
+
+    max_signal = 10
+    clip = 0.8
+    dl = 0.05
+
+    apriori_params = None
+
+    estimated = estimate_with_dark_flat_sky(samples,
+                                            dark,
+                                            flat,
+                                            sky,
+                                            max_signal,
+                                            dl,
+                                            "uniform",
+                                            None,
+                                            clip,
+                                            "MAP")
+
+    assert len(estimated.shape) == 3
+    assert estimated.shape[0] == true_signal.shape[0]
+    assert estimated.shape[1] == true_signal.shape[1]
+    assert estimated.shape[2] == 1
+    estimated = estimated[:,:,0]
+    assert (estimated == true_signal).all()
+
+def test_dark_flat_sky_continuum_1():
+    h = 1
+    w = 1
+    dark = np.zeros((h,w))
+    sky = np.ones((h,w))
+    flat = np.ones((h,w))
+    true_signal_emission = np.ones((h,w))*1
+    true_signal_continuum = np.ones((h,w))*0.5
+    K = 2
+
+    nsamples_wide = 10
+    samples_wide = np.zeros((nsamples_wide, h, w))
+    for i in range(nsamples_wide):
+        samples_wide[i,:,:] = (true_signal_continuum * K + true_signal_emission) * flat + sky * flat + dark
+
+    nsamples_narrow = 10
+    samples_narrow = np.zeros((nsamples_narrow, h, w))
+    for i in range(nsamples_narrow):
+        samples_narrow[i,:,:] = (true_signal_continuum + true_signal_emission) * flat + sky * flat + dark
+
+    max_signal = 4
+    clip = 0.8
+    dl = 0.02
+
+    apriori_params = None
+
+    estimated = estimate_with_dark_flat_sky_continuum(samples_narrow,
+                                                      dark,
+                                                      flat,
+                                                      sky,
+                                                      max_signal,
+                                                      samples_wide,
+                                                      dark,
+                                                      flat,
+                                                      sky,
+                                                      max_signal,
+                                                      K,
+                                                      dl,
+                                                      "uniform",
+                                                      apriori_params,
+                                                      clip,
+                                                      "MAP")
+
+    assert len(estimated.shape) == 3
+    assert estimated.shape[0] == true_signal_emission.shape[0]
+    assert estimated.shape[1] == true_signal_emission.shape[1]
+    assert estimated.shape[2] == 2
+    estimated_continuum = estimated[:,:,0]
+    estimated_emission = estimated[:,:,1]
+    print(estimated_continuum)
+    print(estimated_emission)
+    assert (estimated_continuum == true_signal_continuum).all()
+    assert (estimated_emission == true_signal_emission).all()
