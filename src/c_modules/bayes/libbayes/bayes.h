@@ -14,6 +14,10 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -126,3 +130,7 @@ void bayes_maxp(struct bayes_posterior_ctx_s *ctx,
 
 void bayes_posterior_free(struct bayes_posterior_ctx_s *ctx);
 bool bayes_posterior_init(struct bayes_posterior_ctx_s *ctx, int num_dim);
+
+#ifdef __cplusplus
+}
+#endif
