@@ -125,8 +125,12 @@ def apply_shift(project: vstarstack.tool.cfg.Project, argv: list[str]):
 
     images = vstarstack.tool.common.listfiles(npy_dir, ".zip")
 
-    args = [(name, filename, shifts[name], os.path.join(shifted_dir, name + ".zip"), interpolate if name in shifts else None) 
-            for name, filename in images]
+    args = []
+    for name, filename in images:
+        if name not in shifts:
+            continue
+        args.append((name, filename, shifts[name], os.path.join(shifted_dir, name + ".zip"), interpolate))
+            
     with mp.Pool(ncpu) as pool:
         pool.starmap(_make_shift_same_size, args)
 
