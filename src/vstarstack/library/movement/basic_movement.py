@@ -13,6 +13,7 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+from typing import List
 import numpy as np
 from abc import ABC, abstractmethod
 
@@ -60,3 +61,13 @@ class Movement(ABC):
     @abstractmethod
     def __mul__(self, other):
         """Multiply movements"""
+
+    @staticmethod
+    @abstractmethod
+    def average(transformations, percent=100):
+        """Average of multiple movements"""
+
+    @staticmethod
+    @abstractmethod
+    def interpolate(transformations : list, coefficients : List[float]):
+        """Interpolate of multiple movements"""

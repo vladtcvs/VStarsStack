@@ -254,10 +254,10 @@ commands = {
                      "shifts.json shift.json"),
     "apply-shift": (apply_shift,
                     "Apply selected shifts",
-                    "shift.json npy/ shifted/"),
+                    "npy/ shift.json shifted/"),
     "apply-extended-shift": (apply_shift_extended,
                     "Apply selected shifts and save to output with extended size (only perspective projection!)",
-                    "shift.json npy/ shifted/"),
+                    "npy/ shift.json shifted/"),
 }
 
 def run(project: vstarstack.tool.cfg.Project, argv: list[str]):
