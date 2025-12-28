@@ -108,6 +108,24 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
         transformation = Movement(angle, dy, dx)
         return transformation
 
+    @staticmethod
+    def interpolate(transformations : list, coefficients : List[float]):
+        """Interpolate of multiple movements"""
+        s = sum(coefficients)
+        coefficients = [item / s for item in coefficients]
+        angles = []
+        dxs = []
+        dys = []
+        for i, transformation in enumerate(transformations):
+            angles.append(transformation.a * coefficients[i])
+            dxs.append(transformation.dx * coefficients[i])
+            dys.append(transformation.dy * coefficients[i])
+        angle = np.sum(angles)
+        dy = np.sum(dys)
+        dx = np.sum(dxs)
+        transformation = Movement(angle, dy, dx)
+        return transformation
+
     def __mul__(self, other):
         """Multiply movements"""
         angle1 = self.a

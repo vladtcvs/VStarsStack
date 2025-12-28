@@ -16,7 +16,7 @@
 import logging
 import math
 import json
-from typing import Any
+from typing import Any, List
 import numpy as np
 
 from scipy.spatial.transform import Rotation
@@ -175,6 +175,17 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
         return Movement(rot)
 
     @staticmethod
+    def build_by_single(point_from, point_to):
+        """Build movement by single pair of stars"""
+        v_from = p2vec(point_from)
+        v_to   = p2vec(point_to)
+        angle  = vecangle(v_from, v_to)
+        axis   = vecmul(v_from, v_to)
+        axis   = axis / np.linalg.norm(axis)
+        rot    = Rotation.from_rotvec(angle * axis)
+        return Movement(rot)
+
+    @staticmethod
     def average(transformations, percent=100):
         """Average of multiple movements"""
         axises = np.zeros((len(transformations), 3))
@@ -202,6 +213,20 @@ class Movement(vstarstack.library.movement.basic_movement.Movement):
             for _, axis in distances:
                 rotvec += axis
             rotvec /= len(distances)
+        rot = Rotation.from_rotvec(rotvec)
+        transformation = Movement(rot)
+        return transformation
+
+    @staticmethod
+    def interpolate(transformations : list, coefficients : List[float]):
+        """Interpolate of multiple movements"""
+        s = sum(coefficients)
+        coefficients = [item / s for item in coefficients]
+        axises = np.zeros((len(transformations), 3))
+        for i, transformation in enumerate(transformations):
+            rotvec = transformation.rot.as_rotvec()
+            axises[i, 0:3] = rotvec * coefficients[i]
+        rotvec = np.sum(axises, axis=0)
         rot = Rotation.from_rotvec(rotvec)
         transformation = Movement(rot)
         return transformation

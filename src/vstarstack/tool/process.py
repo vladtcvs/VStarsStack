@@ -53,6 +53,8 @@ commands = {
                    "fine shift images"),
     "photometry": ("vstarstack.tool.photometry.photometry",
                    "analyze images"),
+    "moving-object-align": ("vstarstack.tool.moving_object_shift",
+                            "align moving objects, like comets"),
     "pipeline": ("vstarstack.tool.generators.generators",
                  "generate pipelines for processing"),
 }
