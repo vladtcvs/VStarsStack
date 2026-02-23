@@ -251,6 +251,10 @@ def _print_info(filename, indent):
     elif ptype == vstarstack.library.projection.ProjectionType.Equirectangular:
         print(f"{indent}Projection: equirectangular")
 
+    print(f"{indent}Parameters:")
+    for key in dataframe.params:
+        print(f"{indent}\t{key:4s} : {dataframe.params[key]}")
+
     print(f"{indent}Channels:")
     for channel in channels:
         if not dataframe.get_channel_option(channel, "signal"):
@@ -264,7 +268,7 @@ def _print_info(filename, indent):
         else:
             print(f"{indent}\t{channel} : type = {layer.dtype}, normed = {normed}, size = {layer.shape[1]} x {layer.shape[0]}")
 
-def _exposures(_project, argv):
+def _print_info_files(_project, argv):
     import vstarstack.library.data
     import vstarstack.tool.common
     fname = argv[0]
@@ -321,7 +325,7 @@ commands = {
     "convert": (_convert, "convert image"),
     "cut": (_cut, "cut part of image", "path/ <left> <top> <right> <bottom> out/"),
     "rename-channel": (_rename_channel, "filename.zip original_name target_name - rename channel"),
-    "info": (_exposures, "display image info", "(file.zip | path/)"),
+    "info": (_print_info_files, "display image info", "(file.zip | path/)"),
     "bpp" : (_select_bpp, "select format", "(input.zip | input/) (float16 | float32 | float64) (output.zip | output/)"),
     "drop-weight" : (_drop_weight, "drop weight info", "input.zip output.zip"),
 } 
