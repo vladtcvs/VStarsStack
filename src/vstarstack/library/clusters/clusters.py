@@ -12,7 +12,10 @@
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 #
 
+import logging
 import vstarstack.library.clusters.clusterization
+
+logger = logging.getLogger(__name__)
 
 def find_clusters_in_match_table(match_table : dict):
     """Build cluster of object from match table"""
@@ -49,10 +52,10 @@ def find_clusters_in_match_table(match_table : dict):
             continue
         vcluster = {}
         for image_id, star_id in cluster:
-            if image_id in vcluster:
-                # bad cluster            
-                break
             image_name = rev_image_name_index[image_id]
+            if image_name in vcluster:
+                logger.warning(f"{image_id} : {star_id} - already in cluster: {vcluster[image_name]}, skipping bad cluster")
+                break
             vcluster[image_name] = star_id
         else:
             clusters.append(vcluster)
