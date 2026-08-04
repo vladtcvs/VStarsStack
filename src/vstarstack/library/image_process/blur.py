@@ -26,14 +26,13 @@ def blur(dataframe : vstarstack.library.data.DataFrame, size : int):
         if opts["weight"]:
             continue
 
-        w_channel = dataframe.links["weight"][channel]
-        weight, _ = dataframe.get_channel(w_channel)
+        w_channel, weight, _ = dataframe.get_linked_channel(channel, "weight")
+        if w_channel is not None:
+            weight = cv2.GaussianBlur(weight, (size, size), 0)
+            dataframe.replace_channel(weight, w_channel)
 
         image = cv2.GaussianBlur(image, (size, size), 0)
-        weight = cv2.GaussianBlur(weight, (size, size), 0)
-
         dataframe.replace_channel(image, channel)
-        dataframe.replace_channel(weight, w_channel)
 
     return dataframe
 
