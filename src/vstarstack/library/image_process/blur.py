@@ -23,7 +23,7 @@ def blur(dataframe : vstarstack.library.data.DataFrame, size : int):
         image, opts = dataframe.get_channel(channel)
         if opts["encoded"]:
             continue
-        if opts["weight"]:
+        if not opts["signal"]:
             continue
 
         w_channel, weight, _ = dataframe.get_linked_channel(channel, "weight")
