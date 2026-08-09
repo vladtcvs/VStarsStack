@@ -19,6 +19,7 @@ import numpy as np
 import gc
 import psutil
 
+import vstarstack.library.image_process.togray
 from vstarstack.library.loaders.classic import readjpeg
 from vstarstack.library.fine_movement.module import ImageGrid
 from vstarstack.library.fine_movement.module import ImageDeform
@@ -313,6 +314,47 @@ def test_approximate_by_correlation2():
     assert np.amax(data[:,:,0]) == 0
     assert np.amin(data[:,:,1]) == 0
     assert np.amax(data[:,:,1]) == 1
+
+def test_approximate_by_correlation3():
+    df1 = next(readjpeg(os.path.join(dir_path, "fine_shift/image6.png")))
+    df2 = next(readjpeg(os.path.join(dir_path, "fine_shift/image5.png")))
+
+    image,_ = vstarstack.library.image_process.togray.df_to_gray(df1)
+    image_ref,_ = vstarstack.library.image_process.togray.df_to_gray(df2)
+
+    w = image.shape[1]
+    h = image.shape[0]
+
+    grid = ImageGrid(image_w=w, image_h=h)
+    grid.fill(image)
+    grid_ref = ImageGrid(image_w=w, image_h=h)
+    grid_ref.fill(image_ref)
+
+    correlation1 = ImageGrid.correlation(grid, grid_ref)
+
+    lc = ImageDeformLC(image_w=w, image_h=h, pixels=15)
+    deform = lc.find(grid, None, grid_ref, None, 15, 8, 8)
+    assert deform is not None
+
+    grid_fixed = deform.apply_image(grid, 1)
+    correlation2 = ImageGrid.correlation(grid_fixed, grid_ref)
+
+    assert correlation2 == 1
+
+    data = deform.content()
+    import matplotlib.pyplot as plt
+    fig, axs = plt.subplots(1, 2)
+    axs[0].imshow(data[:,:,0])
+    axs[1].imshow(data[:,:,1])
+    plt.show()
+    assert data.shape[0] == h/15
+    assert data.shape[1] == w/15
+    assert data.shape[2] == 2
+    assert np.amin(data[:,:,0]) == 0
+    assert np.amax(data[:,:,0]) == 0
+    assert np.amin(data[:,:,1]) == 0
+    assert np.amax(data[:,:,1]) == 1
+
 
 def test_memory_leak():
     N = 5
